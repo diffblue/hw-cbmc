@@ -2901,6 +2901,8 @@ modport_ports_declaration_brace:
 // port name (starting a new group) or just a port name (continuing the
 // previous direction group). We flatten into single items to avoid a
 // shift/reduce conflict between the inner and outer comma-separated lists.
+// IEEE 1800-2017 25.5.4: modport also allows import/export of
+// subroutines (method prototypes or task/function identifiers).
 modport_ports_declaration:
           port_direction non_type_identifier
                 { $$ = $1;
@@ -2908,6 +2910,18 @@ modport_ports_declaration:
         | non_type_identifier
                 { init($$, ID_nil);
                   mto($$, $1); }
+        | TOK_IMPORT non_type_identifier
+                { init($$, ID_import);
+                  mto($$, $2); }
+        | TOK_EXPORT non_type_identifier
+                { init($$, ID_export);
+                  mto($$, $2); }
+        | TOK_IMPORT method_prototype
+                { init($$, ID_import);
+                  mto($$, $2); }
+        | TOK_EXPORT method_prototype
+                { init($$, ID_export);
+                  mto($$, $2); }
         ;
 
 // System Verilog standard 1800-2017

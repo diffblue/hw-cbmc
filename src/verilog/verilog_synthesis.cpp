@@ -89,9 +89,9 @@ exprt verilog_synthesist::synth_expr_rec(exprt expr, symbol_statet symbol_state)
   for(auto &op : expr.operands())
     op = synth_expr_rec(op, symbol_state);
 
-  if(expr.id()==ID_symbol)
+  if(expr.id() == ID_symbol)
   {
-    const symbolt &symbol=ns.lookup(to_symbol_expr(expr));
+    const symbolt &symbol = ns.lookup(to_symbol_expr(expr));
 
     if(symbol.is_macro)
     {
@@ -458,19 +458,19 @@ exprt verilog_synthesist::expand_function_call(
   }
 
   // this is essentially inlined
-  const symbol_exprt &function=to_symbol_expr(call.function());
+  const symbol_exprt &function = to_symbol_expr(call.function());
 
-  const symbolt &symbol=ns.lookup(function);
+  const symbolt &symbol = ns.lookup(function);
 
-  if(symbol.type.id()!=ID_code)
+  if(symbol.type.id() != ID_code)
   {
     throw errort().with_location(call.source_location())
       << "function call expects function argument";
   }
 
-  const code_typet &code_type=to_code_type(symbol.type);
+  const code_typet &code_type = to_code_type(symbol.type);
 
-  if(code_type.return_type()==empty_typet())
+  if(code_type.return_type() == empty_typet())
   {
     throw errort().with_location(call.source_location())
       << "function call cannot call task";
@@ -490,13 +490,11 @@ exprt verilog_synthesist::expand_function_call(
 
   tf_frame.value().return_value = return_symbol.symbol_expr();
 
-  const code_typet::parameterst &parameters=
-    code_type.parameters();
+  const code_typet::parameterst &parameters = code_type.parameters();
 
-  const exprt::operandst &actuals=
-    call.op1().operands();
+  const exprt::operandst &actuals = call.op1().operands();
 
-  if(parameters.size()!=actuals.size())
+  if(parameters.size() != actuals.size())
   {
     throw errort().with_location(call.source_location())
       << "wrong number of arguments";
@@ -506,12 +504,12 @@ exprt verilog_synthesist::expand_function_call(
   function_locality(symbol);
 
   // do assignments to function parameters
-  for(unsigned i=0; i<parameters.size(); i++)
+  for(unsigned i = 0; i < parameters.size(); i++)
   {
-    const symbolt &a_symbol=ns.lookup(parameters[i].get_identifier());
+    const symbolt &a_symbol = ns.lookup(parameters[i].get_identifier());
     verilog_blocking_assignt assignment{
       a_symbol.symbol_expr().with_source_location(call), actuals[i]};
-    assignment.add_source_location()=call.source_location();
+    assignment.add_source_location() = call.source_location();
     synth_statement(assignment);
   }
 
@@ -595,7 +593,7 @@ void verilog_synthesist::expand_hierarchical_identifier(
   // The type checker already checked that it's fine.
 
   symbol_exprt new_symbol{full_identifier, expr.type()};
-  new_symbol.add_source_location()=expr.source_location();
+  new_symbol.add_source_location() = expr.source_location();
   expr.swap(new_symbol);
 }
 
@@ -624,29 +622,28 @@ void verilog_synthesist::assignment_rec(
 
     // do it from right to left
 
-    for(exprt::operandst::const_reverse_iterator
-        it=lhs.operands().rbegin();
-        it!=lhs.operands().rend();
+    for(exprt::operandst::const_reverse_iterator it = lhs.operands().rbegin();
+        it != lhs.operands().rend();
         it++)
     {
       auto offset_constant = from_integer(offset, natural_typet{});
 
-      if(it->type().id()==ID_bool)
+      if(it->type().id() == ID_bool)
       {
         exprt bit_extract = extractbit_exprt{rhs, offset_constant};
         ++offset;
 
         assignment_rec(*it, bit_extract, blocking);
       }
-      else if(it->type().id()==ID_signedbv ||
-              it->type().id()==ID_unsignedbv)
+      else if(
+        it->type().id() == ID_signedbv || it->type().id() == ID_unsignedbv)
       {
         extractbits_exprt bit_extract(rhs, offset_constant, it->type());
 
         assignment_rec(*it, bit_extract, blocking);
 
         auto width = get_width(it->type());
-        offset+=width;
+        offset += width;
       }
       else
       {
@@ -660,9 +657,9 @@ void verilog_synthesist::assignment_rec(
   }
 
   // get identifier
-  const symbolt &symbol=assignment_symbol(lhs);
+  const symbolt &symbol = assignment_symbol(lhs);
 
-  if(symbol.type.id()==ID_verilog_realtime)
+  if(symbol.type.id() == ID_verilog_realtime)
   {
     // we silently ignore these
     return;
@@ -678,8 +675,7 @@ void verilog_synthesist::assignment_rec(
   // processes it. This is needed for imported package variables.
   local_symbols.insert(symbol.name);
 
-  if(construct==constructt::ALWAYS &&
-     event_guard==event_guardt::NONE)
+  if(construct == constructt::ALWAYS && event_guard == event_guardt::NONE)
   {
     throw errort().with_location(lhs.source_location())
       << "assignment in 'always' context without event guard";
@@ -695,13 +691,13 @@ void verilog_synthesist::assignment_rec(
     event_guardt new_type;
 
     if(construct == constructt::INITIAL)
-      new_type=event_guardt::CLOCK;
+      new_type = event_guardt::CLOCK;
     else if(construct == constructt::ALWAYS_COMB)
       new_type = event_guardt::COMBINATIONAL;
     else
       new_type = event_guard;
 
-    assignmentt &assignment=assignments[symbol.name];
+    assignmentt &assignment = assignments[symbol.name];
 
     if(assignment.is_cycle_local)
     {
@@ -727,7 +723,7 @@ void verilog_synthesist::assignment_rec(
   }
 
   {
-    assert(value_map!=NULL);
+    assert(value_map != NULL);
 
     auto new_value = assignment_rec(lhs, rhs); // start of recursion
 
@@ -766,14 +762,13 @@ exprt verilog_synthesist::assignment_rec(
   const exprt &lhs, // synth_lhs_expr applied
   const exprt &rhs) // synth_expr applied
 {
-  if(lhs.id()==ID_symbol)
+  if(lhs.id() == ID_symbol)
   {
     return rhs;
   }
-  else if(lhs.id()==ID_index ||
-          lhs.id()==ID_extractbit)
+  else if(lhs.id() == ID_index || lhs.id() == ID_extractbit)
   {
-    if(lhs.operands().size()!=2)
+    if(lhs.operands().size() != 2)
     {
       throw errort() << "index takes two operands";
     }
@@ -976,9 +971,7 @@ Function: verilog_synthesist::replace_by_wire
 
 \*******************************************************************/
 
-void verilog_synthesist::replace_by_wire(
-  exprt &what,
-  const symbolt &base)
+void verilog_synthesist::replace_by_wire(exprt &what, const symbolt &base)
 {
   PRECONDITION(what.is_not_nil());
 
@@ -986,24 +979,25 @@ void verilog_synthesist::replace_by_wire(
 
   do
   {
-    unsigned c=temporary_counter++;
-    new_symbol.name=id2string(base.name)+"_aux"+std::to_string(c);
-    new_symbol.base_name=id2string(base.base_name)+"_aux"+std::to_string(c);
-  }
-  while(symbol_table.symbols.find(new_symbol.name)!=symbol_table.symbols.end());
+    unsigned c = temporary_counter++;
+    new_symbol.name = id2string(base.name) + "_aux" + std::to_string(c);
+    new_symbol.base_name =
+      id2string(base.base_name) + "_aux" + std::to_string(c);
+  } while(symbol_table.symbols.find(new_symbol.name) !=
+          symbol_table.symbols.end());
 
-  new_symbol.type=what.type();
-  new_symbol.module=base.module;
-  new_symbol.mode=base.mode;
-  new_symbol.location=base.location;
-  new_symbol.value=nil_exprt();
-  new_symbol.is_auxiliary=true;
+  new_symbol.type = what.type();
+  new_symbol.module = base.module;
+  new_symbol.mode = base.mode;
+  new_symbol.location = base.location;
+  new_symbol.value = nil_exprt();
+  new_symbol.is_auxiliary = true;
   new_symbol.pretty_name = strip_verilog_root_prefix(new_symbol.name);
 
   symbol_exprt symbol_expr(new_symbol.name, new_symbol.type);
 
-  assignmentt &assignment=assignments[new_symbol.name];
-  assignment.next.value=what;
+  assignmentt &assignment = assignments[new_symbol.name];
+  assignment.next.value = what;
   new_wires.insert(new_symbol.name);
 
   if(symbol_table.add(new_symbol))
@@ -1011,7 +1005,7 @@ void verilog_synthesist::replace_by_wire(
     throw errort() << "failed to add replace_by_wire symbol";
   }
 
-  what=symbol_expr;
+  what = symbol_expr;
 }
 
 /*******************************************************************\
@@ -1031,15 +1025,14 @@ void verilog_synthesist::assignment_member_rec(
   membert &member,
   assignmentt::datat &data)
 {
-  if(lhs.id()==ID_symbol)
+  if(lhs.id() == ID_symbol)
   {
     // done
     add_assignment_member(lhs, member, data);
   }
-  else if(lhs.id()==ID_index ||
-          lhs.id()==ID_extractbit)
+  else if(lhs.id() == ID_index || lhs.id() == ID_extractbit)
   {
-    if(lhs.operands().size()!=2)
+    if(lhs.operands().size() != 2)
     {
       throw errort() << "index takes two operands";
     }
@@ -1084,16 +1077,16 @@ void verilog_synthesist::assignment_member_rec(
         << "failed to convert range";
     }
 
-    if(from>to)
+    if(from > to)
       std::swap(from, to);
 
     member.push_back(mp_integer());
 
     // now add the indexes in the range
-    for(mp_integer i=from; i<=to; ++i)
+    for(mp_integer i = from; i <= to; ++i)
     {
       // do the value
-      member.back()=i;
+      member.back() = i;
       assignment_member_rec(lhs_bv, member, data);
     }
 
@@ -1164,16 +1157,15 @@ Function: verilog_synthesist::disjoint
 
 \*******************************************************************/
 
-bool verilog_synthesist::disjoint(
-  const membert &a,
-  const membert &b)
+bool verilog_synthesist::disjoint(const membert &a, const membert &b)
 {
-  membert::const_iterator a_it=a.begin();
-  membert::const_iterator b_it=b.begin();
+  membert::const_iterator a_it = a.begin();
+  membert::const_iterator b_it = b.begin();
 
-  while(a_it!=a.end() && b_it!=b.end())
+  while(a_it != a.end() && b_it != b.end())
   {
-    if(*a_it!=*b_it) return true;
+    if(*a_it != *b_it)
+      return true;
     a_it++, b_it++;
   }
 
@@ -1198,7 +1190,7 @@ void verilog_synthesist::add_assignment_member(
   assignmentt::datat &data)
 {
   // see if we conflict with any previous assignment
-  for(const auto & it : data.assigned_previous)
+  for(const auto &it : data.assigned_previous)
   {
     if(!disjoint(member, it))
     {
@@ -1224,27 +1216,27 @@ Function: verilog_synthesist::assignment_symbol
 
 const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
 {
-  const exprt *e=&lhs;
+  const exprt *e = &lhs;
 
   while(1)
   {
-    if(e->id()==ID_index)
+    if(e->id() == ID_index)
     {
-      if(e->operands().size()!=2)
+      if(e->operands().size() != 2)
       {
         throw errort() << "index takes two operands";
       }
 
       e = &to_index_expr(*e).op0();
 
-      if(e->type().id()!=ID_array)
+      if(e->type().id() != ID_array)
       {
         throw errort() << "index expects array operand";
       }
     }
-    else if(e->id()==ID_extractbit)
+    else if(e->id() == ID_extractbit)
     {
-      if(e->operands().size()!=2)
+      if(e->operands().size() != 2)
       {
         throw errort() << "extractbit takes two operands";
       }
@@ -1265,16 +1257,16 @@ const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
     {
       e = &to_verilog_indexed_part_select_plus_or_minus_expr(*e).src();
     }
-    else if(e->id()==ID_symbol)
+    else if(e->id() == ID_symbol)
     {
       // get identifier
 
-      const irep_idt &identifier=e->get(ID_identifier);
+      const irep_idt &identifier = e->get(ID_identifier);
 
       symbol_table_baset::symbolst::const_iterator it =
         symbol_table.symbols.find(identifier);
 
-      if(it==symbol_table.symbols.end())
+      if(it == symbol_table.symbols.end())
       {
         throw errort() << "assignment failed to find symbol `" << identifier
                        << '\'';
@@ -1546,34 +1538,32 @@ void verilog_synthesist::synth_module_instance_builtin(
   for(auto &instance : module_item.instances())
   {
     // check built-in ones
-    if(module==ID_bufif0 ||
-       module==ID_bufif1 ||
-       module==ID_notif0 ||
-       module==ID_notif1)
+    if(
+      module == ID_bufif0 || module == ID_bufif1 || module == ID_notif0 ||
+      module == ID_notif1)
     {
       // add to general constraints
 
       exprt constraint = instance;
       constraint.id("verilog-primitive-module");
-      constraint.type()=bool_typet();
+      constraint.type() = bool_typet();
       constraint.set(ID_module, module);
 
-      assert(trans.operands().size()==3);
+      assert(trans.operands().size() == 3);
       trans.invar().add_to_operands(std::move(constraint));
     }
-    else if(module==ID_nmos ||
-            module==ID_pmos ||
-            module==ID_rnmos ||
-            module==ID_rpmos)
+    else if(
+      module == ID_nmos || module == ID_pmos || module == ID_rnmos ||
+      module == ID_rpmos)
     {
       // add to general constraints
 
       exprt constraint = instance;
       constraint.id("verilog-primitive-module");
-      constraint.type()=bool_typet();
+      constraint.type() = bool_typet();
       constraint.set(ID_module, module);
 
-      assert(trans.operands().size()==3);
+      assert(trans.operands().size() == 3);
       trans.invar().add_to_operands(std::move(constraint));
     }
     else if(
@@ -1606,7 +1596,7 @@ void verilog_synthesist::synth_module_instance_builtin(
       equal_exprt constraint{output, op};
       trans.invar().add_to_operands(std::move(constraint));
     }
-    else if(module==ID_buf)
+    else if(module == ID_buf)
     {
       assert(instance.connections().size() >= 2);
 
@@ -1615,11 +1605,11 @@ void verilog_synthesist::synth_module_instance_builtin(
         equal_exprt constraint{
           instance.connections()[i], instance.connections().back()};
 
-        assert(trans.operands().size()==3);
+        assert(trans.operands().size() == 3);
         trans.invar().add_to_operands(std::move(constraint));
       }
     }
-    else if(module==ID_not)
+    else if(module == ID_not)
     {
       assert(instance.connections().size() >= 2);
 
@@ -1641,32 +1631,30 @@ void verilog_synthesist::synth_module_instance_builtin(
         trans.invar().add_to_operands(std::move(constraint));
       }
     }
-    else if(module=="tranif0" ||
-            module=="tranif1" ||
-            module=="rtranif1" ||
-            module=="rtranif0")
+    else if(
+      module == "tranif0" || module == "tranif1" || module == "rtranif1" ||
+      module == "rtranif0")
     {
       // add to general constraints
 
       exprt constraint = instance;
       constraint.id("verilog-primitive-module");
-      constraint.type()=bool_typet();
+      constraint.type() = bool_typet();
       constraint.set(ID_module, module);
 
-      assert(trans.operands().size()==3);
+      assert(trans.operands().size() == 3);
       trans.invar().add_to_operands(std::move(constraint));
     }
-    else if(module=="tran"  ||
-            module=="rtran")
+    else if(module == "tran" || module == "rtran")
     {
       // add to general constraints
 
       exprt constraint = instance;
       constraint.id("verilog-primitive-module");
-      constraint.type()=bool_typet();
+      constraint.type() = bool_typet();
       constraint.set(ID_module, module);
 
-      assert(trans.operands().size()==3);
+      assert(trans.operands().size() == 3);
       trans.invar().add_to_operands(std::move(constraint));
     }
     else
@@ -1723,7 +1711,7 @@ void verilog_synthesist::expand_module_instance(
   const verilog_instt::instancet &instance,
   transt &trans_dest)
 {
-  construct=constructt::OTHER;
+  construct = constructt::OTHER;
 
   // do the trans of the instantiated module
   for(std::size_t i = 0; i < 3; i++)
@@ -1762,22 +1750,22 @@ void verilog_synthesist::synth_always_base(
     DATA_INVARIANT(
       false, "unknown always construct: " + module_item.id_string());
 
-  event_guard=event_guardt::NONE;
+  event_guard = event_guardt::NONE;
 
   value_mapt always_value_map;
   DATA_INVARIANT(value_map == nullptr, "always/initial must not nest");
-  value_map=&always_value_map;
+  value_map = &always_value_map;
 
   synth_statement(module_item.statement());
 
-  for(const auto & it : value_map->final.changed)
+  for(const auto &it : value_map->final.changed)
   {
-    assignmentt &assignment=assignments[it];
-    assignment.next.value=value_map->final.symbol_map[it];
+    assignmentt &assignment = assignments[it];
+    assignment.next.value = value_map->final.symbol_map[it];
     assignment.next.move_assignments();
   }
 
-  value_map=NULL;
+  value_map = NULL;
 }
 
 /*******************************************************************\
@@ -1792,10 +1780,9 @@ Function: verilog_synthesist::synth_initial
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_initial(
-  const verilog_initialt &module_item)
+void verilog_synthesist::synth_initial(const verilog_initialt &module_item)
 {
-  if(module_item.operands().size()!=1)
+  if(module_item.operands().size() != 1)
   {
     throw errort().with_location(module_item.source_location())
       << "initial module item expected to have one operand";
@@ -1804,23 +1791,23 @@ void verilog_synthesist::synth_initial(
   if(ignore_initial)
     return;
 
-  construct=constructt::INITIAL;
-  event_guard=event_guardt::NONE;
+  construct = constructt::INITIAL;
+  event_guard = event_guardt::NONE;
 
   value_mapt initial_value_map;
   DATA_INVARIANT(value_map == nullptr, "always/initial must not nest");
-  value_map=&initial_value_map;
+  value_map = &initial_value_map;
 
   synth_statement(module_item.statement());
 
-  for(const auto & it : value_map->final.changed)
+  for(const auto &it : value_map->final.changed)
   {
-    assignmentt &assignment=assignments[it];
-    assignment.init.value=value_map->final.symbol_map[it];
+    assignmentt &assignment = assignments[it];
+    assignment.init.value = value_map->final.symbol_map[it];
     assignment.init.move_assignments();
   }
 
-  value_map=NULL;
+  value_map = NULL;
 }
 
 /*******************************************************************\
@@ -1923,7 +1910,8 @@ Function: verilog_synthesist::synth_decl
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_decl(const verilog_declt &statement) {
+void verilog_synthesist::synth_decl(const verilog_declt &statement)
+{
   // Look for supply0 and supply1 port class.
   if(statement.get_class() == ID_supply0 || statement.get_class() == ID_supply1)
   {
@@ -1959,8 +1947,8 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
     {
       // These are only allowed for module-level declarations,
       // not block-level.
-      construct=constructt::INITIAL;
-      event_guard=event_guardt::NONE;
+      construct = constructt::INITIAL;
+      event_guard = event_guardt::NONE;
 
       auto rhs = declarator.value();
       const symbolt &symbol = ns.lookup(lhs);
@@ -1969,7 +1957,7 @@ void verilog_synthesist::synth_decl(const verilog_declt &statement) {
       {
         // much like: initial LHS=RHS;
         verilog_initialt initial;
-        initial.statement()=verilog_blocking_assignt(lhs, rhs);
+        initial.statement() = verilog_blocking_assignt(lhs, rhs);
         initial.statement().add_source_location() =
           declarator.source_location();
         initial.add_source_location() = declarator.source_location();
@@ -2100,11 +2088,11 @@ Function: verilog_synthesist::synth_continuous_assign
 void verilog_synthesist::synth_continuous_assign(
   const verilog_continuous_assignt &module_item)
 {
-  construct=constructt::OTHER;
+  construct = constructt::OTHER;
 
   forall_operands(it, module_item)
   {
-    if(it->id()!=ID_equal || it->operands().size()!=2)
+    if(it->id() != ID_equal || it->operands().size() != 2)
     {
       throw errort().with_location(it->source_location())
         << "unexpected continuous assignment";
@@ -2119,7 +2107,7 @@ void verilog_synthesist::synth_continuous_assign(
     assignment.add_source_location() = module_item.source_location();
 
     verilog_event_guardt event_guard;
-    event_guard.add_source_location()=module_item.source_location();
+    event_guard.add_source_location() = module_item.source_location();
     event_guard.body() = assignment;
 
     verilog_always_baset always(
@@ -2157,37 +2145,34 @@ Function: verilog_synthesist::synth_force
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_force_rec(
-  const exprt &lhs,
-  const exprt &rhs)
+void verilog_synthesist::synth_force_rec(const exprt &lhs, const exprt &rhs)
 {
-  if(lhs.id()==ID_concatenation)
+  if(lhs.id() == ID_concatenation)
   {
     // split it up
     mp_integer offset = 0;
 
     // do it from right to left
 
-    for(exprt::operandst::const_reverse_iterator
-        it=lhs.operands().rbegin();
-        it!=lhs.operands().rend();
+    for(exprt::operandst::const_reverse_iterator it = lhs.operands().rbegin();
+        it != lhs.operands().rend();
         it++)
     {
       auto offset_constant = from_integer(offset, natural_typet{});
 
-      if(it->type().id()==ID_bool)
+      if(it->type().id() == ID_bool)
       {
         extractbit_exprt bit_extract(rhs, offset_constant);
         ++offset;
         synth_force_rec(*it, bit_extract);
       }
-      else if(it->type().id()==ID_signedbv ||
-              it->type().id()==ID_unsignedbv)
+      else if(
+        it->type().id() == ID_signedbv || it->type().id() == ID_unsignedbv)
       {
         auto width = get_width(it->type());
         extractbits_exprt bit_extract(rhs, offset_constant, it->type());
         synth_force_rec(*it, bit_extract);
-        offset+=width;
+        offset += width;
       }
       else
       {
@@ -2201,14 +2186,14 @@ void verilog_synthesist::synth_force_rec(
   }
 
   // get symbol
-  const symbolt &symbol=assignment_symbol(lhs);
+  const symbolt &symbol = assignment_symbol(lhs);
 
   // turn into combinational assignment
-  assignmentt &assignment=assignments[symbol.name];
+  assignmentt &assignment = assignments[symbol.name];
 
-  if(assignment.type==event_guardt::NONE)
+  if(assignment.type == event_guardt::NONE)
   {
-    assignment.type=event_guardt::COMBINATIONAL;
+    assignment.type = event_guardt::COMBINATIONAL;
   }
   else if(assignment.type == event_guardt::CLOCK)
   {
@@ -2325,7 +2310,7 @@ void verilog_synthesist::synth_assert_assume_cover(
   const verilog_assert_assume_cover_statementt &statement)
 {
   const irep_idt &identifier = statement.identifier();
-  symbolt &symbol=symbol_table_lookup(identifier);
+  symbolt &symbol = symbol_table_lookup(identifier);
 
   // This covers both immediate assert/cover and procedural concurrent assert/cover.
   // Cadence SMV assertions are treated as immediate assertions,
@@ -2463,7 +2448,7 @@ void verilog_synthesist::synth_assert_assume_cover(
 {
   // These are static concurrent assert/cover module items.
   const irep_idt &identifier = module_item.identifier();
-  symbolt &symbol=symbol_table_lookup(identifier);
+  symbolt &symbol = symbol_table_lookup(identifier);
 
   {
     exprt cond_for_comment = module_item.condition();
@@ -2489,9 +2474,19 @@ void verilog_synthesist::synth_assert_assume_cover(
     symbol.location.set_comment(to_string(cond_for_comment));
   }
 
-  construct=constructt::OTHER;
+  // Use ALWAYS_COMB context to allow function call inlining in
+  // assertions (IEEE 1800-2017 16.14.6).
+  construct = constructt::ALWAYS_COMB;
+  event_guard = event_guardt::NONE;
+
+  value_mapt assertion_value_map;
+  auto old_value_map = value_map;
+  value_map = &assertion_value_map;
 
   auto cond = synth_expr(module_item.condition(), symbol_statet::SYMBOL);
+
+  value_map = old_value_map;
+  construct = constructt::OTHER;
 
   // defaults apply
   apply_defaults(cond);
@@ -2558,7 +2553,7 @@ Function: verilog_synthesist::synth_assume
 void verilog_synthesist::synth_assume(
   const verilog_assume_statementt &statement)
 {
-  construct=constructt::OTHER;
+  construct = constructt::OTHER;
 
   auto condition = synth_expr(statement.condition(), symbol_statet::CURRENT);
 
@@ -2584,7 +2579,8 @@ Function: verilog_synthesist::synth_assume
 void verilog_synthesist::synth_assume(
   const verilog_assert_assume_cover_module_itemt &module_item)
 {
-  auto condition = synth_expr(to_binary_expr(module_item).op0(), symbol_statet::SYMBOL);
+  auto condition =
+    synth_expr(to_binary_expr(module_item).op0(), symbol_statet::SYMBOL);
 
   // add it as an invariant
   invars.push_back(condition);
@@ -2607,7 +2603,7 @@ exprt verilog_synthesist::case_comparison(
   const exprt &pattern)
 {
   // the pattern has the max type, not the case operand
-  const typet &pattern_type=pattern.type();
+  const typet &pattern_type = pattern.type();
 
   // we need to take case of ?, x, z in the pattern
   if(is_aval_bval(pattern_type))
@@ -2652,7 +2648,7 @@ exprt verilog_synthesist::synth_case_values(
   const exprt &values,
   const exprt &case_operand)
 {
-  if(values.id()==ID_default)
+  if(values.id() == ID_default)
     return true_exprt();
 
   exprt::operandst op;
@@ -2683,7 +2679,7 @@ Function: verilog_synthesist::synth_case
 void verilog_synthesist::synth_case(
   const verilog_case_statement_baset &statement)
 {
-  if(statement.operands().size()<1)
+  if(statement.operands().size() < 1)
   {
     throw errort().with_location(statement.source_location())
       << "case statement expected to have at least one operand";
@@ -2695,14 +2691,14 @@ void verilog_synthesist::synth_case(
 
   // we convert the rest to if-then-else
   exprt start;
-  exprt *last_if=&start;
+  exprt *last_if = &start;
   std::optional<verilog_statementt> default_case;
 
-  for(unsigned i=1; i<statement.operands().size(); i++)
+  for(unsigned i = 1; i < statement.operands().size(); i++)
   {
-    const exprt &e=statement.operands()[i];
+    const exprt &e = statement.operands()[i];
 
-    if(e.id()!=ID_case_item)
+    if(e.id() != ID_case_item)
     {
       throw errort() << "expected case_item";
     }
@@ -2750,8 +2746,7 @@ Function: verilog_synthesist::synth_if
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_if(
-  const verilog_ift &statement)
+void verilog_synthesist::synth_if(const verilog_ift &statement)
 {
   auto if_cond = synth_expr(statement.cond(), symbol_statet::CURRENT);
 
@@ -2762,7 +2757,7 @@ void verilog_synthesist::synth_if(
   }
 
   // save current value_map pointer
-  value_mapt *old_map=value_map;
+  value_mapt *old_map = value_map;
 
   // produce new value maps
   value_mapt true_map(*value_map), false_map(*value_map);
@@ -2775,19 +2770,19 @@ void verilog_synthesist::synth_if(
 
   // 'then' case
   {
-    value_map=&true_map;
+    value_map = &true_map;
     synth_statement(statement.then_case());
   }
 
   // 'else' case
   if(statement.has_else_case())
   {
-    value_map=&false_map;
+    value_map = &false_map;
     synth_statement(statement.else_case());
   }
 
   // restore and merge
-  value_map=old_map;
+  value_map = old_map;
 
   // merge current map
   merge(
@@ -2823,12 +2818,14 @@ void verilog_synthesist::merge(
   changed.insert(true_map.changed.begin(), true_map.changed.end());
   changed.insert(false_map.changed.begin(), false_map.changed.end());
 
-  for(const auto & it : changed)
+  for(const auto &it : changed)
   {
-    const symbolt &symbol=ns.lookup(it);
+    const symbolt &symbol = ns.lookup(it);
 
-    exprt true_value=current_value(true_map, symbol, use_previous_assignments);
-    exprt false_value=current_value(false_map, symbol, use_previous_assignments);
+    exprt true_value =
+      current_value(true_map, symbol, use_previous_assignments);
+    exprt false_value =
+      current_value(false_map, symbol, use_previous_assignments);
 
     // this is a phi-node equivalent
     if_exprt value{guard, true_value, false_value, symbol.type};
@@ -2853,41 +2850,41 @@ Function: verilog_synthesist::synth_event_guard
 void verilog_synthesist::synth_event_guard(
   const verilog_event_guardt &statement)
 {
-  if(statement.operands().size()!=2)
+  if(statement.operands().size() != 2)
   {
     throw errort().with_location(statement.source_location())
       << "event_guard expected to have two operands";
   }
 
-  if(event_guard!=event_guardt::NONE)
+  if(event_guard != event_guardt::NONE)
   {
     throw errort().with_location(statement.source_location())
       << "event guard already specified";
   }
 
-  const exprt &event_guard_expr=statement.guard();
+  const exprt &event_guard_expr = statement.guard();
 
-  bool edge=false;
+  bool edge = false;
 
   // these guards are ORed
   exprt::operandst guards;
 
   forall_operands(it, event_guard_expr)
-    if(it->id()==ID_posedge || it->id()==ID_negedge)
+    if(it->id() == ID_posedge || it->id() == ID_negedge)
     {
-      edge=true;
+      edge = true;
 
-      if(it->operands().size()!=1)
+      if(it->operands().size() != 1)
       {
         throw errort().with_location(it->source_location())
           << "pos/negedge expected to have one operand";
       }
 
-      irep_idt identifier="conf::clock_enable_mode";
+      irep_idt identifier = "conf::clock_enable_mode";
 
       // check symbol_table for clock guard
 
-      if(symbol_table.symbols.find(identifier)!=symbol_table.symbols.end())
+      if(symbol_table.symbols.find(identifier) != symbol_table.symbols.end())
       {
         // found! we make it a guard
 
@@ -2905,29 +2902,34 @@ void verilog_synthesist::synth_event_guard(
       }
     }
 
-  event_guard=edge?event_guardt::CLOCK:event_guardt::COMBINATIONAL;
+  event_guard = edge ? event_guardt::CLOCK : event_guardt::COMBINATIONAL;
 
   if(guards.empty())
     synth_statement(statement.body());
   else
   {
     // new guards!
-    exprt guard_expr=disjunction(guards);
+    exprt guard_expr = disjunction(guards);
 
-    value_mapt *old_map=value_map;
+    value_mapt *old_map = value_map;
     value_mapt true_map(*value_map), false_map(*value_map);
     true_map.clear_changed();
     false_map.clear_changed();
 
-    value_map=&true_map;
+    value_map = &true_map;
     synth_statement(statement.body());
 
-    value_map=old_map;
-    merge(guard_expr, true_map.current, false_map.current, false, value_map->current);
+    value_map = old_map;
+    merge(
+      guard_expr,
+      true_map.current,
+      false_map.current,
+      false,
+      value_map->current);
     merge(guard_expr, true_map.final, false_map.final, true, value_map->final);
   }
 
-  event_guard=event_guardt::NONE;
+  event_guard = event_guardt::NONE;
 }
 
 /*******************************************************************\
@@ -2942,10 +2944,9 @@ Function: verilog_synthesist::synth_delay
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_delay(
-  const verilog_delayt &statement)
+void verilog_synthesist::synth_delay(const verilog_delayt &statement)
 {
-  if(statement.operands().size()!=2)
+  if(statement.operands().size() != 2)
   {
     throw errort().with_location(statement.source_location())
       << "delay expected to have two operands";
@@ -2968,7 +2969,7 @@ Function: verilog_synthesist::synth_for
 
 void verilog_synthesist::synth_for(const verilog_fort &statement)
 {
-  if(statement.operands().size()!=4)
+  if(statement.operands().size() != 4)
   {
     throw errort().with_location(statement.source_location())
       << "for expected to have four operands";
@@ -3076,9 +3077,10 @@ Function: verilog_synthesist::synth_prepostincdec
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_prepostincdec(const verilog_statementt &statement)
+void verilog_synthesist::synth_prepostincdec(
+  const verilog_statementt &statement)
 {
-  if(statement.operands().size()!=1)
+  if(statement.operands().size() != 1)
   {
     throw errort().with_location(statement.source_location())
       << statement.id() << " expected to have one operand";
@@ -3100,7 +3102,7 @@ void verilog_synthesist::synth_prepostincdec(const verilog_statementt &statement
     rhs = minus_exprt(op, one);
 
   verilog_blocking_assignt assignment{op, rhs};
-  assignment.add_source_location()=statement.source_location();
+  assignment.add_source_location() = statement.source_location();
 
   synth_statement(assignment);
 }
@@ -3117,10 +3119,9 @@ Function: verilog_synthesist::synth_while
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_while(
-  const verilog_whilet &statement)
+void verilog_synthesist::synth_while(const verilog_whilet &statement)
 {
-  if(statement.operands().size()!=2)
+  if(statement.operands().size() != 2)
   {
     throw errort().with_location(statement.source_location())
       << "while expected to have two operands";
@@ -3133,7 +3134,7 @@ void verilog_synthesist::synth_while(
   {
     loop_frame.value().continue_statement_states.clear();
 
-    exprt tmp_guard=statement.condition();
+    exprt tmp_guard = statement.condition();
     tmp_guard = typecast_exprt{tmp_guard, bool_typet{}};
     tmp_guard = synth_expr(tmp_guard, symbol_statet::CURRENT);
     simplify(tmp_guard, ns);
@@ -3145,7 +3146,8 @@ void verilog_synthesist::synth_while(
         << '\'';
     }
 
-    if(tmp_guard.is_false()) break;
+    if(tmp_guard.is_false())
+      break;
 
     // execute the body
     synth_statement(statement.body());
@@ -3193,10 +3195,9 @@ Function: verilog_synthesist::synth_repeat
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_repeat(
-  const verilog_repeatt &statement)
+void verilog_synthesist::synth_repeat(const verilog_repeatt &statement)
 {
-  if(statement.operands().size()!=2)
+  if(statement.operands().size() != 2)
   {
     throw errort().with_location(statement.source_location())
       << "repeat expected to have two operands";
@@ -3259,10 +3260,9 @@ Function: verilog_synthesist::synth_forever
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_forever(
-  const verilog_forevert &statement)
+void verilog_synthesist::synth_forever(const verilog_forevert &statement)
 {
-  if(statement.operands().size()!=1)
+  if(statement.operands().size() != 1)
   {
     throw errort().with_location(statement.source_location())
       << "forever expected to have one operand";
@@ -3297,13 +3297,13 @@ void verilog_synthesist::synth_function_call_or_task_enable(
     const symbol_exprt &function = to_symbol_expr(statement.function());
     const symbolt &symbol = ns.lookup(function);
 
-    if(symbol.type.id()!=ID_code)
+    if(symbol.type.id() != ID_code)
     {
       throw errort().with_location(statement.source_location())
         << "expected function or task as first operand";
     }
 
-    const code_typet &code_type=to_code_type(symbol.type);
+    const code_typet &code_type = to_code_type(symbol.type);
 
     // preserve the previous call frame, if any
     auto old_tf_frame = tf_frame;
@@ -3314,25 +3314,24 @@ void verilog_synthesist::synth_function_call_or_task_enable(
     // create a fresh call frame
     tf_frame = tf_framet{};
 
-    const code_typet::parameterst &parameters=
-      code_type.parameters();
+    const code_typet::parameterst &parameters = code_type.parameters();
 
     const exprt::operandst &actuals = statement.arguments();
 
-    if(parameters.size()!=actuals.size())
+    if(parameters.size() != actuals.size())
     {
       throw errort().with_location(statement.source_location())
         << "wrong number of arguments";
     }
 
     // do assignments to input parameters
-    for(unsigned i=0; i<parameters.size(); i++)
+    for(unsigned i = 0; i < parameters.size(); i++)
     {
-      const symbolt &a_symbol=ns.lookup(parameters[i].get_identifier());
+      const symbolt &a_symbol = ns.lookup(parameters[i].get_identifier());
       if(parameters[i].get_bool(ID_input))
       {
         verilog_blocking_assignt assignment{a_symbol.symbol_expr(), actuals[i]};
-        assignment.add_source_location()=statement.source_location();
+        assignment.add_source_location() = statement.source_location();
         synth_statement(assignment);
       }
     }
@@ -3358,13 +3357,13 @@ void verilog_synthesist::synth_function_call_or_task_enable(
     value_map->guard = entry_guard;
 
     // do assignments to output parameters
-    for(unsigned i=0; i<parameters.size(); i++)
+    for(unsigned i = 0; i < parameters.size(); i++)
     {
-      const symbolt &a_symbol=ns.lookup(parameters[i].get_identifier());
+      const symbolt &a_symbol = ns.lookup(parameters[i].get_identifier());
       if(parameters[i].get_bool(ID_output))
       {
         verilog_blocking_assignt assignment{actuals[i], a_symbol.symbol_expr()};
-        assignment.add_source_location()=statement.source_location();
+        assignment.add_source_location() = statement.source_location();
         synth_statement(assignment);
       }
     }
@@ -3383,10 +3382,9 @@ Function: verilog_synthesist::synth_statement
 
 \*******************************************************************/
 
-void verilog_synthesist::synth_statement(
-  const verilog_statementt &statement)
+void verilog_synthesist::synth_statement(const verilog_statementt &statement)
 {
-  if(statement.id()==ID_block)
+  if(statement.id() == ID_block)
     synth_block(to_verilog_block(statement));
   else if(statement.id() == ID_break)
     synth_break(to_verilog_break(statement));
@@ -3447,32 +3445,31 @@ void verilog_synthesist::synth_statement(
   }
   else if(statement.id() == ID_verilog_non_blocking_assign)
     synth_assign(to_verilog_assign(statement));
-  else if(statement.id()==ID_force)
+  else if(statement.id() == ID_force)
     synth_force(to_verilog_force(statement));
-  else if(statement.id()==ID_if)
+  else if(statement.id() == ID_if)
     synth_if(to_verilog_if(statement));
-  else if(statement.id()==ID_event_guard)
+  else if(statement.id() == ID_event_guard)
     synth_event_guard(to_verilog_event_guard(statement));
-  else if(statement.id()==ID_delay)
+  else if(statement.id() == ID_delay)
     synth_delay(to_verilog_delay(statement));
-  else if(statement.id()==ID_for)
+  else if(statement.id() == ID_for)
     synth_for(to_verilog_for(statement));
-  else if(statement.id()==ID_while)
+  else if(statement.id() == ID_while)
     synth_while(to_verilog_while(statement));
-  else if(statement.id()==ID_repeat)
+  else if(statement.id() == ID_repeat)
     synth_repeat(to_verilog_repeat(statement));
   else if(statement.id() == ID_return)
     synth_return(to_verilog_return(statement));
-  else if(statement.id()==ID_forever)
+  else if(statement.id() == ID_forever)
     synth_forever(to_verilog_forever(statement));
-  else if(statement.id()==ID_function_call)
+  else if(statement.id() == ID_function_call)
     synth_function_call_or_task_enable(to_verilog_function_call(statement));
-  else if(statement.id()==ID_preincrement ||
-          statement.id()==ID_predecrement ||
-          statement.id()==ID_postincrement ||
-          statement.id()==ID_postdecrement)
+  else if(
+    statement.id() == ID_preincrement || statement.id() == ID_predecrement ||
+    statement.id() == ID_postincrement || statement.id() == ID_postdecrement)
     synth_prepostincdec(statement);
-  else if(statement.id()==ID_decl)
+  else if(statement.id() == ID_decl)
   {
     auto decl_class = to_verilog_decl(statement).get_class();
 
@@ -3482,7 +3479,7 @@ void verilog_synthesist::synth_statement(
     else
       synth_decl(to_verilog_decl(statement));
   }
-  else if(statement.id()==ID_skip)
+  else if(statement.id() == ID_skip)
   {
     // do nothing
   }
@@ -3515,10 +3512,10 @@ void verilog_synthesist::synth_module_item(
   const verilog_module_itemt &module_item,
   transt &trans)
 {
-  if(module_item.id()==ID_specify)
+  if(module_item.id() == ID_specify)
   {
   }
-  else if(module_item.id()==ID_decl)
+  else if(module_item.id() == ID_decl)
   {
     auto decl_class = to_verilog_decl(module_item).get_class();
 
@@ -3542,15 +3539,15 @@ void verilog_synthesist::synth_module_item(
     module_item.id() == ID_verilog_always_ff ||
     module_item.id() == ID_verilog_always_latch)
     synth_always_base(to_verilog_always_base(module_item));
-  else if(module_item.id()==ID_initial)
+  else if(module_item.id() == ID_initial)
     synth_initial(to_verilog_initial(module_item));
-  else if(module_item.id()==ID_continuous_assign)
+  else if(module_item.id() == ID_continuous_assign)
     synth_continuous_assign(to_verilog_continuous_assign(module_item));
-  else if(module_item.id()==ID_inst)
+  else if(module_item.id() == ID_inst)
     synth_module_instance(to_verilog_inst(module_item), trans);
-  else if(module_item.id()==ID_inst_builtin)
+  else if(module_item.id() == ID_inst_builtin)
     synth_module_instance_builtin(to_verilog_inst_builtin(module_item), trans);
-  else if(module_item.id()==ID_generate_block)
+  else if(module_item.id() == ID_generate_block)
   {
     auto &block_items = to_verilog_generate_block(module_item).module_items();
 
@@ -3590,7 +3587,7 @@ void verilog_synthesist::synth_module_item(
   {
     synth_assertion_item(to_verilog_assertion_item(module_item));
   }
-  else if(module_item.id()==ID_task)
+  else if(module_item.id() == ID_task)
   {
     // ignore for now
   }
@@ -3726,7 +3723,8 @@ exprt verilog_synthesist::symbol_expr(
   const symbolt &symbol,
   curr_or_nextt curr_or_next) const
 {
-  exprt result=exprt(curr_or_next==NEXT?ID_next_symbol:ID_symbol, symbol.type);
+  exprt result =
+    exprt(curr_or_next == NEXT ? ID_next_symbol : ID_symbol, symbol.type);
   result.set(ID_identifier, symbol.name);
 
   // The type may need to be lowered
@@ -3754,7 +3752,7 @@ void verilog_synthesist::synth_assignments(
   exprt &constraints)
 {
   if(new_value.is_nil())
-    new_value=symbol_expr(symbol, CURRENT);
+    new_value = symbol_expr(symbol, CURRENT);
 
   // see if wire is used to define itself
   if(!symbol.is_lvalue)
@@ -3786,18 +3784,18 @@ Function: verilog_synthesist::synth_assignments
 
 void verilog_synthesist::synth_assignments(transt &trans)
 {
-  for(const auto & it : local_symbols)
+  for(const auto &it : local_symbols)
   {
-    symbolt &symbol=symbol_table_lookup(it);
+    symbolt &symbol = symbol_table_lookup(it);
 
     if(symbol.is_lvalue && !symbol.is_macro && symbol.type.id() != ID_integer)
     {
-      assignmentt &assignment=assignments[symbol.name];
+      assignmentt &assignment = assignments[symbol.name];
 
       if(assignment.is_cycle_local)
         continue; // ignore
 
-      if(assignment.type==event_guardt::COMBINATIONAL)
+      if(assignment.type == event_guardt::COMBINATIONAL)
       {
         warning().source_location = symbol.location;
         warning() << "Making " << symbol.display_name() << " a wire" << eom;
@@ -3809,37 +3807,31 @@ void verilog_synthesist::synth_assignments(transt &trans)
         // only state variables can be initialized
 
         if(!assignment.init.value.is_nil())
-          synth_assignments(symbol, CURRENT,
-                            assignment.init.value,
-                            trans.op1());
+          synth_assignments(
+            symbol, CURRENT, assignment.init.value, trans.op1());
 
-        synth_assignments(symbol, NEXT,
-                          assignment.next.value,
-                          trans.op2());
+        synth_assignments(symbol, NEXT, assignment.next.value, trans.op2());
 
         // This is a proper state variable
         symbol.is_state_var = true;
       }
       else
       {
-        synth_assignments(symbol, CURRENT,
-                          assignment.next.value,
-                          trans.invar());
+        synth_assignments(
+          symbol, CURRENT, assignment.next.value, trans.invar());
       }
     }
   }
 
-  for(const auto & it : new_wires)
+  for(const auto &it : new_wires)
   {
-    symbolt &symbol=symbol_table_lookup(it);
-    assignmentt &assignment=assignments[symbol.name];
+    symbolt &symbol = symbol_table_lookup(it);
+    assignmentt &assignment = assignments[symbol.name];
 
     DATA_INVARIANT(
       assignment.next.value.is_not_nil(), "must have assignment value");
 
-    synth_assignments(symbol, CURRENT,
-                      assignment.next.value,
-                      trans.invar());
+    synth_assignments(symbol, CURRENT, assignment.next.value, trans.invar());
   }
 
   // post-process initial state predicate to get rid
@@ -3886,10 +3878,10 @@ exprt verilog_synthesist::current_value(
   }
   else // latch
   {
-    value_mapt::mapt::symbol_mapt::const_iterator it=
+    value_mapt::mapt::symbol_mapt::const_iterator it =
       map.symbol_map.find(symbol.name);
 
-    if(it!=map.symbol_map.end())
+    if(it != map.symbol_map.end())
       return it->second; // found
 
     if(use_previous_assignments)
@@ -3918,7 +3910,7 @@ exprt verilog_synthesist::current_value(
     {
       // Initial state computation, i.e., this is a value _before_ the
       // initial state  -- make it non-deterministic
-      exprt result=exprt(ID_nondet_symbol, symbol.type);
+      exprt result = exprt(ID_nondet_symbol, symbol.type);
       result.set(ID_identifier, symbol.name);
       result.set("initial_value", true);
       return result;
@@ -3973,7 +3965,7 @@ void verilog_synthesist::post_process_initial(exprt &constraints)
 
   Forall_operands(it, constraints)
   {
-    if(it->id()==ID_equal && it->operands().size()==2)
+    if(it->id() == ID_equal && it->operands().size() == 2)
     {
       exprt &lhs = to_equal_expr(*it).lhs(), &rhs = to_equal_expr(*it).rhs();
 
@@ -3985,7 +3977,7 @@ void verilog_synthesist::post_process_initial(exprt &constraints)
       if(lhs.id() == ID_symbol && rhs.id() == ID_nondet_symbol)
 #endif
       {
-        if(counters.count(rhs)==1)
+        if(counters.count(rhs) == 1)
         {
           // not used elsewhere
           it->set(ID_value, ID_true);
@@ -4056,8 +4048,8 @@ transt verilog_synthesist::convert_module_items(const symbolt &symbol)
 
   // now convert the module items
 
-  transt trans{ID_trans, conjunction({}), conjunction({}), conjunction({}),
-               symbol.type};
+  transt trans{
+    ID_trans, conjunction({}), conjunction({}), conjunction({}), symbol.type};
 
   // first find any default disable iff at this level
   for(const auto &module_item : verilog_module.module_items())
@@ -4069,12 +4061,12 @@ transt verilog_synthesist::convert_module_items(const symbolt &symbol)
 
   synth_assignments(trans);
 
-  for(const auto & it : invars)
+  for(const auto &it : invars)
     trans.invar().add_to_operands(it);
 
-  trans.invar()=conjunction(trans.invar().operands());
-  trans.init()=conjunction(trans.init().operands());
-  trans.trans()=conjunction(trans.trans().operands());
+  trans.invar() = conjunction(trans.invar().operands());
+  trans.init() = conjunction(trans.init().operands());
+  trans.trans() = conjunction(trans.trans().operands());
 
 #if 0
   // debug
@@ -4114,7 +4106,7 @@ Function: verilog_synthesist::synthesis
 
 transt verilog_synthesist::synthesis()
 {
-  symbolt &symbol=symbol_table_lookup(module);
+  symbolt &symbol = symbol_table_lookup(module);
 
   // done already?
   if(symbol.value.id() == ID_trans)

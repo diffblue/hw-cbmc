@@ -1,0 +1,9 @@
+CORE
+modport_import1.sv
+--bound 1
+^\[main\.r\.p1\] always main\.r\.port\.get\(\) == 171: PROVED up to bound 1
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Modport with import of function (IEEE 1800-2017 25.5.4).
