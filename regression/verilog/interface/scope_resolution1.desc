@@ -1,0 +1,9 @@
+CORE
+scope_resolution1.sv
+--bound 1
+^\[main\.p1\] always main\.bus\.data == 171: PROVED up to bound 1
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Interface scope resolution operator (IEEE 1800-2017 25.3).
