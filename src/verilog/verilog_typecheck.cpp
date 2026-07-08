@@ -797,24 +797,57 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
   }
   else
   {
-    irep_idt base_name =
-      to_verilog_identifier_expr(statement.function()).base_name();
+    irep_idt full_identifier;
+    irep_idt display_name;
 
-    // look it up
-    irep_idt full_identifier =
-      id2string(module_instance) + "." + id2string(base_name);
+    if(statement.function().id() == ID_hierarchical_identifier)
+    {
+      // Hierarchical task/function call, e.g., instance.task_name(...)
+      auto &hi = to_hierarchical_identifier_expr(statement.function());
+      convert_expr(hi.lhs());
+
+      const irep_idt &rhs_base_name = hi.rhs().base_name();
+
+      const irep_idt &lhs_identifier = [](const exprt &lhs)
+      {
+        if(lhs.id() == ID_symbol)
+          return to_symbol_expr(lhs).identifier();
+        else if(lhs.id() == ID_hierarchical_identifier)
+          return to_hierarchical_identifier_expr(lhs).identifier();
+        else
+        {
+          throw errort().with_location(lhs.source_location())
+            << "expected symbol or hierarchical identifier on lhs of `.'";
+        }
+      }(hi.lhs());
+
+      full_identifier =
+        id2string(lhs_identifier) + "." + id2string(rhs_base_name);
+      display_name = rhs_base_name;
+    }
+    else
+    {
+      irep_idt base_name =
+        to_verilog_identifier_expr(statement.function()).base_name();
+
+      // look it up
+      full_identifier = id2string(module_instance) + "." + id2string(base_name);
+
+      const symbolt *symbol;
+      if(ns.lookup(full_identifier, symbol))
+      {
+        // not there? Try compilation-unit scope.
+        full_identifier = verilog_unit_scope_identifier(base_name);
+      }
+
+      display_name = base_name;
+    }
 
     const symbolt *symbol;
     if(ns.lookup(full_identifier, symbol))
     {
-      // not there? Try compilation-unit scope.
-      full_identifier = verilog_unit_scope_identifier(base_name);
-
-      if(ns.lookup(full_identifier, symbol))
-      {
-        throw errort().with_location(statement.function().source_location())
-          << "unknown function or task `" << base_name << "'";
-      }
+      throw errort().with_location(statement.function().source_location())
+        << "unknown function or task `" << display_name << "'";
     }
 
     if(symbol->type.id() != ID_code)
