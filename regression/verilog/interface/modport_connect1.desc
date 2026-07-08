@@ -1,0 +1,9 @@
+CORE
+modport_connect1.sv
+--bound 1
+^\[main\.s\.p1\] always main\.s\.port\.data == 171: PROVED up to bound 1
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Explicit modport selection in port connection (IEEE 1800-2017 25.5.3).
