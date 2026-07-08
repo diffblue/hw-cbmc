@@ -2496,9 +2496,18 @@ void verilog_synthesist::synth_assert_assume_cover(
     symbol.location.set_comment(to_string(cond_for_comment));
   }
 
-  construct=constructt::OTHER;
+  // Set up a combinational context to allow function call inlining
+  // in property expressions.
+  construct = constructt::ALWAYS_COMB;
+  event_guard = event_guardt::NONE;
+
+  value_mapt property_value_map;
+  DATA_INVARIANT(value_map == nullptr, "always/initial must not nest");
+  value_map = &property_value_map;
 
   auto cond = synth_expr(module_item.condition(), symbol_statet::SYMBOL);
+
+  value_map = nullptr;
 
   // defaults apply
   apply_defaults(cond);
