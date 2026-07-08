@@ -62,26 +62,94 @@ void verilog_elaborate_compilation_unit(
     }
     else if(item.id() == ID_decl)
     {
-      // compilation-unit scoped nets, variables, typedefs, functions,
-      // tasks, parameters
-      try
+      auto &decl = to_verilog_decl(item);
+      auto decl_class = decl.get_class();
+
+      // Out-of-body method definition for an interface (1800-2017 25.4.4)
+      if(
+        (decl_class == ID_function || decl_class == ID_task) &&
+        !decl.declarators().empty() &&
+        decl.declarators()[0].get_string(ID_verilog_scope_prefix) != "")
       {
-        verilog_typecheckt verilog_typecheck(
-          parse_tree.standard,
-          warn_implicit_nets,
-          symbol_table,
-          message_handler);
-        verilog_typecheck.typecheck_decl(to_verilog_decl(item));
-      }
-      catch(const typecheckt::errort &error)
-      {
-        if(!error.what().empty())
+        // Merge the out-of-body definition into the interface source.
+        auto scope_prefix =
+          decl.declarators()[0].get_string(ID_verilog_scope_prefix);
+        // Remove trailing '.' to get interface name
+        auto interface_name = scope_prefix.substr(0, scope_prefix.size() - 1);
+        auto source_symbol_id = "Verilog::" + interface_name + "$source";
+
+        auto *source_symbol = symbol_table.get_writeable(source_symbol_id);
+
+        if(source_symbol == nullptr)
         {
-          throw ebmc_errort{}.with_location(error.source_location())
-            << error.what();
+          throw ebmc_errort{}.with_location(decl.source_location())
+            << "interface `" << interface_name
+            << "' not found for out-of-body method definition";
         }
-        else
-          throw ebmc_errort{};
+
+        // Find the extern prototype in the interface items and replace it
+        // with the full definition.
+        auto &interface_source = static_cast<verilog_module_sourcet &>(
+          source_symbol->type.add(ID_module_source));
+        auto base_name = decl.declarators()[0].get(ID_base_name);
+
+        bool found_extern = false;
+        for(auto &iface_item : interface_source.module_items())
+        {
+          if(
+            iface_item.id() == ID_decl &&
+            to_verilog_decl(iface_item).get_class() == decl_class &&
+            to_verilog_decl(iface_item).get_bool(ID_extern))
+          {
+            auto &extern_decl = to_verilog_decl(iface_item);
+            if(
+              !extern_decl.declarators().empty() &&
+              extern_decl.declarators()[0].get(ID_base_name) == base_name)
+            {
+              // Replace the extern prototype with the full definition.
+              // Keep ports from the out-of-body definition and add the body.
+              iface_item = static_cast<const verilog_module_itemt &>(
+                static_cast<const exprt &>(decl));
+              // Remove the scope prefix and extern flag from the merged decl
+              auto &merged = static_cast<verilog_declt &>(iface_item);
+              merged.declarators()[0].remove(ID_verilog_scope_prefix);
+              merged.remove(ID_extern);
+              found_extern = true;
+              break;
+            }
+          }
+        }
+
+        if(!found_extern)
+        {
+          throw ebmc_errort{}.with_location(decl.source_location())
+            << "no matching extern prototype for `" << base_name
+            << "' in interface `" << interface_name << "'";
+        }
+      }
+      else
+      {
+        // compilation-unit scoped nets, variables, typedefs, functions,
+        // tasks, parameters
+        try
+        {
+          verilog_typecheckt verilog_typecheck(
+            parse_tree.standard,
+            warn_implicit_nets,
+            symbol_table,
+            message_handler);
+          verilog_typecheck.typecheck_decl(to_verilog_decl(item));
+        }
+        catch(const typecheckt::errort &error)
+        {
+          if(!error.what().empty())
+          {
+            throw ebmc_errort{}.with_location(error.source_location())
+              << error.what();
+          }
+          else
+            throw ebmc_errort{};
+        }
       }
     }
     else if(
