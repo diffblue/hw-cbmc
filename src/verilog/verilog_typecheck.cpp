@@ -942,7 +942,8 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
   }
   else
   {
-    irep_idt base_name;
+    irep_idt full_identifier;
+    irep_idt display_name;
     const symbolt *symbol;
 
     if(statement.function().id() == ID_verilog_package_scope)
@@ -957,11 +958,10 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
       }
 
       auto package_base = package_scope.package_base_name();
-      base_name =
+      irep_idt base_name =
         to_verilog_identifier_expr(package_scope.identifier()).base_name();
 
-      irep_idt full_identifier =
-        verilog_package_identifier(package_base, base_name);
+      full_identifier = verilog_package_identifier(package_base, base_name);
 
       if(ns.lookup(full_identifier, symbol))
       {
@@ -970,20 +970,48 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
           << '\'';
       }
     }
+    else if(statement.function().id() == ID_hierarchical_identifier)
+    {
+      // Hierarchical task/function call into a module or interface
+      // instance, e.g., instance.task_name(...)
+      auto &hi = to_hierarchical_identifier_expr(statement.function());
+      convert_expr(hi.lhs());
+
+      if(
+        hi.lhs().id() != ID_symbol ||
+        hi.lhs().type().id() != ID_verilog_module_instance)
+      {
+        // e.g., a method call, such as q.push_back(1)
+        throw errort().with_location(statement.function().source_location())
+          << "expected identifier as task";
+      }
+
+      const irep_idt &lhs_identifier = to_symbol_expr(hi.lhs()).identifier();
+      const irep_idt &rhs_base_name = hi.rhs().base_name();
+
+      full_identifier =
+        id2string(lhs_identifier) + "." + id2string(rhs_base_name);
+      display_name = rhs_base_name;
+
+      if(ns.lookup(full_identifier, symbol))
+      {
+        throw errort().with_location(statement.function().source_location())
+          << "unknown function or task `" << display_name << "'";
+      }
+    }
     else if(statement.function().id() != ID_verilog_identifier)
     {
-      // e.g., a method call, such as q.push_back(1), or a hierarchical
-      // task call
       throw errort().with_location(statement.function().source_location())
         << "expected identifier as task";
     }
     else
     {
-      base_name = to_verilog_identifier_expr(statement.function()).base_name();
+      irep_idt base_name =
+        to_verilog_identifier_expr(statement.function()).base_name();
+      display_name = base_name;
 
       // look it up
-      irep_idt full_identifier =
-        id2string(module_instance) + "." + id2string(base_name);
+      full_identifier = id2string(module_instance) + "." + id2string(base_name);
 
       if(ns.lookup(full_identifier, symbol))
       {
@@ -993,7 +1021,7 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
         if(ns.lookup(full_identifier, symbol))
         {
           throw errort().with_location(statement.function().source_location())
-            << "unknown function or task `" << base_name << "'";
+            << "unknown function or task `" << display_name << "'";
         }
       }
     }
