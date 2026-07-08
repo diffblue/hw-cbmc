@@ -962,7 +962,6 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
   }
   else
   {
-    irep_idt base_name;
     const symbolt *symbol;
 
     if(statement.function().id() == ID_verilog_package_scope)
@@ -971,7 +970,7 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
       auto &package_scope = to_verilog_package_scope_expr(statement.function());
 
       auto package_base = package_scope.package_base_name();
-      base_name =
+      irep_idt base_name =
         to_verilog_identifier_expr(package_scope.identifier()).base_name();
 
       irep_idt full_identifier =
@@ -984,9 +983,48 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
           << '\'';
       }
     }
+    else if(statement.function().id() == ID_hierarchical_identifier)
+    {
+      // hierarchical task/function call, e.g., m.foo()
+      auto &hi = to_hierarchical_identifier_expr(statement.function());
+
+      convert_expr(hi.lhs());
+
+      irep_idt base_name = hi.rhs().base_name();
+
+      if(hi.lhs().type().id() != ID_verilog_module_instance)
+      {
+        throw errort().with_location(statement.function().source_location())
+          << "expected module instance on lhs of hierarchical function call";
+      }
+
+      const irep_idt &lhs_identifier = [](const exprt &lhs) -> const irep_idt &
+      {
+        if(lhs.id() == ID_symbol)
+          return to_symbol_expr(lhs).identifier();
+        else if(lhs.id() == ID_hierarchical_identifier)
+          return to_hierarchical_identifier_expr(lhs).identifier();
+        else
+        {
+          throw errort().with_location(lhs.source_location())
+            << "expected symbol or hierarchical identifier on lhs of `.'";
+        }
+      }(hi.lhs());
+
+      irep_idt full_identifier =
+        id2string(lhs_identifier) + "." + id2string(base_name);
+
+      if(ns.lookup(full_identifier, symbol))
+      {
+        throw errort().with_location(statement.function().source_location())
+          << "unknown function or task `" << base_name << "' in `"
+          << lhs_identifier << '\'';
+      }
+    }
     else
     {
-      base_name = to_verilog_identifier_expr(statement.function()).base_name();
+      irep_idt base_name =
+        to_verilog_identifier_expr(statement.function()).base_name();
 
       // look it up
       irep_idt full_identifier =
