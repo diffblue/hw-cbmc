@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/ebmc_util.h>
 #include <util/ieee_float.h>
 #include <util/mathematical_types.h>
+#include <util/prefix.h>
 
 #include "verilog_expr.h"
 #include "verilog_typecheck_expr.h"
@@ -512,6 +513,51 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   }
   else if(src.id() == ID_verilog_class_type)
   {
+    auto identifier = src.get(ID_identifier);
+
+    if(identifier.empty())
+    {
+      const auto base_name = src.get(ID_base_name);
+
+      std::vector<irep_idt> candidates;
+      static const std::string package_prefix = "Verilog::package::";
+
+      if(!current_class_identifier.empty())
+        candidates.emplace_back(
+          id2string(current_class_identifier) + "::" + id2string(base_name));
+
+      if(has_prefix(id2string(module_identifier), package_prefix))
+      {
+        auto package_name =
+          std::string{id2string(module_identifier), package_prefix.size()};
+        candidates.push_back(
+          verilog_package_identifier(package_name, base_name));
+      }
+      else if(!module_identifier.empty())
+      {
+        candidates.emplace_back(
+          id2string(module_identifier) + "::" + id2string(base_name));
+      }
+
+      candidates.push_back(verilog_module_symbol(base_name));
+
+      for(const auto &candidate : candidates)
+      {
+        const symbolt *symbol;
+        if(
+          !ns.lookup(candidate, symbol) &&
+          symbol->type.id() == ID_verilog_class_type)
+        {
+          auto result = symbol->type;
+          result.add_source_location() = source_location;
+          return result;
+        }
+      }
+
+      throw errort{}.with_location(source_location)
+        << "unknown class `" << base_name << '\'';
+    }
+
     return src;
   }
   else if(src.id() == ID_verilog_interface)

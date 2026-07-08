@@ -1,7 +1,11 @@
 CORE
 parameterized_class1.sv
---show-parse
-^Class: stack$
+--show-symbol-table
+^  Verilog::stack$
+^  Verilog::stack::T$
+^  Verilog::stack::DEPTH$
+^  Verilog::stack::mem$
+^  Verilog::stack::top$
 ^EXIT=0$
 ^SIGNAL=0$
 --

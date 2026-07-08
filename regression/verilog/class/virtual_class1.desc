@@ -1,8 +1,9 @@
 CORE
 virtual_class1.sv
---show-parse
-^Class: myBase$
-^Class: myClass$
+--show-symbol-table
+^  Verilog::myBase::area$
+^  Verilog::myClass::width$
+^  Verilog::myClass::area$
 ^EXIT=0$
 ^SIGNAL=0$
 --

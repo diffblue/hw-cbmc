@@ -1,7 +1,8 @@
 CORE
 class1.sv
---show-parse
-^Class: myClass$
+--show-symbol-table
+^  Verilog::myClass$
+^  Verilog::myClass::my_parameter$
 ^EXIT=0$
 ^SIGNAL=0$
 --

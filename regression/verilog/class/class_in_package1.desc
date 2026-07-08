@@ -1,8 +1,9 @@
 CORE
 class_in_package1.sv
---show-parse
-^Package: p$
-^  \* base_name: pc$
+--show-symbol-table
+^  Verilog::package::p$
+^  Verilog::p::pc$
+^  Verilog::p::pc::x$
 ^EXIT=0$
 ^SIGNAL=0$
 --

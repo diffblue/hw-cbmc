@@ -61,6 +61,10 @@ verilog_typecheck_exprt::hierarchical_identifier(irep_idt base_name) const
     return id2string(function_or_task_name) + "." + named_block +
            id2string(base_name);
   }
+  else if(!current_class_identifier.empty())
+  {
+    return id2string(current_class_identifier) + "::" + id2string(base_name);
+  }
   else if(has_prefix(id2string(module_identifier), package_prefix))
   {
     auto package_name =
@@ -1632,6 +1636,16 @@ const symbolt *verilog_typecheck_exprt::resolve(const irep_idt base_name)
 
     auto full_identifier =
       id2string(function_or_task_name) + "." + id2string(base_name);
+
+    const symbolt *symbol;
+    if(!ns.lookup(full_identifier, symbol))
+      return symbol; // found!
+  }
+
+  if(!current_class_identifier.empty())
+  {
+    auto full_identifier =
+      id2string(current_class_identifier) + "::" + id2string(base_name);
 
     const symbolt *symbol;
     if(!ns.lookup(full_identifier, symbol))

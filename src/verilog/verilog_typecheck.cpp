@@ -315,6 +315,59 @@ void verilog_typecheckt::convert_function_or_task(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::convert_class
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::convert_class(verilog_classt &class_decl)
+{
+  const auto old_class_identifier = current_class_identifier;
+  current_class_identifier = class_identifier(class_decl.base_name());
+
+  for(auto &item : class_decl.module_items())
+  {
+    if(item.id() == ID_decl)
+    {
+      auto &decl = to_verilog_decl(item);
+
+      if(decl.get_class() == ID_function || decl.get_class() == ID_task)
+        convert_function_or_task(to_verilog_function_or_task_decl(item));
+      else
+        convert_decl(decl);
+    }
+    else if(
+      item.id() == ID_parameter_decl || item.id() == ID_local_parameter_decl)
+    {
+      // already elaborated
+    }
+    else if(item.id() == ID_verilog_class)
+    {
+      convert_class(to_verilog_class(item));
+    }
+    else if(
+      item.id() == ID_verilog_constraint ||
+      item.id() == ID_verilog_covergroup || item.id() == ID_verilog_empty_item)
+    {
+      // accepted by the parser, but not semantically processed yet
+    }
+    else
+    {
+      throw errort().with_location(item.source_location())
+        << "unexpected class item: " << item.id();
+    }
+  }
+
+  current_class_identifier = old_class_identifier;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::elaborate_constant_function_call
 
   Inputs:
@@ -1632,6 +1685,10 @@ void verilog_typecheckt::convert_module_item(
   else if(module_item.id() == ID_verilog_empty_item)
   {
   }
+  else if(module_item.id() == ID_verilog_class)
+  {
+    convert_class(to_verilog_class(module_item));
+  }
   else if(module_item.id() == ID_verilog_smv_using)
   {
   }
@@ -1967,6 +2024,30 @@ void verilog_typecheckt::typecheck_parameter_decl(
 
   for(auto identifier : symbols_added)
     elaborate_symbol_rec(identifier);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::typecheck_class
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::typecheck_class(const verilog_classt &class_decl)
+{
+  auto class_copy = class_decl;
+
+  collect_symbols(class_copy);
+
+  for(auto identifier : symbols_added)
+    elaborate_symbol_rec(identifier);
+
+  convert_class(class_copy);
 }
 
 /*******************************************************************\
