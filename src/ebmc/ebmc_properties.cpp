@@ -8,6 +8,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "ebmc_properties.h"
 
+#include <util/std_expr.h>
+
 #include <langapi/language.h>
 #include <langapi/language_util.h>
 #include <langapi/mode.h>
@@ -15,6 +17,32 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <verilog/sva_expr.h>
 
 #include "ebmc_error.h"
+
+/// Update symbol expression types in the given expression tree
+/// to match the symbol table. This is needed when interface port
+/// members have their types updated after the property was type-checked
+/// (e.g., due to parameterized interfaces).
+static void fix_symbol_types(exprt &expr, const namespacet &ns)
+{
+  for(auto &op : expr.operands())
+    fix_symbol_types(op, ns);
+
+  if(expr.id() == ID_symbol)
+  {
+    const symbolt *sym;
+    if(!ns.lookup(to_symbol_expr(expr).identifier(), sym))
+    {
+      // Only update if both types are the same kind of bitvector
+      // but differ in width (parameterized interface case).
+      if(
+        expr.type() != sym->type && expr.type().id() == sym->type.id() &&
+        expr.type().id() != ID_empty)
+      {
+        expr.type() = sym->type;
+      }
+    }
+  }
+}
 
 void ebmc_propertiest::propertyt::copy_results_from(
   const ebmc_propertiest::propertyt &src)
@@ -103,6 +131,11 @@ ebmc_propertiest ebmc_propertiest::from_transition_system(
         properties.properties.back().normalized_expr =
           normalize_property(symbol.value);
       }
+
+      // Fix symbol types that may have been updated after
+      // the property was type-checked (e.g., parameterized interfaces).
+      fix_symbol_types(properties.properties.back().normalized_expr, ns);
+      fix_symbol_types(properties.properties.back().original_expr, ns);
 
       message.debug() << "Normalized property: "
                       << from_expr(
