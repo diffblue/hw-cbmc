@@ -1825,11 +1825,42 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
       .with_source_location(expr);
   }
 
-  const irep_idt &lhs_identifier = [](const exprt &lhs) {
+  const irep_idt lhs_identifier = [&](const exprt &lhs) -> irep_idt
+  {
     if(lhs.id() == ID_symbol)
       return to_symbol_expr(lhs).identifier();
     else if(lhs.id() == ID_hierarchical_identifier)
       return to_hierarchical_identifier_expr(lhs).identifier();
+    else if(
+      lhs.id() == ID_verilog_bit_select &&
+      lhs.type().id() == ID_verilog_module_instance)
+    {
+      // Instance array element: bus[i] where bus is an array of
+      // module instances. Construct the identifier as "bus_id[i]".
+      auto &bit_select = to_verilog_bit_select_expr(lhs);
+      irep_idt array_id;
+      if(bit_select.src().id() == ID_symbol)
+        array_id = to_symbol_expr(bit_select.src()).identifier();
+      else
+      {
+        throw errort().with_location(lhs.source_location())
+          << "expected symbol as base of instance array subscript";
+      }
+      // The index must be a constant for instance array access.
+      if(!bit_select.index().is_constant())
+      {
+        throw errort().with_location(lhs.source_location())
+          << "instance array index must be a constant";
+      }
+      auto index_opt =
+        numeric_cast<mp_integer>(to_constant_expr(bit_select.index()));
+      if(!index_opt.has_value())
+      {
+        throw errort().with_location(lhs.source_location())
+          << "instance array index must be a constant";
+      }
+      return id2string(array_id) + '[' + integer2string(*index_opt) + ']';
+    }
     else
     {
       throw errort().with_location(lhs.source_location())
