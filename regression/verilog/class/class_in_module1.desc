@@ -1,7 +1,8 @@
 CORE
 class_in_module1.sv
---show-parse
-^  \* base_name: local_class$
+--show-symbol-table
+^  Verilog::main::local_class$
+^  Verilog::main::local_class::x$
 ^EXIT=0$
 ^SIGNAL=0$
 --

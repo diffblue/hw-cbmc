@@ -1,9 +1,11 @@
 CORE
 interface_class1.sv
---show-parse
-^Class: myInterface$
-^Class: myOtherInterface$
-^Class: myClass$
+--show-symbol-table
+^  Verilog::myInterface::get$
+^  Verilog::myOtherInterface::put$
+^  Verilog::myClass::x$
+^  Verilog::myClass::get$
+^  Verilog::myClass::put$
 ^EXIT=0$
 ^SIGNAL=0$
 --

@@ -2820,8 +2820,34 @@ class verilog_classt : public verilog_item_containert
 {
 public:
   explicit verilog_classt(irep_idt _base_name)
-    : verilog_item_containert(ID_verilog_module, _base_name)
+    : verilog_item_containert(ID_verilog_class, _base_name)
   {
+  }
+
+  using parameter_port_declst = std::vector<verilog_parameter_declt>;
+
+  const parameter_port_declst &parameter_port_decls() const
+  {
+    return (const parameter_port_declst &)(find(ID_verilog_parameter_port_decls)
+                                             .get_sub());
+  }
+
+  parameter_port_declst &parameter_port_decls()
+  {
+    return (
+      parameter_port_declst &)(add(ID_verilog_parameter_port_decls).get_sub());
+  }
+
+  using module_itemst = itemst;
+
+  const module_itemst &module_items() const
+  {
+    return items();
+  }
+
+  module_itemst &module_items()
+  {
+    return items();
   }
 
   void show(std::ostream &) const;

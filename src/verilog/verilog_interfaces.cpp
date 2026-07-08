@@ -291,6 +291,9 @@ void verilog_typecheckt::interface_module_item(
   else if(module_item.id() == ID_verilog_empty_item)
   {
   }
+  else if(module_item.id() == ID_verilog_class)
+  {
+  }
   else if(module_item.id() == ID_verilog_smv_using)
   {
   }

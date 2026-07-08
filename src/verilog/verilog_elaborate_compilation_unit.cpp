@@ -109,5 +109,27 @@ void verilog_elaborate_compilation_unit(
           throw ebmc_errort{};
       }
     }
+    else if(item.id() == ID_verilog_class)
+    {
+      try
+      {
+        verilog_typecheckt verilog_typecheck(
+          parse_tree.standard,
+          warn_implicit_nets,
+          symbol_table,
+          message_handler);
+        verilog_typecheck.typecheck_class(to_verilog_class(item));
+      }
+      catch(const typecheckt::errort &error)
+      {
+        if(!error.what().empty())
+        {
+          throw ebmc_errort{}.with_location(error.source_location())
+            << error.what();
+        }
+        else
+          throw ebmc_errort{};
+      }
+    }
   }
 }

@@ -5384,7 +5384,7 @@ cell_identifier: non_type_identifier;
 class_identifier: TOK_CLASS_IDENTIFIER
                 {
                   init($$, ID_verilog_class_type);
-                  auto base_name = stack_expr($1).id();
+                  auto base_name = stack_expr($1).get(ID_base_name);
                   stack_expr($$).set(ID_base_name, base_name);
                   stack_expr($$).set(ID_verilog_scope_prefix, PARSER.scopes.current_scope().prefix);
                 }

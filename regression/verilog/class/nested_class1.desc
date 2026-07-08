@@ -1,8 +1,10 @@
 CORE
 nested_class1.sv
---show-parse
-^Class: outer$
-^  \* base_name: inner$
+--show-symbol-table
+^  Verilog::outer$
+^  Verilog::outer::x$
+^  Verilog::outer::inner$
+^  Verilog::outer::inner::y$
 ^EXIT=0$
 ^SIGNAL=0$
 --

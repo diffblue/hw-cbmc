@@ -1,8 +1,10 @@
 CORE
 class_constructor1.sv
---show-parse
-^Class: myClass$
-^Class: emptyClass$
+--show-symbol-table
+^  Verilog::myClass$
+^  Verilog::myClass::new$
+^  Verilog::myClass::x$
+^  Verilog::emptyClass::new$
 ^EXIT=0$
 ^SIGNAL=0$
 --

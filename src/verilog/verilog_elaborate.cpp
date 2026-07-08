@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/bitvector_types.h>
 #include <util/mathematical_types.h>
+#include <util/prefix.h>
 
 #include "verilog_typecheck.h"
 #include "verilog_types.h"
@@ -95,6 +96,37 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
   }
 }
 
+irep_idt verilog_typecheckt::class_identifier(const irep_idt &base_name) const
+{
+  static const std::string package_prefix = "Verilog::package::";
+
+  if(!current_class_identifier.empty())
+  {
+    return id2string(current_class_identifier) + "::" + id2string(base_name);
+  }
+  else if(has_prefix(id2string(module_identifier), package_prefix))
+  {
+    auto package_name =
+      std::string{id2string(module_identifier), package_prefix.size()};
+    return verilog_package_identifier(package_name, base_name);
+  }
+  else if(!module_identifier.empty())
+  {
+    return id2string(module_identifier) + "::" + id2string(base_name);
+  }
+  else
+  {
+    return verilog_module_symbol(base_name);
+  }
+}
+
+bool verilog_typecheckt::is_class_constructor(
+  const verilog_function_or_task_declt &decl) const
+{
+  return decl.get_class() == ID_function && !current_class_identifier.empty() &&
+         decl.base_name() == "new" && decl.type().is_nil();
+}
+
 void verilog_typecheckt::collect_symbols(
   const typet &type,
   const verilog_parameter_declt::declaratort &declarator)
@@ -154,6 +186,37 @@ void verilog_typecheckt::collect_symbols(
 void verilog_typecheckt::collect_symbols(
   const verilog_sequence_declarationt &declaration)
 {
+}
+
+void verilog_typecheckt::collect_symbols(const verilog_classt &class_decl)
+{
+  auto identifier = class_identifier(class_decl.base_name());
+
+  symbolt symbol{identifier, typet{ID_verilog_class_type}, mode};
+  symbol.module = verilog_root_module_identifier();
+  symbol.base_name = class_decl.base_name();
+  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+  symbol.is_type = true;
+  symbol.location = class_decl.source_location();
+  symbol.type.set(ID_base_name, class_decl.base_name());
+  symbol.type.set(ID_identifier, identifier);
+
+  add_symbol(std::move(symbol));
+
+  const auto old_class_identifier = current_class_identifier;
+  current_class_identifier = identifier;
+
+  for(auto &parameter_port_decl : class_decl.parameter_port_decls())
+  {
+    collect_symbols(parameter_port_decl.type());
+    for(auto &declarator : parameter_port_decl.declarators())
+      collect_symbols(parameter_port_decl.type(), declarator);
+  }
+
+  for(auto &item : class_decl.module_items())
+    collect_symbols(item);
+
+  current_class_identifier = old_class_identifier;
 }
 
 void verilog_typecheckt::collect_symbols(const typet &type)
@@ -612,7 +675,12 @@ void verilog_typecheckt::collect_symbols(
   typet return_type;
 
   if(decl.get_class() == ID_function)
-    return_type = elaborate_type(decl.type());
+  {
+    if(is_class_constructor(decl))
+      return_type = typet{ID_verilog_void};
+    else
+      return_type = elaborate_type(decl.type());
+  }
   else
     return_type = empty_typet();
 
@@ -961,6 +1029,13 @@ void verilog_typecheckt::collect_symbols(
     collect_symbols(to_verilog_let(module_item));
   }
   else if(module_item.id() == ID_verilog_empty_item)
+  {
+  }
+  else if(module_item.id() == ID_verilog_class)
+  {
+    collect_symbols(to_verilog_class(module_item));
+  }
+  else if(module_item.id() == ID_verilog_constraint)
   {
   }
   else if(module_item.id() == ID_verilog_smv_using)

@@ -64,6 +64,9 @@ protected:
   // full identifier of instance
   irep_idt module_instance;
 
+  // full identifier of the enclosing class, if any
+  irep_idt current_class_identifier;
+
   // full identifier of function/task
   irep_idt function_or_task_name;
 

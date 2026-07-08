@@ -1,7 +1,12 @@
 CORE
 class_method1.sv
---show-parse
-^Class: myClass$
+--show-symbol-table
+^  Verilog::myClass::x$
+^  Verilog::myClass::get_x$
+^  Verilog::myClass::set_x$
+^  Verilog::myClass::double_x$
+^  Verilog::myClass::dump$
+^  Verilog::myClass::zero$
 ^EXIT=0$
 ^SIGNAL=0$
 --

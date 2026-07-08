@@ -1,8 +1,10 @@
 CORE
 extends1.sv
---show-parse
-^Class: base$
-^Class: derived$
+--show-symbol-table
+^  Verilog::base$
+^  Verilog::base::new$
+^  Verilog::base::x$
+^  Verilog::derived$
 ^EXIT=0$
 ^SIGNAL=0$
 --

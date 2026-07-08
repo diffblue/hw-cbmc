@@ -1,7 +1,13 @@
 CORE
 class_property1.sv
---show-parse
-^Class: myClass$
+--show-symbol-table
+^  Verilog::myClass::unqualified$
+^  Verilog::myClass::max_size$
+^  Verilog::myClass::count$
+^  Verilog::myClass::hidden$
+^  Verilog::myClass::secret$
+^  Verilog::myClass::mode$
+^  Verilog::myClass::cycle$
 ^EXIT=0$
 ^SIGNAL=0$
 --

@@ -77,6 +77,7 @@ public:
   // typedefs, functions, tasks, parameters
   void typecheck_decl(const verilog_declt &);
   void typecheck_parameter_decl(const verilog_module_itemt &);
+  void typecheck_class(const verilog_classt &);
 
 protected:
   const namespacet ns;
@@ -106,6 +107,7 @@ protected:
   void collect_symbols(const verilog_module_itemt &);
   void collect_symbols(const verilog_declt &);
   void collect_symbols(const verilog_function_or_task_declt &);
+  void collect_symbols(const verilog_classt &);
   void collect_symbols(const verilog_lett &);
   void collect_symbols(const verilog_statementt &);
   void collect_symbols(const verilog_property_declarationt &);
@@ -196,6 +198,7 @@ protected:
   // module items
   void convert_decl(class verilog_declt &);
   void convert_function_or_task(class verilog_function_or_task_declt &);
+  void convert_class(class verilog_classt &);
   void convert_always_base(class verilog_always_baset &);
   void convert_initial(class verilog_initialt &);
   void convert_continuous_assign(class verilog_continuous_assignt &);
@@ -227,6 +230,9 @@ protected:
 
   bool replace_symbols(const replace_mapt &what, exprt &dest);
   void replace_symbols(const std::string &target, exprt &dest);
+
+  irep_idt class_identifier(const irep_idt &base_name) const;
+  bool is_class_constructor(const verilog_function_or_task_declt &) const;
 
   // to be overridden
   virtual void convert_statements(verilog_module_exprt &);
