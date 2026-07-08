@@ -1,0 +1,7 @@
+CORE
+not_supported2.smv
+--old-ic3
+^\[.*\] AF x: FAILURE: property not supported by old IC3 engine$
+^EXIT=10$
+^SIGNAL=0$
+--

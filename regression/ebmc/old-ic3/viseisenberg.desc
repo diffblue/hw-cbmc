@@ -1,0 +1,10 @@
+CORE
+viseisenberg.sv
+--old-ic3
+^property FAILED
+^cex verification is ok
+^\[viseisenberg\.assert\.1\] always !viseisenberg\.p0: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^cex verification failed

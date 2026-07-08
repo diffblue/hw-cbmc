@@ -1,0 +1,7 @@
+CORE
+no_latches1.smv
+--old-ic3
+^\[.*\] AG TRUE: FAILURE: no latches -- not supported by the old IC3 engine$
+^EXIT=10$
+^SIGNAL=0$
+--

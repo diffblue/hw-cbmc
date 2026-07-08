@@ -41,12 +41,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "cegar/bmc_cegar.h"
 
 #ifdef HAVE_INTERPOLATION
-#include "interpolation/interpolation_expr.h"
-#include "interpolation/interpolation_netlist.h"
-#include "interpolation/interpolation_netlist_vmcai.h"
-#include "interpolation/interpolation_word.h"
-#include "interpolation/compute-interpolant.h"
-#include "coverage/coverage.h"
+#  include "interpolation/interpolation_expr.h"
+#  include "interpolation/interpolation_netlist.h"
+#  include "interpolation/interpolation_netlist_vmcai.h"
+#  include "interpolation/interpolation_word.h"
+#  include "interpolation/compute-interpolant.h"
+#  include "coverage/coverage.h"
 #endif
 
 /*******************************************************************\
@@ -417,11 +417,11 @@ void ebmc_parse_optionst::help()
     "Methods:\n"
     " {y--k-induction}               \t do k-induction with k=bound\n"
     " {y--bdd}                       \t use (unbounded) BDD engine\n"
-    " {y--ic3}                       \t use IC3 engine with options described below\n"
+    " {y--ic3}                       \t use IC3 engine (bit-level, AIG-based)\n"
+    " {y--old-ic3}                   \t use old IC3 engine with options described below\n"
     "    {y--constr}                 \t use constraints specified in 'file.cnstr'\n"
     "    {y--new-mode}               \t new mode is switched on\n"
     "    {y--aiger}                  \t print out the instance in aiger format\n"
-    " {y--new-ic3}                   \t use new IC3 engine (AIG-based)\n"
     " {y--random-traces}             \t generate random traces\n"
     "    {y--traces} {unumber}       \t generate the given number of traces\n"
     "    {y--random-seed} {unumber}  \t use the given random seed\n"

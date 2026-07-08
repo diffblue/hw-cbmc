@@ -1,0 +1,10 @@
+CORE
+non_inductive1.sv
+--old-ic3 --property main.p0
+^property HOLDS$
+^inductive invariant verification is ok
+^\[main\.p0\] always main\.s11: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^inductive invariant verification failed

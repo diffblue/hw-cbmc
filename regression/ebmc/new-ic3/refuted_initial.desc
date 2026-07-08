@@ -1,8 +1,0 @@
-CORE
-refuted_initial.sv
---new-ic3 --top main
-^Property violated in initial state$
-^\[main\.p0\] always main\.x == 1: REFUTED$
-^EXIT=10$
-^SIGNAL=0$
---

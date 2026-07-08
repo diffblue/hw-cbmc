@@ -40,10 +40,10 @@ OBJ += ../src/ebmc/bdd_model_checker$(OBJEXT) \
        ../src/verilog/verilog$(LIBEXT)
 
 ifneq ($(BUILD_ENV),MSVC)
-SRC += new-ic3/ic3_solver.cpp
-INCLUDES += -I ../src/ic3/minisat
-OBJ += ../src/new-ic3/new-ic3$(LIBEXT) \
-       ../src/ic3/minisat/build/release/lib/libminisat.a
+SRC += ic3/ic3_solver.cpp
+INCLUDES += -I ../src/old-ic3/minisat
+OBJ += ../src/ic3/ic3$(LIBEXT) \
+       ../src/old-ic3/minisat/build/release/lib/libminisat.a
 endif
 
 cprover.dir:
