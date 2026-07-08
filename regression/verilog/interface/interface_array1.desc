@@ -1,0 +1,10 @@
+CORE
+interface_array1.sv
+--bound 1
+^\[main\.p1\] always main\.bus\[0\]\.data == 17: PROVED up to bound 1
+^\[main\.p2\] always main\.bus\[1\]\.data == 34: PROVED up to bound 1
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Array of interface instances (IEEE 1800-2017 25.3.1).
