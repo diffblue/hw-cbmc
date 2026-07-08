@@ -1438,9 +1438,13 @@ interface_or_generate_item:
 
 extern_tf_declaration:
           TOK_EXTERN method_prototype ';'
-                { $$ = $2; }
+                { $$ = $2;
+                  stack_expr($$).set(ID_extern, true);
+                }
         | TOK_EXTERN TOK_FORKJOIN task_prototype ';'
-                { $$ = $3; }
+                { $$ = $3;
+                  stack_expr($$).set(ID_extern, true);
+                }
         ;
 
 interface_item_brace:
@@ -2806,6 +2810,32 @@ function_body_declaration:
                   addswap($$, ID_verilog_declarations, $8);
                   addswap($$, ID_body, $9);
                   pop_scope();
+                }
+          // Out-of-body method definition with interface scope (1800-2017 25.4.4)
+        | function_data_type_or_implicit
+          TOK_INTERFACE_IDENTIFIER "::" non_type_identifier
+                { // Enter the interface scope and then the function scope
+                  auto interface_name = stack_expr($2).get(ID_base_name);
+                  PARSER.scopes.enter_package_scope(interface_name);
+                  auto function_name = stack_expr($4).get(ID_base_name);
+                  push_scope(function_name, ".", verilog_scopet::FUNCTION); }
+          '(' tf_port_list_opt ')' ';'
+          block_item_declaration_brace
+          function_statement_or_null_brace
+          TOK_ENDFUNCTION
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_function);
+                  addswap($$, ID_type, $1);
+                  add_as_subtype(stack_type($1), stack_type($1));
+                  // Store the interface scope on the declarator
+                  stack_expr($4).set(ID_verilog_scope_prefix,
+                    id2string(stack_expr($2).get(ID_base_name)) + ".");
+                  mto($$, $4); // declarator (method name)
+                  addswap($$, ID_ports, $7);
+                  addswap($$, ID_verilog_declarations, $10);
+                  addswap($$, ID_body, $11);
+                  pop_scope() // pop function scope
+                  pop_scope() // pop interface scope
                 }
         ;
 
