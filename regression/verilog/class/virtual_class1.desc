@@ -1,0 +1,8 @@
+CORE
+virtual_class1.sv
+--show-parse
+^Class: myBase$
+^Class: myClass$
+^EXIT=0$
+^SIGNAL=0$
+--

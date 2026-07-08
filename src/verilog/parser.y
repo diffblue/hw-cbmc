@@ -889,22 +889,103 @@ checker_port_direction_opt:
         ;
 
 class_declaration:
-          TOK_CLASS any_identifier
-          ';'
+          virtual_opt TOK_CLASS lifetime_opt
+          any_identifier
                 {
                   init($$, ID_verilog_class);
-                  auto base_name = stack_expr($2).get(ID_base_name);
+                  auto base_name = stack_expr($4).get(ID_base_name);
                   stack_expr($$).set(ID_base_name, base_name);
                   // classes go into the top scope, not $unit
                   auto &class_scope = PARSER.scopes.add_class_scope(base_name);
                   PARSER.scopes.enter_scope(class_scope);
                 }
+          parameter_port_list_opt
+          extends_opt
+          implements_opt
+          ';'
           class_item_brace
           TOK_ENDCLASS
+          class_identifier_opt
                 {
-                  $$ = $4;
+                  $$ = $5;
+                  if(stack_expr($1).is_not_nil())
+                    stack_expr($$).set(ID_virtual, true);
+                  addswap($$, ID_verilog_parameter_port_decls, $6);
+                  if(stack_expr($7).is_not_nil())
+                    addswap($$, ID_verilog_extends, $7);
+                  if(stack_expr($8).is_not_nil())
+                    addswap($$, ID_verilog_implements, $8);
+                  addswap($$, ID_module_items, $10);
                   pop_scope();
                 }
+          // IEEE 1800-2017 8.26 interface classes
+        | TOK_INTERFACE TOK_CLASS
+          any_identifier
+                {
+                  init($$, ID_verilog_class);
+                  stack_expr($$).set(ID_interface, true);
+                  auto base_name = stack_expr($3).get(ID_base_name);
+                  stack_expr($$).set(ID_base_name, base_name);
+                  // classes go into the top scope, not $unit
+                  auto &class_scope = PARSER.scopes.add_class_scope(base_name);
+                  PARSER.scopes.enter_scope(class_scope);
+                }
+          parameter_port_list_opt
+          interface_extends_opt
+          ';'
+          class_item_brace
+          TOK_ENDCLASS
+          class_identifier_opt
+                {
+                  $$ = $4;
+                  addswap($$, ID_verilog_parameter_port_decls, $5);
+                  if(stack_expr($6).is_not_nil())
+                    addswap($$, ID_verilog_extends, $6);
+                  addswap($$, ID_module_items, $8);
+                  pop_scope();
+                }
+        ;
+
+virtual_opt:
+          /* optional */
+                { make_nil($$); }
+        | TOK_VIRTUAL
+                { init($$, ID_virtual); }
+        ;
+
+extends_opt:
+          /* optional */
+                { make_nil($$); }
+        | TOK_EXTENDS class_type
+                { init($$); mto($$, $2); }
+        | TOK_EXTENDS class_type '(' list_of_arguments ')'
+                { init($$); mto($$, $2); /* the constructor arguments are dropped */ }
+        ;
+
+interface_extends_opt:
+          /* optional */
+                { make_nil($$); }
+        | TOK_EXTENDS interface_class_type_list
+                { $$ = $2; }
+        ;
+
+implements_opt:
+          /* optional */
+                { make_nil($$); }
+        | TOK_IMPLEMENTS interface_class_type_list
+                { $$ = $2; }
+        ;
+
+interface_class_type_list:
+          class_type
+                { init($$); mto($$, $1); }
+        | interface_class_type_list ',' class_type
+                { $$ = $1; mto($$, $3); }
+        ;
+
+class_identifier_opt:
+          /* optional */
+        | TOK_COLON class_identifier
         ;
 
 package_declaration:
@@ -1260,7 +1341,9 @@ interface_or_generate_item:
 
 extern_tf_declaration:
           TOK_EXTERN method_prototype ';'
+                { $$ = $2; }
         | TOK_EXTERN TOK_FORKJOIN task_prototype ';'
+                { $$ = $3; }
         ;
 
 interface_item_brace:
@@ -1352,16 +1435,15 @@ checker_generate_item:
 
 class_item_brace:
           /* Optional */
+                { init($$); }
         | class_item_brace class_item
+                { $$=$1; mts($$, $2); }
         ;
 
-// classes are yet to be implemented
 class_item:
-//        attribute_instance_brace class_property
-//              { add_attributes($2, $1); $$=$2; }
-//      | attribute_instance_brace class_method
-//              { add_attributes($2, $1); $$=$2; }
-          attribute_instance_brace class_constraint
+          attribute_instance_brace class_property_or_method
+                { add_attributes($2, $1); $$=$2; }
+        | attribute_instance_brace class_constraint
                 { add_attributes($2, $1); $$=$2; }
         | attribute_instance_brace class_declaration
                 { add_attributes($2, $1); $$=$2; }
@@ -1370,25 +1452,55 @@ class_item:
         | local_parameter_declaration ';'
         | parameter_declaration ';'
         | ';'
+                { init($$, ID_verilog_empty_item); }
         ;
 
-class_property:
-          property_qualifier_brace data_declaration
-        | TOK_CONST class_item_qualifier_brace data_type identifier ';'
-        | TOK_CONST class_item_qualifier_brace data_type identifier '=' constant_expression ';'
-        ;
-
-class_method:
-          method_qualifier_brace task_declaration
-        | method_qualifier_brace function_declaration
+// The class_property and class_method rules in the standard are
+// combined into one rule to avoid LALR(1) conflicts between the
+// qualifiers of properties and methods. Note that the
+// "const" and "static" cases of class_property in the standard
+// are covered by data_declaration. The qualifiers are currently
+// not stored in the parse tree.
+class_property_or_method:
+          data_declaration
+        | task_declaration
+        | function_declaration
+        | class_constructor_declaration
+        | lifetime task_declaration
+                { $$ = $2; }
+        | lifetime function_declaration
+                { $$ = $2; }
+        | class_member_qualifier class_property_or_method
+                { $$ = $2; }
         | TOK_PURE TOK_VIRTUAL class_item_qualifier_brace method_prototype ';'
+                { $$ = $4; }
         | TOK_EXTERN method_qualifier_brace method_prototype ';'
-        | method_qualifier_brace class_constructor_declaration
+                { $$ = $3; }
         | TOK_EXTERN method_qualifier_brace class_constructor_prototype
+                { $$ = $3; }
+        ;
+
+// This is a superset of the property_qualifier and method_qualifier
+// rules in the standard, to avoid LALR(1) conflicts. "static" is
+// covered by the lifetime rules in class_property_or_method and
+// data_declaration.
+class_member_qualifier:
+          random_qualifier
+        | TOK_PROTECTED
+        | TOK_LOCAL
+        | TOK_VIRTUAL
         ;
 
 class_constructor_prototype:
-          TOK_FUNCTION TOK_NEW ';'
+          TOK_FUNCTION TOK_NEW tf_port_list_paren_opt ';'
+                {
+                  init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_function);
+                  exprt declarator(ID_declarator);
+                  declarator.set(ID_base_name, "new");
+                  stack_expr($$).add_to_operands(std::move(declarator));
+                  addswap($$, ID_ports, $3);
+                }
         ;
 
 class_constraint:
@@ -1402,16 +1514,6 @@ class_item_qualifier_brace:
         ;
 
 class_item_qualifier: TOK_STATIC | TOK_PROTECTED | TOK_LOCAL ;
-
-property_qualifier_brace:
-          /* Optional */
-        | property_qualifier_brace property_qualifier
-        ;
-
-property_qualifier:
-          random_qualifier
-        | class_item_qualifier
-        ;
 
 random_qualifier_opt:
           /* Optional */
@@ -1440,9 +1542,28 @@ method_prototype:
         ;
 
 class_constructor_declaration:
-          TOK_FUNCTION TOK_NEW ';'
-          block_item_declaration_brace
-          TOK_ENDFUNCTION
+          TOK_FUNCTION TOK_NEW
+                { push_scope("new", ".", verilog_scopet::FUNCTION); }
+          tf_port_list_paren_opt ';'
+          tf_item_declaration_brace
+          function_statement_or_null_brace_opt
+          TOK_ENDFUNCTION endnew_opt
+                {
+                  init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_function);
+                  exprt declarator(ID_declarator);
+                  declarator.set(ID_base_name, "new");
+                  stack_expr($$).add_to_operands(std::move(declarator));
+                  addswap($$, ID_ports, $4);
+                  addswap($$, ID_verilog_declarations, $6);
+                  addswap($$, ID_body, $7);
+                  pop_scope();
+                }
+        ;
+
+endnew_opt:
+          /* Optional */
+        | TOK_COLON TOK_NEW
         ;
 
 // System Verilog standard 1800-2017
@@ -1450,6 +1571,8 @@ class_constructor_declaration:
 
 constraint_declaration:
           TOK_CONSTRAINT constraint_identifier constraint_block
+                { init($$, ID_verilog_constraint);
+                  stack_expr($$).set(ID_base_name, stack_expr($2).get(ID_base_name)); }
         ;
 
 constraint_block: '{' constraint_block_item_brace '}'
@@ -1485,6 +1608,8 @@ dist_weight:
         ;
 
 constraint_prototype: TOK_CONSTRAINT constraint_identifier ';'
+                { init($$, ID_verilog_constraint);
+                  stack_expr($$).set(ID_base_name, stack_expr($2).get(ID_base_name)); }
         ;
 
 // System Verilog standard 1800-2017
@@ -1602,29 +1727,39 @@ part_select:
 
 // TOK_VAR is optional, but footnote 10 in IEEE 1800-2017 requires it
 // when the data_type is omitted. We split the rule in the standard into two.
+// The optional "const" and "lifetime" prefixes are factored out into
+// separate alternatives to avoid LALR(1) conflicts with the qualifiers
+// in class_property_or_method.
 data_declaration:
-          const_opt TOK_VAR lifetime_opt data_type_or_implicit list_of_variable_decl_assignments ';'
-                { init($$, ID_decl);
-                  stack_expr($$).set(ID_class, ID_var);
-                  add_as_subtype(stack_type($1), stack_type($4));
-                  addswap($$, ID_type, $1);
-                  swapop($$, $5); }
-        | const_opt lifetime_opt data_type list_of_variable_decl_assignments ';'
-                { init($$, ID_decl);
-                  stack_expr($$).set(ID_class, ID_reg);
-                  add_as_subtype(stack_type($1), stack_type($3));
-                  addswap($$, ID_type, $1);
-                  swapop($$, $4); }
+          TOK_CONST data_declaration_var
+                { $$ = $2;
+                  // wrap the type into a const
+                  typet const_type(ID_const);
+                  typet &type = static_cast<typet &>(stack_expr($$).add(ID_type));
+                  const_type.add_subtype().swap(type);
+                  type.swap(const_type); }
+        | data_declaration_var
         | type_declaration
         | package_import_declaration
         | net_type_declaration
         ;
 
-const_opt:
-          /* Optional */
-                { init($$, ID_nil); }
-        | TOK_CONST
-                { init($$, ID_const); stack_type($$).add_subtype().make_nil(); }
+data_declaration_var:
+          TOK_VAR lifetime_opt data_type_or_implicit list_of_variable_decl_assignments ';'
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_var);
+                  addswap($$, ID_type, $3);
+                  swapop($$, $4); }
+        | lifetime data_type list_of_variable_decl_assignments ';'
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_reg);
+                  addswap($$, ID_type, $2);
+                  swapop($$, $3); }
+        | data_type list_of_variable_decl_assignments ';'
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_reg);
+                  addswap($$, ID_type, $1);
+                  swapop($$, $2); }
         ;
 
 package_import_declaration_brace:
@@ -2576,7 +2711,12 @@ tf_item_declaration:
                 { add_attributes($2, $1); $$ = $2; }
         ;
 
-function_prototype: TOK_FUNCTION data_type_or_void function_identifier
+function_prototype: TOK_FUNCTION data_type_or_void function_identifier tf_port_list_paren_opt
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_function);
+                  addswap($$, ID_type, $2);
+                  mto($$, $3); /* declarator */
+                  addswap($$, ID_ports, $4); }
         ;
 
 // System Verilog standard 1800-2017
@@ -2621,7 +2761,11 @@ task_statement_or_null_brace:
                 { $$ = $1; mto($$, $2); }
         ;
 
-task_prototype: TOK_TASK task_identifier
+task_prototype: TOK_TASK task_identifier tf_port_list_paren_opt
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_task);
+                  mto($$, $2); /* declarator */
+                  addswap($$, ID_ports, $3); }
         ;
 
 tf_port_list_paren_opt:
@@ -4177,6 +4321,12 @@ function_statement_or_null_brace:
                 { init($$); mto($$, $1); }
         | function_statement_or_null_brace function_statement_or_null
                 { $$ = $1; mto($$, $2); }
+        ;
+
+function_statement_or_null_brace_opt:
+          /* Optional */
+                { init($$); }
+        | function_statement_or_null_brace
         ;
 
 function_statement_brace:

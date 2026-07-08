@@ -1,0 +1,9 @@
+CORE
+interface_class1.sv
+--show-parse
+^Class: myInterface$
+^Class: myOtherInterface$
+^Class: myClass$
+^EXIT=0$
+^SIGNAL=0$
+--

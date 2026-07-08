@@ -1,0 +1,7 @@
+CORE
+parameterized_class1.sv
+--show-parse
+^Class: stack$
+^EXIT=0$
+^SIGNAL=0$
+--
