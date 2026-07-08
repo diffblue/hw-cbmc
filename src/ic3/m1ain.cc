@@ -62,9 +62,10 @@ bool ic3_supports_property(const exprt &expr)
 {
   if(!is_temporal_operator(expr))
     return false;
-  else if(expr.id() == ID_sva_always)
+  else if(
+    expr.id() == ID_sva_always || expr.id() == ID_AG || expr.id() == ID_G)
   {
-    return !has_temporal_operator(to_sva_always_expr(expr).op());
+    return !has_temporal_operator(to_unary_expr(expr).op());
   }
   else
     return false;
@@ -134,6 +135,15 @@ property_checker_resultt ic3_enginet::operator()()
 
     if(number_of_properties == 0)
       return property_checker_resultt{properties};
+
+    // The engine below cannot handle designs without latches.
+    if(netlist.var_map.latches.empty())
+    {
+      for(auto &property : properties.properties)
+        if(property.is_unknown())
+          property.failure("no latches -- not supported by the IC3 engine");
+      return property_checker_resultt{properties};
+    }
 
     const0 = false;
     const1 = false;
