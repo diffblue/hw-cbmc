@@ -22,10 +22,10 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "ebmc_error.h"
 #include "ebmc_solver_factory.h"
 #include "engine_heuristic.h"
-#include "old_ic3_engine.h"
 #include "instrument_past.h"
 #include "k_induction.h"
 #include "netlist.h"
+#include "old_ic3_engine.h"
 #include "report_results.h"
 
 #include <chrono>

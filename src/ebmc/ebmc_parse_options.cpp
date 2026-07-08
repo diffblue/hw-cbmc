@@ -41,12 +41,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "cegar/bmc_cegar.h"
 
 #ifdef HAVE_INTERPOLATION
+#  include "coverage/coverage.h"
+#  include "interpolation/compute-interpolant.h"
 #  include "interpolation/interpolation_expr.h"
 #  include "interpolation/interpolation_netlist.h"
 #  include "interpolation/interpolation_netlist_vmcai.h"
 #  include "interpolation/interpolation_word.h"
-#  include "interpolation/compute-interpolant.h"
-#  include "coverage/coverage.h"
 #endif
 
 /*******************************************************************\
