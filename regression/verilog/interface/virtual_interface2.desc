@@ -1,0 +1,9 @@
+KNOWNBUG
+virtual_interface2.sv
+
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+Virtual interface member access (IEEE 1800-2017 25.9).

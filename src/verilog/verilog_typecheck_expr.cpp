@@ -461,6 +461,13 @@ void verilog_typecheck_exprt::assignment_conversion(
     }
   }
 
+  if(lhs_type.id() == ID_verilog_virtual_interface)
+  {
+    // virtual interface assignment (IEEE 1800-2017 25.9)
+    rhs = typecast_exprt{rhs, lhs_type};
+    return;
+  }
+
   // "The size of the left-hand side of an assignment forms
   // the context for the right-hand expression."
 
