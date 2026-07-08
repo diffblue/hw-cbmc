@@ -1,0 +1,9 @@
+CORE
+modport_expression1.sv
+--bound 1
+^\[main\.c\.p1\] always main\.c\.port\.data\[7:4\] == 4'b1010: PROVED up to bound 1
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Modport port expressions (IEEE 1800-2017 25.5.2).
