@@ -1,8 +1,7 @@
 CORE
 hierarchical_task_call1.sv
-
-^file .* line 11: expected identifier as task$
-^EXIT=2$
+--bound 1
+^EXIT=10$
 ^SIGNAL=0$
 --
-^Invariant check failed$
+^warning: ignoring
