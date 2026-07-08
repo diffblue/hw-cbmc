@@ -83,6 +83,50 @@ jobs:
         run: make -C regression/hw-cbmc test
       - name: Print ccache stats
         run: ccache -s
+  # This job takes approximately 1 minute
+  sv-tests-vlsim:
+    name: Run sv-tests with vlsim
+    runs-on: ubuntu-24.04
+    needs: check-ubuntu-24_04-make-clang
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Get the vlsim binary
+        uses: actions/download-artifact@v8
+        with:
+          name: vlsim-binary
+          path: vlsim
+      - name: Try the vlsim binary
+        run: chmod a+x ./vlsim/vlsim ; ./vlsim/vlsim --version
+      - name: Run sv-tests with vlsim
+        run: PATH=$PATH:$PWD/vlsim examples/chipsalliance-sv-tests/vlsim-sv-tests.sh
+      - name: Prepare Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p _site/sv-tests-vlsim
+          cp -r sv-tests/out/report/* _site/sv-tests-vlsim/
+      - name: Upload sv-tests report
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site/
+
+  deploy-sv-tests-report:
+    name: Deploy sv-tests report to GitHub Pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: sv-tests-vlsim
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}sv-tests-vlsim/
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
   # This job takes approximately 15 minutes
   check-ubuntu-24_04-make-clang:
@@ -173,6 +217,12 @@ jobs:
           name: vlindex-binary
           retention-days: 5
           path: src/vlindex/vlindex
+      - name: Upload the vlsim binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: vlsim-binary
+          retention-days: 5
+          path: src/vlsim/vlsim
 
   # This job takes approximately 4 minutes
   benchmarking:
