@@ -206,15 +206,52 @@ typet verilog_typecheck_exprt::elaborate_package_scope_typedef(
   // look it up
   const symbolt *symbol_ptr;
 
-  if(ns.lookup(full_identifier, symbol_ptr))
-    throw errort().with_location(location)
-      << "symbol " << typedef_base_name << " not found in package";
+  if(!ns.lookup(full_identifier, symbol_ptr))
+  {
+    // must be type
+    if(!symbol_ptr->is_type)
+      throw errort().with_location(location) << "expected a type identifier";
 
-  // must be type
-  if(!symbol_ptr->is_type)
-    throw errort().with_location(location) << "expected a type identifier";
+    return symbol_ptr->type;
+  }
 
-  return symbol_ptr->type;
+  // Not found as a package symbol. Check if it's an interface.
+  auto source_identifier =
+    id2string(verilog_module_symbol(package_base_name)) + "$source";
+
+  const symbolt *source_symbol_ptr;
+  if(!ns.lookup(source_identifier, source_symbol_ptr))
+  {
+    auto &module_source = source_symbol_ptr->type.find(ID_module_source);
+
+    if(module_source.id() == ID_verilog_interface)
+    {
+      // Search through the interface's module items for the typedef
+      auto &interface_source = to_verilog_module_source(module_source);
+      for(auto &item : interface_source.module_items())
+      {
+        if(item.id() == ID_decl)
+        {
+          auto &decl = to_verilog_decl(item);
+          if(decl.get_class() == ID_typedef)
+          {
+            for(auto &declarator : decl.declarators())
+            {
+              if(declarator.base_name() == typedef_base_name)
+              {
+                // Found the typedef in the interface source.
+                // Elaborate its type.
+                return elaborate_type(declarator.merged_type(decl.type()));
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  throw errort().with_location(location)
+    << "symbol " << typedef_base_name << " not found in package";
 }
 
 /*******************************************************************\
