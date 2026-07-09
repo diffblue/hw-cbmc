@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 extern "C"
 {
-#include <ic3/aiger/aiger.h>
+#include <aiger-1.9/aiger.h>
 }
 
 #include <util/bitvector_types.h>

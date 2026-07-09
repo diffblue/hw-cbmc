@@ -1,0 +1,40 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: aiger
+Upstream-Contact: Armin Biere <biere@jku.at>
+Source: https://github.com/arminbiere/aiger
+Comment: The AIGER library is a reader and writer for the AIGER AIG
+ (And-Inverter Graph) format. The vendored copy consists of the two files
+ aiger.c and aiger.h, and is used by src/aiger/ (the AIGER language
+ front-end for EBMC).
+ .
+ The in-tree files are byte-for-byte identical to upstream commit
+ a1b949aad00251a8493513301af660977fe6ee92 (2011-07-22). This is not a
+ tagged release; it predates the rel-1.9.17 tag (2024-01-31), which is the
+ earliest tag in the upstream repository. Later upstream revisions add
+ extern "C" guards, const qualifiers on several function signatures, and
+ additional utility functions (aiger_strip_symbols, aiger_strip_comments,
+ aiger_is_constant).
+
+Files: aiger-1.9/*
+Copyright: 2006-2011, Armin Biere, Johannes Kepler University
+           2011, Siert Wieringa, Aalto University, Finland
+License: Expat
+
+License: Expat
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to
+ deal in the Software without restriction, including without limitation the
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ sell copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.

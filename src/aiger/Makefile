@@ -15,7 +15,7 @@ all: aiger$(LIBEXT)
 
 ###############################################################################
 
-aiger_c$(OBJEXT): ../ic3/aiger/aiger.c
+aiger_c$(OBJEXT): ../../3p/aiger-1.9/aiger.c
 	$(CC) -c -o $@ $<
 
 aiger$(LIBEXT): $(OBJ) $(AIGER_C_OBJ)
