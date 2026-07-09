@@ -208,6 +208,30 @@ transition_systemt verilog_ebmc_languaget::typecheck(
   transition_systemt transition_system;
   transition_system.symbol_table = std::move(symbol_table);
 
+  // Create module instance symbols for the top-level modules under $root,
+  // so that $root.module hierarchical identifiers can be resolved
+  // while type checking.
+  auto root_identifier = verilog_module_symbol(verilog_root_module_name());
+
+  for(auto &top_level_module : top_level_modules)
+  {
+    auto module_identifier = verilog_module_symbol(top_level_module);
+
+    auto instance_identifier =
+      id2string(root_identifier) + "." + id2string(top_level_module);
+
+    symbolt instance_symbol{
+      instance_identifier, verilog_module_instance_typet{}, ID_Verilog};
+    instance_symbol.base_name = top_level_module;
+    instance_symbol.pretty_name = top_level_module;
+    instance_symbol.module = root_identifier;
+    instance_symbol.value = verilog_module_instancet{module_identifier};
+
+    auto add_result_instance =
+      transition_system.symbol_table.add(instance_symbol);
+    CHECK_RETURN(!add_result_instance);
+  }
+
   // now type check the top-level modules
   for(auto &top_level_module : top_level_modules)
   {
@@ -236,19 +260,10 @@ void verilog_ebmc_languaget::create_root_module(
   {
     auto module_identifier = verilog_module_symbol(top_level_module);
 
+    // The module instance symbol for the top-level module
+    // was already added before type checking.
     auto instance_identifier =
       id2string(root_identifier) + "." + id2string(top_level_module);
-
-    // Create a module instance symbol for the top-level module under $root
-    symbolt instance_symbol{
-      instance_identifier, verilog_module_instance_typet{}, ID_Verilog};
-    instance_symbol.base_name = top_level_module;
-    instance_symbol.pretty_name = top_level_module;
-    instance_symbol.module = root_identifier;
-    instance_symbol.value = verilog_module_instancet{module_identifier};
-
-    auto add_result_instance = symbol_table.add(instance_symbol);
-    CHECK_RETURN(!add_result_instance);
 
     // Build a verilog_instt module item for the instantiation
     verilog_instt inst;

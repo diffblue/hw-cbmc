@@ -1841,6 +1841,28 @@ Function: verilog_typecheck_exprt::convert_hierarchical_identifier
 exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
   hierarchical_identifier_exprt expr)
 {
+  if(
+    expr.lhs().id() == ID_verilog_identifier &&
+    to_verilog_identifier_expr(expr.lhs()).base_name() ==
+      verilog_root_module_name())
+  {
+    // $root.somewhere
+    auto module_base_name = to_verilog_identifier_expr(expr.rhs()).base_name();
+
+    const irep_idt full_instance_identifier =
+      id2string(verilog_root_module_identifier()) + '.' +
+      id2string(module_base_name);
+
+    const symbolt *symbol;
+    if(ns.lookup(full_instance_identifier, symbol))
+    {
+      throw errort().with_location(expr.source_location())
+        << "failed to find top module " << module_base_name;
+    }
+
+    return symbol->symbol_expr().with_source_location(expr);
+  }
+
   convert_expr(expr.lhs());
 
   DATA_INVARIANT(

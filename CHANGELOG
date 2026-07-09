@@ -1,5 +1,6 @@
 # EBMC 6.1
 
+* Verilog: $root.
 * Verilog: procedural assignments to hierarchical identifiers
 * SystemVerilog: ports for sequence and property declarations
 * Refreshed IC3 engine --new-ic3
