@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include "sva_expr.h"
+#include "verilog_simulator.h"
 #include "verilog_typecheck_base.h"
 
 #include <stack>
@@ -139,12 +140,6 @@ protected:
     PRECONDITION(false);
   }
 
-  // to be overridden
-  virtual exprt var_value(const irep_idt &identifier)
-  {
-    PRECONDITION(false);
-  }
-
   bool warn_implicit_nets = false;
 
   virtual bool
@@ -175,10 +170,13 @@ protected:
   named_blockst named_blocks;
   void enter_named_block(const irep_idt &);
 
-  // elaboration (expansion and folding) of constant expressions and functions
+  // The simulator maintains the state for the elaboration
+  // (expansion and folding) of constant expressions and functions.
+  friend class verilog_simulatort;
+  verilog_simulatort simulator{*this, ns};
+
   bool is_constant_expression(const exprt &, mp_integer &value);
   std::optional<mp_integer> is_constant_integer_post_convert(const exprt &);
-  exprt elaborate_constant_expression_rec(exprt);
   exprt elaborate_constant_expression(exprt);
   exprt elaborate_constant_expression_check(exprt);
   mp_integer elaborate_constant_integer_expression(exprt);
