@@ -3240,6 +3240,11 @@ void verilog_synthesist::synth_return(const verilog_returnt &statement)
       frame.return_value.has_value(),
       "return with value requires return value symbol");
 
+    // we expect the type checker to make the types consistent
+    DATA_INVARIANT(
+      statement.value().type() == frame.return_value.value().type(),
+      "return value and symbol must have consistent types");
+
     verilog_assignt assignment{
       ID_verilog_blocking_assign,
       frame.return_value.value(),
