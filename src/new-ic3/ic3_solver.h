@@ -39,10 +39,32 @@ namespace IctMinisat
 class Solver;
 }
 
-enum class ic3_resultt
+struct ic3_resultt
 {
-  PROVED,
-  REFUTED
+  enum class outcomet
+  {
+    PROVED,
+    REFUTED
+  } outcome;
+
+  /// When REFUTED, the number of states in the counterexample trace:
+  /// the trace has states at timeframes 0, ..., length - 1, and the
+  /// property-violating state is at timeframe length - 1.
+  /// The trace is genuine, but not guaranteed to be a shortest
+  /// counterexample: obligations are processed by frame level, not by
+  /// depth, so a longer chain of predecessors may reach an initial
+  /// state before a minimal-length one is explored.
+  std::size_t counterexample_length = 0;
+
+  static ic3_resultt proved()
+  {
+    return {outcomet::PROVED, 0};
+  }
+
+  static ic3_resultt refuted(std::size_t counterexample_length)
+  {
+    return {outcomet::REFUTED, counterexample_length};
+  }
 };
 
 /// The IC3 solver uses per-frame SAT solvers via CNF replay.
@@ -66,7 +88,8 @@ public:
 
   ~ic3_solvert();
 
-  /// Run the IC3 algorithm. Returns PROVED or REFUTED.
+  /// Run the IC3 algorithm. Returns PROVED or REFUTED; when refuted,
+  /// the result includes the length of the counterexample trace.
   ic3_resultt solve();
 
 private:
