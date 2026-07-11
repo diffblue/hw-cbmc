@@ -112,15 +112,15 @@ property_checker_resultt new_ic3_engine(
     // For exists-path properties (cover), the normalized expression is
     // the dual safety property: a refutation is a witness trace, and a
     // proof shows that no witness exists.
-    switch(result)
+    switch(result.outcome)
     {
-    case ic3_resultt::PROVED:
+    case ic3_resultt::outcomet::PROVED:
       if(property.is_exists_path())
         property.refuted(engine);
       else
         property.proved(engine);
       break;
-    case ic3_resultt::REFUTED:
+    case ic3_resultt::outcomet::REFUTED:
       if(property.is_exists_path())
         property.proved(engine);
       else

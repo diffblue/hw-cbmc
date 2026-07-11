@@ -756,6 +756,9 @@ struct proof_obligationt
 {
   cubet cube;
   std::size_t level;
+  // Number of transitions from this cube to the property-violating
+  // state; used for the counterexample length when refuting.
+  std::size_t depth;
 
   bool operator>(const proof_obligationt &other) const
   {
@@ -773,7 +776,7 @@ ic3_resultt ic3_solvert::solve()
   if(initial_state_is_bad())
   {
     message.status() << "Property violated in initial state" << messaget::eom;
-    return ic3_resultt::REFUTED;
+    return ic3_resultt::refuted(1);
   }
 
   while(true)
@@ -799,11 +802,11 @@ ic3_resultt ic3_solvert::solve()
       if(!bad_cube.has_value())
         break;
 
-      obligations.push({bad_cube.value(), k});
+      obligations.push({bad_cube.value(), k, 0});
 
       while(!obligations.empty())
       {
-        auto [cube, level] = obligations.top();
+        auto [cube, level, depth] = obligations.top();
         obligations.pop();
 
         if(is_blocked(cube, level))
@@ -811,8 +814,11 @@ ic3_resultt ic3_solvert::solve()
 
         if(init_intersects(cube))
         {
-          message.status() << "Property refuted" << messaget::eom;
-          return ic3_resultt::REFUTED;
+          // The cube contains an initial state, and the bad state is
+          // depth transitions away: depth + 1 states in total.
+          message.status() << "Property refuted with counterexample of length "
+                           << depth + 1 << messaget::eom;
+          return ic3_resultt::refuted(depth + 1);
         }
 
         if(level == 0)
@@ -824,8 +830,8 @@ ic3_resultt ic3_solvert::solve()
         auto pred = solve_relative(level - 1, cube);
         if(pred.has_value())
         {
-          obligations.push({pred.value(), level - 1});
-          obligations.push({std::move(cube), level});
+          obligations.push({pred.value(), level - 1, depth + 1});
+          obligations.push({std::move(cube), level, depth});
         }
         else
         {
@@ -834,7 +840,7 @@ ic3_resultt ic3_solvert::solve()
 
           // Re-queue at level+1 to push the blocking clause higher
           if(level + 1 <= k)
-            obligations.push({std::move(cube), level + 1});
+            obligations.push({std::move(cube), level + 1, depth});
         }
       }
     } // end blocking phase
@@ -848,7 +854,7 @@ ic3_resultt ic3_solvert::solve()
         << std::setprecision(3)
         << std::chrono::duration<double>(end_time - start_time).count()
         << " seconds (" << num_queries << " queries)" << messaget::eom;
-      return ic3_resultt::PROVED;
+      return ic3_resultt::proved();
     }
   }
 }

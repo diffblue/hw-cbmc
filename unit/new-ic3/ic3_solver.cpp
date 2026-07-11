@@ -6,6 +6,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 \*******************************************************************/
 
+#include <util/std_types.h>
+
 #include <new-ic3/ic3_solver.h>
 #include <testing-utils/use_catch.h>
 
@@ -57,7 +59,7 @@ SCENARIO("ic3_solvert proves a trivially safe property")
 
     THEN("IC3 proves the property")
     {
-      REQUIRE(solver.solve() == ic3_resultt::PROVED);
+      REQUIRE(solver.solve().outcome == ic3_resultt::outcomet::PROVED);
     }
   }
 }
@@ -77,9 +79,11 @@ SCENARIO("ic3_solvert refutes a property violated in the initial state")
     null_message_handlert mh;
     ic3_solvert solver(std::move(netlist), prop_lit, mh);
 
-    THEN("IC3 refutes the property")
+    THEN("IC3 refutes the property with a single-state counterexample")
     {
-      REQUIRE(solver.solve() == ic3_resultt::REFUTED);
+      auto result = solver.solve();
+      REQUIRE(result.outcome == ic3_resultt::outcomet::REFUTED);
+      REQUIRE(result.counterexample_length == 1);
     }
   }
 }
@@ -100,9 +104,11 @@ SCENARIO("ic3_solvert refutes a property violated after one step")
     null_message_handlert mh;
     ic3_solvert solver(std::move(netlist), prop_lit, mh);
 
-    THEN("IC3 refutes the property")
+    THEN("IC3 refutes the property with a two-state counterexample")
     {
-      REQUIRE(solver.solve() == ic3_resultt::REFUTED);
+      auto result = solver.solve();
+      REQUIRE(result.outcome == ic3_resultt::outcomet::REFUTED);
+      REQUIRE(result.counterexample_length == 2);
     }
   }
 }
@@ -155,7 +161,7 @@ SCENARIO("ic3_solvert proves a property on a two-latch system")
 
     THEN("IC3 proves the property")
     {
-      REQUIRE(solver.solve() == ic3_resultt::PROVED);
+      REQUIRE(solver.solve().outcome == ic3_resultt::outcomet::PROVED);
     }
   }
 }
@@ -247,7 +253,67 @@ SCENARIO("ic3_solvert proves a property requiring inductive strengthening")
 
     THEN("IC3 proves the property (requires inductive strengthening)")
     {
-      REQUIRE(solver.solve() == ic3_resultt::PROVED);
+      REQUIRE(solver.solve().outcome == ic3_resultt::outcomet::PROVED);
+    }
+  }
+}
+
+SCENARIO("ic3_solvert reports the length of a deeper counterexample")
+{
+  GIVEN("A 2-bit counter that increments every cycle, property = counter != 3")
+  {
+    netlistt netlist;
+
+    // Node 0: bit 0 of counter
+    literalt b0 = netlist.new_input();
+    // Node 1: bit 1 of counter
+    literalt b1 = netlist.new_input();
+
+    // The counter increments unconditionally:
+    // next_b0 = !b0
+    literalt next_b0 = !b0;
+
+    // next_b1 = b1 XOR b0, built with AND nodes
+    literalt b1_and_not_b0 = netlist.new_and_node(b1, !b0);
+    literalt not_b1_and_b0 = netlist.new_and_node(!b1, b0);
+    literalt next_b1 = !netlist.new_and_node(!b1_and_not_b0, !not_b1_and_b0);
+
+    // Register latches
+    var_mapt::vart var_b0;
+    var_b0.vartype = var_mapt::vart::vartypet::LATCH;
+    var_b0.type = bool_typet{};
+    var_b0.bits.resize(1);
+    var_b0.bits[0].current = b0;
+    var_b0.bits[0].next = next_b0;
+    netlist.var_map.map.emplace("b0", var_b0);
+    netlist.var_map.add("b0", 0, var_b0);
+
+    var_mapt::vart var_b1;
+    var_b1.vartype = var_mapt::vart::vartypet::LATCH;
+    var_b1.type = bool_typet{};
+    var_b1.bits.resize(1);
+    var_b1.bits[0].current = b1;
+    var_b1.bits[0].next = next_b1;
+    netlist.var_map.map.emplace("b1", var_b1);
+    netlist.var_map.add("b1", 0, var_b1);
+
+    // Init: counter = 0
+    netlist.initial.push_back(!b0);
+    netlist.initial.push_back(!b1);
+
+    // Property: counter != 3, i.e., !(b0 AND b1)
+    literalt prop_lit = !netlist.new_and_node(b0, b1);
+
+    null_message_handlert mh;
+    ic3_solvert solver(std::move(netlist), prop_lit, mh);
+
+    THEN("IC3 refutes the property with a four-state counterexample")
+    {
+      // The system is deterministic with a unique initial state, so
+      // the only counterexample is 0, 1, 2, 3: four states.
+      auto result = solver.solve();
+      REQUIRE(result.outcome == ic3_resultt::outcomet::REFUTED);
+      REQUIRE(result.counterexample_length == 4);
     }
   }
 }
