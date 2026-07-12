@@ -1,0 +1,14 @@
+-- Bare section headers with no formula should be rejected.
+-- Truncated or malformed input can silently weaken the model.
+
+MODULE main
+
+VAR x : boolean;
+
+TRANS
+INIT
+INVAR
+FAIRNESS
+SPEC
+CTLSPEC
+LTLSPEC
