@@ -2435,12 +2435,8 @@ void smv_typecheckt::typecheck(smv_parse_treet::modulet::elementt &element)
     return;
 
   case smv_parse_treet::modulet::elementt::FAIRNESS:
-    typecheck(element.expr, OTHER);
-    convert_expr_to(element.expr, bool_typet{});
-    no_next_allowed(element.expr);
-    no_CTL_allowed(element.expr);
-    no_LTL_allowed(element.expr);
-    return;
+    throw errort().with_location(element.location)
+      << "fairness constraints are not supported";
 
   case smv_parse_treet::modulet::elementt::ASSIGN_CURRENT:
     typecheck(element.lhs(), OTHER);
