@@ -1,0 +1,14 @@
+KNOWNBUG
+strong_R1.sv
+--bound 20
+^\[main\.p0\] .*: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The encoding of ID_strong_R in src/trans-word-level/property.cpp is incorrect.
+The comment says strong_R(p, q) = Fp ∧ (p R q), but the implementation builds
+F(q) ∧ (p W q), which weakens strong release. In this test, the s_until_with
+lhs can never hold (counter never exceeds 14), so the property should be
+REFUTED, but due to the bug it is incorrectly PROVED.
