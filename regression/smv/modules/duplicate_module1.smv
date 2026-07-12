@@ -1,0 +1,12 @@
+MODULE main
+
+VAR x : boolean;
+
+MODULE other
+
+VAR y : boolean;
+
+-- duplicate of main
+MODULE main
+
+VAR z : boolean;

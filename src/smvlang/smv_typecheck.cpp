@@ -28,6 +28,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cassert>
 #include <set>
 #include <stack>
+#include <unordered_set>
 
 class smv_typecheckt:public typecheckt
 {
@@ -80,6 +81,8 @@ protected:
   smv_indext index;
   const std::string &module_identifier;
 
+  static void
+  check_duplicate_module_names(const smv_parse_treet::module_listt &);
   void check_type(typet &);
   smv_ranget convert_type(const typet &) const;
 
@@ -3195,6 +3198,32 @@ void smv_typecheckt::convert(smv_parse_treet::modulet &smv_module)
 
 /*******************************************************************\
 
+Function: smv_typecheckt::check_duplicate_module_names
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void smv_typecheckt::check_duplicate_module_names(
+  const smv_parse_treet::module_listt &module_list)
+{
+  std::unordered_set<irep_idt, irep_id_hash> module_names;
+  for(const auto &module : module_list)
+  {
+    if(!module_names.insert(module.base_name).second)
+    {
+      throw errort().with_location(module.source_location)
+        << "duplicate module name `" << module.base_name << "'";
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: smv_typecheckt::typecheck
 
   Inputs:
@@ -3209,6 +3238,9 @@ void smv_typecheckt::typecheck()
 {
   if(module_identifier != "smv::main")
     return;
+
+  // check for duplicate module names
+  check_duplicate_module_names(smv_parse_tree.module_list);
 
   // build the index
   index = smv_indext{smv_parse_tree};
