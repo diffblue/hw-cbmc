@@ -1,0 +1,7 @@
+CORE
+duplicate_module1.smv
+
+^file .* line 10: duplicate module name `main'$
+^EXIT=2$
+^SIGNAL=0$
+--
