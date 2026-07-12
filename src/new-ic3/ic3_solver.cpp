@@ -289,6 +289,16 @@ std::unique_ptr<IctMinisat::Solver> ic3_solvert::new_minisat_solver()
     S->newVar();
   for(const auto &clause : base_cnf->get_clauses())
     add_minisat_clause(*S, clause);
+  // Restrict decisions to latch and input variables. The AIG gates are
+  // encoded with the full 3-clause Tseitin AND encoding (both polarities),
+  // so once all latch-current and input variables are assigned, BCP
+  // implies every internal gate variable; models are thus still total.
+  for(IctMinisat::Var v = 0; v < S->nVars(); v++)
+    S->setDecisionVar(v, false);
+  for(const auto &latch : latches)
+    S->setDecisionVar(latch.current.var_no(), true);
+  for(auto l : input_lits)
+    S->setDecisionVar(l.var_no(), true);
   return S;
 }
 
