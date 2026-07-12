@@ -83,6 +83,38 @@ neclaftp1001 16.0 → 1.3 s, nusmvtcasp5 24.3 → 4.7 s, 139462p24
 prodcellp2 now completes (refuted) in ~110 s instead of diverging.
 All verdicts continue to match the published HWMCC08 results.
 
+## Broader evaluation: HWMCC'17 and HWMCC'25
+
+Same machine, 60 s timeout, run in parallel (4 workers for HWMCC'17,
+2 for HWMCC'25), engines built from this PR's sources.
+
+HWMCC'17 single-property track (all 300 AIGER benchmarks, SMV
+translations in `benchmarking/hwmcc17-single-smv/`; expected verdicts
+are the consensus of the 14 HWMCC'17 solvers, available for 242 of
+the 300):
+
+| engine | solved (of 300) | proved / refuted | total time on solved | wrong verdicts |
+|---|---:|---:|---:|---:|
+| ebmc `--ic3` | 125 | 93 / 32 | 697 s | 0 |
+| ebmc `--new-ic3` | 117 | 87 / 30 | 435 s | 0 |
+
+Of the 113 benchmarks solved by both engines, the new engine is
+faster on 91. The old engine solves 12 uniquely (among them the
+intel*, 6s* and prodcellp4 families), the new engine 4.
+
+HWMCC'25 bit-level safety track (the latest competition, October
+2025; 142-benchmark sample — every 2nd of the 284 benchmarks with a
+definitive competition verdict — AIGER 1.9 converted to SMV with
+`aigtosmv -s`): `--new-ic3` solves 65 (48 proved, 17 refuted) in
+399 s, with all verdicts matching the competition results. These
+numbers include the invariant-constraint soundness fix of #1994;
+without it, the engine reports 15 spurious refutations on this set
+(HWMCC'08/'17 benchmarks carry no invariant constraints, HWMCC'25
+ones do). For scale, on the same sample rIC3 solved 112 within 60 s
+in the competition (on different hardware); the gap is concentrated
+in the constrained instances, where the soundness fix weakens
+predecessor generalization.
+
 ## Reproducing
 
     # ebmc engines + rIC3 + Pono, CSV output
