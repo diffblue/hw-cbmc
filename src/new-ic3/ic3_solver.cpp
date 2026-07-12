@@ -839,11 +839,21 @@ ic3_resultt ic3_solvert::solve()
         else
         {
           cubet generalized = generalize(level - 1, core);
-          add_clause(level, negate_cube(generalized));
 
-          // Re-queue at level+1 to push the blocking clause higher
-          if(level + 1 <= k)
-            obligations.push({std::move(cube), level + 1});
+          // Eagerly push the generalized clause to the highest frame where
+          // it is still relatively inductive: one query per level, instead
+          // of a full re-generalization when the obligation is re-queued.
+          std::size_t push_to = level;
+          while(push_to < k &&
+                relative_induction(push_to, generalized, nullptr, false))
+          {
+            push_to++;
+          }
+
+          add_clause(push_to, negate_cube(generalized));
+
+          if(push_to + 1 <= k)
+            obligations.push({std::move(cube), push_to + 1});
         }
       }
     } // end blocking phase

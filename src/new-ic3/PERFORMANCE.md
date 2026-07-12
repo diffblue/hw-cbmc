@@ -48,6 +48,41 @@ than ~50 frames deep).
 rIC3 remains substantially ahead of both ebmc engines; it is the source
 of several of the techniques used in the new engine.
 
+## Update: decision-variable restriction and eager clause pushing
+
+Two further optimizations (2026-07-12, measured on the same machine,
+same 49-benchmark sample, 60 s timeout):
+
+1. *Decision-variable restriction*: the per-frame MiniSAT solvers only
+   branch on latch and input variables. The AIG gates use the full
+   3-clause Tseitin encoding, so BCP totalizes any assignment of the
+   latches and inputs; models remain genuine. This removes the
+   `pickBranchLit` overhead (previously ~half of SAT search time) and
+   gives a uniform 7–22% speedup.
+2. *Eager clause pushing*: after MIC generalization, the blocking phase
+   pushes the generalized clause to the highest frame where it is still
+   relatively inductive — one SAT query per level — instead of
+   re-running a full MIC generalization each time the obligation is
+   re-queued one level higher. This is the dominant win, particularly
+   on refutations with deep counterexamples.
+
+A third experiment, VSIDS-style decay of the MIC literal-activity
+ordering, improved eijkbs3330 but caused a reproducible 15x regression
+on 139453p22 and was dropped.
+
+| tool | solved (of 49) | timeouts | total time on solved |
+|---|---:|---:|---:|
+| ebmc `--new-ic3` before | 43 | 6 | 108.3 s |
+| ebmc `--new-ic3` after | 45 | 4 | 88.9 s |
+
+139453p22 (t/o → 5.5 s) and bc57sensorsp2 (t/o → 44.6 s) are newly
+solved; on the 43 benchmarks solved before, total time drops from
+108.3 s to 38.8 s (2.8x). Largest individual improvements:
+neclaftp1001 16.0 → 1.3 s, nusmvtcasp5 24.3 → 4.7 s, 139462p24
+13.9 → 0.8 s. The only regression is csmacdp2 (1.3 → 4.7 s).
+prodcellp2 now completes (refuted) in ~110 s instead of diverging.
+All verdicts continue to match the published HWMCC08 results.
+
 ## Reproducing
 
     # ebmc engines + rIC3 + Pono, CSV output
