@@ -105,8 +105,8 @@ intel*, 6s* and prodcellp4 families), the new engine 4.
 HWMCC'25 bit-level safety track (the latest competition, October
 2025; 142-benchmark sample — every 2nd of the 284 benchmarks with a
 definitive competition verdict — AIGER 1.9 converted to SMV with
-`aigtosmv -s`): `--new-ic3` solves 65 (48 proved, 17 refuted) in
-399 s, with all verdicts matching the competition results. These
+`aigtosmv -s`): `--new-ic3` solves 64 (47 proved, 17 refuted) in
+388 s, with all verdicts matching the competition results. These
 numbers include the invariant-constraint soundness fix of #1994;
 without it, the engine reports 15 spurious refutations on this set
 (HWMCC'08/'17 benchmarks carry no invariant constraints, HWMCC'25
