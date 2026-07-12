@@ -60,7 +60,7 @@ class ic3_solvert
 {
 public:
   ic3_solvert(
-    netlistt netlist,
+    const netlistt &,
     literalt property_literal,
     message_handlert &message_handler);
 
