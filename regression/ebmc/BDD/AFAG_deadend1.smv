@@ -1,0 +1,12 @@
+MODULE main
+
+VAR good : boolean;
+
+INIT good = TRUE
+
+TRANS good & next(good) | good & !next(good)
+
+-- There is an infinite path that stays in good forever and a finite path to a
+-- deadend state with good = FALSE. Under the deadend conventions used by the
+-- existing BDD regressions, the finite branch should not falsify AG good.
+SPEC AF AG good
