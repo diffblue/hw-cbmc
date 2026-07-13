@@ -1,0 +1,10 @@
+MODULE main
+
+IVAR some_input : boolean;
+VAR some_var : boolean;
+
+ASSIGN init(some_var) := FALSE;
+ASSIGN next(some_var) := some_input;
+
+-- There exists a successor with some_var = TRUE when some_input = TRUE.
+SPEC EX some_var = TRUE
