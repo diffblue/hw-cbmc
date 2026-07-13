@@ -1,0 +1,12 @@
+KNOWNBUG
+s_until_with1.sv
+--bdd
+^\[main\.p0\] always \(0 s_until_with 1\): REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+sva_s_until_with is lowered to ordinary R instead of strong release in
+SVA_to_LTL (src/temporal-logic/sva_to_ltl.cpp:229). The BDD engine uses
+this path and can therefore falsely prove s_until_with properties.
+The word-level BMC engine (trans-word-level/property.cpp) is not affected
+as it correctly uses strong_R_exprt.
