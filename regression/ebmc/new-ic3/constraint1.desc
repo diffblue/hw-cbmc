@@ -1,0 +1,7 @@
+CORE
+constraint1.smv
+--new-ic3
+^\[spec1\] AG !z: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
