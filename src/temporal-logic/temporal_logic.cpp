@@ -16,6 +16,118 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ctl.h"
 #include "ltl.h"
 
+namespace
+{
+
+bool is_state_formula(const exprt &expr)
+{
+  return !has_temporal_operator(expr);
+}
+
+exprt make_conjunction(exprt::operandst operands)
+{
+  if(operands.empty())
+    return true_exprt{};
+  else if(operands.size() == 1)
+    return std::move(operands.front());
+  else
+    return and_exprt{std::move(operands)};
+}
+
+std::optional<exprt> strip_conjunct(const exprt &expr, const exprt &conjunct)
+{
+  if(expr == conjunct)
+    return true_exprt{};
+
+  if(expr.id() != ID_and)
+    return {};
+
+  exprt::operandst remaining;
+  bool found = false;
+
+  for(const auto &op : expr.operands())
+  {
+    if(!found && op == conjunct)
+      found = true;
+    else
+      remaining.push_back(op);
+  }
+
+  if(!found)
+    return {};
+
+  return make_conjunction(std::move(remaining));
+}
+
+struct guarded_formulat
+{
+  exprt guard;
+  exprt positive_case;
+  exprt negative_case;
+};
+
+std::optional<guarded_formulat> match_guarded_formula(
+  const exprt &positive_branch,
+  const exprt &negative_branch)
+{
+  exprt::operandst candidates;
+
+  if(positive_branch.id() == ID_and)
+    candidates = positive_branch.operands();
+  else
+    candidates.push_back(positive_branch);
+
+  for(const auto &candidate : candidates)
+  {
+    if(!is_state_formula(candidate))
+      continue;
+
+    auto positive_case = strip_conjunct(positive_branch, candidate);
+    if(!positive_case.has_value())
+      continue;
+
+    auto negative_case = strip_conjunct(negative_branch, not_exprt{candidate});
+    if(!negative_case.has_value())
+      continue;
+
+    return guarded_formulat{
+      candidate, std::move(*positive_case), std::move(*negative_case)};
+  }
+
+  return {};
+}
+
+template <typename op_convertert>
+std::optional<exprt> convert_guarded_binary(
+  const exprt &lhs,
+  const exprt &rhs,
+  op_convertert op_converter)
+{
+  auto guarded = match_guarded_formula(lhs, rhs);
+  if(!guarded.has_value())
+  {
+    guarded = match_guarded_formula(rhs, lhs);
+    if(!guarded.has_value())
+      return {};
+  }
+
+  auto positive_case = LTL_to_CTL(guarded->positive_case);
+  if(!positive_case.has_value())
+    return {};
+
+  auto negative_case = LTL_to_CTL(guarded->negative_case);
+  if(!negative_case.has_value())
+    return {};
+
+  exprt positive_branch = and_exprt{guarded->guard, std::move(*positive_case)};
+  exprt negative_branch =
+    and_exprt{not_exprt{guarded->guard}, std::move(*negative_case)};
+
+  return op_converter(std::move(positive_branch), std::move(negative_branch));
+}
+
+} // namespace
+
 bool is_temporal_operator(const exprt &expr)
 {
   return is_CTL_operator(expr) || is_LTL_operator(expr) ||
@@ -60,9 +172,8 @@ bool has_CTL_operator(const exprt &expr)
 
 bool is_CTL(const exprt &expr)
 {
-  auto non_CTL_operator = [](const exprt &expr) {
-    return is_temporal_operator(expr) && !is_CTL_operator(expr);
-  };
+  auto non_CTL_operator = [](const exprt &expr)
+  { return is_temporal_operator(expr) && !is_CTL_operator(expr); };
 
   return !has_subexpr(expr, non_CTL_operator);
 }
@@ -84,9 +195,8 @@ bool is_LTL_past_operator(const exprt &expr)
 
 bool is_LTL(const exprt &expr)
 {
-  auto non_LTL_operator = [](const exprt &expr) {
-    return is_temporal_operator(expr) && !is_LTL_operator(expr);
-  };
+  auto non_LTL_operator = [](const exprt &expr)
+  { return is_temporal_operator(expr) && !is_LTL_operator(expr); };
 
   return !has_subexpr(expr, non_LTL_operator);
 }
@@ -169,16 +279,20 @@ bool is_SVA_always_s_eventually_p(const exprt &expr)
 
 std::optional<exprt> LTL_to_CTL(exprt expr)
 {
-  // We map a subset of LTL to ACTL, following
+  // We map the LTLdet fragment to ACTLdet, following
   // Monika Maidl. "The common fragment of CTL and LTL"
   // http://dx.doi.org/10.1109/SFCS.2000.892332
   //
-  // Specificially, we allow
+  // Specifically, we allow
   // * state predicates
   // * conjunctions of allowed formulas
   // * X φ, where φ is allowed
-  // * F φ, where φ is allowed
   // * G φ, where φ is allowed
+  // * F p, where p is a state predicate
+  // * (p ∧ φ1) ∨ (!p ∧ φ2)
+  // * (p ∧ φ1) U (!p ∧ φ2)
+  // * (p ∧ φ1) W (!p ∧ φ2)
+  //   where p is a state predicate and φ1, φ2 are allowed
   if(!has_temporal_operator(expr))
   {
     return expr;
@@ -204,9 +318,8 @@ std::optional<exprt> LTL_to_CTL(exprt expr)
   }
   else if(expr.id() == ID_F)
   {
-    auto rec = LTL_to_CTL(to_F_expr(expr).op());
-    if(rec.has_value())
-      return AF_exprt{*rec};
+    if(is_state_formula(to_F_expr(expr).op()))
+      return AF_exprt{to_F_expr(expr).op()};
     else
       return {};
   }
@@ -229,6 +342,48 @@ std::optional<exprt> LTL_to_CTL(exprt expr)
     }
     else
       return {};
+  }
+  else if(expr.id() == ID_or)
+  {
+    if(expr.operands().size() != 2)
+      return {};
+
+    return convert_guarded_binary(
+      to_binary_expr(expr).lhs(),
+      to_binary_expr(expr).rhs(),
+      [](exprt positive_branch, exprt negative_branch)
+      {
+        return exprt{
+          or_exprt{std::move(positive_branch), std::move(negative_branch)}};
+      });
+  }
+  else if(expr.id() == ID_U)
+  {
+    auto &u_expr = to_U_expr(expr);
+    return convert_guarded_binary(
+      u_expr.lhs(),
+      u_expr.rhs(),
+      [](exprt positive_branch, exprt negative_branch)
+      {
+        return exprt{
+          AU_exprt{std::move(positive_branch), std::move(negative_branch)}};
+      });
+  }
+  else if(expr.id() == ID_weak_U)
+  {
+    auto &weak_u_expr = to_weak_U_expr(expr);
+    return convert_guarded_binary(
+      weak_u_expr.lhs(),
+      weak_u_expr.rhs(),
+      [](exprt positive_branch, exprt negative_branch)
+      {
+        exprt release_branch = negative_branch;
+        exprt until_or_release =
+          or_exprt{std::move(positive_branch), std::move(negative_branch)};
+
+        return exprt{
+          AR_exprt{std::move(release_branch), std::move(until_or_release)}};
+      });
   }
   else
     return {};
