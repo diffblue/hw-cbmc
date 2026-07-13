@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 EX_input1.smv
 --bdd
 ^\[spec1\] EX some_var = TRUE: PROVED$
@@ -6,8 +6,3 @@ EX_input1.smv
 ^SIGNAL=0$
 --
 ^warning: ignoring
---
-The BDD implementation of EX leaves current input variables in the resulting
-state set instead of projecting them away. That makes the satisfaction set for
-EX some_var depend on the current value of some_input, so the initial state is
-incorrectly classified as violating the property.

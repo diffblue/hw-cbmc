@@ -23,6 +23,7 @@ struct bdd_transition_relationt
   {
     mini_bddt current;
     mini_bddt next;
+    bool is_input = false;
   };
 
   std::vector<variable_pairt> variables;
@@ -57,6 +58,7 @@ protected:
   const bdd_transition_relationt &transition_relation;
 
   mini_bddt current_to_next(const mini_bddt &) const;
+  mini_bddt project_inputs(const mini_bddt &) const;
   mini_bddt project_next(const mini_bddt &) const;
   mini_bddt fixedpoint(std::function<mini_bddt(mini_bddt)>, mini_bddt);
 };

@@ -50,6 +50,25 @@ static bdd_transition_relationt make_counter_system(mini_bdd_mgrt &mgr)
   return tr;
 }
 
+/// Build a system with one Boolean input i and one Boolean state s.
+/// Transition: next(s) = i.
+/// The input is unconstrained, so every current state has a successor with
+/// s=1 and a successor with s=0.
+static bdd_transition_relationt make_input_driven_system(mini_bdd_mgrt &mgr)
+{
+  auto i = mgr.Var("i");
+  auto i_next = mgr.Var("i'");
+  auto s = mgr.Var("s");
+  auto s_next = mgr.Var("s'");
+
+  bdd_transition_relationt tr;
+  tr.variables.push_back({i, i_next, true});
+  tr.variables.push_back({s, s_next});
+  tr.transition_conjuncts.push_back(s_next == i);
+
+  return tr;
+}
+
 SCENARIO("BDD model checker EX on toggle system")
 {
   mini_bdd_mgrt mgr;
@@ -88,6 +107,27 @@ SCENARIO("BDD model checker AX on toggle system")
     THEN("AX(s) equals EX(s)")
     {
       REQUIRE((mc.AX(s) == mc.EX(s)).is_true());
+    }
+  }
+}
+
+SCENARIO("BDD model checker EX projects current inputs")
+{
+  mini_bdd_mgrt mgr;
+  auto tr = make_input_driven_system(mgr);
+  auto s = tr.variables[1].current;
+  bdd_model_checkert mc(tr);
+
+  GIVEN("An unconstrained current input determines the next state")
+  {
+    THEN("EX(s) is true for all current states")
+    {
+      REQUIRE(mc.EX(s).is_true());
+    }
+
+    THEN("EX(!s) is also true for all current states")
+    {
+      REQUIRE(mc.EX(!s).is_true());
     }
   }
 }

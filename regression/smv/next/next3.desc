@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 next3.smv
 --bdd
 ^\[.*\] AX x <-> !x: PROVED$
@@ -6,4 +6,3 @@ next3.smv
 ^SIGNAL=0$
 --
 --
-The BDD engine gives the wrong answer.

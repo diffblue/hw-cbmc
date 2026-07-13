@@ -34,6 +34,17 @@ mini_bddt bdd_model_checkert::project_next(const mini_bddt &bdd) const
   return tmp;
 }
 
+mini_bddt bdd_model_checkert::project_inputs(const mini_bddt &bdd) const
+{
+  mini_bddt tmp = bdd;
+
+  for(const auto &v : transition_relation.variables)
+    if(v.is_input)
+      tmp = exists(tmp, v.current.var());
+
+  return tmp;
+}
+
 mini_bddt bdd_model_checkert::fixedpoint(
   std::function<mini_bddt(mini_bddt)> tau,
   mini_bddt x)
@@ -64,7 +75,7 @@ mini_bddt bdd_model_checkert::EX(mini_bddt f)
   for(const auto &c : transition_relation.constraint_conjuncts)
     conjunction = conjunction & c;
 
-  return project_next(conjunction);
+  return project_inputs(project_next(conjunction));
 }
 
 mini_bddt bdd_model_checkert::EF(mini_bddt f)
