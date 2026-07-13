@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 strong_R1.sv
 --bound 20
 ^\[main\.p0\] .*: REFUTED$

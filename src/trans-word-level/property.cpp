@@ -178,7 +178,8 @@ static obligationst property_obligations_rec(
     property_expr.id() == ID_sva_always)
   {
     // We want AG phi.
-    auto &phi = [](const exprt &expr) -> const exprt & {
+    auto &phi = [](const exprt &expr) -> const exprt &
+    {
       if(expr.id() == ID_AG)
         return to_AG_expr(expr).op();
       else if(expr.id() == ID_G)
@@ -521,7 +522,7 @@ static obligationst property_obligations_rec(
     auto &q = to_strong_R_expr(property_expr).rhs();
 
     // p strongR q ≡ Fp ∧ (p R q)
-    exprt tmp = and_exprt{F_exprt{q}, weak_U_exprt{p, q}};
+    exprt tmp = and_exprt{F_exprt{p}, R_exprt{p, q}};
 
     return property_obligations_rec(
       tmp, allow_pending_matches, current, no_timeframes, lasso);
@@ -887,7 +888,8 @@ obligationst property_obligations_lasso(
   {
     return expr.id() == ID_F || expr.id() == ID_AF ||
            expr.id() == ID_sva_s_eventually || expr.id() == ID_sva_s_until ||
-           expr.id() == ID_U || expr.id() == ID_strong_R;
+           expr.id() == ID_sva_s_until_with || expr.id() == ID_U ||
+           expr.id() == ID_strong_R;
   };
 
   // Does the property use a lasso? This assumes NNF.
