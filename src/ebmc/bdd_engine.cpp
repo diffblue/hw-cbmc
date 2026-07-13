@@ -777,7 +777,7 @@ void bdd_enginet::build_BDDs()
   for(const auto &v : vars)
   {
     transition_relation.variables.push_back(
-      {v.second.current_bdd, v.second.next_bdd});
+      {v.second.current_bdd, v.second.next_bdd, v.second.is_input});
   }
 
   // Add the next-state variable constraints for
