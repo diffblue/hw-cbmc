@@ -228,11 +228,11 @@ exprt SVA_to_LTL(exprt expr)
   }
   else if(expr.id() == ID_sva_s_until_with)
   {
-    // This is release with swapped operands
+    // This is strong release with swapped operands.
     auto &until_with = to_sva_s_until_with_expr(expr);
     auto rec_lhs = SVA_to_LTL(until_with.lhs());
     auto rec_rhs = SVA_to_LTL(until_with.rhs());
-    return R_exprt{rec_rhs, rec_lhs}; // swapped
+    return strong_R_exprt{rec_rhs, rec_lhs}; // swapped
   }
   else if(!has_temporal_operator(expr))
   {
