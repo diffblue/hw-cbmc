@@ -407,7 +407,7 @@ int hw_cbmc_parse_optionst::doit()
   if(cmdline.isset("version"))
   {
     std::cout << CBMC_VERSION << std::endl;
-    return 0;
+    return CPROVER_EXIT_SUCCESS;
   }
 
   //
@@ -434,7 +434,7 @@ int hw_cbmc_parse_optionst::doit()
   if(cmdline.isset("preprocess"))
   {
     preprocessing(options);
-    return 0;
+    return CPROVER_EXIT_SUCCESS;
   }
 
   if(cmdline.args.empty())
@@ -561,11 +561,11 @@ int hw_cbmc_parse_optionst::doit()
   if(cmdline.isset("show-properties"))
   {
     show_properties(goto_model, ui_message_handler);
-    return 0;
+    return CPROVER_EXIT_SUCCESS;
   }
 
   if(set_properties())
-    return 7;
+    return CPROVER_EXIT_SET_PROPERTIES_FAILED;
 
   std::unique_ptr<goto_verifiert> verifier = std::make_unique<
     all_properties_verifier_with_trace_storaget<multi_path_symex_checkert>>(
@@ -660,7 +660,7 @@ int hw_cbmc_parse_optionst::get_modules(std::list<exprt> &bmc_constraints) {
           if(!out)
           {
             log.error() << "failed to open given outfile" << messaget::eom;
-            return 6;
+            return CPROVER_EXIT_INCORRECT_TASK;
           }
 
           gen_interface(goto_model.symbol_table, symbol, true, out, std::cerr);
@@ -668,7 +668,7 @@ int hw_cbmc_parse_optionst::get_modules(std::list<exprt> &bmc_constraints) {
         else
           gen_interface(goto_model.symbol_table, symbol, true, std::cout, std::cerr);
 
-        return 0; // done
+        return CPROVER_EXIT_SUCCESS; // done
       }
 
       //
@@ -681,19 +681,22 @@ int hw_cbmc_parse_optionst::get_modules(std::list<exprt> &bmc_constraints) {
                ui_message_handler, get_bound());
     }
 
-    catch(int e) { return 6; }
+    catch(int e)
+    {
+      return CPROVER_EXIT_EXCEPTION;
+    }
   }
   else if(cmdline.isset("gen-interface"))
   {
     log.error() << "must specify top module name for gen-interface"
                 << messaget::eom;
-    return 6;
+    return CPROVER_EXIT_INCORRECT_TASK;
   }
   else if(cmdline.isset("show-modules"))
   {
     show_modulest::from_symbol_table(goto_model.symbol_table)
       .plain_text(std::cout);
-    return 0; // done
+    return CPROVER_EXIT_SUCCESS; // done
   }
 
   return -1; // continue
