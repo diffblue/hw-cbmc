@@ -1,0 +1,97 @@
+name: LogikBench
+
+# Runs ebmc over the LogikBench RTL benchmark suite
+# (https://github.com/zeroasiccorp/logikbench) and publishes an HTML report
+# to GitHub Pages.  This is a report-only smoke test of the Verilog/
+# SystemVerilog front-end and elaboration over a wide range of real-world
+# circuits; it never fails the build on a per-circuit basis.
+
+on:
+  # Refresh the published report whenever main changes.
+  push:
+    branches: [ main ]
+  # Weekly, to pick up new LogikBench circuits.
+  schedule:
+    - cron: '0 4 * * 1'
+  # Allow manual runs from the Actions tab.
+  workflow_dispatch:
+
+# Allow the job to deploy to GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# A single in-progress deployment at a time; do not cancel a running one.
+concurrency:
+  group: pages-logikbench
+  cancel-in-progress: false
+
+jobs:
+  # Build ebmc and run it over the LogikBench circuits, producing the report.
+  run-logikbench:
+    name: Run ebmc on LogikBench
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get remove --purge man-db
+          packages_to_install="flex bison libxml2-utils ccache"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
+      - name: Prepare ccache
+        uses: actions/cache/restore@v6
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-24.04-make-gcc-logikbench-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-24.04-make-gcc-logikbench
+            ${{ runner.os }}-24.04-make-gcc
+      - name: ccache environment
+        run: |
+          echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
+      - name: Zero ccache stats and limit in size
+        run: ccache -z --max-size=500M
+      - name: Get cadical and minisat
+        run: make -C lib/cbmc/src cadical-download minisat2-download
+      - name: Build ebmc with make
+        run: make -C src/ebmc -j4 CXX="ccache g++" MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
+      - name: Save ccache
+        uses: actions/cache/save@v6
+        if: always()
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-24.04-make-gcc-logikbench-${{ github.sha }}
+      - name: Try the ebmc binary
+        run: ./src/ebmc/ebmc --version
+      - name: Run ebmc on the LogikBench circuits
+        run: |
+          mkdir -p _site
+          PATH=$PATH:$PWD/src/ebmc benchmarking/logikbench.sh _site/index.html
+      - name: Upload the report as a Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  # Publish the report to GitHub Pages.  Skipped on forks, where Pages is
+  # not configured.
+  deploy:
+    name: Publish report to GitHub Pages
+    needs: run-logikbench
+    if: github.event_name != 'pull_request' && github.repository == 'diffblue/hw-cbmc'
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
