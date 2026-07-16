@@ -700,7 +700,13 @@ bool ic3_solvert::propagate()
   for(std::size_t i = 1; i + 1 < frame_clauses.size(); i++)
   {
     // The clauses of F_i's delta; a copy, since pushing mutates the frame.
+    // Sort by size: shorter (more general) clauses push more easily.
     auto clauses = frame_clauses[i];
+    std::sort(
+      clauses.begin(),
+      clauses.end(),
+      [](const frame_clauset &a, const frame_clauset &b)
+      { return a.clause.size() < b.clause.size(); });
 
     for(const auto &fc : clauses)
     {
@@ -726,16 +732,39 @@ bool ic3_solvert::propagate()
       num_queries++;
       if(trivially_unsat || !S.solve(assumptions))
       {
-        // Holds at F_{i+1}: move the delta entry up. The solvers at
-        // levels <= i contain the clause already; only level i+1 needs it.
+        // Push as far forward as possible.
+        std::size_t push_to = i + 1;
+        while(push_to + 1 < frame_clauses.size())
+        {
+          auto &S2 = get_solver(push_to);
+          IctMinisat::vec<IctMinisat::Lit> asmp2;
+          bool triv2 = false;
+          for(auto l : cube)
+          {
+            literalt nl = to_next(l);
+            if(nl.is_false())
+            {
+              triv2 = true;
+              break;
+            }
+            if(!nl.is_true())
+              asmp2.push(to_minisat(nl));
+          }
+          num_queries++;
+          if(triv2 || !S2.solve(asmp2))
+            push_to++;
+          else
+            break;
+        }
+
         auto &cls = frame_clauses[i];
         auto it = std::find(cls.begin(), cls.end(), fc);
         if(it != cls.end())
           cls.erase(it);
 
-        if(i + 1 < frame_solvers.size() && frame_solvers[i + 1])
-          add_minisat_clause(*frame_solvers[i + 1], fc.clause);
-        frame_clauses[i + 1].push_back(fc);
+        if(push_to < frame_solvers.size() && frame_solvers[push_to])
+          add_minisat_clause(*frame_solvers[push_to], fc.clause);
+        frame_clauses[push_to].push_back(fc);
       }
     }
 
@@ -829,11 +858,21 @@ ic3_resultt ic3_solvert::solve()
         else
         {
           cubet generalized = generalize(level - 1, core);
-          add_clause(level, negate_cube(generalized));
 
-          // Re-queue at level+1 to push the blocking clause higher
-          if(level + 1 <= k)
-            obligations.push({std::move(cube), level + 1});
+          // Eagerly push the generalized clause to the highest frame where
+          // it is still relatively inductive.
+          std::size_t push_to = level;
+          while(
+            push_to < k &&
+            relative_induction(push_to, generalized, nullptr, false))
+          {
+            push_to++;
+          }
+
+          add_clause(push_to, negate_cube(generalized));
+
+          if(push_to + 1 <= k)
+            obligations.push({std::move(cube), push_to + 1});
         }
       }
     } // end blocking phase
