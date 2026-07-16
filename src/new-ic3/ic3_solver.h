@@ -176,6 +176,8 @@ private:
     cubet *predecessor,
     bool lift_predecessor);
 
+  void set_target_polarity(IctMinisat::Solver &S, const cubet &cube);
+
   void repair_init(const cubet &cube, cubet &reduced);
 
   bool ctg_down(std::size_t level, cubet &cand, std::size_t &ctg_budget);
