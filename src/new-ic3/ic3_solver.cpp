@@ -129,6 +129,11 @@ ic3_solvert::ic3_solvert(
   // Encode the netlist into CNF: one timeframe only — the next-state
   // functions are nodes in the same variable space.
   base_cnf = std::make_unique<recording_cnft>(solver_message_handler);
+
+  // Take invariant constraints out of the netlist before encoding.
+  const auto constraints = std::move(netlist.constraints);
+  netlist.constraints.clear();
+
   bmc_mapt bmc_map(netlist, 1, *base_cnf);
   {
     messaget message{solver_message_handler};
@@ -136,6 +141,20 @@ ic3_solvert::ic3_solvert(
   }
 
   prop_current = bmc_map.translate(0, prop_netlist_lit);
+
+  // Build the constraint literal from the saved constraints.
+  if(!constraints.empty())
+  {
+    literalt c_all = const_literal(true);
+    for(auto c : constraints)
+      c_all = base_cnf->land(c_all, bmc_map.translate(0, c));
+    if(!c_all.is_true())
+    {
+      constraint_lit = c_all;
+      // Weaken the property: bad = constraints ∧ ¬P
+      prop_current = base_cnf->lor(!c_all, prop_current);
+    }
+  }
 
   // The initial state constraint, as unit clauses.
   for(auto n : netlist.initial)
@@ -178,6 +197,8 @@ ic3_solvert::ic3_solvert(
   init_solver =
     std::make_unique<satcheck_no_simplifiert>(solver_message_handler);
   replay_base_cnf(*init_solver, true);
+  if(!constraint_lit.is_true())
+    init_solver->lcnf({constraint_lit});
 
   // Create lifting solver using IC3's MiniSAT (has releaseVar).
   lift_minisat = new_minisat_solver();
@@ -300,6 +321,8 @@ IctMinisat::Solver &ic3_solvert::get_solver(std::size_t level)
   if(!fs)
   {
     fs = new_minisat_solver();
+    if(!constraint_lit.is_true())
+      add_minisat_clause(*fs, {constraint_lit});
     if(level == 0)
       for(auto l : init_units)
         add_minisat_clause(*fs, {l});
@@ -430,7 +453,7 @@ cubet ic3_solvert::lift(
     if(l.is_true())
       return full_state;
 
-  // Activation literal for the target clause: act -> target_clause
+  // Activation literal for the target clause: act -> target_clause ∨ ¬constraint
   Var act_var = S.newVar();
   Lit act = mkLit(act_var, false);
   {
@@ -439,6 +462,8 @@ cubet ic3_solvert::lift(
     for(auto l : target_clause)
       if(!l.is_false())
         clause.push(to_minisat(l));
+    if(!constraint_lit.is_true())
+      clause.push(to_minisat(!constraint_lit));
     S.addClause(clause);
   }
 
