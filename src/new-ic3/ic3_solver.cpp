@@ -129,6 +129,16 @@ ic3_solvert::ic3_solvert(
   // Encode the netlist into CNF: one timeframe only — the next-state
   // functions are nodes in the same variable space.
   base_cnf = std::make_unique<recording_cnft>(solver_message_handler);
+
+  // Take the invariant constraints out of the netlist: unwind() would
+  // assert them as unit clauses in base_cnf, which every solver
+  // replays. In the lifting solver they would weaken lift()'s
+  // implication "cube ∧ inputs ∧ T ⇒ target" to hold only modulo the
+  // constraints, admitting constraint-violating states into widened
+  // cubes and hence spurious counterexample chains.
+  const auto constraints = std::move(netlist.constraints);
+  netlist.constraints.clear();
+
   bmc_mapt bmc_map(netlist, 1, *base_cnf);
   {
     messaget message{solver_message_handler};
@@ -172,12 +182,41 @@ ic3_solvert::ic3_solvert(
     }
   }
 
+  // The conjunction of the invariant constraints, as a literal at the
+  // current frame. It is asserted as a unit clause in the frame and
+  // init solvers, weakens the property (a bad state must satisfy the
+  // constraints), and is added to every lift target, so that the
+  // unsatisfiable core proves "cube ∧ inputs ⊨ target ∧ constraints"
+  // unconditionally: no widened cube can contain a
+  // constraint-violating state. Together this makes every obligation
+  // chain a genuine constraint-satisfying counterexample: the initial
+  // state satisfies the constraints via the init solver, each lifted
+  // cube via its lift core, each unlifted (full-state) cube via the
+  // constraint unit in the frame solver that produced it, and the bad
+  // state via the weakened property.
+  if(!constraints.empty())
+  {
+    literalt c_all = const_literal(true);
+    for(auto c : constraints)
+      c_all = base_cnf->land(c_all, bmc_map.translate(0, c));
+
+    if(!c_all.is_true())
+    {
+      constraint_lit = c_all;
+
+      // weaken the property: bad = c_all ∧ ¬P
+      prop_current = base_cnf->lor(!c_all, prop_current);
+    }
+  }
+
   lit_activity.resize(latches.size(), 0.0f);
 
   // Create the initial state solver.
   init_solver =
     std::make_unique<satcheck_no_simplifiert>(solver_message_handler);
   replay_base_cnf(*init_solver, true);
+  if(!constraint_lit.is_true())
+    init_solver->lcnf({constraint_lit});
 
   // Create lifting solver using IC3's MiniSAT (has releaseVar).
   lift_minisat = new_minisat_solver();
@@ -289,6 +328,16 @@ std::unique_ptr<IctMinisat::Solver> ic3_solvert::new_minisat_solver()
     S->newVar();
   for(const auto &clause : base_cnf->get_clauses())
     add_minisat_clause(*S, clause);
+  // Restrict decisions to latch and input variables. The AIG gates are
+  // encoded with the full 3-clause Tseitin AND encoding (both polarities),
+  // so once all latch-current and input variables are assigned, BCP
+  // implies every internal gate variable; models are thus still total.
+  for(IctMinisat::Var v = 0; v < S->nVars(); v++)
+    S->setDecisionVar(v, false);
+  for(const auto &latch : latches)
+    S->setDecisionVar(latch.current.var_no(), true);
+  for(auto l : input_lits)
+    S->setDecisionVar(l.var_no(), true);
   return S;
 }
 
@@ -300,6 +349,8 @@ IctMinisat::Solver &ic3_solvert::get_solver(std::size_t level)
   if(!fs)
   {
     fs = new_minisat_solver();
+    if(!constraint_lit.is_true())
+      add_minisat_clause(*fs, {constraint_lit});
     if(level == 0)
       for(auto l : init_units)
         add_minisat_clause(*fs, {l});
@@ -430,7 +481,10 @@ cubet ic3_solvert::lift(
     if(l.is_true())
       return full_state;
 
-  // Activation literal for the target clause: act -> target_clause
+  // Activation literal for the target clause: act -> target_clause.
+  // The negated constraint is part of every target, so that the
+  // unsatisfiable core also proves that the lifted cube satisfies the
+  // invariant constraints — see the constructor.
   Var act_var = S.newVar();
   Lit act = mkLit(act_var, false);
   {
@@ -439,6 +493,8 @@ cubet ic3_solvert::lift(
     for(auto l : target_clause)
       if(!l.is_false())
         clause.push(to_minisat(l));
+    if(!constraint_lit.is_true())
+      clause.push(to_minisat(!constraint_lit));
     S.addClause(clause);
   }
 
@@ -829,11 +885,21 @@ ic3_resultt ic3_solvert::solve()
         else
         {
           cubet generalized = generalize(level - 1, core);
-          add_clause(level, negate_cube(generalized));
 
-          // Re-queue at level+1 to push the blocking clause higher
-          if(level + 1 <= k)
-            obligations.push({std::move(cube), level + 1});
+          // Eagerly push the generalized clause to the highest frame where
+          // it is still relatively inductive: one query per level, instead
+          // of a full re-generalization when the obligation is re-queued.
+          std::size_t push_to = level;
+          while(push_to < k &&
+                relative_induction(push_to, generalized, nullptr, false))
+          {
+            push_to++;
+          }
+
+          add_clause(push_to, negate_cube(generalized));
+
+          if(push_to + 1 <= k)
+            obligations.push({std::move(cube), push_to + 1});
         }
       }
     } // end blocking phase

@@ -48,6 +48,73 @@ than ~50 frames deep).
 rIC3 remains substantially ahead of both ebmc engines; it is the source
 of several of the techniques used in the new engine.
 
+## Update: decision-variable restriction and eager clause pushing
+
+Two further optimizations (2026-07-12, measured on the same machine,
+same 49-benchmark sample, 60 s timeout):
+
+1. *Decision-variable restriction*: the per-frame MiniSAT solvers only
+   branch on latch and input variables. The AIG gates use the full
+   3-clause Tseitin encoding, so BCP totalizes any assignment of the
+   latches and inputs; models remain genuine. This removes the
+   `pickBranchLit` overhead (previously ~half of SAT search time) and
+   gives a uniform 7–22% speedup.
+2. *Eager clause pushing*: after MIC generalization, the blocking phase
+   pushes the generalized clause to the highest frame where it is still
+   relatively inductive — one SAT query per level — instead of
+   re-running a full MIC generalization each time the obligation is
+   re-queued one level higher. This is the dominant win, particularly
+   on refutations with deep counterexamples.
+
+A third experiment, VSIDS-style decay of the MIC literal-activity
+ordering, improved eijkbs3330 but caused a reproducible 15x regression
+on 139453p22 and was dropped.
+
+| tool | solved (of 49) | timeouts | total time on solved |
+|---|---:|---:|---:|
+| ebmc `--new-ic3` before | 43 | 6 | 108.3 s |
+| ebmc `--new-ic3` after | 45 | 4 | 88.9 s |
+
+139453p22 (t/o → 5.5 s) and bc57sensorsp2 (t/o → 44.6 s) are newly
+solved; on the 43 benchmarks solved before, total time drops from
+108.3 s to 38.8 s (2.8x). Largest individual improvements:
+neclaftp1001 16.0 → 1.3 s, nusmvtcasp5 24.3 → 4.7 s, 139462p24
+13.9 → 0.8 s. The only regression is csmacdp2 (1.3 → 4.7 s).
+prodcellp2 now completes (refuted) in ~110 s instead of diverging.
+All verdicts continue to match the published HWMCC08 results.
+
+## Broader evaluation: HWMCC'17 and HWMCC'25
+
+Same machine, 60 s timeout, run in parallel (4 workers for HWMCC'17,
+2 for HWMCC'25), engines built from this PR's sources.
+
+HWMCC'17 single-property track (all 300 AIGER benchmarks, SMV
+translations in `benchmarking/hwmcc17-single-smv/`; expected verdicts
+are the consensus of the 14 HWMCC'17 solvers, available for 242 of
+the 300):
+
+| engine | solved (of 300) | proved / refuted | total time on solved | wrong verdicts |
+|---|---:|---:|---:|---:|
+| ebmc `--ic3` | 125 | 93 / 32 | 697 s | 0 |
+| ebmc `--new-ic3` | 117 | 87 / 30 | 435 s | 0 |
+
+Of the 113 benchmarks solved by both engines, the new engine is
+faster on 91. The old engine solves 12 uniquely (among them the
+intel*, 6s* and prodcellp4 families), the new engine 4.
+
+HWMCC'25 bit-level safety track (the latest competition, October
+2025; 142-benchmark sample — every 2nd of the 284 benchmarks with a
+definitive competition verdict — AIGER 1.9 converted to SMV with
+`aigtosmv -s`): `--new-ic3` solves 64 (47 proved, 17 refuted) in
+388 s, with all verdicts matching the competition results. These
+numbers include the invariant-constraint soundness fix of #1994;
+without it, the engine reports 15 spurious refutations on this set
+(HWMCC'08/'17 benchmarks carry no invariant constraints, HWMCC'25
+ones do). For scale, on the same sample rIC3 solved 112 within 60 s
+in the competition (on different hardware); the gap is concentrated
+in the constrained instances, where the soundness fix weakens
+predecessor generalization.
+
 ## Reproducing
 
     # ebmc engines + rIC3 + Pono, CSV output
