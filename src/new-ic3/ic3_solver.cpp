@@ -295,11 +295,15 @@ std::unique_ptr<IctMinisat::Solver> ic3_solvert::new_minisat_solver()
 IctMinisat::Solver &ic3_solvert::get_solver(std::size_t level)
 {
   while(frame_solvers.size() <= level)
+  {
     frame_solvers.emplace_back();
+    frame_solver_queries.push_back(0);
+  }
   auto &fs = frame_solvers[level];
-  if(!fs)
+  if(!fs || frame_solver_queries[level] >= SOLVER_RECYCLE_LIMIT)
   {
     fs = new_minisat_solver();
+    frame_solver_queries[level] = 0;
     if(level == 0)
       for(auto l : init_units)
         add_minisat_clause(*fs, {l});
@@ -307,6 +311,7 @@ IctMinisat::Solver &ic3_solvert::get_solver(std::size_t level)
       for(const auto &cl : frame_clauses[j])
         add_minisat_clause(*fs, cl.clause);
   }
+  frame_solver_queries[level]++;
   return *fs;
 }
 
