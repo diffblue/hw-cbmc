@@ -25,14 +25,18 @@ set -u
 LOGIKBENCH_REV=main
 
 # Per-circuit wall-clock limit, in seconds, so that a single hard design
-# cannot stall the whole run.  Requires coreutils `timeout` (present on Linux).
-PER_CIRCUIT_TIMEOUT=${PER_CIRCUIT_TIMEOUT:-120}
+# cannot stall the whole run.  Uses coreutils `timeout` (present on Linux) or
+# `gtimeout` (coreutils on macOS, `brew install coreutils`).
+PER_CIRCUIT_TIMEOUT=${PER_CIRCUIT_TIMEOUT:-60}
 
 REPORT=${1:-logikbench-report.html}
 
 if command -v timeout > /dev/null 2>&1 ; then
   RUN="timeout $PER_CIRCUIT_TIMEOUT"
+elif command -v gtimeout > /dev/null 2>&1 ; then
+  RUN="gtimeout $PER_CIRCUIT_TIMEOUT"
 else
+  echo "warning: no timeout/gtimeout found; running without a per-circuit limit"
   RUN=""
 fi
 
