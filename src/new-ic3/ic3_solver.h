@@ -127,8 +127,8 @@ private:
 
   literalt prop_current;
 
-  // Max CTG (counterexample-to-generalization) attempts per generalize call
-  static constexpr std::size_t CTG_MAX = 0;
+  // Max CTG (counterexample-to-generalization) attempts per generalize call.
+  std::size_t ctg_max = 3;
   // Max join steps (intersection with predecessor) before giving up
   static constexpr std::size_t JOIN_MAX = 3;
   // Max consecutive MIC literal-drop failures before early termination
