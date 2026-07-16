@@ -33,14 +33,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ebmc/show_modules.h>
 #include <ebmc/transition_system.h>
 #include <goto-checker/all_properties_verifier_with_trace_storage.h>
+#include <goto-checker/goto_trace_storage.h>
 #include <goto-checker/goto_verifier.h>
 #include <goto-checker/multi_path_symex_checker.h>
 #include <langapi/language_file.h>
 #include <langapi/mode.h>
 #include <linking/static_lifetime_init.h>
+#include <trans-netlist/trans_trace.h>
 #include <trans-word-level/instantiate_word_level.h>
-#include <trans-word-level/trans_trace_word_level.h>
-#include <trans-word-level/unwind.h>
 #include <verilog/verilog_ebmc_language.h>
 
 #include "gen_interface.h"
@@ -422,7 +422,13 @@ int hw_cbmc_parse_optionst::doit()
                            messaget::M_STATISTICS, ui_message_handler);
 
   if(cmdline.isset("vcd"))
+  {
     options.set_option("vcd", cmdline.get_value("vcd"));
+
+    // the verifier only stores the traces needed for the
+    // VCD output when the trace option is set
+    options.set_option("trace", true);
+  }
 
   //
   // Print a banner
@@ -567,13 +573,16 @@ int hw_cbmc_parse_optionst::doit()
   if(set_properties())
     return 7;
 
-  std::unique_ptr<goto_verifiert> verifier = std::make_unique<
+  auto verifier = std::make_unique<
     all_properties_verifier_with_trace_storaget<multi_path_symex_checkert>>(
     options, ui_message_handler, goto_model);
 
   // do actual BMC
   const resultt result = (*verifier)();
   verifier->report();
+
+  if(result == resultt::FAIL && options.get_option("vcd") != "")
+    show_unwind_trace(options, verifier->get_traces());
 
   return result_to_exit_code(result);
 }
@@ -728,54 +737,142 @@ void hw_cbmc_parse_optionst::help()
     "\n";
 }
 
-void hw_cbmc_parse_optionst::do_unwind_module(prop_convt &prop_conv) {
-  if (unwind_module == "" || unwind_no_timeframes == 0)
-    return;
+/*******************************************************************\
 
-  namespacet ns{goto_model.symbol_table};
-  const symbolt &symbol = ns.lookup(unwind_module);
+Function: compute_trans_trace
 
-  log.status() << "Unwinding transition system `" << symbol.name << "' with "
-               << unwind_no_timeframes << " time frames" << messaget::eom;
+  Inputs:
 
-  //  auto dp= get_decision_procedure();
+ Outputs:
 
-  ::unwind(to_trans_expr(symbol.value), ui_message_handler, prop_conv,
-           unwind_no_timeframes, ns, true);
+ Purpose: build a hardware trace from a goto trace, using the
+          values of the timeframe-instantiated hardware symbols
 
-  log.status() << "Unwinding transition system done" << messaget::eom;
-}
+\*******************************************************************/
 
-void hw_cbmc_parse_optionst::show_unwind_trace(const optionst &options,
-                                               const prop_convt &prop_conv) {
-  if (unwind_module == "" || unwind_no_timeframes == 0)
-    return;
+static trans_tracet compute_trans_trace(
+  const goto_tracet &goto_trace,
+  std::size_t no_timeframes,
+  const namespacet &ns,
+  const irep_idt &module)
+{
+  // The hardware signals show up in the goto trace as assignments
+  // to the timeframe-instantiated symbols (identifier@t). Collect
+  // their values, per signal and timeframe.
+  std::map<irep_idt, std::vector<exprt>> values;
 
-  namespacet ns{goto_model.symbol_table};
-  auto trans_trace =
-    compute_trans_trace(prop_conv, unwind_no_timeframes, ns, unwind_module);
+  for(const auto &step : goto_trace.steps)
+  {
+    if(!step.is_assignment() && !step.is_decl())
+      continue;
 
-  if (options.get_option("vcd") != "") {
-    if (options.get_option("vcd") == "-")
-      show_trans_trace_vcd(trans_trace, log, ns, std::cout);
-    else {
-      std::ofstream out(widen_if_needed(options.get_option("vcd")));
-      show_trans_trace_vcd(trans_trace, log, ns, out);
+    if(step.full_lhs.id() != ID_symbol)
+      continue;
+
+    const std::string identifier =
+      id2string(to_symbol_expr(step.full_lhs).get_identifier());
+
+    const auto separator_pos = identifier.rfind('@');
+    if(separator_pos == std::string::npos)
+      continue;
+
+    const auto timeframe_string = identifier.substr(separator_pos + 1);
+    if(
+      timeframe_string.empty() ||
+      timeframe_string.find_first_not_of("0123456789") != std::string::npos)
+    {
+      continue;
+    }
+
+    const auto timeframe = unsafe_string2size_t(timeframe_string);
+    if(timeframe >= no_timeframes)
+      continue;
+
+    // the base identifier must be a hardware signal
+    const irep_idt base_identifier = identifier.substr(0, separator_pos);
+    const symbolt *symbol;
+    if(ns.lookup(base_identifier, symbol))
+      continue;
+
+    if(symbol->is_type || symbol->is_property || symbol->is_macro)
+      continue;
+
+    auto &signal_values = values[base_identifier];
+    signal_values.resize(no_timeframes, nil_exprt());
+    signal_values[timeframe] = step.full_lhs_value;
+  }
+
+  trans_tracet dest;
+
+  dest.mode = id2string(ns.lookup(module).mode);
+  dest.states.resize(no_timeframes);
+
+  for(std::size_t t = 0; t < no_timeframes; t++)
+  {
+    trans_tracet::statet &state = dest.states[t];
+
+    for(const auto &[identifier, signal_values] : values)
+    {
+      const symbolt &symbol = ns.lookup(identifier);
+      state.assignments.emplace_back(symbol.symbol_expr(), signal_values[t]);
     }
   }
 
-  switch(ui_message_handler.get_ui())
+  return dest;
+}
+
+/*******************************************************************\
+
+Function: hw_cbmc_parse_optionst::show_unwind_trace
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: write the hardware signals of the counterexample
+          as a VCD file
+
+\*******************************************************************/
+
+void hw_cbmc_parse_optionst::show_unwind_trace(
+  const optionst &options,
+  const goto_trace_storaget &traces)
+{
+  if(unwind_module.empty() || unwind_no_timeframes == 0)
+    return;
+
+  if(traces.all().empty())
+    return;
+
+  const namespacet ns{goto_model.symbol_table};
+
+  auto trans_trace = compute_trans_trace(
+    traces.all().front(), unwind_no_timeframes, ns, unwind_module);
+
+  if(
+    trans_trace.states.empty() ||
+    trans_trace.states.front().assignments.empty())
   {
-  case ui_message_handlert::uit::PLAIN:
-    show_trans_trace(trans_trace, log, ns, std::cout);
-    break;
+    log.warning() << "no hardware signals in counterexample, "
+                  << "not generating VCD" << messaget::eom;
+    return;
+  }
 
-  case ui_message_handlert::uit::XML_UI:
-    show_trans_trace_xml(trans_trace, log, ns, std::cout);
-    break;
+  const auto &vcd_file = options.get_option("vcd");
 
-  case ui_message_handlert::uit::JSON_UI:
-    show_trans_trace_json(trans_trace, log, ns, std::cout);
-    break;
+  if(vcd_file == "-")
+    show_trans_trace_vcd(trans_trace, log, ns, std::cout);
+  else
+  {
+    std::ofstream out(widen_if_needed(vcd_file));
+
+    if(!out)
+    {
+      log.error() << "failed to open VCD file `" << vcd_file << "'"
+                  << messaget::eom;
+      return;
+    }
+
+    show_trans_trace_vcd(trans_trace, log, ns, out);
   }
 }

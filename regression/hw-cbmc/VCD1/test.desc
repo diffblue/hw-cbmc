@@ -1,0 +1,11 @@
+CORE
+main.c
+--module top --bound 10 main.v --vcd -
+^EXIT=10$
+^SIGNAL=0$
+^VERIFICATION FAILED$
+^\$scope module top \$end$
+^  \$var reg 64 top\.counter counter \[63:0\] \$end$
+^b0+101 top\.counter$
+--
+^warning: ignoring
