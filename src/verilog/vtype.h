@@ -11,6 +11,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/type.h>
 
+/// a Verilog non-composite type, including
+/// integral types (1800 2017 6.11.1), realtime types,
+/// string
 class vtypet
 {
 public:
@@ -22,14 +25,26 @@ public:
   inline unsigned get_width() const { return width; }
   
   inline bool is_bool() const { return vtype==BOOL; }
-  inline bool is_signed() const { return vtype==SIGNED; }
-  inline bool is_unsigned() const { return vtype==UNSIGNED; }
-  inline bool is_integer() const { return vtype==INTEGER; }
-  inline bool is_verilog_signed() const { return vtype==VERILOG_SIGNED; }
-  inline bool is_verilog_unsigned() const { return vtype==VERILOG_UNSIGNED; }
-  inline bool is_verilog_real() const
+  inline bool is_signed_bit() const
   {
-    return vtype == VERILOG_REAL;
+    return vtype == SIGNED_BIT;
+  }
+  inline bool is_unsigned_bit() const
+  {
+    return vtype == UNSIGNED_BIT;
+  }
+  inline bool is_integer() const { return vtype==INTEGER; }
+  inline bool is_signed_logic() const
+  {
+    return vtype == SIGNED_LOGIC;
+  }
+  inline bool is_unsigned_logic() const
+  {
+    return vtype == UNSIGNED_LOGIC;
+  }
+  inline bool is_real() const
+  {
+    return vtype == REAL;
   }
   bool is_null() const
   {
@@ -49,17 +64,37 @@ public:
   }
   inline bool is_other() const { return vtype==OTHER; }
 
+  bool is_signed_integral() const
+  {
+    return vtype == SIGNED_BIT || vtype == SIGNED_LOGIC;
+  }
+
+  bool is_unsigned_integral() const
+  {
+    return vtype == BOOL || vtype == UNSIGNED_BIT || vtype == UNSIGNED_LOGIC;
+  }
+
+  bool is_two_valued() const
+  {
+    return vtype == BOOL || vtype == SIGNED_BIT || vtype == UNSIGNED_BIT;
+  }
+
+  bool is_four_valued() const
+  {
+    return vtype == SIGNED_LOGIC || vtype == UNSIGNED_LOGIC;
+  }
+
 protected:
   typedef enum
   {
     UNKNOWN,
     BOOL,
-    SIGNED,
-    UNSIGNED,
+    SIGNED_BIT,
+    UNSIGNED_BIT,
     INTEGER,
-    VERILOG_SIGNED,
-    VERILOG_UNSIGNED,
-    VERILOG_REAL,
+    SIGNED_LOGIC,
+    UNSIGNED_LOGIC,
+    REAL,
     NULL_TYPE,
     CHANDLE,
     EVENT,

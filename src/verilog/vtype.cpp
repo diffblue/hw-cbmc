@@ -40,12 +40,12 @@ vtypet::vtypet(const typet &type)
   }
   else if(type.id()==ID_unsignedbv)
   {
-    vtype=UNSIGNED;
+    vtype = UNSIGNED_BIT;
     width=to_unsignedbv_type(type).get_width();
   }
   else if(type.id()==ID_signedbv)
   {
-    vtype=SIGNED;
+    vtype = SIGNED_BIT;
     width=to_signedbv_type(type).get_width();
   }
   else if(type.id()==ID_bool)
@@ -55,22 +55,22 @@ vtypet::vtypet(const typet &type)
   }
   else if(type.id()==ID_verilog_signedbv)
   {
-    vtype=VERILOG_SIGNED;
+    vtype = SIGNED_LOGIC;
     width=to_verilog_signedbv_type(type).get_width();
   }
   else if(type.id()==ID_verilog_unsignedbv)
   {
-    vtype=VERILOG_UNSIGNED;
+    vtype = UNSIGNED_LOGIC;
     width=to_verilog_unsignedbv_type(type).get_width();
   }
   else if(type.id() == ID_verilog_realtime || type.id() == ID_verilog_real)
   {
-    vtype = VERILOG_REAL;
+    vtype = REAL;
     width = 64;
   }
   else if(type.id() == ID_verilog_shortreal)
   {
-    vtype = VERILOG_REAL;
+    vtype = REAL;
     width = 32;
   }
   else if(type.id() == ID_verilog_chandle)
@@ -113,23 +113,23 @@ std::ostream &operator << (std::ostream &out, const vtypet &vtype)
   {
   case vtypet::INTEGER:
     return out << "integer";
-    
-  case vtypet::UNSIGNED:
-    return out << "unsigned(" << vtype.get_width() << ")";
 
-  case vtypet::SIGNED:
-    return out << "signed(" << vtype.get_width() << ")";
-  
-  case vtypet::VERILOG_SIGNED:
-    return out << "verilog_signed(" << vtype.get_width() << ")";
+  case vtypet::UNSIGNED_BIT:
+    return out << "unsigned-bit(" << vtype.get_width() << ")";
 
-  case vtypet::VERILOG_UNSIGNED:
-    return out << "verilog_unsigned(" << vtype.get_width() << ")";
+  case vtypet::SIGNED_BIT:
+    return out << "signed-bit(" << vtype.get_width() << ")";
+
+  case vtypet::SIGNED_LOGIC:
+    return out << "signed-logic(" << vtype.get_width() << ")";
+
+  case vtypet::UNSIGNED_LOGIC:
+    return out << "unsigned-logic(" << vtype.get_width() << ")";
 
   case vtypet::BOOL:
     return out << "bool";
 
-  case vtypet::VERILOG_REAL:
+  case vtypet::REAL:
     return out << "real";
 
   case vtypet::NULL_TYPE:
