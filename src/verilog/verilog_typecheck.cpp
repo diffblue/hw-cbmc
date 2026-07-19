@@ -433,7 +433,7 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
 
   // elaborate the arguments of the call and assign to parameter
 
-  varst old_vars;
+  verilog_simulatort::varst old_vars;
 
   for(std::size_t i=0; i<arguments.size(); i++)
   {
@@ -447,8 +447,8 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
 
     irep_idt p_identifier=parameters[i].get_identifier();
 
-    old_vars[p_identifier]=var_value(p_identifier);
-    vars[p_identifier]=value;
+    old_vars[p_identifier] = simulator.var_value(p_identifier);
+    simulator.vars[p_identifier] = value;
 
 #if 0
     status() << "ASSIGN " << p_identifier << " <- " << to_string(value) << eom;
@@ -457,14 +457,14 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
 
   // interpret it
   for(auto &statement : function_body.statements())
-    verilog_interpreter(statement);
+    simulator.execute(statement);
 
   function_or_task_name="";
 
   // get return value
 
-  exprt return_value=var_value(
-    id2string(function_symbol.name)+"."+
+  exprt return_value = simulator.var_value(
+    id2string(function_symbol.name) + "." +
     id2string(function_symbol.base_name));
 
   return return_value;

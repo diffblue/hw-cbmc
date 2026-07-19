@@ -276,24 +276,10 @@ protected:
       return it->second;
   }
 
-  // interpreter state
-  typedef std::map<irep_idt, exprt> varst;
-  varst vars;
-
-  exprt var_value(const irep_idt &identifier) override {
-    varst::const_iterator it=vars.find(identifier);
-    if(it==vars.end())
-      return nil_exprt();
-    else
-      return it->second;
-  }
-
   // constant function calls, 13.4.3 IEEE 1800-2017
   exprt
   elaborate_constant_function_call(const class function_call_exprt &) override;
 
-  void verilog_interpreter(const class verilog_statementt &);
-  
   // counter for assertions
   unsigned assertion_counter;
 };

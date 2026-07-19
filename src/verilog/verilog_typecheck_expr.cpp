@@ -26,7 +26,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "typename.h"
 #include "verilog_bits.h"
 #include "verilog_expr.h"
-#include "verilog_lowering.h"
 #include "verilog_simplifier.h"
 #include "verilog_types.h"
 #include "vtype.h"
@@ -2083,99 +2082,7 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
 {
   // This performs constant-folding on a type-checked expression
   // according to Section 11.2.1 IEEE 1800-2017.
-  auto expr_lowered = verilog_lowering(std::move(expr));
-
-  // replace constant symbols
-  auto expr_replaced =
-    elaborate_constant_expression_rec(std::move(expr_lowered));
-
-  // finally simplify
-  auto expr_simplified = verilog_simplifier(std::move(expr_replaced), ns);
-
-  return expr_simplified;
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheck_exprt::elaborate_constant_expression_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt verilog_typecheck_exprt::elaborate_constant_expression_rec(exprt expr)
-{
-  if(expr.id()==ID_constant)
-    return expr;
-  else if(expr.id()==ID_symbol)
-  {
-    const irep_idt &identifier = to_symbol_expr(expr).identifier();
-
-    if(has_prefix(id2string(identifier), "$"))
-    {
-      // System function identifier. Leave as is.
-      return expr;
-    }
-
-    auto &symbol = ns.lookup(to_symbol_expr(expr));
-
-    if(symbol.is_macro)
-    {
-      // Elaborate recursively
-      elaborate_symbol_rec(symbol.name);
-
-      // A parameter or local parameter. Replace by its value.
-      return symbol.value;
-    }
-
-    exprt value=var_value(identifier);
-
-#if 0
-    status() << "READ " << identifier << " = " << to_string(value) << eom;
-#endif
-
-    if(value.is_not_nil())
-    {
-      source_locationt source_location = expr.source_location();
-      exprt tmp = value;
-      tmp.add_source_location() = source_location;
-      return tmp;
-    }
-    else
-      return expr;
-  }
-  else if(expr.id()==ID_function_call)
-  {
-    // Note that the operands are not elaborated yet.
-    const function_call_exprt &function_call=
-      to_function_call_expr(expr);
-
-    // Is it a system function call?
-    if(function_call.is_system_function_call())
-    {
-      // These are 'built in'.
-      return elaborate_constant_system_function_call(function_call);
-    }
-    else
-    {
-      // Use Verilog interpreter.
-      return elaborate_constant_function_call(function_call);
-    }
-  }
-  else
-  {
-    // Do any operands first.
-    for(auto &op : expr.operands())
-    {
-      // recursive call
-      op = elaborate_constant_expression_rec(op);
-    }
-    return expr;
-  }
+  return simulator.evaluate_expr(std::move(expr));
 }
 
 /*******************************************************************\
