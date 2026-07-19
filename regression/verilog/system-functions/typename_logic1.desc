@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 typename_logic1.sv
 
 ^\[.*\] \$typename\(main\.some_bit\) == "logic": PROVED .*$
@@ -10,4 +10,3 @@ typename_logic1.sv
 --
 ^warning: ignoring
 --
-logic is not distinguished from bit

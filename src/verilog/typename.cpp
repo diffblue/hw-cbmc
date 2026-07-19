@@ -126,8 +126,16 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
       return "longint unsigned";
     else if(verilog_type == ID_verilog_shortint)
       return "shortint unsigned";
+    else if(verilog_type == ID_verilog_logic)
+      return "logic";
     else
-      return "bit[" + left(type) + ":" + right(type) + "]";
+    {
+      auto suffix = "[" + left(type) + ":" + right(type) + "]";
+      if(type.get(ID_C_verilog_vector_type) == ID_verilog_logic)
+        return "logic" + suffix;
+      else
+        return "bit" + suffix;
+    }
   }
   else if(type.id() == ID_verilog_unsignedbv)
   {
@@ -147,8 +155,16 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
       return "longint";
     else if(verilog_type == ID_verilog_shortint)
       return "shortint";
+    else if(verilog_type == ID_verilog_logic)
+      return "logic signed";
     else
-      return "bit signed[" + left(type) + ":" + right(type) + "]";
+    {
+      auto suffix = "[" + left(type) + ":" + right(type) + "]";
+      if(type.get(ID_C_verilog_vector_type) == ID_verilog_logic)
+        return "logic signed" + suffix;
+      else
+        return "bit signed" + suffix;
+    }
   }
   else if(type.id() == ID_verilog_byte)
   {
