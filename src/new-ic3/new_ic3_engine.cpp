@@ -64,6 +64,8 @@ property_checker_resultt new_ic3_engine(
     }
   }
 
+  message.progress() << "Creating netlist for IC3" << messaget::eom;
+
   const namespacet ns(transition_system.symbol_table);
 
   auto netlist =
@@ -90,19 +92,22 @@ property_checker_resultt new_ic3_engine(
     // Add the property cone to a local copy of the netlist and obtain
     // the property literal in the AIG variable space.
     netlistt prop_netlist(netlist);
-    literalt prop_lit;
+    literalt prop_lit = [&]()
     {
       aig_prop_constraintt aig_prop(prop_netlist, message_handler);
-      prop_lit = instantiate_convert(
+      return instantiate_convert(
         aig_prop,
         prop_netlist.var_map,
         to_unary_expr(property.normalized_expr).op(),
         ns,
         message_handler);
-    }
+    }();
 
     ic3_solvert solver(std::move(prop_netlist), prop_lit, message_handler);
     auto result = solver.solve();
+
+    // record the outcome produced by this engine
+    constexpr auto engine = "ic3";
 
     // For exists-path properties (cover), the normalized expression is
     // the dual safety property: a refutation is a witness trace, and a
@@ -111,15 +116,15 @@ property_checker_resultt new_ic3_engine(
     {
     case ic3_resultt::PROVED:
       if(property.is_exists_path())
-        property.refuted();
+        property.refuted(engine);
       else
-        property.proved();
+        property.proved(engine);
       break;
     case ic3_resultt::REFUTED:
       if(property.is_exists_path())
-        property.proved();
+        property.proved(engine);
       else
-        property.refuted();
+        property.refuted(engine);
       break;
     }
   }

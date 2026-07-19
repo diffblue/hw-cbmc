@@ -22,6 +22,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <algorithm>
 #include <chrono>
+#include <iomanip>
 #include <queue>
 #include <unordered_set>
 
@@ -128,10 +129,10 @@ ic3_solvert::ic3_solvert(
 {
   // Encode the netlist into CNF: one timeframe only — the next-state
   // functions are nodes in the same variable space.
-  base_cnf = std::make_unique<recording_cnft>(solver_message_handler);
+  base_cnf = std::make_unique<recording_cnft>(message_handler);
   bmc_mapt bmc_map(netlist, 1, *base_cnf);
   {
-    messaget message{solver_message_handler};
+    messaget message{message_handler};
     ::unwind(netlist, bmc_map, message, *base_cnf, false, 0);
   }
 
@@ -771,7 +772,7 @@ ic3_resultt ic3_solvert::solve()
   // Check: can initial states violate the property?
   if(initial_state_is_bad())
   {
-    message.result() << "Property violated in initial state" << messaget::eom;
+    message.status() << "Property violated in initial state" << messaget::eom;
     return ic3_resultt::REFUTED;
   }
 
@@ -810,7 +811,7 @@ ic3_resultt ic3_solvert::solve()
 
         if(init_intersects(cube))
         {
-          message.result() << "Property refuted" << messaget::eom;
+          message.status() << "Property refuted" << messaget::eom;
           return ic3_resultt::REFUTED;
         }
 
@@ -842,8 +843,9 @@ ic3_resultt ic3_solvert::solve()
     if(propagate())
     {
       auto end_time = std::chrono::steady_clock::now();
-      message.statistics()
-        << "IC3: converged at frame " << k << " in "
+      message.status()
+        << "IC3: converged at frame " << k << " in " << std::fixed
+        << std::setprecision(3)
         << std::chrono::duration<double>(end_time - start_time).count()
         << " seconds (" << num_queries << " queries)" << messaget::eom;
       return ic3_resultt::PROVED;

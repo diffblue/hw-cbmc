@@ -53,9 +53,10 @@ void unwind(
 
   // do transitions
   if(last)
-    message.progress() << "Transition " << t << messaget::eom;
+    message.progress() << "Unwinding transition " << t << messaget::eom;
   else
-    message.progress() << "Transition " << t << "->" << t + 1 << messaget::eom;
+    message.progress() << "Unwinding transition " << t << "->" << t + 1
+                       << messaget::eom;
 
   const bmc_mapt::timeframet &timeframe=bmc_map.timeframe_map[t];
   
