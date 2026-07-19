@@ -103,7 +103,7 @@ property_checker_resultt new_ic3_engine(
         message_handler);
     }();
 
-    ic3_solvert solver(std::move(prop_netlist), prop_lit, message_handler);
+    ic3_solvert solver{prop_netlist, prop_lit, message_handler};
     auto result = solver.solve();
 
     // record the outcome produced by this engine

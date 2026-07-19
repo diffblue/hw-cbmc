@@ -122,7 +122,7 @@ static void add_minisat_clause(IctMinisat::Solver &S, const bvt &clause)
 // ============================================================
 
 ic3_solvert::ic3_solvert(
-  netlistt netlist,
+  const netlistt &netlist,
   literalt prop_netlist_lit,
   message_handlert &message_handler)
   : message_handler(message_handler)
