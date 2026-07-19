@@ -1,0 +1,14 @@
+CORE
+fairness_failing1.sv
+--bound 10 --liveness-to-safety
+^EXIT=10$
+^SIGNAL=0$
+^\[main\.p0\] always s_eventually main\.x: REFUTED$
+--
+--
+This is the reproducer for issue #2007: the translation used to turn
+each fairness assumption into the assumed safety property
+G (looped → live), enforced at every step. The loop on the stuck
+register closes one cycle after 'save', by which at most one of the
+two fairness conditions can have been observed, so every path taking
+'save' was pruned and the property was vacuously PROVED.
