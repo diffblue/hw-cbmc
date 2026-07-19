@@ -2920,15 +2920,15 @@ typet verilog_typecheck_exprt::max_type(
     return t0;
 
   if(
-    vt0.is_string() && (vt1.is_signed() || vt1.is_unsigned() ||
-                        vt1.is_verilog_signed() || vt1.is_verilog_unsigned()))
+    vt0.is_string() && (vt1.is_signed_bit() || vt1.is_unsigned_bit() ||
+                        vt1.is_signed_logic() || vt1.is_unsigned_logic()))
   {
     return t0;
   }
 
   if(
-    (vt0.is_signed() || vt0.is_unsigned() || vt0.is_verilog_signed() ||
-     vt0.is_verilog_unsigned()) &&
+    (vt0.is_signed_bit() || vt0.is_unsigned_bit() || vt0.is_signed_logic() ||
+     vt0.is_unsigned_logic()) &&
     vt0.is_string())
   {
     return t1;
@@ -2947,23 +2947,20 @@ typet verilog_typecheck_exprt::max_type(
     return t0;
 
   // If one of the operands is a real, we return the real.
-  if(vt0.is_verilog_real())
+  if(vt0.is_real())
     return t0;
-  else if(vt1.is_verilog_real())
+  else if(vt1.is_real())
     return t1;
 
-  bool is_verilogbv=
-    vt0.is_verilog_signed() || vt0.is_verilog_unsigned() ||
-    vt1.is_verilog_signed() || vt1.is_verilog_unsigned();
+  // If one of the operands is four-valued, we return a four-valued type.
+  bool is_four_valued = vt0.is_four_valued() || vt1.is_four_valued();
 
   // The result is unsigned if any of the operands is
-  bool is_unsigned=
-    vt0.is_unsigned() || vt0.is_bool() || vt0.is_verilog_unsigned() ||
-    vt1.is_unsigned() || vt1.is_bool() || vt1.is_verilog_unsigned();
+  bool is_unsigned = vt0.is_unsigned_integral() || vt1.is_unsigned_integral();
 
   unsigned max_width=std::max(vt0.get_width(), vt1.get_width());
 
-  if(is_verilogbv)
+  if(is_four_valued)
   {
     if(is_unsigned)
       return verilog_unsignedbv_typet(max_width);
