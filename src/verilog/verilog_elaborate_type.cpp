@@ -352,15 +352,18 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   }
   else if(src.id() == ID_verilog_shortreal)
   {
-    return verilog_shortreal_typet().with_source_location(source_location);
+    // 32-bit float, leave as is
+    return src;
   }
   else if(src.id() == ID_verilog_real)
   {
-    return verilog_real_typet().with_source_location(source_location);
+    // 64-bit float, leave as is
+    return src;
   }
   else if(src.id() == ID_verilog_realtime)
   {
-    return verilog_realtime_typet().with_source_location(source_location);
+    // 64-bit float, leave as is
+    return src;
   }
   else if(src.id() == ID_typedef_type)
   {
