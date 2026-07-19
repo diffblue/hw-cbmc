@@ -39,8 +39,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <langapi/mode.h>
 #include <linking/static_lifetime_init.h>
 #include <trans-word-level/instantiate_word_level.h>
-#include <trans-word-level/trans_trace_word_level.h>
-#include <trans-word-level/unwind.h>
 #include <verilog/verilog_ebmc_language.h>
 
 #include "gen_interface.h"
@@ -729,56 +727,4 @@ void hw_cbmc_parse_optionst::help()
     " --gen-interface              print C for interface to module\n"
     " --vcd file                   dump error trace in VCD format\n"
     "\n";
-}
-
-void hw_cbmc_parse_optionst::do_unwind_module(prop_convt &prop_conv) {
-  if (unwind_module == "" || unwind_no_timeframes == 0)
-    return;
-
-  namespacet ns{goto_model.symbol_table};
-  const symbolt &symbol = ns.lookup(unwind_module);
-
-  log.status() << "Unwinding transition system `" << symbol.name << "' with "
-               << unwind_no_timeframes << " time frames" << messaget::eom;
-
-  //  auto dp= get_decision_procedure();
-
-  ::unwind(to_trans_expr(symbol.value), ui_message_handler, prop_conv,
-           unwind_no_timeframes, ns, true);
-
-  log.status() << "Unwinding transition system done" << messaget::eom;
-}
-
-void hw_cbmc_parse_optionst::show_unwind_trace(const optionst &options,
-                                               const prop_convt &prop_conv) {
-  if (unwind_module == "" || unwind_no_timeframes == 0)
-    return;
-
-  namespacet ns{goto_model.symbol_table};
-  auto trans_trace =
-    compute_trans_trace(prop_conv, unwind_no_timeframes, ns, unwind_module);
-
-  if (options.get_option("vcd") != "") {
-    if (options.get_option("vcd") == "-")
-      show_trans_trace_vcd(trans_trace, log, ns, std::cout);
-    else {
-      std::ofstream out(widen_if_needed(options.get_option("vcd")));
-      show_trans_trace_vcd(trans_trace, log, ns, out);
-    }
-  }
-
-  switch(ui_message_handler.get_ui())
-  {
-  case ui_message_handlert::uit::PLAIN:
-    show_trans_trace(trans_trace, log, ns, std::cout);
-    break;
-
-  case ui_message_handlert::uit::XML_UI:
-    show_trans_trace_xml(trans_trace, log, ns, std::cout);
-    break;
-
-  case ui_message_handlert::uit::JSON_UI:
-    show_trans_trace_json(trans_trace, log, ns, std::cout);
-    break;
-  }
 }
