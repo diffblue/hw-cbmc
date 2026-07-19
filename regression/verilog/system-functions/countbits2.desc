@@ -1,0 +1,9 @@
+KNOWNBUG
+countbits2.sv
+--module main
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+$countbits is not yet implemented.
