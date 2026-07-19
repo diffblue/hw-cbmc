@@ -106,6 +106,9 @@ private:
   std::unique_ptr<recording_cnft> base_cnf;
   bvt init_units;
 
+  // Conjunction of invariant constraints at the current frame.
+  literalt constraint_lit = const_literal(true);
+
   void replay_base_cnf(cnft &dest, bool with_init);
 
   std::unique_ptr<satcheck_no_simplifiert> init_solver;
