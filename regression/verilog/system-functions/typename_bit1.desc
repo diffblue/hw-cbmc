@@ -1,0 +1,11 @@
+CORE
+typename_bit1.sv
+
+^\[.*\] \$typename\(main\.some_bit\) == "bit": PROVED .*$
+^\[.*\] \$typename\(main\.vector1\) == "bit\[31:0\]": PROVED .*$
+^\[.*\] \$typename\(main\.vector2\) == "bit\[0:31\]": PROVED .*$
+^\[.*\] \$typename\(main\.vector3\) == "bit signed\[31:0\]": PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

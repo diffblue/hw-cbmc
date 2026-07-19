@@ -1,0 +1,10 @@
+CORE
+typename_real1.sv
+
+^\[.*\] \$typename\(real\) == "real": PROVED .*$
+^\[.*\] \$typename\(shortreal\) == "shortreal": PROVED .*$
+^\[.*\] \$typename\(realtime\) == "realtime": PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
