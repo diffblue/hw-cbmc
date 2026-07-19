@@ -1,5 +1,6 @@
 # EBMC 6.1
 
+* Fix for lowering of s_until_with to LTL
 * Verilog: $root.
 * Verilog: procedural assignments to hierarchical identifiers
 * SystemVerilog: ports for sequence and property declarations

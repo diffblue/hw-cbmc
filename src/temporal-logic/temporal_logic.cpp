@@ -70,7 +70,8 @@ bool is_CTL(const exprt &expr)
 bool is_LTL_operator(const exprt &expr)
 {
   auto id = expr.id();
-  return id == ID_G || id == ID_F || id == ID_X || id == ID_U || id == ID_R;
+  return id == ID_G || id == ID_F || id == ID_X || id == ID_U || id == ID_R ||
+         id == ID_strong_R;
 }
 
 bool is_LTL_past_operator(const exprt &expr)
@@ -214,6 +215,18 @@ std::optional<exprt> LTL_to_CTL(exprt expr)
     auto rec = LTL_to_CTL(to_G_expr(expr).op());
     if(rec.has_value())
       return AG_exprt{*rec};
+    else
+      return {};
+  }
+  else if(expr.id() == ID_strong_R)
+  {
+    auto &strong_R = to_strong_R_expr(expr);
+    auto rec_lhs = LTL_to_CTL(strong_R.lhs());
+    auto rec_rhs = LTL_to_CTL(strong_R.rhs());
+    if(rec_lhs.has_value() && rec_rhs.has_value())
+    {
+      return and_exprt{AF_exprt{*rec_lhs}, AR_exprt{*rec_lhs, *rec_rhs}};
+    }
     else
       return {};
   }

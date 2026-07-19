@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 s_until_with1.sv
 --bdd
 ^\[main\.p0\] always \(0 s_until_with 1\): REFUTED$
