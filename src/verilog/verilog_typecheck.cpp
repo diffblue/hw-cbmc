@@ -1309,16 +1309,40 @@ Function: verilog_typecheckt::convert_return
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_return(verilog_returnt &statement)
+void verilog_typecheckt::convert_return(verilog_returnt &return_statement)
 {
   if(function_or_task_name.empty())
   {
-    throw errort().with_location(statement.source_location())
+    throw errort().with_location(return_statement.source_location())
       << "return statement outside of function or task";
   }
 
-  if(statement.has_value())
-    convert_expr(statement.value());
+  // look up the task/function symbol
+  auto &tf_symbol = ns.lookup(function_or_task_name);
+  auto &return_type = to_code_type(tf_symbol.type).return_type();
+
+  // ID_empty is used for tasks
+  if(return_type.id() == ID_verilog_void || return_type.id() == ID_empty)
+  {
+    if(return_statement.has_value())
+    {
+      throw errort().with_location(return_statement.source_location())
+        << "must not return value";
+    }
+  }
+  else
+  {
+    if(!return_statement.has_value())
+    {
+      throw errort().with_location(return_statement.source_location())
+        << "must return value";
+    }
+
+    convert_expr(return_statement.value());
+
+    // returns are an "assignment-like context" (1800-2017 10.8)
+    assignment_conversion(return_statement.value(), return_type);
+  }
 }
 
 /*******************************************************************\
