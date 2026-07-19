@@ -1,0 +1,14 @@
+KNOWNBUG
+AFAG_deadend1.smv
+--bdd
+^\[spec1\] AF AG good: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The BDD implementation of nested AG uses AG p = !EF !p over the raw
+transition relation. A finite branch into a deadend state with !p is therefore
+treated as a witness against AG p, even though the existing deadend regressions
+use conventions where finite deadend branches do not falsify universal
+properties.
