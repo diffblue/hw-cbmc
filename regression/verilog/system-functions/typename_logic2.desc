@@ -1,13 +1,12 @@
-KNOWNBUG
+CORE
 typename_logic2.sv
 
-^\[.*\] \$typename\(logic\) == "logic": PROVED .*$
-^\[.*\] \$typename\(logic\[31:0\]\) == "logic\[31:0\]": PROVED .*$
-^\[.*\] \$typename\(logic\[0:31\]\) == "logic\[0:31\]": PROVED .*$
-^\[.*\] \$typename\(logic signed\[31:0\]\) == "logic signed\[31:0\]": PROVED .*$
+^\[.*\] \$typename\(\[0:0\]\) == "logic": PROVED .*$
+^\[.*\] \$typename\(\[31:0\]\) == "logic\[31:0\]": PROVED .*$
+^\[.*\] \$typename\(\[0:31\]\) == "logic\[0:31\]": PROVED .*$
+^\[.*\] \$typename\(signed \[31:0\]\) == "logic signed\[31:0\]": PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-logic is not distinguished from bit
