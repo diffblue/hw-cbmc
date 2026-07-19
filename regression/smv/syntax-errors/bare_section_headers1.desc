@@ -1,0 +1,9 @@
+KNOWNBUG
+bare_section_headers1.smv
+--bound 1
+^EXIT=1$
+^SIGNAL=0$
+--
+Bare TRANS/INIT/INVAR/FAIRNESS/SPEC/CTLSPEC/LTLSPEC headers are accepted
+as empty sections (parser.y:447). Truncated or malformed SMV input can
+silently weaken the model instead of failing with a parse error.
