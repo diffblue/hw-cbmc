@@ -1,5 +1,5 @@
 CORE
-typename2.sv
+typename_enum1.sv
 
 ^EXIT=0$
 ^SIGNAL=0$

@@ -1,0 +1,13 @@
+KNOWNBUG
+typename_wire1.sv
+
+^\[.*\] \$typename\(main\.some_bit\) == "wire": PROVED .*$
+^\[.*\] \$typename\(main\.vector1\) == "wire\[31:0\]": PROVED .*$
+^\[.*\] \$typename\(main\.vector2\) == "wire\[0:31\]": PROVED .*$
+^\[.*\] \$typename\(main\.vector3\) == "wire signed\[31:0\]": PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The wire is not recognised.

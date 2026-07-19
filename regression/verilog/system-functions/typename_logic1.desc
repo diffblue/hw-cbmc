@@ -1,0 +1,13 @@
+KNOWNBUG
+typename_logic1.sv
+
+^\[.*\] \$typename\(main\.some_bit\) == "logic": PROVED .*$
+^\[.*\] \$typename\(main\.vector1\) == "logic\[31:0\]": PROVED .*$
+^\[.*\] \$typename\(main\.vector2\) == "logic\[0:31\]": PROVED .*$
+^\[.*\] \$typename\(main\.vector3\) == "logic signed\[31:0\]": PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+logic is not distinguished from bit
