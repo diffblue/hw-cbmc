@@ -1,0 +1,7 @@
+CORE
+reset5.sv
+--module top --bound 10 --reset top.counter
+^\[.*\] top\.counter != 0\: PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--

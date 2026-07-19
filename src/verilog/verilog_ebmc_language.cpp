@@ -25,6 +25,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "top_level_modules.h"
 #include "verilog_elaborate_compilation_unit.h"
 #include "verilog_language.h"
+#include "verilog_lowering.h"
 #include "verilog_parser.h"
 #include "verilog_preprocessor.h"
 #include "verilog_synthesis.h"
@@ -381,12 +382,17 @@ void verilog_ebmc_languaget::create_reset_logic(
     throw ebmc_errort{} << "failed to parse reset constraint";
   }
 
+  // must be boolean, and we lower it
+  auto reset_constraint_lowered = verilog_lowering(
+    typecast_exprt::conditional_cast(reset_constraint, bool_typet{}));
+
   // true in initial state
   transt new_trans_expr = transition_system.trans_expr;
-  new_trans_expr.init() = and_exprt(new_trans_expr.init(), reset_constraint);
+  new_trans_expr.init() =
+    and_exprt(new_trans_expr.init(), reset_constraint_lowered);
 
   // and not anymore afterwards
-  exprt reset_next_state = reset_constraint;
+  exprt reset_next_state = reset_constraint_lowered;
   make_next_state(reset_next_state);
 
   new_trans_expr.trans() =
