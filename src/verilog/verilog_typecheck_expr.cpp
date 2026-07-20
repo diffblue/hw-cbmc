@@ -1339,6 +1339,18 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
         << "cannot determine the number of bits of " << to_string(arguments[0]);
     }
 
+    if(
+      base_name != "$bits" && arguments[0].type().id() != ID_unsignedbv &&
+      arguments[0].type().id() != ID_signedbv &&
+      arguments[0].type().id() != ID_verilog_unsignedbv &&
+      arguments[0].type().id() != ID_verilog_signedbv &&
+      arguments[0].type().id() != ID_bool &&
+      arguments[0].type().id() != ID_array)
+    {
+      throw errort().with_location(arguments[0].source_location())
+        << base_name << " expects an array or integral argument";
+    }
+
     // The return type is integer.
     expr.type() = integer_typet();
 
