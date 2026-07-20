@@ -998,4 +998,7 @@ public:
   }
 };
 
+/// replaces all four-valued types by their corresponding two-valued type
+typet make_two_valued(typet);
+
 #endif

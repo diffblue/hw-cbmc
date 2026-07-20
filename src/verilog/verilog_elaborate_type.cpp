@@ -37,6 +37,13 @@ static bool is_packed_type(const typet &type)
     type.id() == ID_signedbv || type.id() == ID_unsignedbv ||
     type.id() == ID_bool)
   {
+    // the 'bit' vector types
+    return true;
+  }
+  else if(
+    type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
+  {
+    // the 'logic' vector types
     return true;
   }
   else
@@ -253,7 +260,8 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   if(src.is_nil() || src.id() == ID_reg)
   {
     // it's just a bit, unsigned, four-valued
-    auto result = bool_typet{}.with_source_location(source_location);
+    auto result =
+      verilog_unsignedbv_typet{1}.with_source_location(source_location);
     result.set(ID_C_verilog_type, ID_verilog_logic);
     return result;
   }
@@ -264,7 +272,8 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     if(subtype.is_nil())
     {
       // one bit, signed, four-valued
-      auto result = signedbv_typet{1}.with_source_location(source_location);
+      auto result =
+        verilog_signedbv_typet{1}.with_source_location(source_location);
       result.set(ID_C_verilog_type, ID_verilog_logic);
       return result;
     }
@@ -287,8 +296,17 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
 
         return dest;
       }
-      else if(rec.id() == ID_bool)
-        return signedbv_typet{1};
+      else if(rec.id() == ID_verilog_unsignedbv)
+      {
+        typet dest =
+          verilog_signedbv_typet{to_verilog_unsignedbv_type(rec).width()};
+
+        auto verilog_type = rec.get(ID_C_verilog_type);
+        if(verilog_type != irep_idt{})
+          dest.set(ID_C_verilog_type, verilog_type);
+
+        return dest;
+      }
       else
         return rec;
     }
@@ -318,6 +336,17 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
         auto verilog_vector_type = rec.get(ID_C_verilog_vector_type);
         if(verilog_vector_type != irep_idt{})
           dest.set(ID_C_verilog_vector_type, verilog_vector_type);
+
+        return dest;
+      }
+      else if(rec.id() == ID_verilog_signedbv)
+      {
+        typet dest =
+          verilog_unsignedbv_typet{to_verilog_signedbv_type(rec).width()};
+
+        auto verilog_type = rec.get(ID_C_verilog_type);
+        if(verilog_type != irep_idt{})
+          dest.set(ID_C_verilog_type, verilog_type);
 
         return dest;
       }
@@ -353,17 +382,23 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   else if(src.id() == ID_verilog_integer)
   {
     // four-valued type, signed
-    return signedbv_typet{32}.with_source_location(source_location);
+    auto result =
+      verilog_signedbv_typet{32}.with_source_location(source_location);
+    result.set(ID_C_verilog_type, ID_integer);
+    return result;
   }
   else if(src.id() == ID_verilog_time)
   {
     // four-valued type, unsigned
-    return unsignedbv_typet{64}.with_source_location(source_location);
+    auto result =
+      verilog_unsignedbv_typet{64}.with_source_location(source_location);
+    result.set(ID_C_verilog_type, ID_verilog_time);
+    return result;
   }
   else if(src.id() == ID_verilog_bit)
   {
     // two-valued type
-    return bool_typet().with_source_location(source_location);
+    return unsignedbv_typet{1}.with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_logic)
   {
@@ -375,7 +410,8 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   else if(src.id() == ID_wire)
   {
     // four-valued type
-    auto result = bool_typet{}.with_source_location(source_location);
+    auto result =
+      verilog_unsignedbv_typet{1}.with_source_location(source_location);
     result.set(ID_C_verilog_type, ID_wire);
     return result;
   }

@@ -1606,7 +1606,7 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
   else if(expr.id() == ID_type)
   {
     // Used, e.g., for $bits
-    expr.type() = elaborate_type(expr.type());
+    expr.type() = make_two_valued(elaborate_type(expr.type()));
     return std::move(expr);
   }
   else if(expr.id() == ID_this)
@@ -3072,7 +3072,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     // SystemVerilog has got type'(expr). This is an explicit
     // type cast. These are assignment contexts.
     convert_expr(expr.op());
-    expr.type() = elaborate_type(expr.type());
+    expr.type() = make_two_valued(elaborate_type(expr.type()));
 
     // In contrast to assignments, these can turn integers into enums
     // (1800-2017 6.19.3).
@@ -3142,7 +3142,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   else if(expr.id() == ID_verilog_implicit_typecast)
   {
     // We generate implict casts during elaboration.
-    expr.type() = elaborate_type(expr.type());
+    expr.type() = make_two_valued(elaborate_type(expr.type()));
     convert_expr(expr.op());
     expr.id(ID_typecast);
   }
