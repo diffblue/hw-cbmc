@@ -3708,6 +3708,8 @@ module_instantiation:
 // or a variable declaration. Both start with TOK_INTERFACE_IDENTIFIER followed
 // by an identifier, which is LALR(1)-ambiguous with data_type and module_identifier.
 // We handle both cases in a unified rule to avoid the conflict.
+// The scope resolution operator (interface_identifier::type) is also handled here
+// to avoid a shift/reduce conflict with the interface instantiation rule.
 interface_instantiation_or_variable_declaration:
           TOK_INTERFACE_IDENTIFIER '#' '(' list_of_parameter_assignments_opt ')' hierarchical_instance_brace ';'
                 { init($$, ID_inst);
@@ -3721,6 +3723,22 @@ interface_instantiation_or_variable_declaration:
                   stack_expr($$).set(ID_module, base_name);
                   stack_expr($$).add(ID_parameter_assignments).make_nil();
                   swapop($$, $2); }
+        | TOK_INTERFACE_IDENTIFIER "::"
+                { // enter the interface scope for type lookup
+                  init($$, ID_verilog_package_scope);
+                  auto base_name = stack_expr($1).get(ID_base_name);
+                  PARSER.scopes.enter_package_scope(base_name);
+                  mto($$, $1); }
+          type_identifier
+                { pop_scope(); }
+          packed_dimension_brace list_of_variable_decl_assignments ';'
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_reg);
+                  // $3 is the package_scope node from the mid-rule action
+                  mto($3, $4);
+                  add_as_subtype(stack_type($6), stack_type($3));
+                  addswap($$, ID_type, $6);
+                  swapop($$, $7); }
         ;
 
 interface_instance_item_brace:
