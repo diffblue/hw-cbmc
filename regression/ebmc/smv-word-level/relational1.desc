@@ -1,0 +1,14 @@
+CORE
+relational1.sv
+--smv-word-level
+^MODULE main$
+^INVAR a = 0ud8_10$
+^INVAR b = 0ud8_3$
+^INVAR w_lt = \(a < b\)$
+^INVAR w_gt = \(a > b\)$
+^INVAR w_le = \(a <= b\)$
+^INVAR w_ge = \(a >= b\)$
+^INVAR w_ne = \(a != b\)$
+^EXIT=0$
+^SIGNAL=0$
+--

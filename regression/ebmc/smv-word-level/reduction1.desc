@@ -1,0 +1,16 @@
+KNOWNBUG
+reduction1.sv
+--smv-word-level
+^MODULE main$
+^INVAR a = 0uh8_A5$
+^INVAR r_and = \(\)$
+^INVAR r_or = \(\)$
+^INVAR r_xor = \(\)$
+^INVAR r_nand = \(\)$
+^INVAR r_nor = \(\)$
+^INVAR r_xnor = \(\)$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Reduction operators (&, |, ^) produce norep output instead of proper SMV.

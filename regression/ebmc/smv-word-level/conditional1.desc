@@ -1,0 +1,10 @@
+CORE
+conditional1.sv
+--smv-word-level
+^MODULE main$
+^INVAR a = 0ud8_10$
+^INVAR b = 0ud8_3$
+^INVAR mux = \(sel\?a:b\)$
+^EXIT=0$
+^SIGNAL=0$
+--

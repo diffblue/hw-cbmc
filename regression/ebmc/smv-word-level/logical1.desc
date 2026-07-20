@@ -1,0 +1,10 @@
+CORE
+logical1.sv
+--smv-word-level
+^MODULE main$
+^INVAR w_land = \(a & b\)$
+^INVAR w_lor = \(a \| b\)$
+^INVAR w_lnot = !a$
+^EXIT=0$
+^SIGNAL=0$
+--

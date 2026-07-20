@@ -1,0 +1,10 @@
+CORE
+bitselect1.sv
+--smv-word-level
+^MODULE main$
+^INVAR a = 0uh8_A5$
+^INVAR b0 = bool\(a\[0sd32_0:0sd32_0\]\)$
+^INVAR b7 = bool\(a\[0sd32_7:0sd32_7\]\)$
+^EXIT=0$
+^SIGNAL=0$
+--
