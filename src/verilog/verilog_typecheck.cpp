@@ -1586,6 +1586,12 @@ void verilog_typecheckt::convert_statement(
   {
     convert_expr(to_unary_expr(statement).op());
   }
+  else if(
+    statement.id() == ID_deassign || statement.id() == ID_release ||
+    statement.id() == ID_disable)
+  {
+    // no type-checking needed for these statements
+  }
   else
   {
     throw errort().with_location(statement.source_location())
