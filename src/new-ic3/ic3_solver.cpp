@@ -475,6 +475,29 @@ cubet ic3_solvert::lift(
   return result.empty() ? full_state : result;
 }
 
+void ic3_solvert::set_target_polarity(IctMinisat::Solver &S, const cubet &cube)
+{
+  for(auto l : cube)
+  {
+    auto it = current_to_latch.find(l.var_no());
+    if(it != current_to_latch.end())
+    {
+      const auto &latch = latches[it->second];
+      literalt nl = latch.next;
+      if(nl.is_constant())
+        continue;
+      // The cube asserts latch.current with the polarity of l.
+      // want_lit_true: should the next-state literal be true?
+      bool want_lit_true = (l.sign() == latch.current.sign());
+      // The variable should be true when literal and sign agree.
+      bool want_var_true = (want_lit_true != nl.sign());
+      // MiniSAT: l_False means prefer TRUE, l_True means prefer FALSE.
+      S.setPolarity(
+        nl.var_no(), want_var_true ? IctMinisat::l_False : IctMinisat::l_True);
+    }
+  }
+}
+
 bool ic3_solvert::relative_induction(
   std::size_t level,
   const cubet &cube,
@@ -493,6 +516,10 @@ bool ic3_solvert::relative_induction(
 
   auto &S = get_solver(level);
   using namespace IctMinisat;
+
+  // Hint polarity toward the target cube to find predecessors faster
+  if(predecessor != nullptr)
+    set_target_polarity(S, cube);
 
   vec<Lit> assumptions;
   Lit act = lit_Undef;
