@@ -20,6 +20,7 @@ SRC += ebmc/bdd_model_checker.cpp \
        verilog/indexed_part_select.cpp \
        verilog/typename.cpp \
        verilog/verilog_expr.cpp \
+       vlsim/vl_simulator.cpp \
        # Empty last line
 
 INCLUDES= -I ../src/ -I . -I $(CPROVER_DIR)/unit -I $(CPROVER_DIR)/src
@@ -37,7 +38,8 @@ OBJ += ../src/ebmc/bdd_model_checker$(OBJEXT) \
        ../src/temporal-logic/temporal-logic$(LIBEXT) \
        ../src/trans-netlist/trans-netlist$(LIBEXT) \
        ../src/trans-word-level/trans-word-level$(LIBEXT) \
-       ../src/verilog/verilog$(LIBEXT)
+       ../src/verilog/verilog$(LIBEXT) \
+       ../src/vlsim/vl_simulator$(OBJEXT)
 
 ifneq ($(BUILD_ENV),MSVC)
 SRC += new-ic3/ic3_solver.cpp
