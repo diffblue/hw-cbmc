@@ -214,6 +214,52 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
   {
     return "string";
   }
+  else if(type.id() == ID_array)
+  {
+    // Collect unpacked dimensions, then packed dimensions.
+    // Emit as base_type[packed_dims][base_range]$[unpacked_dims]
+    // matching the declaration order.
+    std::string unpacked_dimensions;
+    auto *current = &type;
+    while(current->id() == ID_array &&
+          to_verilog_array_type(*current).is_unpacked())
+    {
+      unpacked_dimensions += '[' + integer2string(verilog_left(*current)) +
+                             ':' + integer2string(verilog_right(*current)) +
+                             ']';
+      current = &to_verilog_array_type(*current).element_type();
+    }
+
+    std::string packed_dimensions;
+    while(current->id() == ID_array &&
+          to_verilog_array_type(*current).is_packed())
+    {
+      packed_dimensions += '[' + integer2string(verilog_left(*current)) + ':' +
+                           integer2string(verilog_right(*current)) + ']';
+      current = &to_verilog_array_type(*current).element_type();
+    }
+
+    auto base_type = verilog_typename(*current, ns);
+
+    // The base type might already have the innermost packed array.
+    // The packed_dimensions must be inserted before the '[', if any.
+    auto bracket_pos = base_type.find('[');
+    if(bracket_pos == std::string::npos)
+    {
+      // no bracket
+      base_type += packed_dimensions;
+    }
+    else
+    {
+      base_type = base_type.substr(0, bracket_pos) + packed_dimensions +
+                  base_type.substr(bracket_pos, std::string::npos);
+    }
+
+    if(unpacked_dimensions.empty())
+      return base_type;
+    else
+      return base_type + '$' + unpacked_dimensions;
+  }
   else
     return "?";
 }
