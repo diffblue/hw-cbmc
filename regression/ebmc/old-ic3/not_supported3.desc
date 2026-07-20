@@ -1,0 +1,7 @@
+CORE
+not_supported3.sv
+--old-ic3
+^no support for assumptions$
+^EXIT=10$
+^SIGNAL=0$
+--

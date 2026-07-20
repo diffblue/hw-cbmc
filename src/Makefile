@@ -1,5 +1,5 @@
 DIRS = ebmc hw-cbmc temporal-logic trans-word-level trans-netlist \
-       verilog vhdl smvlang ic3 aiger btor vlindex new-ic3
+       verilog vhdl smvlang old-ic3 ic3 aiger btor vlindex
 
 CPROVER_DIR:=../lib/cbmc/src
 
@@ -18,7 +18,7 @@ ebmc.dir: trans-word-level.dir trans-netlist.dir verilog.dir vhdl.dir \
       smvlang.dir aiger.dir btor.dir temporal-logic.dir cprover.dir
 
 ifneq ($(BUILD_ENV),MSVC)
-ebmc.dir: ic3.dir new-ic3.dir
+ebmc.dir: old-ic3.dir ic3.dir
 endif
 
 hw-cbmc.dir: ebmc.dir trans-word-level.dir trans-netlist.dir verilog.dir \

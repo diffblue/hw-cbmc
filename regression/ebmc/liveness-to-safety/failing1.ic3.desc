@@ -3,5 +3,5 @@ failing1.sv
 --ic3 --liveness-to-safety
 ^EXIT=10$
 ^SIGNAL=0$
-^property FAILED$
+^Property refuted$
 --
