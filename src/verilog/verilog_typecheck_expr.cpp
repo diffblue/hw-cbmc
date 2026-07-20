@@ -933,6 +933,44 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
       }
     }
   }
+  else if(f_op.id() == ID_hierarchical_identifier)
+  {
+    // hierarchical function call, e.g., m.double()
+    auto &hi = to_hierarchical_identifier_expr(f_op);
+
+    convert_expr(hi.lhs());
+
+    base_name = hi.rhs().base_name();
+
+    if(hi.lhs().type().id() != ID_verilog_module_instance)
+    {
+      throw errort().with_location(f_op.source_location())
+        << "expected module instance on lhs of hierarchical function call";
+    }
+
+    const irep_idt &lhs_identifier = [](const exprt &lhs) -> const irep_idt &
+    {
+      if(lhs.id() == ID_symbol)
+        return to_symbol_expr(lhs).identifier();
+      else if(lhs.id() == ID_hierarchical_identifier)
+        return to_hierarchical_identifier_expr(lhs).identifier();
+      else
+      {
+        throw errort().with_location(lhs.source_location())
+          << "expected symbol or hierarchical identifier on lhs of `.'";
+      }
+    }(hi.lhs());
+
+    irep_idt full_identifier =
+      id2string(lhs_identifier) + "." + id2string(base_name);
+
+    if(ns.lookup(full_identifier, symbol))
+    {
+      throw errort().with_location(f_op.source_location())
+        << "unknown function `" << base_name << "' in `" << lhs_identifier
+        << '\'';
+    }
+  }
   else
   {
     throw errort().with_location(expr.source_location())
