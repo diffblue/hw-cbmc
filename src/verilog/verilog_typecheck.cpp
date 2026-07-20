@@ -850,23 +850,46 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
   }
   else
   {
-    irep_idt base_name =
-      to_verilog_identifier_expr(statement.function()).base_name();
-
-    // look it up
-    irep_idt full_identifier =
-      id2string(module_instance) + "." + id2string(base_name);
-
+    irep_idt base_name;
     const symbolt *symbol;
-    if(ns.lookup(full_identifier, symbol))
+
+    if(statement.function().id() == ID_verilog_package_scope)
     {
-      // not there? Try compilation-unit scope.
-      full_identifier = verilog_unit_scope_identifier(base_name);
+      // package-scoped task call, e.g., moo::foo()
+      auto &package_scope = to_verilog_package_scope_expr(statement.function());
+
+      auto package_base = package_scope.package_base_name();
+      base_name =
+        to_verilog_identifier_expr(package_scope.identifier()).base_name();
+
+      irep_idt full_identifier =
+        verilog_package_identifier(package_base, base_name);
 
       if(ns.lookup(full_identifier, symbol))
       {
         throw errort().with_location(statement.function().source_location())
-          << "unknown function or task `" << base_name << "'";
+          << "task `" << base_name << "' not known in package `" << package_base
+          << '\'';
+      }
+    }
+    else
+    {
+      base_name = to_verilog_identifier_expr(statement.function()).base_name();
+
+      // look it up
+      irep_idt full_identifier =
+        id2string(module_instance) + "." + id2string(base_name);
+
+      if(ns.lookup(full_identifier, symbol))
+      {
+        // not there? Try compilation-unit scope.
+        full_identifier = verilog_unit_scope_identifier(base_name);
+
+        if(ns.lookup(full_identifier, symbol))
+        {
+          throw errort().with_location(statement.function().source_location())
+            << "unknown function or task `" << base_name << "'";
+        }
       }
     }
 
