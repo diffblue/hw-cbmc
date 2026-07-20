@@ -1978,7 +1978,8 @@ data_type:
         | TOK_CHANDLE
                 { init($$, ID_verilog_chandle); }
         | TOK_VIRTUAL interface_opt interface_identifier
-                { init($$, "virtual_interface"); }
+                { init($$, ID_verilog_virtual_interface);
+                  stack_type($$).set(ID_base_name, stack_expr($3).get(ID_base_name)); }
         | type_identifier packed_dimension_brace
                 { add_as_subtype(stack_type($2), stack_type($1));
                   $$ = $2; }

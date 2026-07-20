@@ -608,6 +608,11 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     result.set(ID_base_name, src.get(ID_base_name));
     return result;
   }
+  else if(src.id() == ID_verilog_virtual_interface)
+  {
+    // virtual interface variable (IEEE 1800-2017 25.9)
+    return src;
+  }
   else if(src.id() == ID_verilog_package_scope)
   {
     // package::typedef
