@@ -1,0 +1,8 @@
+KNOWNBUG
+unpacked_array2.sv
+
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+This should fail during typechecking.
