@@ -1217,6 +1217,27 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
   else if(src.id() == ID_zero_extend)
     return convert_zero_extend(to_zero_extend_expr(src));
 
+  else if(src.id() == ID_reduction_and)
+    return convert_rec(to_reduction_and_expr(src).lower());
+
+  else if(src.id() == ID_reduction_nand)
+    return convert_rec(to_reduction_nand_expr(src).lower());
+
+  else if(src.id() == ID_reduction_or)
+    return convert_rec(to_reduction_or_expr(src).lower());
+
+  else if(src.id() == ID_reduction_nor)
+    return convert_rec(to_reduction_nor_expr(src).lower());
+
+  else if(src.id() == ID_reduction_xor)
+    return convert_rec(to_reduction_xor_expr(src).lower());
+
+  else if(src.id() == ID_reduction_xnor)
+    return convert_rec(to_reduction_xnor_expr(src).lower());
+
+  else if(src.id() == ID_replication)
+    return convert_rec(to_replication_expr(src).lower());
+
   else // no SMV language expression for internal representation
     return convert_norep(src);
 }
