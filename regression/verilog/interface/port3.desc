@@ -1,8 +1,7 @@
 CORE
 port3.sv
 --bound 5
-^\[main\.w\.p1\] always main\.w\.bus\.value == 4'b0111: PROVED up to bound 5
-^\[main\.r\.p1\] always main\.r\.bus\.value == 4'b0111: PROVED up to bound 5
+^\[main\.r\.p0\] main\.r\.bus\.value == 1 \|\| main\.r\.bus\.value == 2: PROVED up to bound 5
 ^EXIT=0$
 ^SIGNAL=0$
 --

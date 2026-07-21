@@ -1,5 +1,6 @@
 interface myInterface #(parameter WIDTH = 8);
   logic [WIDTH-1:0] data;
+  initial assert($bits(data) == 16);
 endinterface
 
 module main;
