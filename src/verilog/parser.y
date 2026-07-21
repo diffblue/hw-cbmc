@@ -4640,11 +4640,18 @@ array_pattern_key:
                 }
         ;
 
-// The following rule is missing the case
-//   assignment_pattern_expression_type assignment_pattern
-// owing to a conflict with cast expressions.
+// System Verilog standard 1800-2017
+// A.6.7.1 Patterns
+// assignment_pattern_expression ::=
+//   [ assignment_pattern_expression_type ] assignment_pattern
 assignment_pattern_expression:
           assignment_pattern
+        | casting_type assignment_pattern
+                {
+                  $$ = $2;
+                  stack_expr($$).type() = stack_expr($1).type();
+                  stack_expr($$).id(ID_verilog_assignment_pattern_with_type);
+                }
         ;
 
 // System Verilog standard 1800-2017
