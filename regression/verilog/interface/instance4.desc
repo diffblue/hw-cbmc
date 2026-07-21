@@ -1,9 +1,9 @@
-CORE
+KNOWNBUG
 instance4.sv
---bound 5
-^\[main\.p1\] always main\.ctr\.count <= 15: PROVED up to bound 5
+--bound 10
+^\[main\.p1\] always main\.ctr\.count <= 10: REFUTED$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-Interface instance with behavioral access and property checking.
+The behavior of the counter in the interface instance is overconstrainted.

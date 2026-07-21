@@ -1,15 +1,15 @@
 // Two modules connected through a shared interface
 interface data_if;
   logic [3:0] value;
-  initial value = 4'd7;
+  initial value = 1;
 endinterface
 
 module writer(data_if bus);
-  p1: assert property (bus.value == 4'd7);
+  initial bus.value = 2;
 endmodule
 
 module reader(data_if bus);
-  p1: assert property (bus.value == 4'd7);
+  initial p0: assert(bus.value == 1 || bus.value == 2);
 endmodule
 
 module main(input clk);

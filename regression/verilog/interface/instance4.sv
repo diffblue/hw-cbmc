@@ -9,6 +9,7 @@ module main(input clk);
 
   always @(posedge clk) ctr.count = ctr.count + 1;
 
-  p1: assert property (@(posedge clk) ctr.count <= 15);
+  // should fail
+  p1: assert property (@(posedge clk) ctr.count <= 4'd10);
 
 endmodule
