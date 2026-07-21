@@ -1519,16 +1519,15 @@ void verilog_synthesist::synth_module_instance(
     // must be in symbol_table
     const symbolt &module_symbol = ns.lookup(module_identifier);
 
-    // get the transition relation of the instantiated module
-    auto trans_inst = verilog_synthesis(
-      symbol_table,
-      module_identifier,
-      standard,
-      ignore_initial,
-      initial_zero,
-      get_message_handler());
-
-    expand_module_instance(module_symbol, trans_inst, instance, trans_dest);
+    // Synthesis is monolithic: the instantiated module's items are
+    // expanded into trans_dest using the very same verilog_synthesist
+    // object (and hence the same 'assignments' and 'local_symbols'
+    // state) as the enclosing module, instead of being synthesized in
+    // isolation. This is required so that assignments made via
+    // hierarchical identifiers, which can reach across instance
+    // boundaries in either direction, are all visible by the time
+    // the constraints are generated.
+    expand_module_instance(module_symbol, instance, trans_dest);
   }
 }
 
@@ -1726,15 +1725,20 @@ Function: verilog_synthesist::expand_module_instance
 
 void verilog_synthesist::expand_module_instance(
   const symbolt &module_symbol,
-  const transt &trans_inst,
   const verilog_instt::instancet &instance,
   transt &trans_dest)
 {
   construct=constructt::OTHER;
 
-  // do the trans of the instantiated module
-  for(std::size_t i = 0; i < 3; i++)
-    trans_dest.operands()[i].add_to_operands(trans_inst.operands()[i]);
+  // Each instantiated module symbol is unique to its instance, and
+  // synthesis expands it in place exactly once.
+  PRECONDITION(module_symbol.value.id() != ID_trans);
+
+  // Expand the instantiated module's items in place, using the same
+  // 'assignments' and 'local_symbols' state as the rest of the
+  // hierarchy, so that the constraints for the entire design are
+  // only generated once all assignments have been collected.
+  synth_module_items(module_symbol, trans_dest);
 
   instantiate_ports(instance.base_name(), instance, module_symbol, trans_dest);
 }
@@ -4047,15 +4051,13 @@ Function: verilog_synthesist::convert_module_items
 
 \*******************************************************************/
 
-transt verilog_synthesist::convert_module_items(const symbolt &symbol)
+void verilog_synthesist::synth_module_items(
+  const symbolt &symbol,
+  transt &trans)
 {
   PRECONDITION(symbol.value.id() == ID_verilog_module);
 
   const auto &verilog_module = to_verilog_module_expr(symbol.value);
-
-  // clean up
-  assignments.clear();
-  invars.clear();
 
   // Add port-declared symbols to local_symbols, since ANSI-style
   // port declarations do not appear as decl module items.
@@ -4066,19 +4068,60 @@ transt verilog_synthesist::convert_module_items(const symbolt &symbol)
       local_symbols.insert(port.identifier());
   }
 
-  // now convert the module items
-
-  transt trans{ID_trans, conjunction({}), conjunction({}), conjunction({}),
-               symbol.type};
+  // 'default disable iff' is scoped to this module; save/restore so that
+  // it does not leak into, or out of, the module items of an instance
+  // expanded as part of this same recursive traversal.
+  auto old_default_disable_iff = default_disable_iff;
+  default_disable_iff = {};
 
   // first find any default disable iff at this level
   for(const auto &module_item : verilog_module.module_items())
     find_defaults(module_item);
 
-  // now synthesise
+  // now synthesise; this recurses into instantiated submodules, and
+  // their assignments accumulate in the same 'assignments' and
+  // 'local_symbols' state as this module
   for(const auto &module_item : verilog_module.module_items())
     synth_module_item(module_item, trans);
 
+  default_disable_iff = old_default_disable_iff;
+}
+
+/*******************************************************************\
+
+Function: verilog_synthesist::convert_module_items
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Turn the verilog_module_exprt into a transition system
+          expression. This is done monolithically: the entire module
+          instance hierarchy is expanded and all assignments are
+          collected first, using synth_module_items, and only then
+          are the constraints for the resulting flat set of
+          assignments generated. This is necessary because assignments
+          made via hierarchical identifiers may cross instance
+          boundaries in either direction.
+
+\*******************************************************************/
+
+transt verilog_synthesist::convert_module_items(const symbolt &symbol)
+{
+  // clean up
+  assignments.clear();
+  invars.clear();
+
+  // now convert the module items, recursively expanding the instance
+  // hierarchy
+
+  transt trans{
+    ID_trans, conjunction({}), conjunction({}), conjunction({}), symbol.type};
+
+  synth_module_items(symbol, trans);
+
+  // Only now, after all assignments across the entire hierarchy have
+  // been collected, do we generate the constraints.
   synth_assignments(trans);
 
   for(const auto & it : invars)
@@ -4128,15 +4171,12 @@ transt verilog_synthesist::synthesis()
 {
   symbolt &symbol=symbol_table_lookup(module);
 
-  // done already?
-  if(symbol.value.id() == ID_trans)
-    return to_trans_expr(symbol.value);
-  else
-  {
-    auto result = convert_module_items(symbol);
-    symbol.value = result;
-    return result;
-  }
+  // Synthesis runs exactly once for a given module symbol.
+  PRECONDITION(symbol.value.id() != ID_trans);
+
+  auto result = convert_module_items(symbol);
+  symbol.value = result;
+  return result;
 }
 
 /*******************************************************************\
