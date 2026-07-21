@@ -63,7 +63,7 @@ jobs:
       - name: Get cadical and minisat
         run: make -C lib/cbmc/src cadical-download minisat2-download
       - name: Build ebmc with make
-        run: make -C src/ebmc -j4 CXX="ccache g++" MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
+        run: make -C src ebmc.dir -j4 CXX="ccache g++" MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
       - name: Save ccache
         uses: actions/cache/save@v6
         if: always()
@@ -87,7 +87,7 @@ jobs:
     name: Publish report to GitHub Pages
     needs: run-logikbench
     if: github.event_name != 'pull_request' && github.repository == 'diffblue/hw-cbmc'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
