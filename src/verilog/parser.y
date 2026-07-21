@@ -5057,11 +5057,21 @@ unsigned_number: TOK_NUMBER
 // System Verilog standard 1800-2017
 // A.8.2 Subroutine calls
 
+// We deviate from the standard by inlining ps_or_hierarchical_tf_identifier
+// here. Using ps_or_hierarchical_tf_identifier directly causes reduce/reduce
+// conflicts in statement context, where hierarchical_identifier is also the
+// start of blocking_assignment.
 tf_call:
           hierarchical_identifier list_of_arguments_paren_opt
                 { init($$, ID_function_call);
                   stack_expr($$).operands().reserve(2);
                   mto($$, $1); mto($$, $2); }
+        | package_scope tf_identifier list_of_arguments_paren_opt
+                { mto($1, $2);
+                  pop_scope();
+                  init($$, ID_function_call);
+                  stack_expr($$).operands().reserve(2);
+                  mto($$, $1); mto($$, $3); }
         ;
 
 list_of_arguments_paren:
