@@ -642,6 +642,10 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     auto result =
       verilog_module_instance_typet{}.with_source_location(source_location);
     result.set(ID_base_name, src.get(ID_base_name));
+    // Preserve modport name if specified (IEEE 1800-2017 25.5)
+    auto modport = src.get(ID_verilog_modport);
+    if(!modport.empty())
+      result.set(ID_verilog_modport, modport);
     return result;
   }
   else if(src.id() == ID_verilog_package_scope)

@@ -2901,6 +2901,8 @@ modport_ports_declaration_brace:
 // port name (starting a new group) or just a port name (continuing the
 // previous direction group). We flatten into single items to avoid a
 // shift/reduce conflict between the inner and outer comma-separated lists.
+// Per IEEE 1800-2017 25.5.2, modport port expressions use the form:
+//   port_direction . port_identifier ( expression )
 modport_ports_declaration:
           port_direction non_type_identifier
                 { $$ = $1;
@@ -2908,6 +2910,10 @@ modport_ports_declaration:
         | non_type_identifier
                 { init($$, ID_nil);
                   mto($$, $1); }
+        | port_direction '.' non_type_identifier '(' expression ')'
+                { $$ = $1;
+                  stack_expr($3).add(ID_value).swap(stack_expr($5));
+                  mto($$, $3); }
         ;
 
 // System Verilog standard 1800-2017
