@@ -205,35 +205,10 @@ void verilog_ebmc_languaget::typecheck_module(
     return;
   }
 
-  // The hw-cbmc flow continues to use synthesis, since it unwinds
-  // the module that is given on the command line, and hence requires
-  // the transition relation of that module.
-  if(use_synthesis)
-  {
-    log.status() << "Synthesis " << module.identifier << messaget::eom;
-
-    const bool ignore_initial = cmdline.isset("ignore-initial");
-    const bool initial_zero = cmdline.isset("initial-zero");
-
-    try
-    {
-      verilog_synthesis(
-        symbol_table,
-        module.identifier,
-        module.parse_tree.standard,
-        ignore_initial,
-        initial_zero,
-        message_handler);
-    }
-    catch(ebmc_errort)
-    {
-      log.error() << "CONVERSION ERROR" << messaget::eom;
-      throw ebmc_errort{}.with_exit_code(2);
-    }
-  }
-
-  // Otherwise, the transition relation is created from the RTL
-  // representation when the $root module is converted.
+  // The transition relation is created when the $root module is
+  // converted in create_root_module: from the RTL representation in
+  // the EBMC flow, or, in the hw-cbmc flow, by synthesizing the entire
+  // hierarchy once, monolithically.
 }
 
 transition_systemt verilog_ebmc_languaget::typecheck(
@@ -356,12 +331,18 @@ void verilog_ebmc_languaget::create_root_module(
   const bool ignore_initial = cmdline.isset("ignore-initial");
   const bool initial_zero = cmdline.isset("initial-zero");
 
-  // Create the transition relation for $root from its RTL
-  // representation, which expands the top-level module instance.
-  // The hw-cbmc flow uses synthesis instead.
-  try
+  messaget log(message_handler);
+
+  if(use_synthesis)
   {
-    if(use_synthesis)
+    // The hw-cbmc flow uses synthesis, since it unwinds the module
+    // that is given on the command line, and hence requires the
+    // transition relation of that module.
+    log.status() << "Synthesis" << messaget::eom;
+
+    // Synthesize $root, which expands the top-level module instance
+    // and, monolithically, the entire instance hierarchy underneath it.
+    try
     {
       transition_system.trans_expr = verilog_synthesis(
         symbol_table,
@@ -371,7 +352,31 @@ void verilog_ebmc_languaget::create_root_module(
         initial_zero,
         message_handler);
     }
-    else
+    catch(ebmc_errort)
+    {
+      log.error() << "CONVERSION ERROR" << messaget::eom;
+      throw ebmc_errort{}.with_exit_code(2);
+    }
+
+    // Publish the result onto each top-level module's own symbol as well,
+    // for consumers that look up an individual top-level module's trans
+    // directly (e.g., hw-cbmc, which combines exactly one hardware module
+    // with a C harness). This is not a re-synthesis: $root's own module
+    // items are plain instantiations of the top-level modules with no
+    // port connections of their own, so its trans is exactly the
+    // (disjoint) union of the individual modules' trans.
+    for(auto top_level_module : top_level_modules)
+    {
+      auto module_identifier = verilog_module_symbol(top_level_module);
+      symbol_table.get_writeable_ref(module_identifier).value =
+        transition_system.trans_expr;
+    }
+  }
+  else
+  {
+    // Create the transition relation for $root from its RTL
+    // representation, which expands the top-level module instance.
+    try
     {
       transition_system.trans_expr = verilog_transition_relation(
         symbol_table,
@@ -381,12 +386,11 @@ void verilog_ebmc_languaget::create_root_module(
         initial_zero,
         message_handler);
     }
-  }
-  catch(ebmc_errort &)
-  {
-    messaget log{message_handler};
-    log.error() << "CONVERSION ERROR" << messaget::eom;
-    throw;
+    catch(ebmc_errort &)
+    {
+      log.error() << "CONVERSION ERROR" << messaget::eom;
+      throw;
+    }
   }
 }
 
