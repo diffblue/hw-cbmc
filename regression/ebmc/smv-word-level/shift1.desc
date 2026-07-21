@@ -1,0 +1,12 @@
+CORE
+shift1.sv
+--smv-word-level
+^MODULE main$
+^INVAR a = 0uh8_A5$
+^INVAR shl = a << 0sd32_2$
+^INVAR lshr = a >> 0sd32_2$
+^INVAR sa = -0sd8_10$
+^INVAR ashr = sa >> 0sd32_2$
+^EXIT=0$
+^SIGNAL=0$
+--

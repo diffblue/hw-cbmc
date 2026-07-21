@@ -1,0 +1,12 @@
+KNOWNBUG
+replication1.sv
+--smv-word-level
+^MODULE main$
+^INVAR a = 0uh4_A$
+^INVAR rep = a :: a$
+^INVAR rep3 = a :: a :: a$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Replication operator ({N{x}}) produces norep output instead of concatenation.

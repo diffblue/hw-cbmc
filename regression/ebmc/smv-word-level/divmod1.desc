@@ -1,0 +1,11 @@
+CORE
+divmod1.sv
+--smv-word-level
+^MODULE main$
+^INVAR a = 0ud8_100$
+^INVAR b = 0ud8_7$
+^INVAR w_div = a / b$
+^INVAR w_mod = a mod b$
+^EXIT=0$
+^SIGNAL=0$
+--

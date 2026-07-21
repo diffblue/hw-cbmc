@@ -1,0 +1,14 @@
+CORE
+bitwise1.sv
+--smv-word-level
+^MODULE main$
+^INVAR a = 0uh8_A5$
+^INVAR b = 0uh8_3C$
+^INVAR w_and = \(a & b\)$
+^INVAR w_or = \(a \| b\)$
+^INVAR w_xor = \(a xor b\)$
+^INVAR w_xnor = \(a xnor b\)$
+^INVAR w_not = !a$
+^EXIT=0$
+^SIGNAL=0$
+--
