@@ -76,3 +76,66 @@ constant_exprt verilog_unsignedbv_typet::all_z_expr() const
 {
   return constant_exprt{std::string(get_width(), 'z'), *this};
 }
+
+typet make_two_valued(typet src)
+{
+  if(src.id() == ID_verilog_unsignedbv)
+  {
+    // Is it [0:0]? If so, make it 'bool'
+    if(
+      to_verilog_unsignedbv_type(src).width() == 1 &&
+      src.get(ID_C_offset) == irep_idt{})
+    {
+      auto result = bool_typet{}.with_source_location(src.source_location());
+      irep_idt verilog_type = src.get(ID_C_verilog_type);
+      if(verilog_type != irep_idt{})
+        result.set(ID_C_verilog_type, verilog_type);
+      return result;
+    }
+    else
+    {
+      // replace id, preserve width and location, if any
+      src.id(ID_unsignedbv);
+      return src;
+    }
+  }
+  else if(src.id() == ID_verilog_signedbv)
+  {
+    // replace id, preserve width and location, if any
+    src.id(ID_signedbv);
+    return src;
+  }
+  else if(src.id() == ID_unsignedbv)
+  {
+    // Is it [0:0]? If so, make it 'bool'
+    if(
+      to_unsignedbv_type(src).width() == 1 &&
+      src.get(ID_C_offset) == irep_idt{})
+    {
+      auto result = bool_typet{}.with_source_location(src.source_location());
+      irep_idt verilog_type = src.get(ID_C_verilog_type);
+      if(verilog_type != irep_idt{})
+        result.set(ID_C_verilog_type, verilog_type);
+      return result;
+    }
+    else
+    {
+      // leave as is
+      return src;
+    }
+  }
+  else if(src.id() == ID_array)
+  {
+    auto &array_type = to_array_type(src);
+    array_type.element_type() = make_two_valued(array_type.element_type());
+    return src;
+  }
+  else if(src.id() == ID_struct)
+  {
+    for(auto &component : to_struct_type(src).components())
+      component.type() = make_two_valued(component.type());
+    return src;
+  }
+  else
+    return src;
+}

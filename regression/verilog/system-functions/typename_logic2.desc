@@ -1,7 +1,7 @@
 CORE
 typename_logic2.sv
 
-^\[.*\] \$typename\(\[0:0\]\) == "logic": PROVED .*$
+^\[.*\] \$typename\(bool\) == "logic": PROVED .*$
 ^\[.*\] \$typename\(\[31:0\]\) == "logic\[31:0\]": PROVED .*$
 ^\[.*\] \$typename\(\[0:31\]\) == "logic\[0:31\]": PROVED .*$
 ^\[.*\] \$typename\(signed \[31:0\]\) == "logic signed\[31:0\]": PROVED .*$

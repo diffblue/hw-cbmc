@@ -143,7 +143,10 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
   }
   else if(type.id() == ID_bool)
   {
-    return "bit";
+    if(verilog_type == ID_verilog_logic)
+      return "logic";
+    else
+      return "bit";
   }
   else if(type.id() == ID_signedbv)
   {
