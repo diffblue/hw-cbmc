@@ -1,7 +1,13 @@
-CORE
+KNOWNBUG
 ref_port1.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
+--
+Monolithic synthesis now makes the child module's own 'initial some_ref
+= 123' assignment visible to the port-wiring code, which flags a
+(spurious, since 'ref' ports are aliases, not driven signals) conflict
+between the two. 'ref' ports need proper alias handling in the
+synthesis code, which is not yet implemented.

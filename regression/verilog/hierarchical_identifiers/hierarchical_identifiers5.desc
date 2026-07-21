@@ -1,0 +1,12 @@
+CORE
+hierarchical_identifiers5.sv
+--bound 1
+^\[main\.p0\] always main\.s\.r == 42: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The submodule's own always block drives s.r independently of the
+hierarchical assignment in main's initial block; synthesis must not
+conflate the two into a spurious, over-constraining self-hold on s.r.
