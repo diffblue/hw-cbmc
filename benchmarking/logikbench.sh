@@ -129,8 +129,17 @@ for group in "$BENCHMARKS"/*/ ; do
       css=fail ; label="fail ($status)"
     fi
 
-    printf '<tr class="%s"><td>%s</td><td>%s</td><td>%s</td></tr>\n' \
-      "$css" "$group_name" "$bench_name" "$label" >> "$ROWS"
+    # Link the circuit name to its RTL sources in the LogikBench repository
+    # on GitHub, pinned to the revision used for this run.
+    src_url="https://github.com/zeroasiccorp/logikbench/tree/$LOGIKBENCH_SHA/logikbench/benchmarks/$group_name/$bench_name/rtl"
+
+    # HTML-escape the captured ebmc output so it can be embedded verbatim in
+    # a <pre> block; the escaped log is shown/hidden by clicking the result
+    # cell (see the script at the end of the report).
+    log_html=`sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' logikbench.out`
+
+    printf '<tr class="%s"><td>%s</td><td><a href="%s">%s</a></td><td class="result" data-log="log-%s">%s</td></tr>\n<tr class="log-row" id="log-%s"><td colspan="3"><pre>%s</pre></td></tr>\n' \
+      "$css" "$group_name" "$src_url" "$bench_name" "$total" "$label" "$total" "$log_html" >> "$ROWS"
   done
 done
 
@@ -164,6 +173,12 @@ echo "LogikBench summary: $pass/$total circuits elaborated ($fail failed)"
   tr.fail td:last-child { color: #cf222e; }
   tr.timeout td:last-child { color: #9a6700; }
   tr.oom td:last-child { color: #8250df; }
+  td.result { cursor: pointer; text-decoration: underline dotted; }
+  tr.log-row { display: none; }
+  tr.log-row pre { white-space: pre-wrap; word-break: break-all; margin: 0;
+                    font-size: 0.8rem; max-height: 20rem; overflow: auto;
+                    background: color-mix(in srgb, Canvas 90%, CanvasText 10%);
+                    padding: 0.5rem; border-radius: 0.25rem; }
 </style>
 </head>
 <body>
@@ -190,6 +205,15 @@ HTML_HEAD
   cat <<'HTML_TAIL'
 </tbody>
 </table>
+<script>
+document.querySelectorAll('td.result').forEach(function (cell) {
+  cell.addEventListener('click', function () {
+    var logRow = document.getElementById(cell.dataset.log);
+    if (!logRow) return;
+    logRow.style.display = logRow.style.display === 'table-row' ? 'none' : 'table-row';
+  });
+});
+</script>
 </body>
 </html>
 HTML_TAIL
