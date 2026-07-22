@@ -29,6 +29,13 @@ LOGIKBENCH_REV=main
 # `gtimeout` (coreutils on macOS, `brew install coreutils`).
 PER_CIRCUIT_TIMEOUT=${PER_CIRCUIT_TIMEOUT:-60}
 
+# Per-circuit virtual memory limit, in KB, so that a single design whose
+# elaboration blows up (e.g. an unrolled loop producing exponentially large
+# expressions) cannot exhaust all memory on the machine and take the whole
+# run down with it.  Applied via the `ulimit -v` shell builtin, which is not
+# available on macOS; the run proceeds without a memory limit there.
+PER_CIRCUIT_MEM_KB=${PER_CIRCUIT_MEM_KB:-4000000}
+
 REPORT=${1:-logikbench-report.html}
 
 if command -v timeout > /dev/null 2>&1 ; then
@@ -96,7 +103,8 @@ for group in "$BENCHMARKS"/*/ ; do
     # Parse and elaborate only (--bound 0).  Exit code 1 indicates a
     # front-end/elaboration error; 124 is a timeout; anything else means ebmc
     # processed the design (0 = holds/no properties, 10 = counterexample, ...).
-    $RUN ebmc $incflags --bound 0 $sources > logikbench.out 2>&1
+    ( ulimit -v $PER_CIRCUIT_MEM_KB 2>/dev/null
+      $RUN ebmc $incflags --bound 0 $sources ) > logikbench.out 2>&1
     status=$?
 
     if [ "$status" = 0 ] || [ "$status" = 10 ] ; then
