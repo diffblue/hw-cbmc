@@ -472,7 +472,7 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator lhs_it)
       // make it a new input
       lhs.l=lhs.bit->next=new_input();
     }
-    else if(lhs.var->is_wire())
+    else if(lhs.var->is_wire() || lhs.var->is_output())
     {
       // there needs to be _something_ as value,
       // make it a new input
@@ -542,8 +542,9 @@ void convert_trans_to_netlistt::convert_lhs_rec(
         throw ebmc_errort{} << "lhs_rec: failed to find `"
                             << bv_varid.as_string() << "' in lhs_map";
 
-      // we only need to do wires
-      if(!it->second.var->is_wire()) return;
+      // we only need to do wires and outputs
+      if(!it->second.var->is_wire() && !it->second.var->is_output())
+        return;
 
       finalize_lhs(it);
     }
@@ -711,8 +712,9 @@ void convert_trans_to_netlistt::add_equality_rec(
       lhs_entryt &lhs_entry=it->second;
       const var_mapt::vart &var=*lhs_entry.var;
 
-      if((next && !var.is_latch()) ||
-         (!next && !var.is_wire()))
+      if(
+        (next && !var.is_latch()) ||
+        (!next && !var.is_wire() && !var.is_output()))
       {
         // give up
         constraint_list.push_back(src);

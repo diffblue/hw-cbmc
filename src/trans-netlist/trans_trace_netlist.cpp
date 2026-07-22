@@ -119,8 +119,10 @@ trans_tracet compute_trans_trace(
     {
       const var_mapt::vart &var=it->second;
 
-      // we show latches, inputs, wires      
-      if(!var.is_latch() && !var.is_input() && !var.is_wire())
+      // we show latches, inputs, wires, outputs
+      if(
+        !var.is_latch() && !var.is_input() && !var.is_wire() &&
+        !var.is_output())
         continue;
         
       const symbolt &symbol=ns.lookup(it->first);
