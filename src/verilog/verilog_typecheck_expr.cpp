@@ -1949,6 +1949,37 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     }
     else
     {
+      // Check if the rhs is a modport name of the interface.
+      // Per IEEE 1800-2017 25.5.3, sb.receiver in a port connection
+      // means "pass interface instance sb with modport receiver".
+      const symbolt *lhs_symbol;
+      if(
+        !ns.lookup(lhs_identifier, lhs_symbol) &&
+        lhs_symbol->value.id() == ID_verilog_module_instance)
+      {
+        auto &module_id =
+          to_verilog_module_instance(lhs_symbol->value).module_identifier();
+        const symbolt *module_symbol;
+        if(!ns.lookup(module_id, module_symbol))
+        {
+          auto &module_expr = to_verilog_module_expr(module_symbol->value);
+          for(auto &item : module_expr.module_items())
+          {
+            if(item.id() == ID_verilog_modport_declaration)
+            {
+              for(auto &modport_item : item.operands())
+              {
+                if(modport_item.get(ID_base_name) == rhs_base_name)
+                {
+                  // The modport selection resolves to the interface
+                  // instance itself; the modport is informational.
+                  return expr.lhs();
+                }
+              }
+            }
+          }
+        }
+      }
       throw errort().with_location(expr.source_location())
         << "identifier `" << rhs_base_name << "' not found in module `"
         << lhs_identifier << '\'';
