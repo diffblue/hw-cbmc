@@ -101,8 +101,12 @@ for group in "$BENCHMARKS"/*/ ; do
     total=`expr $total + 1`
 
     # Parse and elaborate only (--bound 0).  Exit code 1 indicates a
-    # front-end/elaboration error; 124 is a timeout; anything else means ebmc
-    # processed the design (0 = holds/no properties, 10 = counterexample, ...).
+    # front-end/elaboration error; 124 is a timeout; 6 is CPROVER's
+    # catch-all for an internal exception, which is also what ebmc reports
+    # for std::bad_alloc (see CPROVER_EXIT_INTERNAL_OUT_OF_MEMORY in
+    # lib/cbmc/src/util/exit_codes.h) and thus what the PER_CIRCUIT_MEM_KB
+    # cap above triggers; anything else means ebmc processed the design
+    # (0 = holds/no properties, 10 = counterexample, ...).
     ( ulimit -v $PER_CIRCUIT_MEM_KB 2>/dev/null
       $RUN ebmc $incflags --bound 0 $sources ) > logikbench.out 2>&1
     status=$?
@@ -115,6 +119,10 @@ for group in "$BENCHMARKS"/*/ ; do
       echo "  TIMEOUT $group_name/$bench_name"
       fail=`expr $fail + 1`
       css=timeout ; label="timeout"
+    elif [ "$status" = 6 ] ; then
+      echo "  OOM     $group_name/$bench_name"
+      fail=`expr $fail + 1`
+      css=oom ; label="out of memory / internal error"
     else
       echo "  FAIL    $group_name/$bench_name"
       fail=`expr $fail + 1`
@@ -155,6 +163,7 @@ echo "LogikBench summary: $pass/$total circuits elaborated ($fail failed)"
   tr.ok td:last-child { color: #1a7f37; }
   tr.fail td:last-child { color: #cf222e; }
   tr.timeout td:last-child { color: #9a6700; }
+  tr.oom td:last-child { color: #8250df; }
 </style>
 </head>
 <body>
