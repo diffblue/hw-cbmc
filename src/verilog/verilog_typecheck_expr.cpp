@@ -3313,6 +3313,15 @@ exprt verilog_typecheck_exprt::convert_replication_expr(replication_exprt expr)
   convert_expr(op1);
   require_vector(op1);
 
+  // The parser wraps the replicated expression in a concatenation node.
+  DATA_INVARIANT(
+    op1.id() == ID_concatenation,
+    "replication operand must be a concatenation");
+
+  // Unwrap single-element concatenations.
+  if(op1.operands().size() == 1)
+    op1 = to_unary_expr(op1).op();
+
   auto width = get_width(expr.op1().type());
 
   mp_integer op0 = convert_integer_constant_expression(expr.op0());
