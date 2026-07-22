@@ -42,8 +42,8 @@ void show_state(
   for(auto it : map.var_map.sorted())
   {
     const var_mapt::vart &var=it->second;
-    
-    if(var.is_latch() || var.is_input() || var.is_wire())
+
+    if(var.is_latch() || var.is_input() || var.is_wire() || var.is_output())
     {
       std::cout << it->first << "=";
 

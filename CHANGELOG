@@ -1,5 +1,8 @@
 # EBMC 6.1
 
+* Netlist: module outputs are now classified as outputs rather than
+  wires (visible in --show-varmap); they remain shown in
+  counterexample traces
 * --aiger outputs the model in AIGER format
 * Fix for lowering of s_until_with to LTL
 * Verilog: $root.

@@ -59,6 +59,8 @@ build_netlist_var_map(symbol_table_baset &symbol_table, const irep_idt &module)
       vartype = var_mapt::vart::vartypet::INPUT;
     else if(symbol.is_state_var)
       vartype = var_mapt::vart::vartypet::LATCH;
+    else if(symbol.is_output)
+      vartype = var_mapt::vart::vartypet::OUTPUT;
     else
       vartype = var_mapt::vart::vartypet::WIRE;
 
