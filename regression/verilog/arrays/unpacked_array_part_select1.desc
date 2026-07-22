@@ -1,0 +1,12 @@
+KNOWNBUG
+unpacked_array_part_select1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+1800-2017 7.4.3 permits reading and writing a slice of an unpacked
+array. ebmc does not yet implement this and currently rejects the
+part-select (slicing) operator on unpacked arrays during
+type-checking, with "expected a vector type, but got unpacked array
+...".
