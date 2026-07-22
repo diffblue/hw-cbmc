@@ -420,12 +420,30 @@ void verilog_typecheck_exprt::assignment_conversion(
       << to_string(lhs_type) << "'";
   }
 
+  if(
+    lhs_type.id() == ID_array &&
+    lhs_type.get(ID_C_verilog_type) == ID_verilog_unpacked_array)
+  {
+    // assignment of a non-matching type to unpacked array
+    throw errort().with_location(rhs.source_location())
+      << "failed to convert `" << to_string(original_rhs_type) << "' to `"
+      << to_string(lhs_type) << "'";
+  }
+
   // do enum, union and struct decay
   decay_to_vector(rhs);
 
   if(rhs.type().id() == ID_struct || rhs.type().id() == ID_union)
   {
     // not decayed, not equal
+    throw errort().with_location(rhs.source_location())
+      << "failed to convert `" << to_string(original_rhs_type) << "' to `"
+      << to_string(lhs_type) << "'";
+  }
+
+  if(rhs.type().id() == ID_array)
+  {
+    // Unpacked arrays do not decay to integral types.
     throw errort().with_location(rhs.source_location())
       << "failed to convert `" << to_string(original_rhs_type) << "' to `"
       << to_string(lhs_type) << "'";
@@ -2753,7 +2771,9 @@ void verilog_typecheck_exprt::array_decay(exprt &expr) const
   // 1800-2017 7.4.3
   // Packed arrays can be "treated as an integer in an expression"
   auto &type = expr.type();
-  if(type.id() == ID_array)
+  if(
+    type.id() == ID_array &&
+    type.get(ID_C_verilog_type) == ID_verilog_packed_array)
   {
     auto new_type =
       unsignedbv_typet{numeric_cast_v<std::size_t>(get_width(type))};

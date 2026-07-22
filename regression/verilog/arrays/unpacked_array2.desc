@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 unpacked_array2.sv
 
+^file .* line 7: failed to convert `unpacked array \[32\] of bool' to `signed \[31:0\]'$
 ^EXIT=2$
 ^SIGNAL=0$
 --
 --
-This should fail during typechecking.
