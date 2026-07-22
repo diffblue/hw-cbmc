@@ -29,6 +29,13 @@ LOGIKBENCH_REV=main
 # `gtimeout` (coreutils on macOS, `brew install coreutils`).
 PER_CIRCUIT_TIMEOUT=${PER_CIRCUIT_TIMEOUT:-60}
 
+# Per-circuit virtual memory limit, in KB, so that a single design whose
+# elaboration blows up (e.g. an unrolled loop producing exponentially large
+# expressions) cannot exhaust all memory on the machine and take the whole
+# run down with it.  Applied via the `ulimit -v` shell builtin, which is not
+# available on macOS; the run proceeds without a memory limit there.
+PER_CIRCUIT_MEM_KB=${PER_CIRCUIT_MEM_KB:-4000000}
+
 REPORT=${1:-logikbench-report.html}
 
 if command -v timeout > /dev/null 2>&1 ; then
@@ -94,9 +101,14 @@ for group in "$BENCHMARKS"/*/ ; do
     total=`expr $total + 1`
 
     # Parse and elaborate only (--bound 0).  Exit code 1 indicates a
-    # front-end/elaboration error; 124 is a timeout; anything else means ebmc
-    # processed the design (0 = holds/no properties, 10 = counterexample, ...).
-    $RUN ebmc $incflags --bound 0 $sources > logikbench.out 2>&1
+    # front-end/elaboration error; 124 is a timeout; 6 is CPROVER's
+    # catch-all for an internal exception, which is also what ebmc reports
+    # for std::bad_alloc (see CPROVER_EXIT_INTERNAL_OUT_OF_MEMORY in
+    # lib/cbmc/src/util/exit_codes.h) and thus what the PER_CIRCUIT_MEM_KB
+    # cap above triggers; anything else means ebmc processed the design
+    # (0 = holds/no properties, 10 = counterexample, ...).
+    ( ulimit -v $PER_CIRCUIT_MEM_KB 2>/dev/null
+      $RUN ebmc $incflags --bound 0 $sources ) > logikbench.out 2>&1
     status=$?
 
     if [ "$status" = 0 ] || [ "$status" = 10 ] ; then
@@ -107,6 +119,10 @@ for group in "$BENCHMARKS"/*/ ; do
       echo "  TIMEOUT $group_name/$bench_name"
       fail=`expr $fail + 1`
       css=timeout ; label="timeout"
+    elif [ "$status" = 6 ] ; then
+      echo "  OOM     $group_name/$bench_name"
+      fail=`expr $fail + 1`
+      css=oom ; label="out of memory / internal error"
     else
       echo "  FAIL    $group_name/$bench_name"
       fail=`expr $fail + 1`
@@ -147,6 +163,7 @@ echo "LogikBench summary: $pass/$total circuits elaborated ($fail failed)"
   tr.ok td:last-child { color: #1a7f37; }
   tr.fail td:last-child { color: #cf222e; }
   tr.timeout td:last-child { color: #9a6700; }
+  tr.oom td:last-child { color: #8250df; }
 </style>
 </head>
 <body>
