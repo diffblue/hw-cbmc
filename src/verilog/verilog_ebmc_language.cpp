@@ -162,27 +162,8 @@ void verilog_ebmc_languaget::typecheck_module(
     throw ebmc_errort{}.with_exit_code(2);
   }
 
-  messaget message(message_handler);
-  log.status() << "Synthesis " << module.identifier << messaget::eom;
-
-  const bool ignore_initial = cmdline.isset("ignore-initial");
-  const bool initial_zero = cmdline.isset("initial-zero");
-
-  try
-  {
-    verilog_synthesis(
-      symbol_table,
-      module.identifier,
-      module.parse_tree.standard,
-      ignore_initial,
-      initial_zero,
-      message_handler);
-  }
-  catch(ebmc_errort)
-  {
-    log.error() << "CONVERSION ERROR" << messaget::eom;
-    throw ebmc_errort{}.with_exit_code(2);
-  }
+  // Synthesis happens once, monolithically, for the entire hierarchy
+  // when $root is synthesized in create_root_module.
 }
 
 transition_systemt verilog_ebmc_languaget::typecheck(
@@ -305,14 +286,40 @@ void verilog_ebmc_languaget::create_root_module(
   const bool ignore_initial = cmdline.isset("ignore-initial");
   const bool initial_zero = cmdline.isset("initial-zero");
 
+  messaget log(message_handler);
+  log.status() << "Synthesis" << messaget::eom;
+
   // Synthesize $root, which expands the top-level module instance
-  transition_system.trans_expr = verilog_synthesis(
-    symbol_table,
-    root_identifier,
-    standard,
-    ignore_initial,
-    initial_zero,
-    message_handler);
+  // and, monolithically, the entire instance hierarchy underneath it.
+  try
+  {
+    transition_system.trans_expr = verilog_synthesis(
+      symbol_table,
+      root_identifier,
+      standard,
+      ignore_initial,
+      initial_zero,
+      message_handler);
+  }
+  catch(ebmc_errort)
+  {
+    log.error() << "CONVERSION ERROR" << messaget::eom;
+    throw ebmc_errort{}.with_exit_code(2);
+  }
+
+  // Publish the result onto each top-level module's own symbol as well,
+  // for consumers that look up an individual top-level module's trans
+  // directly (e.g., hw-cbmc, which combines exactly one hardware module
+  // with a C harness). This is not a re-synthesis: $root's own module
+  // items are plain instantiations of the top-level modules with no
+  // port connections of their own, so its trans is exactly the
+  // (disjoint) union of the individual modules' trans.
+  for(auto top_level_module : top_level_modules)
+  {
+    auto module_identifier = verilog_module_symbol(top_level_module);
+    symbol_table.get_writeable_ref(module_identifier).value =
+      transition_system.trans_expr;
+  }
 }
 
 static void make_next_state(exprt &expr)
