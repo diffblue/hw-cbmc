@@ -1,8 +1,11 @@
 KNOWNBUG
-part_select1.sv
+assignment_pattern_expr1.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-This does not parse.
+1800-2017 7.4.3 permits reading and writing a slice of an unpacked
+array, but ebmc rejects the part-select (slicing) operator on
+unpacked arrays during type-checking; see
+unpacked_array_part_select1.sv for a minimal reproduction.
