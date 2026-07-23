@@ -1,0 +1,13 @@
+KNOWNBUG
+unpacked_array_param1.sv
+--bound 0
+
+^file .* line 5: expected constant expression, but got .*$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The declarator's unpacked array dimensions now parse, but elaborating an
+array assignment pattern ('{...}) as a constant parameter value is not
+yet supported. When that is added, this test should pass and become CORE.

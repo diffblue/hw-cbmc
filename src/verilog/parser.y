@@ -2368,18 +2368,20 @@ list_of_param_assignments:
         ;
 
 param_assignment:
-          param_identifier '=' constant_param_expression
+          param_identifier unpacked_dimension_brace '=' constant_param_expression
                 { init($$, ID_parameter);
                   auto base_name = stack_expr($1).get(ID_base_name);
                   PARSER.scopes.add_identifier(base_name, verilog_scopet::PARAMETER);
                   stack_expr($$).set(ID_base_name, base_name);
-                  addswap($$, ID_value, $3); }
+                  addswap($$, ID_type, $2);
+                  addswap($$, ID_value, $4); }
           /* The assignment is optional */
-        | param_identifier
+        | param_identifier unpacked_dimension_brace
                 { init($$, ID_parameter);
                   auto base_name = stack_expr($1).get(ID_base_name);
                   PARSER.scopes.add_identifier(base_name, verilog_scopet::PARAMETER);
                   stack_expr($$).set(ID_base_name, base_name);
+                  addswap($$, ID_type, $2);
                   stack_expr($$).set(ID_value, nil_exprt{}); }
         ;
 
