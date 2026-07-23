@@ -2703,7 +2703,7 @@ function_body_declaration:
           ';'
           tf_item_declaration_brace
           function_statement_or_null_brace
-          TOK_ENDFUNCTION
+          TOK_ENDFUNCTION end_identifier_opt
                 { init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_function);
                   addswap($$, ID_type, $1);
@@ -2720,7 +2720,7 @@ function_body_declaration:
           '(' tf_port_list_opt ')' ';'
           block_item_declaration_brace
           function_statement_or_null_brace
-          TOK_ENDFUNCTION
+          TOK_ENDFUNCTION end_identifier_opt
                 { init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_function);
                   addswap($$, ID_type, $1);
@@ -2768,7 +2768,7 @@ task_declaration:
           ';'
           tf_item_declaration_brace
           task_statement_or_null_brace
-          TOK_ENDTASK
+          TOK_ENDTASK end_identifier_opt
                 { init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_task);
                   mto($$, $2); // declarator
@@ -2782,7 +2782,7 @@ task_declaration:
           '(' tf_port_list_opt ')' ';'
           tf_item_declaration_brace
           task_statement_or_null_brace
-          TOK_ENDTASK
+          TOK_ENDTASK end_identifier_opt
                 { init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_task);
                   mto($$, $2); // declarator
@@ -5513,6 +5513,13 @@ topmodule_identifier: non_type_identifier;
 endmodule_identifier_opt:
           /* Optional */
         | TOK_COLON module_identifier
+        ;
+
+// Optional block name repeated after endfunction/endtask etc.,
+// e.g. "endfunction : is_width_valid". IEEE 1800-2017 A.9.3.
+end_identifier_opt:
+          /* Optional */
+        | TOK_COLON any_identifier
         ;
 
 clocking_identifier: non_type_identifier;
