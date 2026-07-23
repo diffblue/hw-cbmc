@@ -156,7 +156,7 @@ void verilog_typecheckt::typecheck_port_connections(
       const irep_idt &base_name =
         to_verilog_identifier_expr(named_port_connection.port()).base_name();
 
-      bool found=false;
+      bool found = false;
 
       irep_idt full_identifier =
         id2string(inst.identifier()) + '.' + id2string(base_name);
@@ -175,7 +175,7 @@ void verilog_typecheckt::typecheck_port_connections(
       {
         if(port.identifier() == full_identifier)
         {
-          found=true;
+          found = true;
           typecheck_port_connection(value, port);
           named_port_connection.port().type() = port.type();
           break;
@@ -240,8 +240,8 @@ void verilog_typecheckt::typecheck_builtin_port_connections(
 
   inst.remove(ID_range);
 
-  typet &type=inst.type();
-  if(width==1)
+  typet &type = inst.type();
+  if(width == 1)
     type.id(ID_bool);
   else
   {
@@ -287,16 +287,16 @@ void verilog_typecheckt::convert_function_or_task(
 {
   const auto identifier = hierarchical_identifier(decl.base_name());
 
-  auto result=symbol_table.get_writeable(identifier);
+  auto result = symbol_table.get_writeable(identifier);
 
-  if(result==nullptr)
+  if(result == nullptr)
   {
     throw errort().with_location(decl.source_location())
       << "expected to find " << decl.id() << " symbol `" << identifier
       << "' in symbol_table";
   }
 
-  symbolt &symbol=*result;
+  symbolt &symbol = *result;
 
   decl.set_identifier(symbol.name);
 
@@ -308,9 +308,9 @@ void verilog_typecheckt::convert_function_or_task(
   for(auto &statement : decl.body().statements())
     convert_statement(statement);
 
-  function_or_task_name="";
+  function_or_task_name = "";
 
-  symbol.value=decl.body();
+  symbol.value = decl.body();
 }
 
 /*******************************************************************\
@@ -381,18 +381,17 @@ Function: verilog_typecheckt::elaborate_constant_function_call
 exprt verilog_typecheckt::elaborate_constant_function_call(
   const function_call_exprt &function_call)
 {
-  const function_call_exprt::argumentst &arguments=
-    function_call.arguments();
+  const function_call_exprt::argumentst &arguments = function_call.arguments();
 
   // find the function
-  if(function_call.function().id()!=ID_symbol)
+  if(function_call.function().id() != ID_symbol)
   {
     throw errort().with_location(function_call.source_location())
       << "expected function symbol, but got `"
       << to_string(function_call.function()) << '\'';
   }
 
-  const symbolt &function_symbol=
+  const symbolt &function_symbol =
     ns.lookup(to_symbol_expr(function_call.function()));
 
   verilog_function_or_task_declt::bodyt function_body;
@@ -419,13 +418,11 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
       function_symbol.value);
   }
 
-  const code_typet &code_type=
-    to_code_type(function_symbol.type);
+  const code_typet &code_type = to_code_type(function_symbol.type);
 
-  const code_typet::parameterst &parameters=
-    code_type.parameters();
+  const code_typet::parameterst &parameters = code_type.parameters();
 
-  if(parameters.size()!=arguments.size())
+  if(parameters.size() != arguments.size())
   {
     throw errort().with_location(function_call.source_location())
       << "function call has wrong number of arguments";
@@ -435,7 +432,7 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
 
   varst old_vars;
 
-  for(std::size_t i=0; i<arguments.size(); i++)
+  for(std::size_t i = 0; i < arguments.size(); i++)
   {
     exprt value = elaborate_constant_expression(arguments[i]);
 
@@ -445,10 +442,10 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
         << "constant function argument is not constant";
     }
 
-    irep_idt p_identifier=parameters[i].get_identifier();
+    irep_idt p_identifier = parameters[i].get_identifier();
 
-    old_vars[p_identifier]=var_value(p_identifier);
-    vars[p_identifier]=value;
+    old_vars[p_identifier] = var_value(p_identifier);
+    vars[p_identifier] = value;
 
 #if 0
     status() << "ASSIGN " << p_identifier << " <- " << to_string(value) << eom;
@@ -459,12 +456,12 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
   for(auto &statement : function_body.statements())
     verilog_interpreter(statement);
 
-  function_or_task_name="";
+  function_or_task_name = "";
 
   // get return value
 
-  exprt return_value=var_value(
-    id2string(function_symbol.name)+"."+
+  exprt return_value = var_value(
+    id2string(function_symbol.name) + "." +
     id2string(function_symbol.base_name));
 
   return return_value;
@@ -536,10 +533,9 @@ Function: verilog_typecheckt::convert_initial
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_initial(
-  verilog_initialt &module_item)
+void verilog_typecheckt::convert_initial(verilog_initialt &module_item)
 {
-  if(module_item.operands().size()!=1)
+  if(module_item.operands().size() != 1)
   {
     throw errort().with_location(module_item.source_location())
       << "initial statement expected to have one operand";
@@ -582,17 +578,15 @@ Function: verilog_typecheckt::check_lhs
 
 \*******************************************************************/
 
-void verilog_typecheckt::check_lhs(
-  const exprt &lhs,
-  vassignt vassign)
+void verilog_typecheckt::check_lhs(const exprt &lhs, vassignt vassign)
 {
-  if(lhs.id()==ID_index)
+  if(lhs.id() == ID_index)
   {
     check_lhs(to_index_expr(lhs).array(), vassign);
   }
-  else if(lhs.id()==ID_extractbit)
+  else if(lhs.id() == ID_extractbit)
   {
-    if(lhs.operands().size()!=2)
+    if(lhs.operands().size() != 2)
     {
       throw errort() << "extractbit takes two operands";
     }
@@ -615,16 +609,16 @@ void verilog_typecheckt::check_lhs(
     auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(lhs);
     check_lhs(part_select.src(), vassign);
   }
-  else if(lhs.id()==ID_concatenation)
+  else if(lhs.id() == ID_concatenation)
   {
     forall_operands(it, lhs)
       check_lhs(*it, vassign);
 
     return;
   }
-  else if(lhs.id()==ID_symbol)
+  else if(lhs.id() == ID_symbol)
   {
-    const symbolt &symbol=ns.lookup(to_symbol_expr(lhs));
+    const symbolt &symbol = ns.lookup(to_symbol_expr(lhs));
 
     // check for 'const'
     if(symbol.type.get_bool(ID_C_const))
@@ -799,13 +793,13 @@ void verilog_typecheckt::convert_continuous_assign(
 {
   Forall_operands(it, module_item)
   {
-    if(it->id()!=ID_equal || it->operands().size()!=2)
+    if(it->id() != ID_equal || it->operands().size() != 2)
     {
       throw errort().with_location(it->source_location())
         << "malformed continuous assignment";
     }
 
-    it->type()=bool_typet();
+    it->type() = bool_typet();
 
     exprt &lhs = to_binary_expr(*it).lhs();
     exprt &rhs = to_binary_expr(*it).rhs();
@@ -817,6 +811,22 @@ void verilog_typecheckt::convert_continuous_assign(
     {
       lhs = convert_verilog_identifier(
         to_verilog_identifier_expr(lhs), unsignedbv_typet{1});
+    }
+    else if(lhs.id() == ID_concatenation)
+    {
+      // The implicit net rule also applies to undeclared identifiers that
+      // appear as members of a concatenation on the LHS, e.g.
+      //   assign {carry, sum} = a + b;   // carry is undeclared
+      // Declare each such member as a scalar net of the default net type,
+      // then convert the concatenation as usual.
+      for(auto &op : lhs.operands())
+      {
+        if(op.id() == ID_verilog_identifier)
+          op = convert_verilog_identifier(
+            to_verilog_identifier_expr(op), unsignedbv_typet{1});
+      }
+
+      convert_expr(lhs);
     }
     else
       convert_expr(lhs);
@@ -902,16 +912,16 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
     const code_typet &code_type = to_code_type(symbol->type);
 
     // check arguments
-    const code_typet::parameterst &parameter_types=code_type.parameters();
-    exprt::operandst &arguments=statement.arguments();
+    const code_typet::parameterst &parameter_types = code_type.parameters();
+    exprt::operandst &arguments = statement.arguments();
 
-    if(parameter_types.size()!=arguments.size())
+    if(parameter_types.size() != arguments.size())
     {
       throw errort().with_location(statement.source_location())
         << "wrong number of arguments";
     }
 
-    for(unsigned i=0; i<arguments.size(); i++)
+    for(unsigned i = 0; i < arguments.size(); i++)
     {
       convert_expr(arguments[i]);
       assignment_conversion(arguments[i], parameter_types[i].type());
@@ -936,8 +946,8 @@ Function: verilog_typecheckt::convert_assign
 
 void verilog_typecheckt::convert_force(verilog_forcet &statement)
 {
-  exprt &lhs=statement.lhs();
-  exprt &rhs=statement.rhs();
+  exprt &lhs = statement.lhs();
+  exprt &rhs = statement.rhs();
 
   convert_expr(lhs);
   convert_expr(rhs);
@@ -962,7 +972,7 @@ void verilog_typecheckt::convert_assign(
   verilog_assignt &statement,
   bool blocking)
 {
-  if(statement.operands().size()!=2)
+  if(statement.operands().size() != 2)
   {
     throw errort().with_location(statement.source_location())
       << "assign statement expected to have two operands";
@@ -973,7 +983,7 @@ void verilog_typecheckt::convert_assign(
 
   convert_expr(lhs);
   convert_expr(rhs);
-  check_lhs(lhs, blocking?A_BLOCKING:A_NON_BLOCKING);
+  check_lhs(lhs, blocking ? A_BLOCKING : A_NON_BLOCKING);
   assignment_conversion(rhs, lhs.type());
 }
 
@@ -1243,16 +1253,15 @@ Function: verilog_typecheckt::convert_event_guard
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_event_guard(
-  verilog_event_guardt &statement)
+void verilog_typecheckt::convert_event_guard(verilog_event_guardt &statement)
 {
-  if(statement.operands().size()!=2)
+  if(statement.operands().size() != 2)
   {
     throw errort().with_location(statement.source_location())
       << "event_guard expected to have two operands";
   }
 
-  exprt &guard=statement.guard();
+  exprt &guard = statement.guard();
 
   convert_expr(guard);
   make_boolean(guard);
@@ -1274,7 +1283,7 @@ Function: verilog_typecheckt::convert_delay
 
 void verilog_typecheckt::convert_delay(verilog_delayt &statement)
 {
-  if(statement.operands().size()!=2)
+  if(statement.operands().size() != 2)
   {
     throw errort().with_location(statement.source_location())
       << "delay expected to have two operands";
@@ -1297,7 +1306,7 @@ Function: verilog_typecheckt::convert_for
 
 void verilog_typecheckt::convert_for(verilog_fort &statement)
 {
-  if(statement.operands().size()!=4)
+  if(statement.operands().size() != 4)
   {
     throw errort().with_location(statement.source_location())
       << "for expected to have four operands";
@@ -1309,7 +1318,7 @@ void verilog_typecheckt::convert_for(verilog_fort &statement)
   for(auto &init : statement.initialization())
     convert_statement(init);
 
-  exprt &condition=statement.condition();
+  exprt &condition = statement.condition();
   convert_expr(condition);
   make_boolean(condition);
 
@@ -1382,7 +1391,7 @@ Function: verilog_typecheckt::convert_prepostincdec
 
 void verilog_typecheckt::convert_prepostincdec(verilog_statementt &statement)
 {
-  if(statement.operands().size()!=1)
+  if(statement.operands().size() != 1)
   {
     throw errort().with_location(statement.source_location())
       << statement.id() << " expected to have one operand";
@@ -1403,16 +1412,15 @@ Function: verilog_typecheckt::convert_while
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_while(
-  verilog_whilet &statement)
+void verilog_typecheckt::convert_while(verilog_whilet &statement)
 {
-  if(statement.operands().size()!=2)
+  if(statement.operands().size() != 2)
   {
     throw errort().with_location(statement.source_location())
       << "while expected to have two operands";
   }
 
-  exprt &condition=statement.condition();
+  exprt &condition = statement.condition();
   convert_expr(condition);
   make_boolean(condition);
 
@@ -1431,16 +1439,15 @@ Function: verilog_typecheckt::convert_repeat
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_repeat(
-  verilog_repeatt &statement)
+void verilog_typecheckt::convert_repeat(verilog_repeatt &statement)
 {
-  if(statement.operands().size()!=2)
+  if(statement.operands().size() != 2)
   {
     throw errort().with_location(statement.source_location())
       << "repeat expected to have two operands";
   }
 
-  exprt &condition=statement.condition();
+  exprt &condition = statement.condition();
   convert_expr(condition);
   make_boolean(condition);
 
@@ -1459,10 +1466,9 @@ Function: verilog_typecheckt::convert_forever
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_forever(
-  verilog_forevert &statement)
+void verilog_typecheckt::convert_forever(verilog_forevert &statement)
 {
-  if(statement.operands().size()!=1)
+  if(statement.operands().size() != 1)
   {
     throw errort().with_location(statement.source_location())
       << "forever expected to have one operand";
@@ -1483,10 +1489,9 @@ Function: verilog_typecheckt::convert_statement
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_statement(
-  verilog_statementt &statement)
+void verilog_typecheckt::convert_statement(verilog_statementt &statement)
 {
-  if(statement.id()==ID_block)
+  if(statement.id() == ID_block)
     convert_block(to_verilog_block(statement));
   else if(
     statement.id() == ID_verilog_case || statement.id() == ID_verilog_casex ||
@@ -1538,32 +1543,31 @@ void verilog_typecheckt::convert_statement(
   }
   else if(statement.id() == ID_verilog_non_blocking_assign)
     convert_assign(to_verilog_assign(statement), false);
-  else if(statement.id()==ID_if)
+  else if(statement.id() == ID_if)
     convert_if(to_verilog_if(statement));
-  else if(statement.id()==ID_event_guard)
+  else if(statement.id() == ID_event_guard)
     convert_event_guard(to_verilog_event_guard(statement));
-  else if(statement.id()==ID_delay)
+  else if(statement.id() == ID_delay)
     convert_delay(to_verilog_delay(statement));
-  else if(statement.id()==ID_for)
+  else if(statement.id() == ID_for)
     convert_for(to_verilog_for(statement));
-  else if(statement.id()==ID_while)
+  else if(statement.id() == ID_while)
     convert_while(to_verilog_while(statement));
-  else if(statement.id()==ID_repeat)
+  else if(statement.id() == ID_repeat)
     convert_repeat(to_verilog_repeat(statement));
-  else if(statement.id()==ID_forever)
+  else if(statement.id() == ID_forever)
     convert_forever(to_verilog_forever(statement));
-  else if(statement.id()==ID_skip)
+  else if(statement.id() == ID_skip)
   {
     // do nothing
   }
-  else if(statement.id()==ID_preincrement ||
-          statement.id()==ID_predecrement ||
-          statement.id()==ID_postincrement ||
-          statement.id()==ID_postdecrement)
+  else if(
+    statement.id() == ID_preincrement || statement.id() == ID_predecrement ||
+    statement.id() == ID_postincrement || statement.id() == ID_postdecrement)
     convert_prepostincdec(statement);
-  else if(statement.id()==ID_function_call)
+  else if(statement.id() == ID_function_call)
     convert_function_call_or_task_enable(to_verilog_function_call(statement));
-  else if(statement.id()==ID_decl)
+  else if(statement.id() == ID_decl)
   {
     auto decl_class = to_verilog_decl(statement).get_class();
     if(decl_class == ID_function || decl_class == ID_task)
@@ -1572,7 +1576,7 @@ void verilog_typecheckt::convert_statement(
     else
       convert_decl(to_verilog_decl(statement));
   }
-  else if(statement.id()==ID_force)
+  else if(statement.id() == ID_force)
     convert_force(to_verilog_force(statement));
   else if(statement.id() == ID_verilog_label_statement)
   {
@@ -1628,13 +1632,12 @@ Function: verilog_typecheckt::convert_module_item
 
 \*******************************************************************/
 
-void verilog_typecheckt::convert_module_item(
-  verilog_module_itemt &module_item)
+void verilog_typecheckt::convert_module_item(verilog_module_itemt &module_item)
 {
-  if(module_item.id()==ID_specify)
+  if(module_item.id() == ID_specify)
   {
   }
-  else if(module_item.id()==ID_decl)
+  else if(module_item.id() == ID_decl)
   {
     auto decl_class = to_verilog_decl(module_item).get_class();
 
@@ -1648,8 +1651,9 @@ void verilog_typecheckt::convert_module_item(
   else if(module_item.id() == ID_verilog_generate_decl)
   {
   }
-  else if(module_item.id()==ID_parameter_decl ||
-          module_item.id()==ID_local_parameter_decl)
+  else if(
+    module_item.id() == ID_parameter_decl ||
+    module_item.id() == ID_local_parameter_decl)
   {
   }
   else if(module_item.id() == ID_parameter_override)
@@ -1680,17 +1684,17 @@ void verilog_typecheckt::convert_module_item(
     convert_assert_assume_cover(
       to_verilog_assertion_item(module_item).statement());
   }
-  else if(module_item.id()==ID_initial)
+  else if(module_item.id() == ID_initial)
     convert_initial(to_verilog_initial(module_item));
-  else if(module_item.id()==ID_continuous_assign)
+  else if(module_item.id() == ID_continuous_assign)
     convert_continuous_assign(to_verilog_continuous_assign(module_item));
-  else if(module_item.id()==ID_inst)
+  else if(module_item.id() == ID_inst)
   {
   }
-  else if(module_item.id()==ID_inst_builtin)
+  else if(module_item.id() == ID_inst_builtin)
   {
   }
-  else if(module_item.id()==ID_generate_block)
+  else if(module_item.id() == ID_generate_block)
   {
     // these introduce a scope, much like a named block
     auto &generate_block = to_verilog_generate_block(module_item);
@@ -1712,7 +1716,7 @@ void verilog_typecheckt::convert_module_item(
     for(auto &var : variables)
       genvars[id2string(var.first)] = string2integer(var.second.id_string());
 
-    if(module_item.operands().size()!=1)
+    if(module_item.operands().size() != 1)
     {
       throw errort() << "set_genvars expects one operand";
     }
@@ -1941,17 +1945,17 @@ bool verilog_typecheckt::implicit_wire(
 
   symbolt symbol;
 
-  symbol.mode=mode;
+  symbol.mode = mode;
   symbol.module = verilog_root_module_identifier();
   symbol.value.make_nil();
-  symbol.base_name=identifier;
-  symbol.name=full_identifier;
+  symbol.base_name = identifier;
+  symbol.name = full_identifier;
   symbol.type = net_type;
   symbol.pretty_name = strip_verilog_root_prefix(full_identifier);
 
   symbolt *new_symbol;
   symbol_table.move(symbol, new_symbol);
-  symbol_ptr=new_symbol;
+  symbol_ptr = new_symbol;
 
   return false;
 }
@@ -2116,7 +2120,7 @@ symbolt &copy_module_source(
 
   symbol.base_name = base_name;
   symbol.pretty_name = base_name;
-  symbol.module=symbol.name;
+  symbol.module = symbol.name;
   symbol.location = verilog_module_source.source_location();
 
   symbol.type.add(ID_module_source) = verilog_module_source;
