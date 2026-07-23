@@ -163,8 +163,12 @@ void verilog_typecheckt::collect_symbols(
 
     // If there's no type, parameters take the type of the final
     // value. We signal this using the special type "derive_from_value".
-    auto symbol_type =
-      to_be_elaborated_typet(type.is_nil() ? derive_from_value_typet() : type);
+    // The declarator may carry unpacked array dimensions
+    // (e.g. "parameter logic [3:0] p [73] = ...") that are merged
+    // with the declaration type here.
+    auto merged = type.is_nil() ? typet{derive_from_value_typet()}
+                                : declarator.merged_type(type);
+    auto symbol_type = to_be_elaborated_typet(merged);
 
     symbolt symbol{full_identifier, symbol_type, mode};
 
