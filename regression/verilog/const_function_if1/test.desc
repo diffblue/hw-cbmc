@@ -1,0 +1,10 @@
+CORE
+main.v
+--bound 0
+^\[main\.property\.p1\] always main\.P == 21: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+^CONVERSION ERROR$
+Don't know how to interpret statement

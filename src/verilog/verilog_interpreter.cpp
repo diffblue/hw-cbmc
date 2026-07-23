@@ -86,6 +86,36 @@ void verilog_typecheckt::verilog_interpreter(
       verilog_interpreter(verilog_for.inc_statement());
     }
   }
+  else if(statement.id() == ID_if)
+  {
+    const verilog_ift &verilog_if = to_verilog_if(statement);
+
+    exprt cond = elaborate_constant_expression(verilog_if.cond());
+
+    bool taken;
+
+    if(cond.is_true())
+      taken = true;
+    else if(cond.is_false())
+      taken = false;
+    else
+    {
+      mp_integer cond_i;
+
+      if(to_integer_non_constant(cond, cond_i))
+      {
+        throw errort().with_location(verilog_if.source_location())
+          << "if condition is not constant: " << cond.pretty();
+      }
+
+      taken = (cond_i != 0);
+    }
+
+    if(taken)
+      verilog_interpreter(verilog_if.then_case());
+    else if(verilog_if.has_else_case())
+      verilog_interpreter(verilog_if.else_case());
+  }
   else
   {
     throw errort().with_location(statement.source_location())
