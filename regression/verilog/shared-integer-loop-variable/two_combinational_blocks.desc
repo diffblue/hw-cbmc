@@ -1,0 +1,9 @@
+CORE
+two_combinational_blocks.sv
+--bound 0
+^\[main\.p0\] always main\.a == main\.b: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+conflict with previous assignment
