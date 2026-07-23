@@ -1,0 +1,11 @@
+CORE
+output_reg1.sv
+--aiger --top main
+^aag 3 2 1 0 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^o0
+--
+An `output reg` must remain a latch in the netlist (state before
+visibility): it is exported as an AIGER latch, not as an output.

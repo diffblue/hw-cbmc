@@ -1,0 +1,10 @@
+CORE
+output1.sv
+--aiger --top main
+^aag 6 4 0 2 2$
+^i0 .*a\[0\]$
+^o0 .*o\[0\]$
+^o1 .*o\[1\]$
+^EXIT=0$
+^SIGNAL=0$
+--
