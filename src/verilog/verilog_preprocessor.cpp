@@ -353,6 +353,11 @@ auto verilog_preprocessort::parse_define_arguments(const definet &define)
   // which contains one empty vector of argument tokens.
   std::vector<std::vector<tokent>> arguments = {{}};
 
+  // 1800-2017 22.5.1: an actual argument that contains a comma must be
+  // enclosed within parentheses, brackets or braces. Commas and the
+  // closing ')' are therefore only significant at nesting depth zero.
+  std::size_t nesting = 0;
+
   while(true)
   {
     if(tokenizer().eof())
@@ -360,15 +365,21 @@ auto verilog_preprocessort::parse_define_arguments(const definet &define)
         << "eof inside a define argument list";
 
     auto token = tokenizer().next_token();
-    if(token == ',')
+    if(token == ',' && nesting == 0)
     {
       arguments.push_back({}); // next argument
       tokenizer().skip_ws();
     }
-    else if(token == ')')
+    else if(token == ')' && nesting == 0)
       break; // done
     else
+    {
+      if(token == '(' || token == '[' || token == '{')
+        nesting++;
+      else if(token == ')' || token == ']' || token == '}')
+        nesting--;
       arguments.back().push_back(std::move(token));
+    }
   }
 
   // does the number of arguments match the number of parameters?
