@@ -27,6 +27,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_expr.h"
 #include "verilog_initializer.h"
 #include "verilog_lowering.h"
+#include "verilog_simplifier.h"
 #include "verilog_typecheck_expr.h"
 
 #include <cassert>
@@ -2306,7 +2307,12 @@ void verilog_synthesist::synth_assign(const verilog_assignt &statement)
   }
 
   // Can the rhs be simplified to a constant, for propagation?
-  auto rhs_simplified = simplify_expr(rhs, ns);
+  // We use the Verilog-aware simplifier so that Verilog-specific constructs
+  // such as replication (e.g. the loop-variable initializer
+  // {1'b1, {DW-1{1'b0}}}) are folded; the plain simplifier does not know how
+  // to reduce these to a constant, which would otherwise leave an unrolled
+  // loop guard unevaluable.
+  auto rhs_simplified = verilog_simplifier(rhs, ns);
 
   if(rhs_simplified.is_constant())
     rhs = rhs_simplified;
