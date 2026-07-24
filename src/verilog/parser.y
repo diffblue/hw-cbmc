@@ -2711,6 +2711,11 @@ function_body_declaration:
                   addswap($$, ID_type, $1);
                   add_as_subtype(stack_type($1), stack_type($1));
                   mto($$, $2); // declarator
+                  // Anchor the declaration's location to the declarator
+                  // so it does not follow the lookahead token consumed for
+                  // the optional end label.
+                  stack_expr($$).add_source_location() =
+                    stack_expr($$).operands().back().source_location();
                   addswap($$, ID_verilog_declarations, $5);
                   addswap($$, ID_body, $6);
                   pop_scope();
@@ -2728,6 +2733,11 @@ function_body_declaration:
                   addswap($$, ID_type, $1);
                   add_as_subtype(stack_type($1), stack_type($1));
                   mto($$, $2); // declarator
+                  // Anchor the declaration's location to the declarator
+                  // so it does not follow the lookahead token consumed for
+                  // the optional end label.
+                  stack_expr($$).add_source_location() =
+                    stack_expr($$).operands().back().source_location();
                   addswap($$, ID_ports, $5);
                   addswap($$, ID_verilog_declarations, $8);
                   addswap($$, ID_body, $9);
@@ -2774,6 +2784,11 @@ task_declaration:
                 { init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_task);
                   mto($$, $2); // declarator
+                  // Anchor the declaration's location to the declarator
+                  // so it does not follow the lookahead token consumed for
+                  // the optional end label.
+                  stack_expr($$).add_source_location() =
+                    stack_expr($$).operands().back().source_location();
                   addswap($$, ID_verilog_declarations, $5);
                   addswap($$, ID_body, $6);
                   pop_scope();
@@ -2788,6 +2803,11 @@ task_declaration:
                 { init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_task);
                   mto($$, $2); // declarator
+                  // Anchor the declaration's location to the declarator
+                  // so it does not follow the lookahead token consumed for
+                  // the optional end label.
+                  stack_expr($$).add_source_location() =
+                    stack_expr($$).operands().back().source_location();
                   addswap($$, ID_ports, $5);
                   addswap($$, ID_verilog_declarations, $8);
                   addswap($$, ID_body, $9);
