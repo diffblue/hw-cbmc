@@ -12,6 +12,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/help_formatter.h>
 #include <util/string2int.h>
 
+#include <ebmc/command_file.h>
 #include <ebmc/ebmc_error.h>
 
 #include "verilog_indexer.h"
@@ -43,6 +44,8 @@ int vlindex_parse_optionst::doit()
     std::cout << EBMC_VERSION << '\n';
     return 0;
   }
+
+  expand_command_files(cmdline);
 
   try
   {
