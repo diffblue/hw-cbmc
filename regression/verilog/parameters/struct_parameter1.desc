@@ -1,0 +1,9 @@
+KNOWNBUG
+struct_parameter1.sv
+
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The struct literal is not recognised as a constant.
