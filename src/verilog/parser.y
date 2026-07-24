@@ -2368,18 +2368,20 @@ list_of_param_assignments:
         ;
 
 param_assignment:
-          param_identifier '=' constant_param_expression
+          param_identifier unpacked_dimension_brace '=' constant_param_expression
                 { init($$, ID_parameter);
                   auto base_name = stack_expr($1).get(ID_base_name);
                   PARSER.scopes.add_identifier(base_name, verilog_scopet::PARAMETER);
                   stack_expr($$).set(ID_base_name, base_name);
-                  addswap($$, ID_value, $3); }
+                  addswap($$, ID_type, $2);
+                  addswap($$, ID_value, $4); }
           /* The assignment is optional */
-        | param_identifier
+        | param_identifier unpacked_dimension_brace
                 { init($$, ID_parameter);
                   auto base_name = stack_expr($1).get(ID_base_name);
                   PARSER.scopes.add_identifier(base_name, verilog_scopet::PARAMETER);
                   stack_expr($$).set(ID_base_name, base_name);
+                  addswap($$, ID_type, $2);
                   stack_expr($$).set(ID_value, nil_exprt{}); }
         ;
 
@@ -2703,12 +2705,17 @@ function_body_declaration:
           ';'
           tf_item_declaration_brace
           function_statement_or_null_brace
-          TOK_ENDFUNCTION
+          TOK_ENDFUNCTION end_identifier_opt
                 { init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_function);
                   addswap($$, ID_type, $1);
                   add_as_subtype(stack_type($1), stack_type($1));
                   mto($$, $2); // declarator
+                  // Anchor the declaration's location to the declarator
+                  // so it does not follow the lookahead token consumed for
+                  // the optional end label.
+                  stack_expr($$).add_source_location() =
+                    stack_expr($$).operands().back().source_location();
                   addswap($$, ID_verilog_declarations, $5);
                   addswap($$, ID_body, $6);
                   pop_scope();
@@ -2720,12 +2727,17 @@ function_body_declaration:
           '(' tf_port_list_opt ')' ';'
           block_item_declaration_brace
           function_statement_or_null_brace
-          TOK_ENDFUNCTION
+          TOK_ENDFUNCTION end_identifier_opt
                 { init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_function);
                   addswap($$, ID_type, $1);
                   add_as_subtype(stack_type($1), stack_type($1));
                   mto($$, $2); // declarator
+                  // Anchor the declaration's location to the declarator
+                  // so it does not follow the lookahead token consumed for
+                  // the optional end label.
+                  stack_expr($$).add_source_location() =
+                    stack_expr($$).operands().back().source_location();
                   addswap($$, ID_ports, $5);
                   addswap($$, ID_verilog_declarations, $8);
                   addswap($$, ID_body, $9);
@@ -2768,10 +2780,15 @@ task_declaration:
           ';'
           tf_item_declaration_brace
           task_statement_or_null_brace
-          TOK_ENDTASK
+          TOK_ENDTASK end_identifier_opt
                 { init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_task);
                   mto($$, $2); // declarator
+                  // Anchor the declaration's location to the declarator
+                  // so it does not follow the lookahead token consumed for
+                  // the optional end label.
+                  stack_expr($$).add_source_location() =
+                    stack_expr($$).operands().back().source_location();
                   addswap($$, ID_verilog_declarations, $5);
                   addswap($$, ID_body, $6);
                   pop_scope();
@@ -2782,10 +2799,15 @@ task_declaration:
           '(' tf_port_list_opt ')' ';'
           tf_item_declaration_brace
           task_statement_or_null_brace
-          TOK_ENDTASK
+          TOK_ENDTASK end_identifier_opt
                 { init($$, ID_decl);
                   stack_expr($$).set(ID_class, ID_task);
                   mto($$, $2); // declarator
+                  // Anchor the declaration's location to the declarator
+                  // so it does not follow the lookahead token consumed for
+                  // the optional end label.
+                  stack_expr($$).add_source_location() =
+                    stack_expr($$).operands().back().source_location();
                   addswap($$, ID_ports, $5);
                   addswap($$, ID_verilog_declarations, $8);
                   addswap($$, ID_body, $9);
@@ -5513,6 +5535,13 @@ topmodule_identifier: non_type_identifier;
 endmodule_identifier_opt:
           /* Optional */
         | TOK_COLON module_identifier
+        ;
+
+// Optional block name repeated after endfunction/endtask etc.,
+// e.g. "endfunction : is_width_valid". IEEE 1800-2017 A.9.3.
+end_identifier_opt:
+          /* Optional */
+        | TOK_COLON any_identifier
         ;
 
 clocking_identifier: non_type_identifier;
