@@ -1,0 +1,7 @@
+CORE
+alu.sv
+--top alu --process 28nm
+^  Register bits:       33$
+^  Total:               345\.2 um2$
+^EXIT=0$
+^SIGNAL=0$

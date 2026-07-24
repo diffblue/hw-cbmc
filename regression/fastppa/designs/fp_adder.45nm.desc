@@ -1,0 +1,7 @@
+CORE
+fp_adder.sv
+--top adder --process 45nm
+^  Register bits:       277$
+^  Total:               3920\.7 um2$
+^EXIT=0$
+^SIGNAL=0$
