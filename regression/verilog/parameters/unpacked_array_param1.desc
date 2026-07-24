@@ -2,12 +2,17 @@ KNOWNBUG
 unpacked_array_param1.sv
 --bound 0
 
-^file .* line 5: expected constant expression, but got .*$
-^EXIT=2$
+^no properties$
+^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
 The declarator's unpacked array dimensions now parse, but elaborating an
 array assignment pattern ('{...}) as a constant parameter value is not
-yet supported. When that is added, this test should pass and become CORE.
+yet supported (currently: "expected constant expression, but got ...",
+EXIT=2). The patterns above describe the aspirational fixed behaviour, per
+this suite's KNOWNBUG convention (test.pl inverts KNOWNBUG results: a
+*mismatch* against these patterns is what's currently expected and is
+reported OK; a match means the bug is fixed and the test should be
+promoted to CORE).
