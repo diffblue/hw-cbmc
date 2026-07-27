@@ -77,7 +77,7 @@ jobs:
           mkdir -p _site
           PATH=$PATH:$PWD/src/ebmc benchmarking/logikbench.sh _site/index.html
       - name: Upload the report as a Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
