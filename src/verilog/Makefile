@@ -7,6 +7,7 @@ SRC = aval_bval_encoding.cpp \
       typename.cpp \
       verilog_bind.cpp \
       verilog_bits.cpp \
+      verilog_constant.cpp \
       verilog_constant_folding.cpp \
       verilog_ebmc_language.cpp \
       verilog_elaborate.cpp \

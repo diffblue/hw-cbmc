@@ -25,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2verilog.h"
 #include "typename.h"
 #include "verilog_bits.h"
+#include "verilog_constant.h"
 #include "verilog_constant_folding.h"
 #include "verilog_expr.h"
 #include "verilog_lowering.h"
@@ -2770,8 +2771,7 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression_check(exprt expr)
 
   exprt tmp = elaborate_constant_expression(std::move(expr));
 
-  // $ counts as a constant
-  if(!tmp.is_constant() && tmp.id() != ID_infinity)
+  if(!is_verilog_constant(tmp))
   {
     std::string tmp_string =
       given_type.has_value() ? *given_type : to_string(tmp);

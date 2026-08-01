@@ -10,9 +10,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/arith_tools.h>
 #include <util/bitvector_types.h>
+#include <util/c_types.h>
 #include <util/expr.h>
 #include <util/namespace.h>
 #include <util/std_expr.h>
+#include <util/std_types.h>
 
 #include "aval_bval_encoding.h"
 #include "verilog_lowering.h"
@@ -89,6 +91,14 @@ verilog_lift_constant(exprt lowered, const typet &verilog_type_given)
   if(!lowered.is_constant())
     return lowered;
 
+  // Lifted already, e.g., an element of an aggregate.
+  // The comparison ignores the attributes; hence, set the type.
+  if(lowered.type() == verilog_type)
+  {
+    lowered.type() = verilog_type;
+    return lowered;
+  }
+
   // Lift four-valued constants back to their Verilog type, unless they
   // are two-valued.
   if(
@@ -119,6 +129,51 @@ verilog_lift_constant(exprt lowered, const typet &verilog_type_given)
   return lowered;
 }
 
+/// The lowering lowers the elements of struct, union and array
+/// expressions, but not their types. Fold the elements, and lift them
+/// back to the element type, to restore type consistency.
+static void lift_aggregate_elements(exprt &expr, const namespacet &ns)
+{
+  for(auto &op : expr.operands())
+    lift_aggregate_elements(op, ns);
+
+  auto lift_element = [&ns](exprt &op, const typet &element_type)
+  {
+    auto source_location = op.source_location();
+    auto simplified = verilog_simplifier(op, ns);
+    if(simplified.is_constant())
+      simplified.add_source_location() = source_location;
+    op = verilog_lift_constant(std::move(simplified), element_type);
+  };
+
+  if(expr.id() == ID_struct && expr.type().id() == ID_struct)
+  {
+    auto &components = to_struct_type(expr.type()).components();
+    if(components.size() == expr.operands().size())
+    {
+      for(std::size_t i = 0; i < components.size(); i++)
+        lift_element(expr.operands()[i], components[i].type());
+    }
+  }
+  else if(expr.id() == ID_union && expr.type().id() == ID_union)
+  {
+    auto &union_expr = to_union_expr(expr);
+    auto &union_type = to_union_type(expr.type());
+    if(union_type.has_component(union_expr.get_component_name()))
+    {
+      lift_element(
+        union_expr.op(),
+        union_type.get_component(union_expr.get_component_name()).type());
+    }
+  }
+  else if(expr.id() == ID_array && expr.type().id() == ID_array)
+  {
+    auto &element_type = to_array_type(expr.type()).element_type();
+    for(auto &op : expr.operands())
+      lift_element(op, element_type);
+  }
+}
+
 exprt verilog_constant_folding(exprt expr, const namespacet &ns)
 {
   // This performs constant-folding on a type-checked expression
@@ -127,6 +182,8 @@ exprt verilog_constant_folding(exprt expr, const namespacet &ns)
   auto source_location = expr.source_location();
 
   auto expr_lowered = verilog_lowering(std::move(expr));
+
+  lift_aggregate_elements(expr_lowered, ns);
 
   // simplify
   auto expr_simplified = verilog_simplifier(std::move(expr_lowered), ns);
