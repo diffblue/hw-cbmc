@@ -2226,6 +2226,36 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression_rec(exprt expr)
 
 /*******************************************************************\
 
+Function: is_constant_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: returns true iff the given expression is a constant,
+          including struct, union and array expressions with
+          all-constant members
+
+\*******************************************************************/
+
+static bool is_constant_rec(const exprt &expr)
+{
+  if(expr.is_constant() || expr.id() == ID_infinity)
+    return true;
+
+  if(expr.id() == ID_struct || expr.id() == ID_array || expr.id() == ID_union)
+  {
+    for(auto &op : expr.operands())
+      if(!is_constant_rec(op))
+        return false;
+    return true;
+  }
+
+  return false;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::elaborate_constant_expression_check
 
   Inputs:
@@ -2242,8 +2272,7 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression_check(exprt expr)
 
   exprt tmp = elaborate_constant_expression(std::move(expr));
 
-  // $ counts as a constant
-  if(!tmp.is_constant() && tmp.id() != ID_infinity)
+  if(!is_constant_rec(tmp))
   {
     throw errort().with_location(source_location)
       << "expected constant expression, but got `" << to_string(tmp) << '\'';
