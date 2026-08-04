@@ -44,6 +44,8 @@ int vlindex_parse_optionst::doit()
     return 0;
   }
 
+  log_version_and_architecture("VLINDEX");
+
   try
   {
     return verilog_index(cmdline);
