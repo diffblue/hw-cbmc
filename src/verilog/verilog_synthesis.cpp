@@ -1364,21 +1364,32 @@ void verilog_synthesist::instantiate_port(
 
   symbol_exprt port_symbol{port.identifier(), port.type()};
 
+  // Convert the rhs to the type of the lhs, as an assignment would.
+  // Note that the types need not match. Narrowing to a one-bit net must
+  // take the least-significant bit, as in assignment_conversion; a plain
+  // typecast to bool would instead compute a (!= 0) reduction.
+  auto narrowing_cast = [](exprt src, const typet &dest_type) -> exprt
+  {
+    if(dest_type.id() == ID_bool && src.type().id() != ID_bool)
+      return extractbit_exprt{std::move(src), from_integer(0, integer_typet{})};
+    else
+      return typecast_exprt::conditional_cast(src, dest_type);
+  };
+
   // Much like
   //   always @(*) port = value for an input, and
   //   always @(*) value = port for an output.
-  // Note that the types need not match.
   exprt lhs, rhs;
 
   if(port.output())
   {
     lhs = value;
-    rhs = typecast_exprt::conditional_cast(port_symbol, value.type());
+    rhs = narrowing_cast(port_symbol, value.type());
   }
   else
   {
     lhs = port_symbol;
-    rhs = typecast_exprt::conditional_cast(value, port_symbol.type());
+    rhs = narrowing_cast(value, port_symbol.type());
   }
 
   verilog_forcet assignment{lhs, rhs};
