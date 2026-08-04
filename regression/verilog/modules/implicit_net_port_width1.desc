@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 implicit_net_port_width1.sv
 --bound 1
 ^\[main\.p0\] always main\.cam == main\.din\[0\]: PROVED up to bound 1$
@@ -8,5 +8,4 @@ implicit_net_port_width1.sv
 --
 An output port that is wider than the (one-bit) net it drives must be
 truncated to the least-significant bit, as a narrowing continuous
-assignment would be. EBMC instead casts to bool, i.e. computes (port != 0),
-so the property is wrongly REFUTED.
+assignment would be.
