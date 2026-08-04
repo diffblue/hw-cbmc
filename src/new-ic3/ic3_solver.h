@@ -141,9 +141,11 @@ private:
   bvt input_lits;
 
   std::vector<std::unique_ptr<IctMinisat::Solver>> frame_solvers;
+  std::vector<std::size_t> frame_solver_queries;
 
   std::vector<std::vector<frame_clauset>> frame_clauses;
 
+  static constexpr std::size_t SOLVER_RECYCLE_LIMIT = 2000;
   std::unique_ptr<IctMinisat::Solver> new_minisat_solver();
 
   IctMinisat::Solver &get_solver(std::size_t level);
