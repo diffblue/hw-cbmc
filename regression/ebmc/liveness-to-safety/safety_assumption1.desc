@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 safety_assumption1.sv
 --bound 10 --liveness-to-safety
 ^EXIT=0$
@@ -7,9 +7,5 @@ safety_assumption1.sv
 ^\[main\.p0\] always s_eventually main\.my_bit: PROVED up to bound 10$
 --
 --
-The liveness-to-safety translation rejects any non-disabled property it
-cannot translate, including assumed plain-safety properties
-(src/ebmc/liveness_to_safety.cpp). "assume property (always a)" alongside
-a liveness assertion yields "error: no liveness-to-safety translation for
-always main.a" and EXIT=6. The assumption needs no translation and should
-be passed through unchanged.
+The plain-safety assumption requires no liveness-to-safety translation
+and is passed through unchanged.
