@@ -526,3 +526,12 @@ verilog_module_instancet::verilog_module_instancet(
 {
   module_identifier(_module_identifier);
 }
+
+verilog_set_genvarst::genvarst verilog_set_genvarst::build_map() const
+{
+  const auto &variables = this->variables();
+  genvarst genvars;
+  for(auto &var : variables)
+    genvars[id2string(var.first)] = string2integer(var.second.id_string());
+  return genvars;
+}

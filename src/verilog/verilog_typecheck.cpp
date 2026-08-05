@@ -1707,15 +1707,8 @@ void verilog_typecheckt::convert_module_item(
   }
   else if(module_item.id() == ID_set_genvars)
   {
-    genvars.clear();
-    const auto &variables = to_verilog_set_genvars(module_item).variables();
-    for(auto &var : variables)
-      genvars[id2string(var.first)] = string2integer(var.second.id_string());
-
-    if(module_item.operands().size()!=1)
-    {
-      throw errort() << "set_genvars expects one operand";
-    }
+    auto &set_genvars = to_verilog_set_genvars(module_item);
+    genvars = set_genvars.build_map();
 
     exprt tmp;
     tmp.swap(to_unary_expr(module_item).op());
