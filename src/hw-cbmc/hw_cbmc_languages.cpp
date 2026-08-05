@@ -23,11 +23,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <smvlang/smv_language.h>
 #endif
 
-#include <cbmc/cbmc_parse_options.h>
+#include "hw_cbmc_parse_options.h"
 
 /*******************************************************************\
 
-Function: cbmc_parse_optionst::register_languages
+Function: hw_cbmc_parse_optionst::register_languages
 
   Inputs:
 
@@ -37,7 +37,7 @@ Function: cbmc_parse_optionst::register_languages
 
 \*******************************************************************/
 
-void cbmc_parse_optionst::register_languages()
+void hw_cbmc_parse_optionst::register_languages()
 {
   register_language(new_ansi_c_language);
   register_language(new_cpp_language);
