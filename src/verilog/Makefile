@@ -15,7 +15,6 @@ SRC = aval_bval_encoding.cpp \
       verilog_instantiate_module.cpp \
       verilog_initializer.cpp \
       verilog_interfaces.cpp \
-      verilog_interpreter.cpp \
       verilog_language.cpp \
       verilog_lex.yy.cpp \
       verilog_lowering.cpp \
@@ -26,6 +25,7 @@ SRC = aval_bval_encoding.cpp \
       verilog_preprocessor_tokenizer.cpp \
       verilog_scope.cpp \
       verilog_simplifier.cpp \
+      verilog_simulator.cpp \
       verilog_standard.cpp \
       verilog_symbol_table.cpp \
       verilog_synthesis.cpp \
