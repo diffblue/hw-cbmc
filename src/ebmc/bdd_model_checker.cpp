@@ -88,6 +88,14 @@ mini_bddt bdd_model_checkert::EG(mini_bddt f)
   return fixedpoint([this](mini_bddt x) { return x & EX(x); }, f);
 }
 
+mini_bddt bdd_model_checkert::AG(mini_bddt f)
+{
+  // Over non-total transition systems we quantify over infinite paths only.
+  // A finite branch into a deadend state must therefore not witness AG(!p).
+  mini_bddt live_states = EG(f | !f);
+  return !EF(live_states & !f);
+}
+
 mini_bddt bdd_model_checkert::EU(mini_bddt f1, mini_bddt f2)
 {
   return fixedpoint(
