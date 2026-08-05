@@ -63,22 +63,40 @@ static void preprocessor()
 
 }
 
+static verilog_identifier_exprt::scopest make_scopes(const verilog_scopet *scope_ptr)
+{
+  verilog_identifier_exprt::scopest result;
+
+  while(scope_ptr != nullptr)
+  {
+    result.emplace_back(irep_idt{}, scope_ptr->base_name());
+    scope_ptr = scope_ptr->parent;
+  }
+
+  // reverse to get an ordering that starts from a root
+  std::reverse(result.begin(), result.end());
+
+  return result;
+}
+
 YYSTYPE make_identifier(irep_idt base_name, exprt &dest)
 {
   dest.id(ID_verilog_identifier);
   dest.set(ID_base_name, base_name);
   PARSER.set_source_location(dest);
   auto scope_ptr = PARSER.scopes.lookup(base_name);
-  if(scope_ptr == nullptr)
+  if(scope_ptr == nullptr) // unseen
   {
-    dest.set(ID_scope, PARSER.scopes.current_scope().prefix);
     return TOK_NON_TYPE_IDENTIFIER; // default for unseen identifiers
   }
   else
   {
-    dest.set(ID_scope, scope_ptr->prefix);
+    // add the scope stack to the identifier expression
+    to_verilog_identifier_expr(dest).scopes() = make_scopes(scope_ptr);  
+
     if(!scope_ptr->import.empty())
       dest.set(ID_verilog_import, scope_ptr->import);
+
     return scope_ptr->identifier_token();
   }
 }

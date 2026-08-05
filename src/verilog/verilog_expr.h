@@ -19,18 +19,48 @@ Author: Daniel Kroening, kroening@kroening.com
 class verilog_identifier_exprt : public nullary_exprt
 {
 public:
+  struct scopet : public irept
+  {
+  public:
+    scopet(irep_idt _kind, irep_idt _base_name) : irept{ID_scope}
+    {
+      kind(_kind);
+      base_name(_base_name);
+    }
+
+    irep_idt kind() const
+    {
+      return get(ID_scope_kind);
+    }
+
+    void kind(irep_idt _kind)
+    {
+      set(ID_scope_kind, _kind);
+    }
+
+    irep_idt base_name() const
+    {
+      return get(ID_base_name);
+    }
+
+    void base_name(irep_idt _base_name)
+    {
+      set(ID_base_name, _base_name);
+    }
+  };
+
+  using scopest = std::vector<scopet>;
+
   explicit verilog_identifier_exprt(const irep_idt _base_name)
     : nullary_exprt{ID_verilog_identifier, typet{}}
   {
     base_name(_base_name);
   }
 
-  explicit verilog_identifier_exprt(
-    const irep_idt _scope,
-    const irep_idt _base_name)
+  verilog_identifier_exprt(scopest _scopes, const irep_idt _base_name)
     : nullary_exprt{ID_verilog_identifier, typet{}}
   {
-    scope(_scope);
+    scopes() = std::move(_scopes);
     base_name(_base_name);
   }
 
@@ -44,14 +74,14 @@ public:
     set(ID_base_name, _base_name);
   }
 
-  const irep_idt &scope() const
+  const scopest &scopes() const
   {
-    return get(ID_scope);
+    return (const scopest &)(find(ID_scopes).get_sub());
   }
 
-  void scope(irep_idt _scope)
+  scopest &scopes()
   {
-    set(ID_scope, _scope);
+    return (scopest &)(add(ID_scopes).get_sub());
   }
 
   // This gives the original package plus base name
