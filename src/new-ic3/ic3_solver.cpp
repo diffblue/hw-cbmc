@@ -644,7 +644,25 @@ cubet ic3_solvert::generalize(std::size_t level, cubet cube)
 {
   std::size_t ctg_budget = CTG_MAX;
 
-  // Sort by activity: drop least-active literals first
+  // Parent-lemma optimization: find a clause at the current or higher
+  // level that subsumes the negated cube (i.e., is a subset of the
+  // clause we're about to learn). Literals appearing in such a parent
+  // are important and should be dropped last.
+  std::unordered_set<unsigned> parent_lits;
+  {
+    frame_clauset negated(negate_cube(cube));
+    for(std::size_t j = level; j < frame_clauses.size(); j++)
+      for(const auto &existing : frame_clauses[j])
+        if(subsumes(existing, negated))
+        {
+          for(auto l : existing.clause)
+            parent_lits.insert(l.var_no());
+          break;
+        }
+  }
+
+  // Sort by activity: drop least-active literals first.
+  // Literals in a parent lemma get a large activity bonus to sort last.
   std::sort(
     cube.begin(),
     cube.end(),
@@ -656,6 +674,10 @@ cubet ic3_solvert::generalize(std::size_t level, cubet cube)
         (ia != current_to_latch.end()) ? lit_activity[ia->second] : 0.0f;
       float ab =
         (ib != current_to_latch.end()) ? lit_activity[ib->second] : 0.0f;
+      if(parent_lits.count(a.var_no()))
+        aa += 1e6f;
+      if(parent_lits.count(b.var_no()))
+        ab += 1e6f;
       return aa < ab;
     });
 
