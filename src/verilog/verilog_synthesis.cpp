@@ -1519,6 +1519,80 @@ void verilog_synthesist::synth_module_instance(
     // must be in symbol_table
     const symbolt &module_symbol = ns.lookup(module_identifier);
 
+    // For interface ports, update the port member types to match the
+    // actual bound interface instance before synthesising the submodule.
+    // The port's interface was instantiated with default parameters during
+    // type checking, but the actual interface may use different parameters.
+    {
+      auto &module_type = to_module_type(module_symbol.type);
+      auto &ports = module_type.ports();
+      auto &connections = instance.connections();
+
+      std::size_t port_index = 0;
+      for(auto &port : ports)
+      {
+        if(port.type().id() == ID_verilog_module_instance)
+        {
+          // Find the corresponding connection
+          const exprt *connection = nullptr;
+          if(instance.named_port_connections())
+          {
+            for(auto &conn : connections)
+            {
+              if(conn.id() == ID_verilog_named_port_connection)
+              {
+                auto &named = to_verilog_named_port_connection(conn);
+                if(
+                  to_symbol_expr(named.port()).identifier() ==
+                  port.identifier())
+                {
+                  connection = &named.value();
+                  break;
+                }
+              }
+            }
+          }
+          else if(port_index < connections.size())
+          {
+            connection = &connections[port_index];
+          }
+
+          if(
+            connection != nullptr && connection->is_not_nil() &&
+            connection->id() == ID_symbol)
+          {
+            auto &bound_id = to_symbol_expr(*connection).identifier();
+            auto port_prefix = id2string(port.identifier()) + ".";
+            auto bound_prefix = id2string(bound_id) + ".";
+
+            for(auto &entry : symbol_table.symbols)
+            {
+              auto id = id2string(entry.first);
+              if(
+                id.size() > port_prefix.size() &&
+                id.substr(0, port_prefix.size()) == port_prefix &&
+                id.find('.', port_prefix.size()) == std::string::npos)
+              {
+                auto member_name = id.substr(port_prefix.size());
+                auto bound_member_id = bound_prefix + member_name;
+
+                const symbolt *bound_sym;
+                if(!ns.lookup(bound_member_id, bound_sym))
+                {
+                  if(entry.second.type != bound_sym->type)
+                  {
+                    symbolt &port_member_sym = symbol_table_lookup(entry.first);
+                    port_member_sym.type = bound_sym->type;
+                  }
+                }
+              }
+            }
+          }
+        }
+        port_index++;
+      }
+    }
+
     // get the transition relation of the instantiated module
     auto trans_inst = verilog_synthesis(
       symbol_table,
