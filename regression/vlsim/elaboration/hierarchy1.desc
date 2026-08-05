@@ -1,0 +1,8 @@
+CORE
+hierarchy1.v
+
+^Type-checking Verilog::top$
+^EXIT=0$
+^SIGNAL=0$
+--
+^Type-checking Verilog::sub$
