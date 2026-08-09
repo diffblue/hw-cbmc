@@ -1,0 +1,10 @@
+CORE
+unpacked_array_param1.sv
+--bound 0
+
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

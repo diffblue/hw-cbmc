@@ -171,7 +171,8 @@ void verilog_typecheck_exprt::assignment_conversion(
   if(rhs.type().id() == ID_verilog_assignment_pattern)
   {
     DATA_INVARIANT(
-      rhs.id() == ID_verilog_assignment_pattern,
+      rhs.id() == ID_verilog_assignment_pattern ||
+        rhs.id() == ID_verilog_assignment_pattern_with_type,
       "verilog_assignment_pattern expression expected");
 
     if(lhs_type.id() == ID_struct)
@@ -481,6 +482,13 @@ void verilog_typecheck_exprt::assignment_conversion(
       rhs = typecast_exprt{rhs, lhs_type};
       return;
     }
+  }
+
+  if(lhs_type.id() == ID_verilog_virtual_interface)
+  {
+    // virtual interface assignment (IEEE 1800-2017 25.9)
+    rhs = typecast_exprt{rhs, lhs_type};
+    return;
   }
 
   // "The size of the left-hand side of an assignment forms
@@ -849,7 +857,22 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
     // Typechecking can only be completed once we know the type
     // from the usage context. We record "verilog_assignment_pattern"
     // to signal that.
-    expr.type() = typet(ID_verilog_assignment_pattern);
+    expr.type() = typet{ID_verilog_assignment_pattern};
+
+    return expr;
+  }
+  else if(expr.id() == ID_verilog_assignment_pattern_with_type)
+  {
+    // multi-ary -- may become a struct or array, depending
+    // on context.
+    for(auto &op : expr.operands())
+      convert_expr(op);
+
+    // This is a typed assignment pattern expression (1800-2017 10.9),
+    // e.g., twoarr'{ 0, 1 }. The type is known from the prefix.
+    auto dest_type = elaborate_type(expr.type());
+    expr.type() = typet{ID_verilog_assignment_pattern};
+    assignment_conversion(expr, dest_type);
 
     return expr;
   }
@@ -1949,6 +1972,37 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     }
     else
     {
+      // Check if the rhs is a modport name of the interface.
+      // Per IEEE 1800-2017 25.5.3, sb.receiver in a port connection
+      // means "pass interface instance sb with modport receiver".
+      const symbolt *lhs_symbol;
+      if(
+        !ns.lookup(lhs_identifier, lhs_symbol) &&
+        lhs_symbol->value.id() == ID_verilog_module_instance)
+      {
+        auto &module_id =
+          to_verilog_module_instance(lhs_symbol->value).module_identifier();
+        const symbolt *module_symbol;
+        if(!ns.lookup(module_id, module_symbol))
+        {
+          auto &module_expr = to_verilog_module_expr(module_symbol->value);
+          for(auto &item : module_expr.module_items())
+          {
+            if(item.id() == ID_verilog_modport_declaration)
+            {
+              for(auto &modport_item : item.operands())
+              {
+                if(modport_item.get(ID_base_name) == rhs_base_name)
+                {
+                  // The modport selection resolves to the interface
+                  // instance itself; the modport is informational.
+                  return expr.lhs();
+                }
+              }
+            }
+          }
+        }
+      }
       throw errort().with_location(expr.source_location())
         << "identifier `" << rhs_base_name << "' not found in module `"
         << lhs_identifier << '\'';
@@ -2210,6 +2264,36 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression_rec(exprt expr)
 
 /*******************************************************************\
 
+Function: is_constant_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: returns true iff the given expression is a constant,
+          including struct, union and array expressions with
+          all-constant members
+
+\*******************************************************************/
+
+static bool is_constant_rec(const exprt &expr)
+{
+  if(expr.is_constant() || expr.id() == ID_infinity)
+    return true;
+
+  if(expr.id() == ID_struct || expr.id() == ID_array || expr.id() == ID_union)
+  {
+    for(auto &op : expr.operands())
+      if(!is_constant_rec(op))
+        return false;
+    return true;
+  }
+
+  return false;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::elaborate_constant_expression_check
 
   Inputs:
@@ -2226,8 +2310,7 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression_check(exprt expr)
 
   exprt tmp = elaborate_constant_expression(std::move(expr));
 
-  // $ counts as a constant
-  if(!tmp.is_constant() && tmp.id() != ID_infinity)
+  if(!is_constant_rec(tmp))
   {
     throw errort().with_location(source_location)
       << "expected constant expression, but got `" << to_string(tmp) << '\'';

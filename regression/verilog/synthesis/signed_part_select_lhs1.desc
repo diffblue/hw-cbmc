@@ -1,0 +1,12 @@
+CORE
+signed_part_select_lhs1.sv
+
+^\[main\.p0\] always main\.via_part_select == main\.via_whole: PROVED \(1-induction\)$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Minimal reproducer for the synthesis crash on LogikBench arithmetic/mulreg.
+A full-width part-select on the LHS of a signed register used to abort
+synthesis with a "synth_assignments type consistency" invariant violation.

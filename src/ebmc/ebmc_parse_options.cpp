@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-netlist/smv_netlist.h>
 
 #include "build_transition_system.h"
+#include "command_file.h"
 #include "diatest.h"
 #include "ebmc_error.h"
 #include "ebmc_language.h"
@@ -85,8 +86,12 @@ int ebmc_parse_optionst::doit()
     return 0;
   }
 
+  log_version_and_architecture("EBMC");
+
   try
   {
+    expand_command_files(cmdline);
+
     if(cmdline.isset("diatest"))
     {
       if(!cmdline.isset("statebits"))
@@ -412,6 +417,7 @@ void ebmc_parse_optionst::help()
     "\n"
     " {bebmc} [{y-?}] [{y-h}] [{y--help}] \t show help\n"
     " {bebmc} {ufile} {u...}         \t source file names\n"
+    " {y-f} {ufile}                  \t read command-line arguments from file\n"
     "\n"
     "Additonal options:\n"
     " {y--bound} {unr}               \t set bound (default: 1)\n"
@@ -436,6 +442,8 @@ void ebmc_parse_optionst::help()
     "    {y--constr}                 \t use constraints specified in 'file.cnstr'\n"
     "    {y--new-mode}               \t new mode is switched on\n"
     " {y--new-ic3}                   \t use new IC3 engine (AIG-based)\n"
+    "    {y--new-ic3-sat-solver} {uictminisat|minisat2|cadical}\n"
+    "                                \t select the SAT backend for the new IC3 engine\n"
     " {y--random-traces}             \t generate random traces\n"
     "    {y--traces} {unumber}       \t generate the given number of traces\n"
     "    {y--random-seed} {unumber}  \t use the given random seed\n"

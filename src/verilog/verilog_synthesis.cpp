@@ -27,6 +27,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_expr.h"
 #include "verilog_initializer.h"
 #include "verilog_lowering.h"
+#include "verilog_simplifier.h"
 #include "verilog_typecheck_expr.h"
 
 #include <cassert>
@@ -710,7 +711,15 @@ void verilog_synthesist::assignment_rec(
 
     assignmentt &assignment=assignments[symbol.name];
 
-    if(assignment.is_cycle_local)
+    // Variables declared with the Verilog 'integer' type are idiomatically
+    // used as loop counters and combinational scratch. They are effectively
+    // a fresh temporary in each always/initial block and may therefore
+    // legitimately be (blocking-)assigned by more than one block. Exempt
+    // them from assignment-type and driver-conflict tracking, which would
+    // otherwise flag the reuse as a spurious multiple-driver conflict.
+    bool is_integer = symbol.type.get(ID_C_verilog_type) == ID_integer;
+
+    if(assignment.is_cycle_local || is_integer)
     {
     }
     else
@@ -829,7 +838,16 @@ exprt verilog_synthesist::assignment_rec(
     // redundant?
     if(from == 0 && to == get_width(lhs_src.type()) - 1)
     {
-      return assignment_rec(lhs_src, rhs); // recursive call
+      // The part-select spans the entire source, hence the assignment
+      // is equivalent to assigning to the source directly. Note that a
+      // part-select expression is always unsigned (1800-2017 11.5.1),
+      // even when it selects a signed vector in its entirety, so the rhs
+      // may differ in signedness from the source. As the bits are the
+      // same, we reinterpret the rhs to the type of the source.
+      return assignment_rec(
+        lhs_src,
+        typecast_exprt::conditional_cast(
+          rhs, lhs_src.type())); // recursive call
     }
 
     // turn
@@ -1364,21 +1382,32 @@ void verilog_synthesist::instantiate_port(
 
   symbol_exprt port_symbol{port.identifier(), port.type()};
 
+  // Convert the rhs to the type of the lhs, as an assignment would.
+  // Note that the types need not match. Narrowing to a one-bit net must
+  // take the least-significant bit, as in assignment_conversion; a plain
+  // typecast to bool would instead compute a (!= 0) reduction.
+  auto narrowing_cast = [](exprt src, const typet &dest_type) -> exprt
+  {
+    if(dest_type.id() == ID_bool && src.type().id() != ID_bool)
+      return extractbit_exprt{std::move(src), from_integer(0, integer_typet{})};
+    else
+      return typecast_exprt::conditional_cast(src, dest_type);
+  };
+
   // Much like
   //   always @(*) port = value for an input, and
   //   always @(*) value = port for an output.
-  // Note that the types need not match.
   exprt lhs, rhs;
 
   if(port.output())
   {
     lhs = value;
-    rhs = typecast_exprt::conditional_cast(port_symbol, value.type());
+    rhs = narrowing_cast(port_symbol, value.type());
   }
   else
   {
     lhs = port_symbol;
-    rhs = typecast_exprt::conditional_cast(value, port_symbol.type());
+    rhs = narrowing_cast(value, port_symbol.type());
   }
 
   verilog_forcet assignment{lhs, rhs};
@@ -1518,6 +1547,80 @@ void verilog_synthesist::synth_module_instance(
 
     // must be in symbol_table
     const symbolt &module_symbol = ns.lookup(module_identifier);
+
+    // For interface ports, update the port member types to match the
+    // actual bound interface instance before synthesising the submodule.
+    // The port's interface was instantiated with default parameters during
+    // type checking, but the actual interface may use different parameters.
+    {
+      auto &module_type = to_module_type(module_symbol.type);
+      auto &ports = module_type.ports();
+      auto &connections = instance.connections();
+
+      std::size_t port_index = 0;
+      for(auto &port : ports)
+      {
+        if(port.type().id() == ID_verilog_module_instance)
+        {
+          // Find the corresponding connection
+          const exprt *connection = nullptr;
+          if(instance.named_port_connections())
+          {
+            for(auto &conn : connections)
+            {
+              if(conn.id() == ID_verilog_named_port_connection)
+              {
+                auto &named = to_verilog_named_port_connection(conn);
+                if(
+                  to_symbol_expr(named.port()).identifier() ==
+                  port.identifier())
+                {
+                  connection = &named.value();
+                  break;
+                }
+              }
+            }
+          }
+          else if(port_index < connections.size())
+          {
+            connection = &connections[port_index];
+          }
+
+          if(
+            connection != nullptr && connection->is_not_nil() &&
+            connection->id() == ID_symbol)
+          {
+            auto &bound_id = to_symbol_expr(*connection).identifier();
+            auto port_prefix = id2string(port.identifier()) + ".";
+            auto bound_prefix = id2string(bound_id) + ".";
+
+            for(auto &entry : symbol_table.symbols)
+            {
+              auto id = id2string(entry.first);
+              if(
+                id.size() > port_prefix.size() &&
+                id.substr(0, port_prefix.size()) == port_prefix &&
+                id.find('.', port_prefix.size()) == std::string::npos)
+              {
+                auto member_name = id.substr(port_prefix.size());
+                auto bound_member_id = bound_prefix + member_name;
+
+                const symbolt *bound_sym;
+                if(!ns.lookup(bound_member_id, bound_sym))
+                {
+                  if(entry.second.type != bound_sym->type)
+                  {
+                    symbolt &port_member_sym = symbol_table_lookup(entry.first);
+                    port_member_sym.type = bound_sym->type;
+                  }
+                }
+              }
+            }
+          }
+        }
+        port_index++;
+      }
+    }
 
     // get the transition relation of the instantiated module
     auto trans_inst = verilog_synthesis(
@@ -2306,7 +2409,12 @@ void verilog_synthesist::synth_assign(const verilog_assignt &statement)
   }
 
   // Can the rhs be simplified to a constant, for propagation?
-  auto rhs_simplified = simplify_expr(rhs, ns);
+  // We use the Verilog-aware simplifier so that Verilog-specific constructs
+  // such as replication (e.g. the loop-variable initializer
+  // {1'b1, {DW-1{1'b0}}}) are folded; the plain simplifier does not know how
+  // to reduce these to a constant, which would otherwise leave an unrolled
+  // loop guard unevaluable.
+  auto rhs_simplified = verilog_simplifier(rhs, ns);
 
   if(rhs_simplified.is_constant())
     rhs = rhs_simplified;
