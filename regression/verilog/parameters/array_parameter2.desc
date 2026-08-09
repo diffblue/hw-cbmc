@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 array_parameter2.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ array_parameter2.sv
 --
 ^warning: ignoring
 --
-Array dimension after the parameter name is not yet supported.
