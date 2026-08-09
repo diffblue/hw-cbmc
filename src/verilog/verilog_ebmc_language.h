@@ -49,6 +49,8 @@ protected:
 
   parse_treest parse();
 
+  void resolve_library_modules(parse_treest &);
+
   void copy_parse_tree(const parse_treet &, symbol_tablet &);
 
   class modulet
