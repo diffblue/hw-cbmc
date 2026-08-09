@@ -766,6 +766,66 @@ struct proof_obligationt
   }
 };
 
+std::optional<ic3_resultt> ic3_solvert::block_frame(std::size_t k)
+{
+  messaget message{message_handler};
+
+  std::priority_queue<
+    proof_obligationt,
+    std::vector<proof_obligationt>,
+    std::greater<proof_obligationt>>
+    obligations;
+
+  while(true)
+  {
+    auto bad_cube = solve_bad(k);
+    if(!bad_cube.has_value())
+      return std::nullopt;
+
+    obligations.push({bad_cube.value(), k, 0});
+
+    while(!obligations.empty())
+    {
+      auto [cube, level, depth] = obligations.top();
+      obligations.pop();
+
+      if(is_blocked(cube, level))
+        continue;
+
+      if(init_intersects(cube))
+      {
+        // The cube contains an initial state, and the bad state is
+        // depth transitions away: depth + 1 states in total.
+        message.status() << "Property refuted with counterexample of length "
+                         << depth + 1 << messaget::eom;
+        return ic3_resultt::refuted(depth + 1);
+      }
+
+      if(level == 0)
+      {
+        add_clause(0, negate_cube(cube));
+        continue;
+      }
+
+      auto pred = solve_relative(level - 1, cube);
+      if(pred.has_value())
+      {
+        obligations.push({pred.value(), level - 1, depth + 1});
+        obligations.push({std::move(cube), level, depth});
+      }
+      else
+      {
+        cubet generalized = generalize(level - 1, core);
+        add_clause(level, negate_cube(generalized));
+
+        // Re-queue at level+1 to push the blocking clause higher
+        if(level + 1 <= k)
+          obligations.push({std::move(cube), level + 1, depth});
+      }
+    }
+  }
+}
+
 ic3_resultt ic3_solvert::solve()
 {
   messaget message{message_handler};
@@ -789,61 +849,8 @@ ic3_resultt ic3_solvert::solve()
                        << total_clauses() << " clauses, avg size "
                        << average_clause_size() << ")" << messaget::eom;
 
-    std::priority_queue<
-      proof_obligationt,
-      std::vector<proof_obligationt>,
-      std::greater<proof_obligationt>>
-      obligations;
-
-    // Blocking phase
-    while(true)
-    {
-      auto bad_cube = solve_bad(k);
-      if(!bad_cube.has_value())
-        break;
-
-      obligations.push({bad_cube.value(), k, 0});
-
-      while(!obligations.empty())
-      {
-        auto [cube, level, depth] = obligations.top();
-        obligations.pop();
-
-        if(is_blocked(cube, level))
-          continue;
-
-        if(init_intersects(cube))
-        {
-          // The cube contains an initial state, and the bad state is
-          // depth transitions away: depth + 1 states in total.
-          message.status() << "Property refuted with counterexample of length "
-                           << depth + 1 << messaget::eom;
-          return ic3_resultt::refuted(depth + 1);
-        }
-
-        if(level == 0)
-        {
-          add_clause(0, negate_cube(cube));
-          continue;
-        }
-
-        auto pred = solve_relative(level - 1, cube);
-        if(pred.has_value())
-        {
-          obligations.push({pred.value(), level - 1, depth + 1});
-          obligations.push({std::move(cube), level, depth});
-        }
-        else
-        {
-          cubet generalized = generalize(level - 1, core);
-          add_clause(level, negate_cube(generalized));
-
-          // Re-queue at level+1 to push the blocking clause higher
-          if(level + 1 <= k)
-            obligations.push({std::move(cube), level + 1, depth});
-        }
-      }
-    } // end blocking phase
+    if(auto result = block_frame(k); result.has_value())
+      return *result;
 
     // Propagation: push clauses from F_i to F_{i+1}
     if(propagate())

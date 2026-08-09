@@ -100,6 +100,7 @@ private:
   static bool subsumes(const frame_clauset &a, const frame_clauset &b);
 
   bool initial_state_is_bad();
+  std::optional<ic3_resultt> block_frame(std::size_t level);
   std::optional<cubet> solve_relative(std::size_t level, const cubet &);
   std::optional<cubet> solve_bad(std::size_t level);
   cubet generalize(std::size_t level, cubet cube);
