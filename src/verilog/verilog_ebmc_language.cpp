@@ -46,16 +46,24 @@ void verilog_ebmc_languaget::preprocess(
     throw ebmc_errort{}.with_exit_code(1)
       << "failed to open input file " << path;
 
-  // do -I and -D
-  auto &include_paths = cmdline.get_values('I');
+  // do -D
   auto &initial_defines = cmdline.get_values('D');
+
+  // Collect +incdir+ paths and merge with -I paths
+  auto &I_paths = cmdline.get_values('I');
+  auto &incdir_paths = cmdline.get_values("incdir");
+  std::list<std::string> all_include_paths;
+  all_include_paths.insert(
+    all_include_paths.end(), I_paths.begin(), I_paths.end());
+  all_include_paths.insert(
+    all_include_paths.end(), incdir_paths.begin(), incdir_paths.end());
 
   verilog_preprocessort preprocessor(
     infile,
     out,
     message_handler,
     path.u8string(),
-    include_paths,
+    all_include_paths,
     initial_defines);
 
   try

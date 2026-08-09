@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Main Module 
+Module: Main Module
 
 Author: Daniel Kroening, kroening@kroening.com
 
@@ -128,6 +128,7 @@ int ebmc_parse_optionst::doit()
     ui_message_handler.set_verbosity(messaget::M_STATUS); // default
 
   // Process Verilog-style +plusarg+ arguments.
+  plus_arg("incdir");
   plus_arg("libfile");
 
   if(config.set(cmdline))
@@ -207,7 +208,7 @@ int ebmc_parse_optionst::doit()
       #else
       language_uit language_ui(cmdline);
       language_ui.error("No support for interpolation linked in");
-      return 1; 
+      return 1;
       #endif
       */
     }
@@ -231,7 +232,7 @@ int ebmc_parse_optionst::doit()
       #else
       language_uit language_ui(cmdline);
       language_ui.error("No support for interpolation linked in");
-      return 1; 
+      return 1;
       #endif
     }
     */
@@ -531,6 +532,7 @@ void ebmc_parse_optionst::help()
     "\n"
     "Verilog options:\n"
     " {y-I} {upath}                  \t set include path\n"
+    " {y+incdir+}{upath}[{y+}{upath}...] \t set include path\n"
     " {y-D} {uvar}[={uvalue}]        \t set preprocessor define\n"
     " {y-l} {ufile}                  \t library file (modules are not top-level)\n"
     " {y+libfile+}{ufile}            \t library file (modules are not top-level)\n"
