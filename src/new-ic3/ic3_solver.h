@@ -35,18 +35,12 @@ class cnft;
 class recording_cnft;
 class bmc_mapt;
 
-namespace IctMinisat
-{
+namespace IctMinisat {
 class Solver;
 }
 
-struct ic3_resultt
-{
-  enum class outcomet
-  {
-    PROVED,
-    REFUTED
-  } outcome;
+struct ic3_resultt {
+  enum class outcomet { PROVED, REFUTED } outcome;
 
   /// When REFUTED, the number of states in the counterexample trace:
   /// the trace has states at timeframes 0, ..., length - 1, and the
@@ -57,13 +51,9 @@ struct ic3_resultt
   /// state before a minimal-length one is explored.
   std::size_t counterexample_length = 0;
 
-  static ic3_resultt proved()
-  {
-    return {outcomet::PROVED, 0};
-  }
+  static ic3_resultt proved() { return {outcomet::PROVED, 0}; }
 
-  static ic3_resultt refuted(std::size_t counterexample_length)
-  {
+  static ic3_resultt refuted(std::size_t counterexample_length) {
     return {outcomet::REFUTED, counterexample_length};
   }
 };
@@ -79,13 +69,10 @@ struct ic3_resultt
 /// F_i for all i <= j, and the solver for level i contains the
 /// clauses of all levels >= i. F_0 additionally contains the initial
 /// state constraint.
-class ic3_solvert
-{
+class ic3_solvert {
 public:
-  ic3_solvert(
-    const netlistt &,
-    literalt property_literal,
-    message_handlert &message_handler);
+  ic3_solvert(const netlistt &, literalt property_literal,
+              message_handlert &message_handler);
 
   ~ic3_solvert();
 
@@ -122,8 +109,7 @@ private:
   std::size_t total_clauses() const;
   double average_clause_size() const;
 
-  struct latch_infot
-  {
+  struct latch_infot {
     literalt current, next;
   };
 
@@ -171,16 +157,11 @@ private:
 
   cubet extract_state(const IctMinisat::Solver &);
 
-  cubet lift(
-    const IctMinisat::Solver &query_solver,
-    const cubet &full_state,
-    const bvt &target_clause);
+  cubet lift(const IctMinisat::Solver &query_solver, const cubet &full_state,
+             const bvt &target_clause);
 
-  bool relative_induction(
-    std::size_t level,
-    const cubet &cube,
-    cubet *predecessor,
-    bool lift_predecessor);
+  bool relative_induction(std::size_t level, const cubet &cube,
+                          cubet *predecessor, bool lift_predecessor);
 
   void repair_init(const cubet &cube, cubet &reduced);
 
