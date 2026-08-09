@@ -23,6 +23,7 @@ set -u
 
 # Pin to a known revision for reproducibility.
 LOGIKBENCH_REV=main
+LAMBDALIB_REV=v0.13.1
 
 # Per-circuit wall-clock limit, in seconds, so that a single hard design
 # cannot stall the whole run.  Uses coreutils `timeout` (present on Linux) or
@@ -51,6 +52,12 @@ if [ ! -e logikbench/.git ] ; then
   echo "Cloning the LogikBench repository"
   git clone --depth 1 --branch "$LOGIKBENCH_REV" \
     https://github.com/zeroasiccorp/logikbench.git logikbench
+fi
+
+if [ ! -e lambdalib/.git ] ; then
+  echo "Cloning the lambdalib repository"
+  git clone --depth 1 --branch "$LAMBDALIB_REV" \
+    https://github.com/siliconcompiler/lambdalib.git lambdalib
 fi
 
 BENCHMARKS=logikbench/logikbench/benchmarks
@@ -84,19 +91,41 @@ for group in "$BENCHMARKS"/*/ ; do
   for bench in "$group"*/ ; do
     [ -d "${bench}rtl" ] || continue
 
-    # Source files: the Verilog/SystemVerilog under rtl/.  ebmc selects
-    # SystemVerilog automatically for the .sv extension.
-    sources=`find "${bench}rtl" -name '*.v' -o -name '*.sv' | sort`
-    [ -n "$sources" ] || continue
-
     bench_name=`basename "$bench"`
+    bench_py="${bench}${bench_name}.py"
+    sources_file=`mktemp`
+    incdirs_file=`mktemp`
+    defines_file=`mktemp`
+
+    python3 benchmarking/logikbench_resolve_fileset.py \
+      "$bench_py" \
+      --logikbench-root "$PWD/logikbench" \
+      --lambdalib-root "$PWD/lambdalib" \
+      --sources-out "$sources_file" \
+      --incdirs-out "$incdirs_file" \
+      --defines-out "$defines_file"
+
+    sources=`cat "$sources_file"`
+    if [ -z "$sources" ] ; then
+      rm -f "$sources_file" "$incdirs_file" "$defines_file"
+      continue
+    fi
 
     # Include directories: rtl/ and, if present, include/, so that `include
-    # directives and header (.vh) files resolve.
+    # directives and header (.vh) files resolve, plus any directories the
+    # benchmark metadata contributed via dependency filesets.
     incflags="-I ${bench}rtl"
     if [ -d "${bench}include" ] ; then
       incflags="$incflags -I ${bench}include"
     fi
+    for idir in `cat "$incdirs_file"` ; do
+      incflags="$incflags -I $idir"
+    done
+
+    defineflags=
+    for define in `cat "$defines_file"` ; do
+      defineflags="$defineflags -D$define"
+    done
 
     total=`expr $total + 1`
 
@@ -108,8 +137,10 @@ for group in "$BENCHMARKS"/*/ ; do
     # cap above triggers; anything else means ebmc processed the design
     # (0 = holds/no properties, 10 = counterexample, ...).
     ( ulimit -v $PER_CIRCUIT_MEM_KB 2>/dev/null
-      $RUN ebmc $incflags --bound 0 $sources ) > logikbench.out 2>&1
+      $RUN ebmc $incflags $defineflags --bound 0 $sources ) \
+      > logikbench.out 2>&1
     status=$?
+    rm -f "$sources_file" "$incdirs_file" "$defines_file"
 
     if [ "$status" = 0 ] || [ "$status" = 10 ] ; then
       echo "  ok      $group_name/$bench_name"
