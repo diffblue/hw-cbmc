@@ -46,12 +46,21 @@ void verilog_ebmc_languaget::preprocess(
     throw ebmc_errort{}.with_exit_code(1)
       << "failed to open input file " << path;
 
-  // do -D
-  auto &initial_defines = cmdline.get_values('D');
+  // -D
+  auto &d_list = cmdline.get_values('D');
+  auto &define_list = cmdline.get_values("define");
 
-  // Collect +incdir+ paths and merge with -I paths
+  // Merge -D defines with +define+ defines
+  std::list<std::string> initial_defines;
+  initial_defines.insert(initial_defines.end(), d_list.begin(), d_list.end());
+  initial_defines.insert(
+    initial_defines.end(), define_list.begin(), define_list.end());
+
+  // -I
   auto &I_paths = cmdline.get_values('I');
   auto &incdir_paths = cmdline.get_values("incdir");
+
+  // Collect +incdir+ paths and merge with -I paths
   std::list<std::string> all_include_paths;
   all_include_paths.insert(
     all_include_paths.end(), I_paths.begin(), I_paths.end());

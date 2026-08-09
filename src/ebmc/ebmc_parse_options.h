@@ -51,7 +51,7 @@ public:
         "(random-trace)(random-waveform)"
         "(bmc-with-assumptions)"
         "(liveness-to-safety)(buechi)"
-        "I:(incdir):D:"
+        "I:(incdir):D:(define):"
         "l:(libfile):"
         "y:(libdir):"
         "(preprocess)(systemverilog)(vl2smv-extensions)"

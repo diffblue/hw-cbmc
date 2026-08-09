@@ -1,0 +1,8 @@
+CORE
+plus_define3.v
+--show-modules +define+A+B=my_module
+^  Name:       my_module$
+^EXIT=0$
+^SIGNAL=0$
+--
+^PREPROCESSING FAILED$
