@@ -33,11 +33,19 @@ clauset negate_cube(const cubet &cube);
 
 class cnft;
 class recording_cnft;
+class ic3_query_solvert;
 
 namespace IctMinisat
 {
 class Solver;
 }
+
+enum class ic3_sat_backendt
+{
+  ICT_MINISAT,
+  MINISAT2,
+  CADICAL
+};
 
 struct ic3_resultt
 {
@@ -84,7 +92,8 @@ public:
   ic3_solvert(
     const netlistt &,
     literalt property_literal,
-    message_handlert &message_handler);
+    message_handlert &message_handler,
+    ic3_sat_backendt = ic3_sat_backendt::ICT_MINISAT);
 
   ~ic3_solvert();
 
@@ -123,6 +132,7 @@ private:
 
   std::vector<latch_infot> latches;
   std::unordered_map<unsigned, std::size_t> current_to_latch;
+  ic3_sat_backendt sat_backend;
 
   null_message_handlert solver_message_handler;
 
@@ -131,22 +141,22 @@ private:
 
   void replay_base_cnf(cnft &dest, bool with_init);
 
-  std::unique_ptr<satcheck_no_simplifiert> init_solver;
+  std::unique_ptr<cnft> init_solver;
 
   std::vector<tvt> init_values;
   bool init_is_unique_state = false;
 
-  std::unique_ptr<IctMinisat::Solver> lift_minisat;
+  std::unique_ptr<ic3_query_solvert> lift_solver;
 
   bvt input_lits;
 
-  std::vector<std::unique_ptr<IctMinisat::Solver>> frame_solvers;
+  std::vector<std::unique_ptr<ic3_query_solvert>> frame_solvers;
 
   std::vector<std::vector<frame_clauset>> frame_clauses;
 
-  std::unique_ptr<IctMinisat::Solver> new_minisat_solver();
+  std::unique_ptr<ic3_query_solvert> new_query_solver();
 
-  IctMinisat::Solver &get_solver(std::size_t level);
+  ic3_query_solvert &get_solver(std::size_t level);
 
   literalt prop_current;
 
@@ -163,10 +173,10 @@ private:
 
   literalt to_next(literalt l) const;
 
-  cubet extract_state(const IctMinisat::Solver &);
+  cubet extract_state(const ic3_query_solvert &);
 
   cubet lift(
-    const IctMinisat::Solver &query_solver,
+    ic3_query_solvert &query_solver,
     const cubet &full_state,
     const bvt &target_clause);
 

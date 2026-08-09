@@ -442,6 +442,8 @@ void ebmc_parse_optionst::help()
     "    {y--constr}                 \t use constraints specified in 'file.cnstr'\n"
     "    {y--new-mode}               \t new mode is switched on\n"
     " {y--new-ic3}                   \t use new IC3 engine (AIG-based)\n"
+    "    {y--new-ic3-sat-solver} {uictminisat|minisat2|cadical}\n"
+    "                                \t select the SAT backend for the new IC3 engine\n"
     " {y--random-traces}             \t generate random traces\n"
     "    {y--traces} {unumber}       \t generate the given number of traces\n"
     "    {y--random-seed} {unumber}  \t use the given random seed\n"
