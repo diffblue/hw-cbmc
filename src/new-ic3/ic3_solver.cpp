@@ -14,6 +14,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/invariant.h>
 
+#include <solvers/sat/satcheck_cadical.h>
+#include <solvers/sat/satcheck_minisat2.h>
 #include <ic3/minisat/minisat/core/Solver.h>
 #include <solvers/sat/cnf_clause_list.h>
 #include <solvers/sat/satcheck.h>
@@ -117,6 +119,148 @@ static void add_minisat_clause(IctMinisat::Solver &S, const bvt &clause)
   S.addClause(mc);
 }
 
+class ic3_query_solvert
+{
+public:
+  virtual ~ic3_query_solvert() = default;
+
+  virtual void add_clause(const bvt &) = 0;
+  virtual bool solve(const bvt &assumptions) = 0;
+  virtual literalt new_variable() = 0;
+  virtual tvt l_get(literalt) const = 0;
+  virtual bool is_in_conflict(literalt) const = 0;
+  virtual void release(literalt)
+  {
+  }
+};
+
+namespace
+{
+class ict_minisat_query_solvert final : public ic3_query_solvert
+{
+public:
+  explicit ict_minisat_query_solvert(
+    cnf_clause_listt &base_cnf,
+    const bvt &init_units)
+  {
+    auto nv = base_cnf.no_variables();
+    while(solver.nVars() < static_cast<int>(nv))
+      solver.newVar();
+
+    for(const auto &clause : base_cnf.get_clauses())
+      add_minisat_clause(solver, clause);
+
+    for(auto l : init_units)
+      add_minisat_clause(solver, {l});
+  }
+
+  explicit ict_minisat_query_solvert(cnf_clause_listt &base_cnf)
+    : ict_minisat_query_solvert(base_cnf, {})
+  {
+  }
+
+  void add_clause(const bvt &clause) override
+  {
+    add_minisat_clause(solver, clause);
+  }
+
+  bool solve(const bvt &assumptions) override
+  {
+    IctMinisat::vec<IctMinisat::Lit> minisat_assumptions;
+    for(auto l : assumptions)
+      if(!l.is_true() && !l.is_false())
+        minisat_assumptions.push(to_minisat(l));
+
+    return solver.solve(minisat_assumptions);
+  }
+
+  literalt new_variable() override
+  {
+    return literalt{static_cast<unsigned>(solver.newVar()), false};
+  }
+
+  tvt l_get(literalt l) const override
+  {
+    auto value = solver.modelValue(to_minisat(l));
+    if(value == IctMinisat::l_True)
+      return tvt(true);
+    if(value == IctMinisat::l_False)
+      return tvt(false);
+    return tvt::unknown();
+  }
+
+  bool is_in_conflict(literalt l) const override
+  {
+    return const_cast<IctMinisat::LSet &>(solver.conflict).has(~to_minisat(l));
+  }
+
+  void release(literalt l) override
+  {
+    solver.releaseVar(~to_minisat(l));
+  }
+
+private:
+  IctMinisat::Solver solver;
+};
+
+class cbmc_query_solvert final : public ic3_query_solvert
+{
+public:
+  explicit cbmc_query_solvert(std::unique_ptr<cnft> solver)
+    : solver(std::move(solver))
+  {
+  }
+
+  void add_clause(const bvt &clause) override
+  {
+    solver->lcnf(clause);
+  }
+
+  bool solve(const bvt &assumptions) override
+  {
+    return solver->prop_solve(assumptions) == propt::resultt::P_SATISFIABLE;
+  }
+
+  literalt new_variable() override
+  {
+    return solver->new_variable();
+  }
+
+  tvt l_get(literalt l) const override
+  {
+    return solver->l_get(l);
+  }
+
+  bool is_in_conflict(literalt l) const override
+  {
+    return solver->is_in_conflict(l);
+  }
+
+private:
+  std::unique_ptr<cnft> solver;
+};
+
+std::unique_ptr<cnft>
+make_cbmc_solver(ic3_sat_backendt sat_backend, message_handlert &message_handler)
+{
+  switch(sat_backend)
+  {
+  case ic3_sat_backendt::ICT_MINISAT:
+  case ic3_sat_backendt::MINISAT2:
+    return std::make_unique<satcheck_minisat_no_simplifiert>(message_handler);
+  case ic3_sat_backendt::CADICAL:
+#ifdef SATCHECK_CADICAL
+    return std::make_unique<satcheck_cadical_no_preprocessingt>(
+      message_handler);
+#else
+    UNREACHABLE;
+#endif
+  }
+
+  UNREACHABLE;
+}
+} // namespace
+
 // ============================================================
 // ic3_solvert implementation
 // ============================================================
@@ -124,8 +268,9 @@ static void add_minisat_clause(IctMinisat::Solver &S, const bvt &clause)
 ic3_solvert::ic3_solvert(
   const netlistt &netlist,
   literalt prop_netlist_lit,
-  message_handlert &message_handler)
-  : message_handler(message_handler)
+  message_handlert &message_handler,
+  ic3_sat_backendt sat_backend)
+  : message_handler(message_handler), sat_backend(sat_backend)
 {
   // Encode the netlist into CNF: one timeframe only — the next-state
   // functions are nodes in the same variable space.
@@ -176,12 +321,11 @@ ic3_solvert::ic3_solvert(
   lit_activity.resize(latches.size(), 0.0f);
 
   // Create the initial state solver.
-  init_solver =
-    std::make_unique<satcheck_no_simplifiert>(solver_message_handler);
+  init_solver = make_cbmc_solver(sat_backend, solver_message_handler);
   replay_base_cnf(*init_solver, true);
 
-  // Create lifting solver using IC3's MiniSAT (has releaseVar).
-  lift_minisat = new_minisat_solver();
+  // Create the lifting solver.
+  lift_solver = new_query_solver();
 
   // Determine which latches have forced initial values. If all are
   // forced, the initial state is unique and intersection checks
@@ -261,16 +405,16 @@ literalt ic3_solvert::to_next(literalt l) const
   return latch.next ^ (l.sign() != latch.current.sign());
 }
 
-cubet ic3_solvert::extract_state(const IctMinisat::Solver &S)
+cubet ic3_solvert::extract_state(const ic3_query_solvert &S)
 {
   cubet cube;
   cube.reserve(latches.size());
   for(const auto &latch : latches)
   {
-    auto val = S.modelValue(to_minisat(latch.current));
-    if(val == IctMinisat::l_True)
+    auto val = S.l_get(latch.current);
+    if(val.is_true())
       cube.push_back(latch.current);
-    else if(val == IctMinisat::l_False)
+    else if(val.is_false())
       cube.push_back(!latch.current);
     // skip don't-care (unknown) bits — smaller cubes
   }
@@ -282,31 +426,38 @@ void ic3_solvert::new_frame()
   frame_clauses.emplace_back();
 }
 
-std::unique_ptr<IctMinisat::Solver> ic3_solvert::new_minisat_solver()
+std::unique_ptr<ic3_query_solvert> ic3_solvert::new_query_solver()
 {
-  auto S = std::make_unique<IctMinisat::Solver>();
-  auto nv = base_cnf->no_variables();
-  while(S->nVars() < (int)nv)
-    S->newVar();
-  for(const auto &clause : base_cnf->get_clauses())
-    add_minisat_clause(*S, clause);
-  return S;
+  switch(sat_backend)
+  {
+  case ic3_sat_backendt::ICT_MINISAT:
+    return std::make_unique<ict_minisat_query_solvert>(*base_cnf);
+  case ic3_sat_backendt::MINISAT2:
+  case ic3_sat_backendt::CADICAL:
+  {
+    auto solver = make_cbmc_solver(sat_backend, solver_message_handler);
+    replay_base_cnf(*solver, false);
+    return std::make_unique<cbmc_query_solvert>(std::move(solver));
+  }
+  }
+
+  UNREACHABLE;
 }
 
-IctMinisat::Solver &ic3_solvert::get_solver(std::size_t level)
+ic3_query_solvert &ic3_solvert::get_solver(std::size_t level)
 {
   while(frame_solvers.size() <= level)
     frame_solvers.emplace_back();
   auto &fs = frame_solvers[level];
   if(!fs)
   {
-    fs = new_minisat_solver();
+    fs = new_query_solver();
     if(level == 0)
       for(auto l : init_units)
-        add_minisat_clause(*fs, {l});
+        fs->add_clause({l});
     for(std::size_t j = level; j < frame_clauses.size(); j++)
       for(const auto &cl : frame_clauses[j])
-        add_minisat_clause(*fs, cl.clause);
+        fs->add_clause(cl.clause);
   }
   return *fs;
 }
@@ -339,7 +490,7 @@ void ic3_solvert::add_clause(std::size_t level, const clauset &clause)
 
   for(std::size_t i = 0; i <= level && i < frame_solvers.size(); i++)
     if(frame_solvers[i])
-      add_minisat_clause(*frame_solvers[i], new_clause.clause);
+      frame_solvers[i]->add_clause(new_clause.clause);
 
   frame_clauses[level].push_back(std::move(new_clause));
   num_clauses_added++;
@@ -419,58 +570,54 @@ void ic3_solvert::repair_init(const cubet &cube, cubet &reduced)
 }
 
 cubet ic3_solvert::lift(
-  const IctMinisat::Solver &query_solver,
+  ic3_query_solvert &query_solver,
   const cubet &full_state,
   const bvt &target_clause)
 {
-  auto &S = *lift_minisat;
-  using namespace IctMinisat;
-
   // A tautological target cannot be lifted against.
   for(auto l : target_clause)
     if(l.is_true())
       return full_state;
 
   // Activation literal for the target clause: act -> target_clause
-  Var act_var = S.newVar();
-  Lit act = mkLit(act_var, false);
+  literalt act = lift_solver->new_variable();
   {
-    vec<Lit> clause;
-    clause.push(~act);
+    bvt clause;
+    clause.push_back(!act);
     for(auto l : target_clause)
       if(!l.is_false())
-        clause.push(to_minisat(l));
-    S.addClause(clause);
+        clause.push_back(l);
+    lift_solver->add_clause(clause);
   }
 
   // Solve with act + inputs + state as assumptions
-  vec<Lit> assumptions;
-  assumptions.push(act);
+  bvt assumptions;
+  assumptions.push_back(act);
   for(auto l : input_lits)
   {
-    auto val = query_solver.modelValue(to_minisat(l));
-    if(val == l_True)
-      assumptions.push(to_minisat(l));
-    else if(val == l_False)
-      assumptions.push(to_minisat(!l));
+    auto val = query_solver.l_get(l);
+    if(val.is_true())
+      assumptions.push_back(l);
+    else if(val.is_false())
+      assumptions.push_back(!l);
   }
   for(auto l : full_state)
-    assumptions.push(to_minisat(l));
+    assumptions.push_back(l);
 
   num_lifts++;
   cubet result;
-  if(!S.solve(assumptions))
+  if(!lift_solver->solve(assumptions))
   {
     // UNSAT — extract minimal state from conflict
     for(auto l : full_state)
     {
-      if(S.conflict.has(~to_minisat(l)))
+      if(lift_solver->is_in_conflict(l))
         result.push_back(l);
     }
   }
 
-  // Release activation literal (permanently set ~act, freeing the variable)
-  S.releaseVar(~act);
+  // Release activation literal where supported.
+  lift_solver->release(act);
 
   return result.empty() ? full_state : result;
 }
@@ -492,28 +639,27 @@ bool ic3_solvert::relative_induction(
     }
 
   auto &S = get_solver(level);
-  using namespace IctMinisat;
 
-  vec<Lit> assumptions;
-  Lit act = lit_Undef;
+  bvt assumptions;
+  literalt act;
 
   if(WITH_NEGATED_CUBE)
   {
     // Activation literal for ¬cube at timeframe 0
-    act = mkLit(S.newVar());
-    vec<Lit> act_clause;
-    act_clause.push(~act);
+    act = S.new_variable();
+    bvt act_clause;
+    act_clause.push_back(!act);
     for(auto l : cube)
-      act_clause.push(to_minisat(!l));
-    S.addClause(act_clause);
-    assumptions.push(act);
+      act_clause.push_back(!l);
+    S.add_clause(act_clause);
+    assumptions.push_back(act);
   }
 
   for(auto l : cube)
   {
     literalt nl = to_next(l);
     if(!nl.is_true())
-      assumptions.push(to_minisat(nl));
+      assumptions.push_back(nl);
   }
 
   num_queries++;
@@ -525,7 +671,7 @@ bool ic3_solvert::relative_induction(
     for(auto l : cube)
     {
       literalt nl = to_next(l);
-      if(!nl.is_true() && S.conflict.has(~to_minisat(nl)))
+      if(!nl.is_true() && S.is_in_conflict(nl))
         core.push_back(l);
     }
     if(core.empty())
@@ -551,8 +697,8 @@ bool ic3_solvert::relative_induction(
 
   if(WITH_NEGATED_CUBE)
   {
-    // Release the activation literal
-    S.releaseVar(~act);
+    // Release the activation literal where supported.
+    S.release(act);
   }
 
   return unsat;
@@ -574,9 +720,9 @@ std::optional<cubet> ic3_solvert::solve_bad(std::size_t level)
 
   auto &S = get_solver(level);
 
-  IctMinisat::vec<IctMinisat::Lit> assumptions;
+  bvt assumptions;
   if(!prop_current.is_false())
-    assumptions.push(to_minisat(!prop_current));
+    assumptions.push_back(!prop_current);
 
   num_queries++;
   if(S.solve(assumptions))
@@ -711,7 +857,7 @@ bool ic3_solvert::propagate()
       cubet cube = negate_cube(fc.clause);
 
       bool trivially_unsat = false;
-      IctMinisat::vec<IctMinisat::Lit> assumptions;
+      bvt assumptions;
       for(auto l : cube)
       {
         literalt nl = to_next(l);
@@ -721,7 +867,7 @@ bool ic3_solvert::propagate()
           break;
         }
         if(!nl.is_true())
-          assumptions.push(to_minisat(nl));
+          assumptions.push_back(nl);
       }
 
       num_queries++;
@@ -735,7 +881,7 @@ bool ic3_solvert::propagate()
           cls.erase(it);
 
         if(i + 1 < frame_solvers.size() && frame_solvers[i + 1])
-          add_minisat_clause(*frame_solvers[i + 1], fc.clause);
+          frame_solvers[i + 1]->add_clause(fc.clause);
         frame_clauses[i + 1].push_back(fc);
       }
     }

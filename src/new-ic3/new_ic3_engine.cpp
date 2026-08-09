@@ -16,6 +16,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "new_ic3_engine.h"
 
 #include <ebmc/ebmc_error.h>
+#include <util/invariant.h>
 #include <ebmc/liveness_to_safety.h>
 #include <ebmc/netlist.h>
 #include <ebmc/report_results.h>
@@ -27,6 +28,73 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <verilog/sva_expr.h>
 
 #include "ic3_solver.h"
+
+static const char *to_string(ic3_sat_backendt backend)
+{
+  switch(backend)
+  {
+  case ic3_sat_backendt::ICT_MINISAT:
+    return "ict-minisat";
+  case ic3_sat_backendt::MINISAT2:
+    return "minisat2";
+  case ic3_sat_backendt::CADICAL:
+    return "cadical";
+  }
+
+  UNREACHABLE;
+}
+
+static std::optional<ic3_sat_backendt>
+get_new_ic3_sat_backend(const cmdlinet &cmdline, messaget &message)
+{
+  const bool explicit_minisat = cmdline.isset("minisat");
+  const bool explicit_cadical = cmdline.isset("cadical");
+
+  if(
+    !cmdline.get_value("new-ic3-sat-solver").empty() &&
+    (explicit_minisat || explicit_cadical))
+  {
+    message.error() << "use either --new-ic3-sat-solver or --minisat/--cadical"
+                    << messaget::eom;
+    return std::nullopt;
+  }
+
+  if(explicit_minisat && explicit_cadical)
+  {
+    message.error() << "use at most one of --minisat and --cadical"
+                    << messaget::eom;
+    return std::nullopt;
+  }
+
+  std::string backend_name = cmdline.get_value("new-ic3-sat-solver");
+  if(backend_name.empty())
+  {
+    if(explicit_cadical)
+      backend_name = "cadical";
+    else if(explicit_minisat)
+      backend_name = "minisat2";
+    else
+      backend_name = "ictminisat";
+  }
+
+  if(backend_name == "ictminisat")
+    return ic3_sat_backendt::ICT_MINISAT;
+  if(backend_name == "minisat2" || backend_name == "minisat")
+    return ic3_sat_backendt::MINISAT2;
+  if(backend_name == "cadical")
+  {
+#ifndef SATCHECK_CADICAL
+    message.error() << "support for CaDiCaL not configured" << messaget::eom;
+    return std::nullopt;
+#else
+    return ic3_sat_backendt::CADICAL;
+#endif
+  }
+
+  message.error() << "unknown new IC3 SAT backend `" << backend_name << "`"
+                  << messaget::eom;
+  return std::nullopt;
+}
 
 static bool new_ic3_supports_property(const exprt &expr)
 {
@@ -48,6 +116,9 @@ property_checker_resultt new_ic3_engine(
   message_handlert &message_handler)
 {
   messaget message{message_handler};
+  auto sat_backend = get_new_ic3_sat_backend(cmdline, message);
+  if(!sat_backend.has_value())
+    return property_checker_resultt::error();
 
   if(!properties.has_unfinished_property())
     return property_checker_resultt{properties};
@@ -87,6 +158,7 @@ property_checker_resultt new_ic3_engine(
     }
 
     message.status() << "Checking " << property.name << " with new IC3 engine"
+                     << " (" << to_string(sat_backend.value()) << ")"
                      << messaget::eom;
 
     // Add the property cone to a local copy of the netlist and obtain
@@ -103,7 +175,8 @@ property_checker_resultt new_ic3_engine(
         message_handler);
     }();
 
-    ic3_solvert solver{prop_netlist, prop_lit, message_handler};
+    ic3_solvert solver{
+      prop_netlist, prop_lit, message_handler, sat_backend.value()};
     auto result = solver.solve();
 
     // record the outcome produced by this engine
