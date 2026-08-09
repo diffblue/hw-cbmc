@@ -379,6 +379,135 @@ symbol_tablet verilog_ebmc_languaget::elaborate_compilation_units(
   return symbol_table;
 }
 
+/// Collect all module base names that are instantiated by the given
+/// parse trees, recursively descending into generate blocks.
+static void collect_module_dependencies_rec(
+  const verilog_module_itemt &module_item,
+  std::set<irep_idt> &deps)
+{
+  if(module_item.id() == ID_inst)
+  {
+    deps.insert(to_verilog_inst(module_item).module_base_name());
+  }
+  else if(module_item.id() == ID_generate_block)
+  {
+    for(auto &sub_item : to_verilog_generate_block(module_item).module_items())
+      collect_module_dependencies_rec(sub_item, deps);
+  }
+  else if(module_item.id() == ID_generate_if)
+  {
+    auto &generate_if = to_verilog_generate_if(module_item);
+    collect_module_dependencies_rec(generate_if.then_case(), deps);
+    if(generate_if.has_else_case())
+      collect_module_dependencies_rec(generate_if.else_case(), deps);
+  }
+  else if(module_item.id() == ID_generate_for)
+  {
+    collect_module_dependencies_rec(
+      to_verilog_generate_for(module_item).body(), deps);
+  }
+}
+
+static std::set<irep_idt> collect_all_dependencies(
+  const verilog_ebmc_languaget::parse_treest &parse_trees)
+{
+  std::set<irep_idt> deps;
+
+  for(auto &parse_tree : parse_trees)
+    for(auto &item : parse_tree.items)
+      if(
+        item.id() == ID_verilog_module || item.id() == ID_verilog_program ||
+        item.id() == ID_verilog_checker)
+      {
+        for(auto &module_item : to_verilog_module_source(item).items())
+          collect_module_dependencies_rec(module_item, deps);
+      }
+
+  return deps;
+}
+
+static std::set<irep_idt>
+collect_all_provided(const verilog_ebmc_languaget::parse_treest &parse_trees)
+{
+  std::set<irep_idt> provided;
+
+  for(auto &parse_tree : parse_trees)
+    for(auto &item : parse_tree.items)
+      if(
+        item.id() == ID_verilog_module || item.id() == ID_verilog_checker ||
+        item.id() == ID_verilog_interface)
+      {
+        provided.insert(to_verilog_module_source(item).base_name());
+      }
+
+  return provided;
+}
+
+void verilog_ebmc_languaget::resolve_library_modules(parse_treest &parse_trees)
+{
+  std::list<std::string> library_dirs;
+
+  for(auto &dir : cmdline.get_values('y'))
+    library_dirs.push_back(dir);
+
+  for(auto &dir : cmdline.get_values("libdir"))
+    library_dirs.push_back(dir);
+
+  messaget log{message_handler};
+
+  // Iteratively resolve library dependencies until no new
+  // unresolved modules are found.
+  while(true)
+  {
+    auto provided = collect_all_provided(parse_trees);
+    auto dependencies = collect_all_dependencies(parse_trees);
+
+    // Determine which dependencies are unresolved
+    std::set<irep_idt> unresolved;
+    for(auto &dep : dependencies)
+      if(provided.find(dep) == provided.end())
+        unresolved.insert(dep);
+
+    if(unresolved.empty())
+      break;
+
+    bool found_any = false;
+
+    for(auto &module_name : unresolved)
+    {
+      bool found = false;
+
+      for(auto &dir : library_dirs)
+      {
+        // Try <dir>/<module>.v and <dir>/<module>.sv
+        for(auto ext : {".v", ".sv"})
+        {
+          auto path =
+            std::filesystem::path{dir} / (id2string(module_name) + ext);
+
+          if(std::filesystem::exists(path))
+          {
+            log.status() << "Library: parsing " << path << messaget::eom;
+
+            verilog_scopest scopes;
+            parse_trees.push_back(parse(path, scopes));
+            found = true;
+            found_any = true;
+            break;
+          }
+        }
+
+        if(found)
+          break;
+      }
+    }
+
+    // If no new files were found in this iteration, stop.
+    if(!found_any)
+      break;
+  }
+}
+
 void verilog_ebmc_languaget::create_reset_logic(
   const std::string &reset_constraint_string,
   transition_systemt &transition_system)
@@ -438,6 +567,10 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   }
 
   auto parse_trees = parse();
+
+  // resolve library directories (-y)
+  if(cmdline.isset('y') || cmdline.isset("libdir"))
+    resolve_library_modules(parse_trees);
 
   if(cmdline.isset("show-modules"))
   {
