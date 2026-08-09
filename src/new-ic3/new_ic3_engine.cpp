@@ -28,70 +28,59 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "ic3_solver.h"
 
-static bool new_ic3_supports_property(const exprt &expr)
-{
-  if(!is_temporal_operator(expr))
+static bool new_ic3_supports_property(const exprt &expr) {
+  if (!is_temporal_operator(expr))
     return false;
-  if(expr.id() == ID_sva_always)
+  if (expr.id() == ID_sva_always)
     return !has_temporal_operator(to_sva_always_expr(expr).op());
-  if(expr.id() == ID_G)
+  if (expr.id() == ID_G)
     return !has_temporal_operator(to_G_expr(expr).op());
-  if(expr.id() == ID_AG)
+  if (expr.id() == ID_AG)
     return !has_temporal_operator(to_AG_expr(expr).op());
   return false;
 }
 
-static literalt build_property_literal(
-  netlistt &prop_netlist,
-  const exprt &property_expr,
-  const namespacet &ns,
-  message_handlert &message_handler)
-{
+static literalt build_property_literal(netlistt &prop_netlist,
+                                       const exprt &property_expr,
+                                       const namespacet &ns,
+                                       message_handlert &message_handler) {
   aig_prop_constraintt aig_prop(prop_netlist, message_handler);
-  return instantiate_convert(
-    aig_prop,
-    prop_netlist.var_map,
-    to_unary_expr(property_expr).op(),
-    ns,
-    message_handler);
+  return instantiate_convert(aig_prop, prop_netlist.var_map,
+                             to_unary_expr(property_expr).op(), ns,
+                             message_handler);
 }
 
-static ic3_resultt check_property(
-  const netlistt &netlist,
-  const ebmc_propertiest::propertyt &property,
-  const namespacet &ns,
-  message_handlert &message_handler)
-{
+static ic3_resultt check_property(const netlistt &netlist,
+                                  const ebmc_propertiest::propertyt &property,
+                                  const namespacet &ns,
+                                  message_handlert &message_handler) {
   // Add the property cone to a local copy of the netlist and obtain
   // the property literal in the AIG variable space.
   netlistt prop_netlist(netlist);
   literalt prop_lit = build_property_literal(
-    prop_netlist, property.normalized_expr, ns, message_handler);
+      prop_netlist, property.normalized_expr, ns, message_handler);
 
   ic3_solvert solver{prop_netlist, prop_lit, message_handler};
   return solver.solve();
 }
 
-static void apply_result(
-  ebmc_propertiest::propertyt &property,
-  ic3_resultt::outcomet outcome)
-{
+static void apply_result(ebmc_propertiest::propertyt &property,
+                         ic3_resultt::outcomet outcome) {
   // record the outcome produced by this engine
   constexpr auto engine = "ic3";
 
   // For exists-path properties (cover), the normalized expression is
   // the dual safety property: a refutation is a witness trace, and a
   // proof shows that no witness exists.
-  switch(outcome)
-  {
+  switch (outcome) {
   case ic3_resultt::outcomet::PROVED:
-    if(property.is_exists_path())
+    if (property.is_exists_path())
       property.refuted(engine);
     else
       property.proved(engine);
     break;
   case ic3_resultt::outcomet::REFUTED:
-    if(property.is_exists_path())
+    if (property.is_exists_path())
       property.proved(engine);
     else
       property.refuted(engine);
@@ -99,24 +88,20 @@ static void apply_result(
   }
 }
 
-property_checker_resultt new_ic3_engine(
-  const cmdlinet &cmdline,
-  transition_systemt &transition_system,
-  ebmc_propertiest &properties,
-  message_handlert &message_handler)
-{
+property_checker_resultt new_ic3_engine(const cmdlinet &cmdline,
+                                        transition_systemt &transition_system,
+                                        ebmc_propertiest &properties,
+                                        message_handlert &message_handler) {
   messaget message{message_handler};
 
-  if(!properties.has_unfinished_property())
+  if (!properties.has_unfinished_property())
     return property_checker_resultt{properties};
 
-  if(cmdline.isset("liveness-to-safety"))
+  if (cmdline.isset("liveness-to-safety"))
     liveness_to_safety(transition_system, properties);
 
-  for(auto &property : properties.properties)
-  {
-    if(property.is_assumed())
-    {
+  for (auto &property : properties.properties) {
+    if (property.is_assumed()) {
       message.error() << "no support for assumptions" << messaget::eom;
       return property_checker_resultt::error();
     }
@@ -127,19 +112,17 @@ property_checker_resultt new_ic3_engine(
   const namespacet ns(transition_system.symbol_table);
 
   auto netlist =
-    make_netlist(transition_system, properties, cmdline, message_handler);
+      make_netlist(transition_system, properties, cmdline, message_handler);
 
   message.statistics() << "Latches: " << netlist.var_map.latches.size()
                        << ", nodes: " << netlist.number_of_nodes()
                        << messaget::eom;
 
-  for(auto &property : properties.properties)
-  {
-    if(property.is_disabled() || !property.is_unknown())
+  for (auto &property : properties.properties) {
+    if (property.is_disabled() || !property.is_unknown())
       continue;
 
-    if(!new_ic3_supports_property(property.normalized_expr))
-    {
+    if (!new_ic3_supports_property(property.normalized_expr)) {
       property.failure("property not supported by new IC3 engine");
       continue;
     }
