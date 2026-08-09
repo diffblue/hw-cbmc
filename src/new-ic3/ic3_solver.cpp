@@ -14,11 +14,11 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/invariant.h>
 
-#include <solvers/sat/satcheck_cadical.h>
-#include <solvers/sat/satcheck_minisat2.h>
 #include <ic3/minisat/minisat/core/Solver.h>
 #include <solvers/sat/cnf_clause_list.h>
 #include <solvers/sat/satcheck.h>
+#include <solvers/sat/satcheck_cadical.h>
+#include <solvers/sat/satcheck_minisat2.h>
 #include <trans-netlist/bmc_map.h>
 #include <trans-netlist/unwind_netlist.h>
 
@@ -240,8 +240,9 @@ private:
   std::unique_ptr<cnft> solver;
 };
 
-std::unique_ptr<cnft>
-make_cbmc_solver(ic3_sat_backendt sat_backend, message_handlert &message_handler)
+std::unique_ptr<cnft> make_cbmc_solver(
+  ic3_sat_backendt sat_backend,
+  message_handlert &message_handler)
 {
   switch(sat_backend)
   {

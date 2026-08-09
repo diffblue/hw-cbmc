@@ -15,8 +15,9 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "new_ic3_engine.h"
 
-#include <ebmc/ebmc_error.h>
 #include <util/invariant.h>
+
+#include <ebmc/ebmc_error.h>
 #include <ebmc/liveness_to_safety.h>
 #include <ebmc/netlist.h>
 #include <ebmc/report_results.h>
