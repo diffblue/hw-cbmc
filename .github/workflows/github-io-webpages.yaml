@@ -1,10 +1,7 @@
-name: LogikBench
+name: github-io-webpages
 
-# Runs ebmc over the LogikBench RTL benchmark suite
-# (https://github.com/zeroasiccorp/logikbench) and publishes an HTML report
-# to GitHub Pages.  This is a report-only smoke test of the Verilog/
-# SystemVerilog front-end and elaboration over a wide range of real-world
-# circuits; it never fails the build on a per-circuit basis.
+# Runs ebmc over the LogikBench and HWMCC08 benchmark suites and publishes
+# a small benchmark index plus per-suite HTML reports to GitHub Pages.
 
 on:
   # Refresh the published report whenever main changes.
@@ -24,13 +21,13 @@ permissions:
 
 # A single in-progress deployment at a time; do not cancel a running one.
 concurrency:
-  group: pages-logikbench
+  group: pages-benchmarks
   cancel-in-progress: false
 
 jobs:
-  # Build ebmc and run it over the LogikBench circuits, producing the report.
-  run-logikbench:
-    name: Run ebmc on LogikBench
+  # Build ebmc and generate the benchmark reports for GitHub Pages.
+  run-benchmarks:
+    name: Generate benchmark reports
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -41,7 +38,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get remove --purge man-db
-          packages_to_install="flex bison libxml2-utils ccache"
+          packages_to_install="flex bison libxml2-utils ccache wget"
           if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
             sudo apt-get update
             sudo apt-get install --no-install-recommends -yq $packages_to_install
@@ -72,10 +69,13 @@ jobs:
           key: ${{ runner.os }}-24.04-make-gcc-logikbench-${{ github.sha }}
       - name: Try the ebmc binary
         run: ./src/ebmc/ebmc --version
-      - name: Run ebmc on the LogikBench circuits
+      - name: Run ebmc on the benchmark suites
         run: |
-          mkdir -p _site
-          PATH=$PATH:$PWD/src/ebmc benchmarking/logikbench.sh _site/index.html
+          mkdir -p _site/logikbench _site/hwmcc
+          PATH=$PATH:$PWD/src/ebmc benchmarking/logikbench.sh _site/logikbench/index.html
+          PATH=$PATH:$PWD/src/ebmc benchmarking/hwmcc08-report.sh _site/hwmcc/index.html
+      - name: Generate the benchmark landing page
+        run: cp benchmarking/index.html _site/index.html
       - name: Upload the report as a Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
@@ -85,7 +85,7 @@ jobs:
   # not configured.
   deploy:
     name: Publish report to GitHub Pages
-    needs: run-logikbench
+    needs: run-benchmarks
     if: github.event_name != 'pull_request' && github.repository == 'diffblue/hw-cbmc'
     runs-on: ubuntu-slim
     environment:
