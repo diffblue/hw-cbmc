@@ -9,3 +9,5 @@ assignment_pattern_expr1.sv
 array, but ebmc rejects the part-select (slicing) operator on
 unpacked arrays during type-checking; see
 unpacked_array_part_select1.sv for a minimal reproduction.
+Type checking fails before the typed assignment-pattern
+cast on the RHS is ever reached.

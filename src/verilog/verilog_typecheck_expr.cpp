@@ -171,7 +171,8 @@ void verilog_typecheck_exprt::assignment_conversion(
   if(rhs.type().id() == ID_verilog_assignment_pattern)
   {
     DATA_INVARIANT(
-      rhs.id() == ID_verilog_assignment_pattern,
+      rhs.id() == ID_verilog_assignment_pattern ||
+        rhs.id() == ID_verilog_assignment_pattern_with_type,
       "verilog_assignment_pattern expression expected");
 
     if(lhs_type.id() == ID_struct)
@@ -849,7 +850,22 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
     // Typechecking can only be completed once we know the type
     // from the usage context. We record "verilog_assignment_pattern"
     // to signal that.
-    expr.type() = typet(ID_verilog_assignment_pattern);
+    expr.type() = typet{ID_verilog_assignment_pattern};
+
+    return expr;
+  }
+  else if(expr.id() == ID_verilog_assignment_pattern_with_type)
+  {
+    // multi-ary -- may become a struct or array, depending
+    // on context.
+    for(auto &op : expr.operands())
+      convert_expr(op);
+
+    // This is a typed assignment pattern expression (1800-2017 10.9),
+    // e.g., twoarr'{ 0, 1 }. The type is known from the prefix.
+    auto dest_type = elaborate_type(expr.type());
+    expr.type() = typet{ID_verilog_assignment_pattern};
+    assignment_conversion(expr, dest_type);
 
     return expr;
   }
