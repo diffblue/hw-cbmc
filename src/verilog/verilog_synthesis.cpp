@@ -829,7 +829,16 @@ exprt verilog_synthesist::assignment_rec(
     // redundant?
     if(from == 0 && to == get_width(lhs_src.type()) - 1)
     {
-      return assignment_rec(lhs_src, rhs); // recursive call
+      // The part-select spans the entire source, hence the assignment
+      // is equivalent to assigning to the source directly. Note that a
+      // part-select expression is always unsigned (1800-2017 11.5.1),
+      // even when it selects a signed vector in its entirety, so the rhs
+      // may differ in signedness from the source. As the bits are the
+      // same, we reinterpret the rhs to the type of the source.
+      return assignment_rec(
+        lhs_src,
+        typecast_exprt::conditional_cast(
+          rhs, lhs_src.type())); // recursive call
     }
 
     // turn
