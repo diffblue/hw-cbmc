@@ -1,7 +1,7 @@
 CORE
 smv_ltlspec_FX1.smv
 --bdd
-^\[spec1\] F X X p: REFUTED$
+^\[spec1\] F X X p: FAILURE: property not supported by BDD engine$
 ^EXIT=10$
 ^SIGNAL=0$
 --

@@ -8,6 +8,7 @@ SRC += ebmc/bdd_model_checker.cpp \
        ebmc/transition_property.cpp \
        smvlang/expr2smv.cpp \
        temporal-logic/hoa.cpp \
+       temporal-logic/ltl_to_ctl.cpp \
        temporal-logic/ltl_sva_to_string.cpp \
        temporal-logic/rewrite_sva_sequence.cpp \
        temporal-logic/sva_sequence_match.cpp \

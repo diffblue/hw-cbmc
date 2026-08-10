@@ -1,10 +1,8 @@
-KNOWNBUG
+CORE
 smv_ltlspec_FG1.smv
 --bdd
-^\[spec1\] F G x!=1: PROVED$
-^EXIT=0$
+^\[spec1\] F G x != 1: FAILURE: property not supported by BDD engine$
+^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
---
-The BDD engine returns the wrong answer.
