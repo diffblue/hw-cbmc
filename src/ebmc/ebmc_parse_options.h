@@ -51,9 +51,10 @@ public:
         "(random-trace)(random-waveform)"
         "(bmc-with-assumptions)"
         "(liveness-to-safety)(buechi)"
-        "I:D:(preprocess)(systemverilog)(vl2smv-extensions)"
-        "(warn-implicit-nets)"
-        "l:(libfile):",
+        "I:(incdir):D:"
+        "l:(libfile):"
+        "(preprocess)(systemverilog)(vl2smv-extensions)"
+        "(warn-implicit-nets)",
         argc,
         argv,
         std::string("EBMC ") + EBMC_VERSION),
@@ -62,7 +63,7 @@ public:
   }
 
   virtual ~ebmc_parse_optionst() { }
-  
+
 protected:
   void register_languages();
   void plus_arg(const std::string &);

@@ -1,0 +1,12 @@
+CORE
+incdir1.v
+--preprocess +incdir+subdir
+// Enable multi-line checking
+activate-multi-line-match
+`line 1 "incdir1\.v" 0
+`line 1 "subdir[/\\]include_file\.vh" 1
+
+`line 2 "incdir1\.v" 2
+^EXIT=0$
+^SIGNAL=0$
+--
