@@ -440,6 +440,11 @@ void verilog_preprocessort::directive()
     auto &identifier = identifier_token.text;
     auto &define = defines[identifier];
 
+    // A repeated `define replaces any previous definition (1800-2017
+    // 22.5.1: "the most recent definition ... is used"). Reset the entry
+    // so parameters and tokens are not appended to a stale definition.
+    define = definet{};
+
     // Is there a parameter list?
     // These have been introduced in Verilog 2001.
     // 1800-2017: "The left parenthesis shall follow the text macro name
