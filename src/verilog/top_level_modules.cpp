@@ -61,22 +61,40 @@ static void module_dependencies(
 
 /// Determine the set of top-level modules following 1800 2017 23.3.1,
 /// given via their base names. Sorted alphabetically.
+/// The library_count parameter specifies how many parse trees at the end
+/// of the list are library files. Modules in library parse trees are
+/// not candidates for being top-level, but are still used for dependency
+/// erasure.
 std::vector<irep_idt> top_level_modules(
   const std::list<verilog_parse_treet> &parse_trees,
-  const cmdlinet &cmdline)
+  const cmdlinet &cmdline,
+  std::size_t library_count)
 {
-  // start with a set of all modules, from all the files
+  // Determine which parse trees are non-library (regular)
+  const std::size_t total = parse_trees.size();
+  const std::size_t regular_count =
+    total >= library_count ? total - library_count : total;
+
+  // start with a set of all modules from non-library files only
   std::set<irep_idt> all_modules;
 
-  for(auto &parse_tree : parse_trees)
-    for(auto &item : parse_tree.items)
+  {
+    std::size_t index = 0;
+    for(auto &parse_tree : parse_trees)
     {
-      if(item.id() == ID_verilog_module)
+      if(index >= regular_count)
+        break;
+      for(auto &item : parse_tree.items)
       {
-        auto base_name = to_verilog_module_source(item).base_name();
-        all_modules.insert(base_name);
+        if(item.id() == ID_verilog_module)
+        {
+          auto base_name = to_verilog_module_source(item).base_name();
+          all_modules.insert(base_name);
+        }
       }
+      ++index;
     }
+  }
 
   // Did the user specify a set of top level modules?
   std::vector<irep_idt> given_modules;
@@ -113,6 +131,8 @@ std::vector<irep_idt> top_level_modules(
   // No modules given. Find all modules that are not used
   // as a submodule. Start with all modules, and then erase
   // the ones that are used as a submodule.
+  // We consider dependencies from all parse trees (including library)
+  // for erasure purposes.
   std::set<irep_idt> top_level_modules = all_modules;
 
   for(auto &parse_tree : parse_trees)

@@ -52,7 +52,8 @@ public:
         "(bmc-with-assumptions)"
         "(liveness-to-safety)(buechi)"
         "I:D:(preprocess)(systemverilog)(vl2smv-extensions)"
-        "(warn-implicit-nets)",
+        "(warn-implicit-nets)"
+        "l:(libfile):",
         argc,
         argv,
         std::string("EBMC ") + EBMC_VERSION),
@@ -64,7 +65,8 @@ public:
   
 protected:
   void register_languages();
-  
+  void plus_arg(const std::string &);
+
   ui_message_handlert ui_message_handler;
 };
 

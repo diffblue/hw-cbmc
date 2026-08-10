@@ -1,0 +1,7 @@
+CORE
+main_simple.sv
+-l standalone_lib.sv --bound 3
+^\[main\.p1\] always main\.cnt != 3: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--

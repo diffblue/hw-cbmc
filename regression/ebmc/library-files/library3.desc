@@ -1,0 +1,8 @@
+CORE
+main_simple.sv
+-l standalone_lib.sv --show-modules
+^  Name:       main$
+^  Name:       standalone_lib$
+^EXIT=0$
+^SIGNAL=0$
+--

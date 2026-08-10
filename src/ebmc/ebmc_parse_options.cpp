@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/exit_codes.h>
 #include <util/help_formatter.h>
 #include <util/output_file.h>
+#include <util/prefix.h>
 #include <util/string2int.h>
 
 #include <trans-netlist/compute_ct.h>
@@ -52,6 +53,62 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: ebmc_parse_optionst::plus_arg
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: turn a +plusarg into a cmdlinet option
+
+\*******************************************************************/
+
+void ebmc_parse_optionst::plus_arg(const std::string &plus_arg)
+{
+  // The format is +plus_arg+opt1+opt2+...
+  // We extract these from cmdline.args (where cmdlinet puts them
+  // since they don't start with '-') and store them as option values
+  // so that they can be obtained via cmdline.get_values("plus_arg").
+
+  const std::string prefix = '+' + plus_arg + '+';
+  cmdlinet::argst remaining_args;
+  for(const auto &arg : cmdline.args)
+  {
+    if(has_prefix(arg, prefix))
+    {
+      // Split on '+' to get individual option values
+      std::string arg_str = arg.substr(prefix.size());
+      std::string::size_type pos = 0;
+      while(pos < arg_str.size())
+      {
+        auto next = arg_str.find('+', pos);
+        std::string arg_value;
+        if(next == std::string::npos)
+        {
+          arg_value = arg_str.substr(pos);
+          pos = arg_str.size();
+        }
+        else
+        {
+          arg_value = arg_str.substr(pos, next - pos);
+          pos = next + 1;
+        }
+
+        if(!arg_value.empty())
+          cmdline.set(plus_arg, arg_value);
+      }
+    }
+    else
+    {
+      remaining_args.push_back(arg);
+    }
+  }
+
+  cmdline.args = std::move(remaining_args);
+}
+
+/*******************************************************************\
+
 Function: ebmc_parse_optionst::doit
 
   Inputs:
@@ -69,6 +126,9 @@ int ebmc_parse_optionst::doit()
       unsafe_string2unsigned(cmdline.get_value("verbosity")));
   else
     ui_message_handler.set_verbosity(messaget::M_STATUS); // default
+
+  // Process Verilog-style +plusarg+ arguments.
+  plus_arg("libfile");
 
   if(config.set(cmdline))
   {
@@ -472,6 +532,8 @@ void ebmc_parse_optionst::help()
     "Verilog options:\n"
     " {y-I} {upath}                  \t set include path\n"
     " {y-D} {uvar}[={uvalue}]        \t set preprocessor define\n"
+    " {y-l} {ufile}                  \t library file (modules are not top-level)\n"
+    " {y+libfile+}{ufile}            \t library file (modules are not top-level)\n"
     " {y--systemverilog}             \t force SystemVerilog instead of Verilog\n"
     " {y--reset} {uexpr}             \t set up module reset\n"
     " {y--ignore-initial}            \t disregard initial blocks\n"

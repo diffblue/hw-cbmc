@@ -137,6 +137,13 @@ verilog_ebmc_languaget::parse_treest verilog_ebmc_languaget::parse()
   for(auto &arg : cmdline.args)
     parse_trees.push_back(parse(arg, scopes));
 
+  // Parse library files specified with -l and +libfile+
+  for(auto &lib_file : cmdline.get_values('l'))
+    parse_trees.push_back(parse(lib_file, scopes));
+
+  for(auto &lib_file : cmdline.get_values("libfile"))
+    parse_trees.push_back(parse(lib_file, scopes));
+
   return parse_trees;
 }
 
@@ -453,7 +460,10 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   //
   // determine the top-level modules
   //
-  auto top_level_modules = ::top_level_modules(parse_trees, cmdline);
+  auto library_count =
+    cmdline.get_values('l').size() + cmdline.get_values("libfile").size();
+  auto top_level_modules =
+    ::top_level_modules(parse_trees, cmdline, library_count);
 
   //
   // type checking
