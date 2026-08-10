@@ -146,6 +146,8 @@ int ebmc_parse_optionst::doit()
     return 0;
   }
 
+  log_version_and_architecture("EBMC");
+
   try
   {
     if(cmdline.isset("diatest"))
