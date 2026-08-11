@@ -1,0 +1,9 @@
+CORE
+two_filesA3.sv
+two_filesB3.sv --top top
+^\[top\.assert\.1\] my_package::my_parameter == 1: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The package is given after the file that imports a single identifier from it.

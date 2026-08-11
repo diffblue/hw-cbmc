@@ -63,6 +63,15 @@ public:
 
   verilog_scopest &scopes;
 
+  // Report an error at the given source location. This is for errors that
+  // are not expressible in the grammar, and hence would otherwise be
+  // reported as a syntax error about a token class.
+  void error(const source_locationt &location, const std::string &message)
+  {
+    log.error().source_location = location;
+    log.error() << message << messaget::eom;
+  }
+
   // These are used for anonymous gate instances
   // and to create a unique identifier for enum types.
   std::size_t next_id_counter = 0;
