@@ -11,6 +11,8 @@
 * Verilog: procedural assignments to hierarchical identifiers
 * SystemVerilog: ports for sequence and property declarations
 * SystemVerilog: $typename for logic types
+* SystemVerilog: interface ports no longer require the interface to be
+  declared before the module that uses it
 * Verilog: +define+ command-line option
 * Verilog: +incdir+ command-line option
 * Verilog: -l and +libfile+ command-line options
