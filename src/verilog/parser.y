@@ -3874,8 +3874,10 @@ named_port_connection_brace:
         ;
 
 named_port_connection:
-          // This needs to be 'any_identifier' to allow identifiers that
-          // are typedefs in the local scope.
+          // This needs to be 'any_identifier': the formal name is looked
+          // up in the instantiated module's port name space, and hence may
+          // coincide with a typedef, interface, package or class name that
+          // is visible in the local scope.
           '.' any_identifier '(' expression_opt ')'
                 { init($$, ID_verilog_named_port_connection);
                   mto($$, $2);
@@ -5490,8 +5492,14 @@ attr_name: identifier
 // An extension of the System Verilog grammar to allow defining new identifiers
 // even if they are already used for a different kind of identifier
 // in a higher scope.
+// Note that the scanner gives all identifier tokens the same shape,
+// namely ID_verilog_identifier with ID_base_name set. Hence, no action
+// is required to normalize the alternatives below.
 any_identifier:
           TOK_TYPE_IDENTIFIER
+        | TOK_CLASS_IDENTIFIER
+        | TOK_PACKAGE_IDENTIFIER
+        | TOK_INTERFACE_IDENTIFIER
         | non_type_identifier
         ;
 
@@ -5603,7 +5611,10 @@ type_identifier: TOK_TYPE_IDENTIFIER
 
 ps_type_identifier: type_identifier;
 
-parameter_identifier: non_type_identifier;
+// This needs to be 'any_identifier': the parameter name in a named
+// parameter assignment is looked up in the instantiated module's
+// parameter name space, not in the local scope.
+parameter_identifier: any_identifier;
 
 udp_identifier: non_type_identifier;
 

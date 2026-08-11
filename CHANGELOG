@@ -13,6 +13,8 @@
 * SystemVerilog: $typename for logic types
 * Verilog: +incdir+ command-line option
 * Verilog: -l and +libfile+ command-line options
+* SystemVerilog: named port connections and named parameter assignments
+  may name formals that clash with interface, package or class names
 * Refreshed IC3 engine --new-ic3
 
 # EBMC 6.0
