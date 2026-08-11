@@ -16,6 +16,8 @@
 * Verilog: +incdir+ command-line option
 * Verilog: -l and +libfile+ command-line options
 * Verilog: -y and +libdir+ command-line options
+* SystemVerilog: interface ports no longer require the interface to be
+  declared before the module that uses it
 * Refreshed IC3 engine --new-ic3
 
 # EBMC 6.0
