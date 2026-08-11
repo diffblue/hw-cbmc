@@ -1,10 +1,13 @@
 CORE
 port_array2.sv
-
-^file .* line 6: no support for arrays of interface ports$
-^EXIT=2$
+--top main --show-symbol-table
+^  Verilog::\$root\.main\.bus\[0\]$
+^  Verilog::\$root\.main\.bus\[1\]$
+^  Verilog::\$root\.main\.bus\[2\]$
+^  Verilog::\$root\.main\.bus\[3\]$
+^EXIT=0$
 ^SIGNAL=0$
 --
 --
-Arrays of interface ports (1800-2017 25.4) parse, but are not elaborated yet.
-The dimension must not be dropped silently.
+Arrays of interface ports (1800-2017 25.4) yield one interface instance per
+array element. The dimension must not be dropped silently.

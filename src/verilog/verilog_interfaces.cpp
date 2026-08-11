@@ -141,6 +141,8 @@ Function: verilog_typecheckt::instantiate_interface_ports
  Purpose: For each port that has an interface type, instantiate
           the interface under the port's identifier so that
           hierarchical member access (e.g., bus.i) works.
+          Arrays of interface ports, 1800-2017 25.4, yield one
+          instance per array element, named bus[0], bus[1], ...
 
 \*******************************************************************/
 
@@ -159,33 +161,110 @@ void verilog_typecheckt::instantiate_interface_ports(
     if(ns.lookup(port_identifier, port_symbol))
       continue;
 
-    // Check if this port has an interface type
-    if(port_symbol->type.id() != ID_verilog_module_instance)
+    // Is this an interface port, or an array thereof? Arrays of interface
+    // ports may have any number of dimensions.
+    auto *type = &port_symbol->type;
+    while(type->id() == ID_array)
+      type = &to_array_type(*type).element_type();
+
+    if(type->id() != ID_verilog_module_instance)
       continue;
 
-    irep_idt interface_base_name = port_symbol->type.get(ID_base_name);
+    irep_idt interface_base_name = type->get(ID_base_name);
     if(interface_base_name.empty())
       continue;
 
-    // Find the interface source and instantiate it under this port
+    // Find the interface source, to be instantiated under the port.
     irep_idt interface_module_id = verilog_module_symbol(interface_base_name);
 
-    exprt::operandst no_parameters;
-    std::map<irep_idt, exprt> no_defparams;
-
-    instantiate_module(
+    instantiate_interface_port(
+      port_symbol->type,
       port_symbol->location,
       interface_module_id,
       interface_base_name,
-      port_identifier,
-      no_parameters,
-      no_defparams);
-
-    // Update the instance symbol value to record the module binding
-    symbolt &port_sym = symbol_table_lookup(port_identifier);
-    port_sym.value =
-      verilog_module_instancet{id2string(port_identifier) + "$module"};
+      base_name,
+      port_identifier);
   }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::instantiate_interface_port
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Instantiate the given interface under the given identifier.
+          When the type is an array, this recurses into the array
+          elements, which are given the identifiers id[0], id[1], ...
+
+\*******************************************************************/
+
+void verilog_typecheckt::instantiate_interface_port(
+  const typet &type,
+  const source_locationt &location,
+  const irep_idt &interface_module_id,
+  const irep_idt &interface_base_name,
+  const irep_idt &base_name,
+  const irep_idt &identifier)
+{
+  if(type.id() == ID_array)
+  {
+    // An array of interface ports, 1800-2017 25.4. Each element is
+    // instantiated separately. The elements are given the indices that
+    // the array's declared range yields.
+    auto &array_type = to_verilog_array_type(type);
+    auto size = array_type.size_int();
+    auto offset = array_type.offset();
+
+    for(mp_integer i = 0; i < size; ++i)
+    {
+      // The elements are stored starting from the left index of the range.
+      auto index = array_type.increasing() ? offset + i : offset + size - 1 - i;
+      auto suffix = '[' + integer2string(index) + ']';
+
+      symbolt element_symbol{
+        id2string(identifier) + suffix, array_type.element_type(), mode};
+
+      element_symbol.module = verilog_root_module_identifier();
+      element_symbol.base_name = id2string(base_name) + suffix;
+      element_symbol.pretty_name =
+        strip_verilog_root_prefix(element_symbol.name);
+      element_symbol.location = location;
+      element_symbol.value.make_nil();
+
+      auto element_base_name = element_symbol.base_name;
+      auto element_identifier = element_symbol.name;
+      add_symbol(std::move(element_symbol));
+
+      // recursive call, for further dimensions
+      instantiate_interface_port(
+        array_type.element_type(),
+        location,
+        interface_module_id,
+        interface_base_name,
+        element_base_name,
+        element_identifier);
+    }
+
+    return;
+  }
+
+  exprt::operandst no_parameters;
+  std::map<irep_idt, exprt> no_defparams;
+
+  instantiate_module(
+    location,
+    interface_module_id,
+    interface_base_name,
+    identifier,
+    no_parameters,
+    no_defparams);
+
+  // Update the instance symbol value to record the module binding
+  symbolt &symbol = symbol_table_lookup(identifier);
+  symbol.value = verilog_module_instancet{id2string(identifier) + "$module"};
 }
 
 /*******************************************************************\

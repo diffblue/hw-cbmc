@@ -38,15 +38,6 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
     throw errort{}.with_location(decl.source_location())
       << "no support for port expressions";
   }
-  else if(
-    decl.type().id() == ID_verilog_interface && declarator.type().is_not_nil())
-  {
-    // An array of interface ports, 1800-2017 25.4. These parse, but
-    // elaborating the array elements requires support for arrays of
-    // interface instances, which we do not have yet.
-    throw errort{}.with_location(declarator.source_location())
-      << "no support for arrays of interface ports";
-  }
   else
   {
     // add the symbol
