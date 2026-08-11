@@ -1,0 +1,11 @@
+CORE
+port_array1.sv
+--show-modules
+.*Name:.* sub1$
+.*Name:.* sub2$
+.*Name:.* sub3$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Arrays of interface ports parse (1800-2017 25.4), with and without a modport.
