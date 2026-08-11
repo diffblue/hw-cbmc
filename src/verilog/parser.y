@@ -1856,19 +1856,36 @@ package_import_item_brace:
         ;
 
 package_import_item:
-          package_identifier "::" identifier
+          import_package_identifier "::" identifier
                 { init($$, ID_verilog_import_item);
                   auto package_base_name = stack_expr($1).get(ID_base_name);
                   auto identifier_base_name = stack_expr($3).get(ID_base_name);
                   stack_expr($$).set(ID_verilog_package, package_base_name);
                   stack_expr($$).set(ID_base_name, identifier_base_name);
                   PARSER.scopes.import(package_base_name, identifier_base_name); }
-        | package_identifier "::" "*"
+        | import_package_identifier "::" "*"
                 { init($$, ID_verilog_import_item);
                   auto package_base_name = stack_expr($1).get(ID_base_name);
                   stack_expr($$).set(ID_verilog_package, package_base_name);
                   stack_expr($$).set(ID_base_name, "*");
                   PARSER.scopes.wildcard_import(package_base_name); }
+        ;
+
+// The operand of an import can only ever be a package name, and hence we
+// also accept an identifier that the scanner did not classify as a package
+// name. That yields a diagnostic that names the offending package, instead
+// of a syntax error about the token class.
+import_package_identifier:
+          package_identifier
+        | non_type_identifier
+                { $$ = $1;
+                  auto base_name = stack_expr($$).get(ID_base_name);
+                  PARSER.error(
+                    stack_expr($$).source_location(),
+                    PARSER.scopes.lookup(base_name) == nullptr
+                      ? "unknown package `" + id2string(base_name) + '\''
+                      : '`' + id2string(base_name) + "' is not a package");
+                  YYERROR; }
         ;
 
 genvar_declaration:

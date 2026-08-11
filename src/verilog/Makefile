@@ -19,6 +19,7 @@ SRC = aval_bval_encoding.cpp \
       verilog_language.cpp \
       verilog_lex.yy.cpp \
       verilog_lowering.cpp \
+      verilog_parse_order.cpp \
       verilog_parse_tree.cpp \
       verilog_parser.cpp \
       verilog_preprocessor.cpp \
@@ -68,3 +69,4 @@ verilog_preprocessor_lex.yy.cpp: verilog_preprocessor_tokenizer.l
 verilog_y.tab$(OBJEXT): verilog_y.tab.cpp verilog_y.tab.h
 verilog_lex.yy$(OBJEXT): verilog_y.tab.cpp verilog_lex.yy.cpp verilog_y.tab.h
 verilog_scope$(OBJEXT): verilog_y.tab.h
+verilog_parse_order$(OBJEXT): verilog_y.tab.h
