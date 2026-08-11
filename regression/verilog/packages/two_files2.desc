@@ -1,0 +1,9 @@
+CORE
+two_filesA2.sv
+two_filesB2.sv --top top
+^\[top\.assert\.1\] \$bits\(top\.some_var\) == 32: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The package is given after the file that imports it.

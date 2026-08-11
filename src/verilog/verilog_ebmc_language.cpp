@@ -26,6 +26,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "verilog_elaborate_compilation_unit.h"
 #include "verilog_language.h"
 #include "verilog_lowering.h"
+#include "verilog_parse_order.h"
 #include "verilog_parser.h"
 #include "verilog_preprocessor.h"
 #include "verilog_synthesis.h"
@@ -96,23 +97,23 @@ void verilog_ebmc_languaget::preprocess()
   preprocess(file_name, std::cout);
 }
 
+verilog_standardt
+verilog_ebmc_languaget::standard(const std::filesystem::path &path) const
+{
+  if(path.extension() == ".sv" || cmdline.isset("systemverilog"))
+    return verilog_standardt::SV2023;
+  else if(cmdline.isset("vl2smv-extensions"))
+    return verilog_standardt::V2005_SMV;
+  else
+    return verilog_standardt::V2005_SMV;
+}
+
 verilog_parse_treet verilog_ebmc_languaget::parse(
   const std::filesystem::path &path,
+  std::istream &preprocessed,
   verilog_scopest &scopes)
 {
-  verilog_standardt standard;
-
-  if(path.extension() == ".sv" || cmdline.isset("systemverilog"))
-    standard = verilog_standardt::SV2023;
-  else if(cmdline.isset("vl2smv-extensions"))
-    standard = verilog_standardt::V2005_SMV;
-  else
-    standard = verilog_standardt::V2005_SMV;
-
-  std::stringstream preprocessed;
-  preprocess(path, preprocessed);
-
-  verilog_parsert verilog_parser{standard, scopes, message_handler};
+  verilog_parsert verilog_parser{standard(path), scopes, message_handler};
 
   verilog_parser.set_file(path.u8string());
   verilog_parser.in = &preprocessed;
@@ -126,6 +127,16 @@ verilog_parse_treet verilog_ebmc_languaget::parse(
   verilog_parser.parse_tree.build_item_map();
 
   return std::move(verilog_parser.parse_tree);
+}
+
+verilog_parse_treet verilog_ebmc_languaget::parse(
+  const std::filesystem::path &path,
+  verilog_scopest &scopes)
+{
+  std::stringstream preprocessed;
+  preprocess(path, preprocessed);
+
+  return parse(path, preprocessed, scopes);
 }
 
 void verilog_ebmc_languaget::show_parse(const std::filesystem::path &path)
@@ -148,18 +159,61 @@ void verilog_ebmc_languaget::show_parse()
 
 verilog_ebmc_languaget::parse_treest verilog_ebmc_languaget::parse()
 {
-  parse_treest parse_trees;
-  verilog_scopest scopes;
+  // The input files, in the order in which they were given.
+  std::vector<std::filesystem::path> paths;
 
   for(auto &arg : cmdline.args)
-    parse_trees.push_back(parse(arg, scopes));
+    paths.push_back(widen_if_needed(arg));
 
-  // Parse library files specified with -l and +libfile+
+  // Library files specified with -l and +libfile+
   for(auto &lib_file : cmdline.get_values('l'))
-    parse_trees.push_back(parse(lib_file, scopes));
+    paths.push_back(widen_if_needed(lib_file));
 
   for(auto &lib_file : cmdline.get_values("libfile"))
-    parse_trees.push_back(parse(lib_file, scopes));
+    paths.push_back(widen_if_needed(lib_file));
+
+  // Preprocess the input files, in the order in which they were given.
+  // We keep the results, as each of them is read twice below.
+  std::vector<std::stringstream> preprocessed(paths.size());
+
+  for(std::size_t i = 0; i < paths.size(); i++)
+    preprocess(paths[i], preprocessed[i]);
+
+  // IEEE 1800-2017 26.3 requires that a package is compiled before the
+  // scopes that import it, but the order of the input files is not
+  // prescribed. We hence determine the order in which to parse the files
+  // from the packages that they declare and reference.
+  std::vector<verilog_package_usaget> usage;
+  usage.reserve(paths.size());
+
+  for(std::size_t i = 0; i < paths.size(); i++)
+  {
+    usage.push_back(
+      verilog_scan_package_usage(preprocessed[i], standard(paths[i])));
+
+    // rewind, for the parser
+    preprocessed[i].clear();
+    preprocessed[i].seekg(0);
+  }
+
+  // Now parse, in dependency order, using one scope table for all files.
+  std::vector<std::optional<parse_treet>> results(paths.size());
+  verilog_scopest scopes;
+
+  elaboration_order = verilog_parse_order(usage);
+
+  for(auto i : elaboration_order)
+    results[i] = parse(paths[i], preprocessed[i], scopes);
+
+  // The parse trees are returned in the order in which the files were
+  // given, which is what determines the top-level modules.
+  parse_treest parse_trees;
+
+  for(auto &result : results)
+  {
+    CHECK_RETURN(result.has_value());
+    parse_trees.push_back(std::move(*result));
+  }
 
   return parse_trees;
 }
@@ -381,9 +435,21 @@ symbol_tablet verilog_ebmc_languaget::elaborate_compilation_units(
 
   const bool warn_implicit_nets = cmdline.isset("warn-implicit-nets");
 
+  // Random access into the parse tree list, which is a std::list.
+  std::vector<const parse_treet *> vector;
+  vector.reserve(parse_trees.size());
+
   for(auto &parse_tree : parse_trees)
+    vector.push_back(&parse_tree);
+
+  // A package is elaborated before the compilation units that import it,
+  // which is the order in which the files were parsed.
+  for(auto i : elaboration_order)
+  {
+    DATA_INVARIANT(i < vector.size(), "elaboration order must be in range");
     verilog_elaborate_compilation_unit(
-      parse_tree, warn_implicit_nets, symbol_table, message_handler);
+      *vector[i], warn_implicit_nets, symbol_table, message_handler);
+  }
 
   return symbol_table;
 }

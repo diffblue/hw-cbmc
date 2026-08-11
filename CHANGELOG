@@ -11,6 +11,9 @@
 * Verilog: procedural assignments to hierarchical identifiers
 * SystemVerilog: ports for sequence and property declarations
 * SystemVerilog: $typename for logic types
+* SystemVerilog: packages may now be given in any order on the command
+  line, and importing a package that is not declared now yields a
+  diagnostic that names the package
 * Verilog: +define+ command-line option
 * Verilog: +incdir+ command-line option
 * Verilog: -l and +libfile+ command-line options

@@ -1,0 +1,10 @@
+CORE
+import11.sv
+
+^file import11\.sv line 2: unknown package `no_such_package'$
+^EXIT=1$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+An import of a single identifier from a package that is not declared anywhere.
