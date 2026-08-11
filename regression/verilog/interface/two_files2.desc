@@ -1,0 +1,10 @@
+CORE
+two_filesB2.sv
+two_filesA2.sv
+^\[main\.sub_inst\.assert\.1\] always main\.sub_inst\.bus\.i == 123: PROVED
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+An interface declared in one file is used by a module in another file,
+where that other file also declares an interface of its own.

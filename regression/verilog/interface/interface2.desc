@@ -1,7 +1,7 @@
 CORE
 interface2.sv
 
-^error: duplicate definition of interface foobar$
+^file .* line 6: error: duplicate definition of interface foobar$
 ^EXIT=2$
 ^SIGNAL=0$
 --
