@@ -1,0 +1,10 @@
+CORE
+two_filesB1.sv
+two_filesA1.sv --show-parse
+^Interface: bus_if$
+^Interface: some_if$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+An interface declaration in each of two separately parsed files.

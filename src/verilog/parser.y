@@ -755,6 +755,14 @@ interface_declaration:
                 }
         ;
 
+// This deviates from the IEEE 1800-2017 grammar, which uses the
+// "interface" keyword directly. We need a nonterminal to attach a
+// semantic value to the keyword, mirroring module_keyword. Note that
+// the scanner does not allocate a stack slot for keyword tokens.
+interface_keyword:
+          TOK_INTERFACE { init($$, ID_interface); }
+        ;
+
 interface_identifier_with_scope:
           interface_identifier
                 {
@@ -768,7 +776,7 @@ interface_identifier_with_scope:
 
 interface_nonansi_header:
           attribute_instance_brace
-          TOK_INTERFACE
+          interface_keyword
           lifetime_opt
           interface_identifier_with_scope
           package_import_declaration_brace
@@ -787,7 +795,7 @@ interface_nonansi_header:
 
 interface_ansi_header:
           attribute_instance_brace
-          TOK_INTERFACE
+          interface_keyword
           lifetime_opt
           interface_identifier_with_scope
           package_import_declaration_brace
