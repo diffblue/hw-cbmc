@@ -1,0 +1,10 @@
+CORE
+port_array9.sv
+--top main
+^file .* line 8: index 2 is out of the range \[0:1\] of the array of interfaces$
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+The index into an array of interface ports (1800-2017 25.4) must be within the
+declared range. There is no interface instance to select otherwise.

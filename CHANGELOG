@@ -26,6 +26,7 @@
 * SystemVerilog: named port connections and named parameter assignments
   may name formals that clash with interface, package or class names
 * SystemVerilog: $time, $stime and $realtime
+* SystemVerilog: arrays of interface ports
 * Refreshed IC3 engine --new-ic3
 * Fix: the --bdd and --aig engines no longer silently ignore assumptions
   with temporal operators; such assumptions are now marked UNSUPPORTED
