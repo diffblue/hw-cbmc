@@ -20,6 +20,9 @@
 * Verilog: -y and +libdir+ command-line options
 * SystemVerilog: ports for sequence and property declarations
 * SystemVerilog: $typename for logic types
+* SystemVerilog: packages may now be given in any order on the command
+  line, and importing a package that is not declared now yields a
+  diagnostic that names the package
 * SystemVerilog: interface ports no longer require the interface to be
   declared before the module that uses it
 * Refreshed IC3 engine --new-ic3

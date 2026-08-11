@@ -1,0 +1,9 @@
+CORE
+three_filesA1.sv
+three_filesC1.sv three_filesB1.sv --top top
+^\[top\.assert\.1\] \$bits\(top\.some_var\) == 8: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+A chain of packages, with the files given in reverse dependency order.
