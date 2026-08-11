@@ -19,6 +19,11 @@
 * SystemVerilog: interface ports no longer require the interface to be
   declared before the module that uses it
 * SystemVerilog: arrays of interface ports are now parsed (not yet elaborated)
+* SystemVerilog: named port connections and named parameter assignments
+  may name formals that clash with interface, package or class names
+* SystemVerilog: packages may now be given in any order on the command
+  line, and importing a package that is not declared now yields a
+  diagnostic that names the package
 * Refreshed IC3 engine --new-ic3
 
 # EBMC 6.0
