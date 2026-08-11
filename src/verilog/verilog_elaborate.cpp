@@ -1004,6 +1004,31 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   else if(statement.id() == ID_verilog_event_trigger)
   {
   }
+  else if(statement.id() == ID_deassign || statement.id() == ID_force)
+  {
+  }
+  else if(statement.id() == ID_release)
+  {
+  }
+  else if(statement.id() == ID_repeat)
+  {
+    collect_symbols(to_verilog_repeat(statement).body());
+  }
+  else if(statement.id() == ID_while)
+  {
+    collect_symbols(to_verilog_while(statement).body());
+  }
+  else if(statement.id() == ID_fork)
+  {
+    for(auto &operand : statement.operands())
+      collect_symbols(to_verilog_statement(operand));
+  }
+  else if(statement.id() == ID_disable)
+  {
+  }
+  else if(statement.id() == ID_parameter_decl)
+  {
+  }
   else
     DATA_INVARIANT(false, "unexpected statement: " + statement.id_string());
 }
