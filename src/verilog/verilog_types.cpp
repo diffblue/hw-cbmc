@@ -77,6 +77,18 @@ constant_exprt verilog_unsignedbv_typet::all_z_expr() const
   return constant_exprt{std::string(get_width(), 'z'), *this};
 }
 
+bool is_interface_array_type(const typet &type)
+{
+  if(type.id() != ID_array)
+    return false;
+
+  auto *element_type = &to_array_type(type).element_type();
+  while(element_type->id() == ID_array)
+    element_type = &to_array_type(*element_type).element_type();
+
+  return element_type->id() == ID_verilog_module_instance;
+}
+
 typet make_two_valued(typet src)
 {
   if(src.id() == ID_verilog_unsignedbv)
