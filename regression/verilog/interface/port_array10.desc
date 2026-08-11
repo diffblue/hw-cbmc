@@ -1,0 +1,11 @@
+CORE
+port_array10.sv
+--top main
+^\[main\.mid_inst\.leaf_inst\.assert\.1\] main\.mid_inst\.leaf_inst\.bus\[0\]\.i == 40: PROVED
+^\[main\.mid_inst\.leaf_inst\.assert\.2\] main\.mid_inst\.leaf_inst\.bus\[1\]\.i == 50: PROVED
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+An array of interface ports (1800-2017 25.4) may be passed on to a submodule
+by giving its name, without repeating the array elements.
