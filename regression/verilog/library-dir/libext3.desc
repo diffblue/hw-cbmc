@@ -1,0 +1,6 @@
+CORE
+library_dir1.sv
+-y library_dir1_lib +libext+.xyz --bound 10
+module `sub' not found
+^EXIT=2$
+^SIGNAL=0$

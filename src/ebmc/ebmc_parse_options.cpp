@@ -132,6 +132,7 @@ int ebmc_parse_optionst::doit()
   plus_arg("incdir");
   plus_arg("libfile");
   plus_arg("libdir");
+  plus_arg("libext");
 
   if(config.set(cmdline))
   {
@@ -541,6 +542,7 @@ void ebmc_parse_optionst::help()
     " {y+define+}{uvar}[={uvalue}]   \t set preprocessor define(s)\n"
     " {y-y} {upath}                  \t set library directory\n"
     " {y+libdir+}{upath}[{y+}{upath}...] \t set library directory\n"
+    " {y+libext+}{u.ext}[{y+}{u.ext}...] \t set library file extension(s)\n"
     " {y-l} {ufile}                  \t library file (modules are not top-level)\n"
     " {y+libfile+}{ufile}            \t library file (modules are not top-level)\n"
     " {y--systemverilog}             \t force SystemVerilog instead of Verilog\n"
