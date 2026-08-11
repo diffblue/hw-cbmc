@@ -442,6 +442,12 @@ symbol_tablet verilog_ebmc_languaget::elaborate_compilation_units(
   for(auto &parse_tree : parse_trees)
     vector.push_back(&parse_tree);
 
+  // Every parse tree is elaborated exactly once. Any parse tree that is added
+  // after parsing, e.g. a library file, must extend the elaboration order.
+  DATA_INVARIANT(
+    elaboration_order.size() == vector.size(),
+    "elaboration order must cover all parse trees");
+
   // A package is elaborated before the compilation units that import it,
   // which is the order in which the files were parsed.
   for(auto i : elaboration_order)
@@ -566,8 +572,8 @@ void verilog_ebmc_languaget::resolve_library_modules(parse_treest &parse_trees)
 
             verilog_scopest scopes;
             parse_trees.push_back(parse(path, scopes));
-            // Library files are parsed after the files given on the command
-            // line, and are elaborated in that order also.
+            // The library file is parsed after the given files, and hence is
+            // also elaborated last.
             elaboration_order.push_back(parse_trees.size() - 1);
             found = true;
             found_any = true;
