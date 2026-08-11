@@ -130,6 +130,7 @@ int ebmc_parse_optionst::doit()
   // Process Verilog-style +plusarg+ arguments.
   plus_arg("incdir");
   plus_arg("libfile");
+  plus_arg("libdir");
 
   if(config.set(cmdline))
   {
@@ -536,6 +537,8 @@ void ebmc_parse_optionst::help()
     " {y-I} {upath}                  \t set include path\n"
     " {y+incdir+}{upath}[{y+}{upath}...] \t set include path\n"
     " {y-D} {uvar}[={uvalue}]        \t set preprocessor define\n"
+    " {y-y} {upath}                  \t set library directory\n"
+    " {y+libdir+}{upath}[{y+}{upath}...] \t set library directory\n"
     " {y-l} {ufile}                  \t library file (modules are not top-level)\n"
     " {y+libfile+}{ufile}            \t library file (modules are not top-level)\n"
     " {y--systemverilog}             \t force SystemVerilog instead of Verilog\n"

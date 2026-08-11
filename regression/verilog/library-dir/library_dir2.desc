@@ -1,0 +1,6 @@
+CORE
+library_dir1.sv
++libdir+library_dir1_lib --bound 10
+^\[.*p1\] .* REFUTED$
+^EXIT=10$
+^SIGNAL=0$

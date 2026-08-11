@@ -53,6 +53,7 @@ public:
         "(liveness-to-safety)(buechi)"
         "I:(incdir):D:"
         "l:(libfile):"
+        "y:(libdir):"
         "(preprocess)(systemverilog)(vl2smv-extensions)"
         "(warn-implicit-nets)",
         argc,
