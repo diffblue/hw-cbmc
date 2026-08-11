@@ -273,6 +273,7 @@ protected:
 
   // module items
   transt convert_module_items(const symbolt &);
+  void synth_module_items(const symbolt &, transt &);
   void synth_module_item(const verilog_module_itemt &, transt &);
   void synth_always_base(const verilog_always_baset &);
   void synth_assertion_item(const verilog_assertion_itemt &);
@@ -338,7 +339,6 @@ protected:
 
   void expand_module_instance(
     const symbolt &module_symbol,
-    const transt &trans_inst,
     const verilog_instt::instancet &,
     transt &trans_dest);
 

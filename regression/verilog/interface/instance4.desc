@@ -1,9 +1,10 @@
-KNOWNBUG
+CORE
 instance4.sv
---bound 10
-^\[main\.p1\] always main\.ctr\.count <= 10: REFUTED$
-^EXIT=0$
+--bound 11
+^\[main\.p1\] always main\.ctr\.count <= 4'b1010: REFUTED$
+^EXIT=10$
 ^SIGNAL=0$
 --
 --
-The behavior of the counter in the interface instance is overconstrainted.
+The counter in the interface instance is incremented via a hierarchical
+identifier from the enclosing module, and exceeds 10 after 11 clock edges.
