@@ -1,0 +1,7 @@
+CORE
+shared_cache_bug.sv
+--top shared_cache_bug --process 45nm
+^  Register bits:       64$
+^  Total:               673\.3 um2$
+^EXIT=0$
+^SIGNAL=0$

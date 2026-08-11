@@ -1,0 +1,12 @@
+# Extracted from Rocket.cell_pwr_area.rpt (see SHA256SUMS),
+# RTL-Timer commit 206ff4078368c251d2fafaffcc648282c68316f1,
+# by fetch_reports.sh: the rows with attribute 'h'
+# (hierarchical cell). Columns: cell, internal/switching/
+# leakage/total power (W), (% of total), area (um2), attrs.
+csr                        0.0145 9.709e-03 2.442e-04    0.0244 (16.12%)  8.968e+03 h
+div                        0.0143    0.0161 1.545e-04    0.0306 (20.22%)  5.734e+03 h
+ibuf                    6.378e-03 6.363e-03 1.038e-04    0.0128 ( 8.48%)  2.998e+03 h
+alu                     3.399e-03 3.741e-03 6.581e-05 7.206e-03 ( 4.76%)  2.100e+03 h
+bpu                     8.948e-04 7.389e-04 1.296e-05 1.647e-03 ( 1.09%)   496.8886 h
+POWERGATING_clock_n12112_0 5.453e-05 6.606e-05 2.035e-07 1.208e-04 ( 0.08%)    7.7140 h
+POWERGATING_clock_mem_pc_valid_0 5.433e-05 3.528e-06 2.022e-07 5.806e-05 ( 0.04%)    7.7140 h

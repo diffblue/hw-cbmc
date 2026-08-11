@@ -1,0 +1,6 @@
+CORE
+../blocks/adder.sv
+--top adder --process 45nm --clock-freq 1GHz
+^error: invalid --clock-freq value: 1GHz$
+^EXIT=1$
+^SIGNAL=0$

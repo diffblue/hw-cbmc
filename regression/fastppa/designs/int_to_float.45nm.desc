@@ -1,0 +1,7 @@
+CORE
+int_to_float.sv
+--top int_to_float --process 45nm
+^  Register bits:       178$
+^  Total:               1549\.6 um2$
+^EXIT=0$
+^SIGNAL=0$
