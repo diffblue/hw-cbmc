@@ -1,11 +1,11 @@
-KNOWNBUG
+CORE
 port_array3.sv
-
-^\[main\.sub_inst\.assert\.1\] always main\.sub_inst\.bus\[0\]\.i == 123: PROVED
+--top main
+^\[main\.sub_inst\.assert\.1\] main\.sub_inst\.bus\[0\]\.i == 123: PROVED
+^\[main\.sub_inst\.assert\.2\] main\.sub_inst\.bus\[1\]\.i == 123: PROVED
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-Arrays of interface ports (1800-2017 25.4) parse, but are not elaborated yet.
-Elaborating the array elements requires support for arrays of interface
-instances.
+Arrays of interface ports (1800-2017 25.4). Each array element is bound to the
+corresponding interface instance given in the port connection.

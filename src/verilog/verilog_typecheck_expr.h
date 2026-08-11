@@ -206,6 +206,8 @@ protected:
   [[nodiscard]] exprt convert_expr_function_call(function_call_exprt);
   [[nodiscard]] exprt convert_system_function(function_call_exprt);
   [[nodiscard]] exprt convert_bit_select_expr(verilog_bit_select_exprt);
+  [[nodiscard]] exprt
+  convert_interface_array_element(verilog_bit_select_exprt);
   [[nodiscard]] exprt convert_replication_expr(replication_exprt);
   [[nodiscard]] exprt convert_power_expr(power_exprt);
   [[nodiscard]] exprt convert_shl_expr(shl_exprt);

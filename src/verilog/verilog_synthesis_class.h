@@ -361,6 +361,17 @@ protected:
     const source_locationt &,
     transt &);
 
+  void bind_interface_instance(
+    const irep_idt &port_identifier,
+    const irep_idt &bound_instance_identifier,
+    transt &);
+
+  void bind_interface_instance_array(
+    const irep_idt &port_identifier,
+    const typet &port_type,
+    const exprt &value,
+    transt &);
+
   void replace_by_wire(exprt &expr, const symbolt &base);
 
   // Mark the local variables of a function or task
