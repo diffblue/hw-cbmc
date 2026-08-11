@@ -1203,7 +1203,7 @@ ansi_port_declaration:
 // an identifier that is followed by another identifier, with or without an
 // intervening ".modport", can only be an interface port.
 interface_port_declaration:
-          interface_identifier port_identifier
+          interface_identifier port_identifier unpacked_dimension_brace
                 {
                   // Interface port: myInterface bus
                   PARSER.scopes.add_identifier(stack_expr($2).get(ID_base_name), verilog_scopet::VAR);
@@ -1212,8 +1212,12 @@ interface_port_declaration:
                   auto interface_base_name = stack_expr($1).get(ID_base_name);
                   stack_expr($$).type() = typet(ID_verilog_interface);
                   stack_expr($$).type().set(ID_base_name, interface_base_name);
+                  // The interface type goes onto the declaration,
+                  // and the unpacked_array_type goes onto the declarator.
+                  addswap($2, ID_type, $3);
                   mto($$, $2); /* declarator */ }
         | interface_identifier '.' non_type_identifier port_identifier
+          unpacked_dimension_brace
                 {
                   // Interface port with modport: myInterface.some_port bus
                   PARSER.scopes.add_identifier(stack_expr($4).get(ID_base_name), verilog_scopet::VAR);
@@ -1223,6 +1227,9 @@ interface_port_declaration:
                   stack_expr($$).type() = typet(ID_verilog_interface);
                   stack_expr($$).type().set(ID_base_name, interface_base_name);
                   stack_expr($$).type().set(ID_verilog_modport, stack_expr($3).get(ID_base_name));
+                  // The interface type goes onto the declaration,
+                  // and the unpacked_array_type goes onto the declarator.
+                  addswap($4, ID_type, $5);
                   mto($$, $4); /* declarator */ }
         ;
 

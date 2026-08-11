@@ -1,0 +1,11 @@
+KNOWNBUG
+port_array3.sv
+
+^\[main\.sub_inst\.assert\.1\] always main\.sub_inst\.bus\[0\]\.i == 123: PROVED
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Arrays of interface ports (1800-2017 25.4) parse, but are not elaborated yet.
+Elaborating the array elements requires support for arrays of interface
+instances.

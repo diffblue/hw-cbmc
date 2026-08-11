@@ -18,6 +18,7 @@
 * Verilog: -y and +libdir+ command-line options
 * SystemVerilog: interface ports no longer require the interface to be
   declared before the module that uses it
+* SystemVerilog: arrays of interface ports are now parsed (not yet elaborated)
 * Refreshed IC3 engine --new-ic3
 
 # EBMC 6.0
