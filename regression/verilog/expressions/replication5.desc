@@ -1,0 +1,8 @@
+CORE
+replication5.sv
+
+^file .* line 6: a replication with a zero replication constant is only allowed inside a concatenation$
+^EXIT=2$
+^SIGNAL=0$
+--
+--

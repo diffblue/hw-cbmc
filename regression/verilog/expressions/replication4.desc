@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 replication4.sv
 
 ^\[main\.assert\.1\] main\.p == 4'b1001: PROVED .*$
@@ -6,7 +6,8 @@ replication4.sv
 ^EXIT=0$
 ^SIGNAL=0$
 --
+^warning: ignoring
 --
-The zero-width replication is fine in the net declaration, but the
-constant-expression interpreter does not evaluate it, and hence gives
-"expected constant expression" for the localparam.
+The zero-width replication contributes nothing to the concatenation
+(1800-2017 11.4.12.1), both in the localparam and in the net declaration.
+The assertions confirm the resulting values.

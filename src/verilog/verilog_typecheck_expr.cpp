@@ -752,7 +752,14 @@ exprt verilog_typecheck_exprt::convert_expr_concatenation(
 
   Forall_operands(it, expr)
   {
-    convert_expr(*it);
+    if(it->id() == ID_replication)
+    {
+      // A replication with a zero replication constant is allowed when it
+      // appears directly within a concatenation (1800-2017 11.4.12.1).
+      *it = convert_replication_expr(to_replication_expr(std::move(*it)), true);
+    }
+    else
+      convert_expr(*it);
 
     // check if there's an unsized literal (1800-2017 11.4.12)
     if(
@@ -774,6 +781,14 @@ exprt verilog_typecheck_exprt::convert_expr_concatenation(
     }
 
     width += get_width(*it);
+  }
+
+  // A zero-width operand is only allowed when at least one of the operands
+  // has nonzero size (1800-2017 11.4.12.1).
+  if(width == 0)
+  {
+    throw errort().with_location(expr.source_location())
+      << "concatenation requires at least one operand of nonzero size";
   }
 
   // Cocatenations are unsigned regardless of the operands
@@ -3342,7 +3357,9 @@ Function: verilog_typecheck_exprt::convert_replication_expr
 
 \*******************************************************************/
 
-exprt verilog_typecheck_exprt::convert_replication_expr(replication_exprt expr)
+exprt verilog_typecheck_exprt::convert_replication_expr(
+  replication_exprt expr,
+  bool zero_allowed)
 {
   exprt &op1=expr.op1();
 
@@ -3359,8 +3376,14 @@ exprt verilog_typecheck_exprt::convert_replication_expr(replication_exprt expr)
       << "number of replications must not be negative";
   }
 
-  // IEEE 1800-2017 explicitly allows replication with
-  // count zero.
+  // 1800-2017 11.4.12.1 allows replication with count zero, but only
+  // when the replication appears directly within a concatenation.
+  if(op0 == 0 && !zero_allowed)
+  {
+    throw errort().with_location(expr.source_location())
+      << "a replication with a zero replication constant is only allowed "
+         "inside a concatenation";
+  }
 
   {
     expr.op0()=from_integer(op0, natural_typet());
@@ -3507,7 +3530,11 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     }
   }
   else if(expr.id()==ID_replication)
-    return convert_replication_expr(to_replication_expr(expr));
+  {
+    // Not inside a concatenation, hence a zero replication constant
+    // is not allowed.
+    return convert_replication_expr(to_replication_expr(expr), false);
+  }
   else if(expr.id() == ID_and || expr.id() == ID_or)
   {
     Forall_operands(it, expr)

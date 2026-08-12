@@ -206,7 +206,12 @@ protected:
   [[nodiscard]] exprt convert_expr_function_call(function_call_exprt);
   [[nodiscard]] exprt convert_system_function(function_call_exprt);
   [[nodiscard]] exprt convert_bit_select_expr(verilog_bit_select_exprt);
-  [[nodiscard]] exprt convert_replication_expr(replication_exprt);
+  /// Convert a replication expression. Per 1800-2017 11.4.12.1, a
+  /// replication with a zero replication constant is only allowed when it
+  /// appears directly within a concatenation; zero_allowed states whether
+  /// that is the case.
+  [[nodiscard]] exprt
+  convert_replication_expr(replication_exprt, bool zero_allowed);
   [[nodiscard]] exprt convert_power_expr(power_exprt);
   [[nodiscard]] exprt convert_shl_expr(shl_exprt);
   void implicit_typecast(exprt &, const typet &type);

@@ -18,6 +18,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "verilog_expr.h"
 #include "verilog_types.h"
 
+#include <algorithm>
+
 static constant_exprt
 countones(const constant_exprt &expr, const namespacet &ns)
 {
@@ -61,6 +63,62 @@ static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
 
   // Remember the source location.
   auto location = expr.source_location();
+
+  // Restores the annotations above on the given expression.
+  auto restore_annotations =
+    [&expr_verilog_type, &expr_identifier, &location](exprt result) -> exprt
+  {
+    if(expr_verilog_type != irep_idt())
+      result.type().set(ID_C_verilog_type, expr_verilog_type);
+
+    if(expr_identifier != irep_idt())
+      result.type().set(ID_C_identifier, expr_identifier);
+
+    if(location.is_not_nil())
+      result.add_source_location() = location;
+
+    return result;
+  };
+
+  // The conditional operator is short-circuited: 1800-2017 11.4.11 says
+  // that the second operand is evaluated when the condition is true, and
+  // the third operand is evaluated when the condition is false. Both
+  // operands are evaluated only when the condition is ambiguous, in which
+  // case the type checker has rewritten the expression already.
+  if(expr.id() == ID_if)
+  {
+    auto &if_expr = to_if_expr(expr);
+    if_expr.cond() = verilog_simplifier_rec(if_expr.cond(), ns);
+
+    if(if_expr.cond().is_true())
+      return restore_annotations(
+        verilog_simplifier_rec(if_expr.true_case(), ns));
+    else if(if_expr.cond().is_false())
+      return restore_annotations(
+        verilog_simplifier_rec(if_expr.false_case(), ns));
+  }
+
+  // Operands of a concatenation that have zero width do not contribute
+  // anything to the result (1800-2017 11.4.12.1). Remove them, to enable
+  // the simplification of the remaining operands.
+  if(expr.id() == ID_concatenation)
+  {
+    auto is_zero_width = [](const exprt &op)
+    {
+      auto bitvector_type = type_try_dynamic_cast<bitvector_typet>(op.type());
+      return bitvector_type != nullptr && bitvector_type->get_width() == 0;
+    };
+
+    auto &operands = expr.operands();
+
+    // Do not create an empty concatenation.
+    if(!std::all_of(operands.begin(), operands.end(), is_zero_width))
+    {
+      operands.erase(
+        std::remove_if(operands.begin(), operands.end(), is_zero_width),
+        operands.end());
+    }
+  }
 
   // Do any operands first.
   bool operands_are_constant = true;
@@ -142,12 +200,22 @@ static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
   {
     auto &replication = to_replication_expr(expr);
     auto times = numeric_cast_v<std::size_t>(replication.times());
-    // lower to a concatenation
-    exprt::operandst ops;
-    ops.reserve(times);
-    for(std::size_t i = 0; i < times; i++)
-      ops.push_back(replication.op());
-    expr = concatenation_exprt{ops, expr.type()};
+
+    if(times == 0)
+    {
+      // A zero replication constant yields a zero-width result
+      // (1800-2017 11.4.12.1). Avoid an empty concatenation.
+      expr = from_integer(0, expr.type());
+    }
+    else
+    {
+      // lower to a concatenation
+      exprt::operandst ops;
+      ops.reserve(times);
+      for(std::size_t i = 0; i < times; i++)
+        ops.push_back(replication.op());
+      expr = concatenation_exprt{ops, expr.type()};
+    }
   }
   else if(expr.id() == ID_onehot)
   {
@@ -166,17 +234,8 @@ static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
   // the standard's definition of 'constant expression'.
   auto simplified_expr = simplify_expr(expr, ns);
 
-  // Restore the Verilog type, if any.
-  if(expr_verilog_type != irep_idt())
-    simplified_expr.type().set(ID_C_verilog_type, expr_verilog_type);
-
-  if(expr_identifier != irep_idt())
-    simplified_expr.type().set(ID_C_identifier, expr_identifier);
-
-  if(location.is_not_nil())
-    simplified_expr.add_source_location() = location;
-
-  return simplified_expr;
+  // Restore the Verilog type and the source location, if any.
+  return restore_annotations(std::move(simplified_expr));
 }
 
 exprt verilog_simplifier(exprt expr, const namespacet &ns)
