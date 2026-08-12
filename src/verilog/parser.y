@@ -3995,11 +3995,11 @@ case_generate_item:
 
 generate_block:
           generate_item
-        | TOK_BEGIN generate_item_brace TOK_END
+        | TOK_BEGIN generate_item_brace TOK_END end_identifier_opt
                 { init($$, ID_generate_block); swapop($$, $2); }
         | TOK_BEGIN TOK_COLON any_identifier
                 { push_scope(stack_expr($3).get(ID_base_name), ".", verilog_scopet::BLOCK); }
-          generate_item_brace TOK_END
+          generate_item_brace TOK_END end_identifier_opt
                 { pop_scope();
                   init($$, ID_generate_block);
                   swapop($$, $5);
@@ -5564,7 +5564,8 @@ endmodule_identifier_opt:
 
 // Optional block name repeated after the keyword that ends a named
 // construct, e.g. "endfunction : is_width_valid" (IEEE 1800-2017 A.9.3),
-// "end : blk" for a named sequential block (9.3.4, A.6.3), and
+// "end : blk" for a named sequential or generate block (9.3.4, A.4.2,
+// A.6.3), and
 // "join : blk" for a named parallel block (9.3.4).
 // The identifier is accepted and discarded, mirroring the treatment of
 // endmodule_identifier_opt and friends.
