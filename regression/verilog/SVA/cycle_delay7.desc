@@ -1,0 +1,9 @@
+CORE
+cycle_delay7.sv
+
+^file cycle_delay7\.sv line \d+: delay must not be negative$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
