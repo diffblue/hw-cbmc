@@ -1,0 +1,16 @@
+CORE
+array_of_structs3.sv
+--module main --bound 0
+^\[main\.0\.p0\] main\.b\[0\] == 16'h102: PROVED up to bound 0$
+^\[main\.0\.p1\] main\.b\[1\] == 16'h304: PROVED up to bound 0$
+^\[main\.0\.p2\] main\.b\[2\] == 16'h506: PROVED up to bound 0$
+^\[main\.1\.p3\] main\.c\[0\]\.hi == 17 && main\.c\[0\]\.lo == 34: PROVED up to bound 0$
+^\[main\.1\.p4\] main\.c\[1\]\.hi == 51 && main\.c\[1\]\.lo == 68: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Assignment between unpacked arrays of equivalent types, in both
+directions, with a check on the order of the array elements and on the
+order of the struct members.
