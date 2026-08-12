@@ -941,6 +941,18 @@ public:
     return find(ID_variables).get_named_sub();
   }
 
+  // The scope of the loop generate construct a genvar is local to,
+  // for those genvars that are local to a loop. 1800-2017 27.4.
+  named_subt &loop_scopes()
+  {
+    return add("loop_scopes").get_named_sub();
+  }
+
+  const named_subt &loop_scopes() const
+  {
+    return find("loop_scopes").get_named_sub();
+  }
+
   const verilog_module_itemt &module_item() const
   {
     return static_cast<const verilog_module_itemt &>(op0());
