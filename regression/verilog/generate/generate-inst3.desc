@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 generate-inst3.sv
 --bound 0
 ^\[main\.property1\] always main\.out == main\.in: PROVED up to bound 0$
@@ -6,4 +6,5 @@ generate-inst3.sv
 ^SIGNAL=0$
 --
 --
-The parameter is not passed correctly.
+The genvar in the part selects of the port connections is evaluated per
+iteration of the loop.
