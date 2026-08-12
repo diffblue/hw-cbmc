@@ -162,8 +162,11 @@ void verilog_typecheckt::elaborate_module_instances(
   }
   else if(module_item.id() == ID_set_genvars)
   {
-    elaborate_module_instances(
-      to_verilog_set_genvars(module_item).module_item());
+    auto old_genvars = genvars;
+    auto &set_genvars = to_verilog_set_genvars(module_item);
+    genvars = set_genvars.build_map();
+    elaborate_module_instances(set_genvars.module_item());
+    genvars = std::move(old_genvars);
   }
 }
 
@@ -295,8 +298,11 @@ void verilog_typecheckt::parameterize_instantiated_modules(
   }
   else if(module_item.id() == ID_set_genvars)
   {
-    parameterize_instantiated_modules(
-      to_verilog_set_genvars(module_item).module_item());
+    auto old_genvars = genvars;
+    auto &set_genvars = to_verilog_set_genvars(module_item);
+    genvars = set_genvars.build_map();
+    parameterize_instantiated_modules(set_genvars.module_item());
+    genvars = std::move(old_genvars);
   }
 }
 
