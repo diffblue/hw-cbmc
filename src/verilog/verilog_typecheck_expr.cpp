@@ -425,6 +425,14 @@ void verilog_typecheck_exprt::assignment_conversion(
     lhs_type.id() == ID_array &&
     lhs_type.get(ID_C_verilog_type) == ID_verilog_unpacked_array)
   {
+    // 1800-2017 7.6: an unpacked array can be assigned an unpacked array
+    // of an equivalent type.
+    if(equivalent_type(lhs_type, rhs.type()))
+    {
+      rhs = typecast_exprt{rhs, lhs_type};
+      return;
+    }
+
     // assignment of a non-matching type to unpacked array
     throw errort().with_location(rhs.source_location())
       << "failed to convert `" << to_string(original_rhs_type) << "' to `"
@@ -2741,6 +2749,108 @@ void verilog_typecheck_exprt::decay_to_vector(exprt &expr) const
   enum_decay(expr);
   struct_decay(expr);
   union_decay(expr);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::is_signed_type
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool verilog_typecheck_exprt::is_signed_type(const typet &type)
+{
+  // 1800-2017 7.2.1 and 7.4.1: packed structs, packed unions and packed
+  // arrays are unsigned unless declared signed, and hence the signed types
+  // are the vector types with a signed range.
+  return type.id() == ID_signedbv || type.id() == ID_verilog_signedbv;
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::is_integral_type
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool verilog_typecheck_exprt::is_integral_type(const typet &type)
+{
+  // 1800-2017 6.11.1: the integral types are the packed arrays, the packed
+  // structs and unions, and the built-in integral types.
+  if(type.id() == ID_array)
+    return type.get(ID_C_verilog_type) == ID_verilog_packed_array;
+  else if(type.id() == ID_struct || type.id() == ID_union)
+    return type.get_bool(ID_packed);
+  else
+  {
+    return type.id() == ID_bool || type.id() == ID_unsignedbv ||
+           type.id() == ID_signedbv || type.id() == ID_verilog_unsignedbv ||
+           type.id() == ID_verilog_signedbv;
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::equivalent_type
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool verilog_typecheck_exprt::equivalent_type(
+  const typet &type1,
+  const typet &type2) const
+{
+  // 1800-2017 6.22.1 (a): identical types are equivalent.
+  if(type1 == type2)
+    return true;
+
+  // 1800-2017 6.22.1 (c): fixed-size unpacked arrays are equivalent when
+  // they have equal size and equivalent element types.
+  if(type1.id() == ID_array && type2.id() == ID_array)
+  {
+    auto &array_type1 = to_array_type(type1);
+    auto &array_type2 = to_array_type(type2);
+
+    if(
+      type1.get(ID_C_verilog_type) == ID_verilog_unpacked_array &&
+      type2.get(ID_C_verilog_type) == ID_verilog_unpacked_array)
+    {
+      return array_type1.size() == array_type2.size() &&
+             equivalent_type(
+               array_type1.element_type(), array_type2.element_type());
+    }
+  }
+
+  // 1800-2017 6.22.1 (d): packed arrays, packed structs, packed unions and
+  // the built-in integral types are equivalent when they have the same
+  // number of bits, are either all 2-state or all 4-state, and are either
+  // all signed or all unsigned.  Note that the elaborated types do not
+  // record whether a vector was declared as 2-state or 4-state, and hence
+  // the 2-state/4-state condition only rules out the types that carry x
+  // and z.
+  if(is_integral_type(type1) && is_integral_type(type2))
+  {
+    return get_width(type1) == get_width(type2) &&
+           is_four_valued(type1) == is_four_valued(type2) &&
+           is_signed_type(type1) == is_signed_type(type2);
+  }
+
+  return false;
 }
 
 /*******************************************************************\
