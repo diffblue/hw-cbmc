@@ -1,0 +1,10 @@
+CORE
+named_port_connection4.sv
+
+^file .* line 12: syntax error, unexpected '\.', expecting '\)' before '\.'$
+^EXIT=1$
+^SIGNAL=0$
+--
+--
+A null element as the first element of a list of named port connections
+remains a syntax error.

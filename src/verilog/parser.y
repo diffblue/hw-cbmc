@@ -3879,6 +3879,15 @@ named_port_connection_brace:
                 { init($$); mto($$, $1); }
         | named_port_connection_brace ',' named_port_connection
                 { $$=$1;    mto($$, $3); }
+        // The next rule is not in 1800-2017: A.4.1.1 permits a null element
+        // in ordered_port_connection only.  A null element in a list of
+        // named port connections nevertheless occurs in practice, e.g., as
+        // the result of macro expansion.  Unlike in an ordered list, where
+        // the position of a null element identifies the port that is left
+        // unconnected, a null element in a named list carries no
+        // information at all, and hence is discarded here.
+        | named_port_connection_brace ','
+                { $$=$1; }
         ;
 
 named_port_connection:

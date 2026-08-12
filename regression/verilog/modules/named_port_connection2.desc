@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 named_port_connection2.sv
 
 ^\[main\.assert\.1\] main\.m1\.a == 1: PROVED .*$
@@ -7,5 +7,3 @@ named_port_connection2.sv
 ^SIGNAL=0$
 --
 --
-A null element in a named port connection list is rejected by the parser:
-syntax error, unexpected ','.

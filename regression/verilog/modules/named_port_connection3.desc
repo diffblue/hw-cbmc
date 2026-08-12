@@ -1,0 +1,10 @@
+CORE
+named_port_connection3.sv
+
+^\[main\.assert\.1\] main\.m1\.a == 1 && main\.m1\.c == 1: PROVED .*$
+^\[main\.assert\.2\] main\.m2\.a == 1 && main\.m2\.c == 1: PROVED .*$
+^\[main\.assert\.3\] main\.m3\.a == 1: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
