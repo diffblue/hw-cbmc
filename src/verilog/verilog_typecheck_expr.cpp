@@ -1731,17 +1731,43 @@ exprt verilog_typecheck_exprt::genvar_constant(
   const irep_idt &base_name,
   const source_locationt &source_location)
 {
-  auto value_opt = genvar_value(base_name);
+  auto genvar_opt = genvar_lookup(base_name);
 
   // Genvars are declared without a value, and hence may be unset.
-  if(!value_opt.has_value() || *value_opt < 0)
+  if(!genvar_opt.has_value() || genvar_opt->value < 0)
     throw errort().with_location(source_location) << "invalid genvar value";
 
-  auto &value = *value_opt;
+  auto &value = genvar_opt->value;
   std::size_t bits = address_bits(value + 1);
 
   return from_integer(value, unsignedbv_typet{bits})
     .with_source_location(source_location);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::genvart::shadows
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool verilog_typecheck_exprt::genvart::shadows(const symbolt *symbol) const
+{
+  // A genvar that is declared separately from the loop generate construct
+  // has a symbol of its own, which is found by resolve.
+  if(!is_loop_local())
+    return false;
+
+  // A loop-local genvar shadows anything that is not declared inside the
+  // loop. Note that a clash with a symbol in the scope that contains the
+  // loop is rejected when the genvar is declared.
+  return symbol == nullptr ||
+         !has_prefix(id2string(symbol->name), id2string(loop_scope));
 }
 
 /*******************************************************************\
@@ -1876,6 +1902,15 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
   else
   {
     symbol = resolve(base_name);
+
+    // A genvar that is declared in the header of a loop generate construct
+    // is local to that loop, 1800-2017 27.4. It does not have a symbol of
+    // its own, and takes precedence over any symbol that is visible from
+    // the scope that contains the loop.
+    auto genvar = genvar_lookup(base_name);
+
+    if(genvar.has_value() && genvar->shadows(symbol))
+      return genvar_constant(base_name, expr.source_location());
   }
 
   if(symbol != nullptr)
@@ -1905,13 +1940,6 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
     {
       return symbol->symbol_expr().with_source_location(expr);
     }
-  }
-  else if(genvar_value(base_name).has_value())
-  {
-    // A genvar that is declared in the header of a loop generate construct
-    // is local to that loop, and hence does not have a symbol.
-    // 1800-2017 27.4.
-    return genvar_constant(base_name, expr.source_location());
   }
   else
   {

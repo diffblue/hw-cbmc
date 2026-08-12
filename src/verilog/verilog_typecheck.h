@@ -278,10 +278,10 @@ protected:
   generate_for_loop_index(const verilog_module_itemt &initialization) const;
 
   // generate state
-  typedef std::map<irep_idt, mp_integer> genvarst;
+  typedef std::map<irep_idt, genvart> genvarst;
   genvarst genvars;
 
-  std::optional<mp_integer> genvar_value(const irep_idt &identifier) override
+  std::optional<genvart> genvar_lookup(const irep_idt &identifier) override
   {
     genvarst::const_iterator it = genvars.find(identifier);
     if(it == genvars.end())
