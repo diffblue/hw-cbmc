@@ -1904,6 +1904,11 @@ void verilog_typecheckt::preresolve_identifiers(exprt &expr)
         {
           identifier_expr.preresolved(symbol_ptr->name);
         }
+        else if(genvar_value(base_name).has_value())
+        {
+          // A genvar that is local to a loop generate construct, 1800-2017
+          // 27.4. These do not have a symbol.
+        }
         else
         {
           throw errort().with_location(node.source_location())

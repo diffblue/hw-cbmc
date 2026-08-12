@@ -1,0 +1,10 @@
+CORE
+genvar_scope3.sv
+
+^file .* line 8: definition of symbol `gi' conflicts with earlier definition at line 6$
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+A genvar declared in the header of a loop generate construct must not clash
+with a symbol in the enclosing scope.

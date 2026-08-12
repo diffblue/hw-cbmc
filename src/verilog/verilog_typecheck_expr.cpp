@@ -1717,6 +1717,35 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::genvar_constant
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::genvar_constant(
+  const irep_idt &base_name,
+  const source_locationt &source_location)
+{
+  auto value_opt = genvar_value(base_name);
+
+  // Genvars are declared without a value, and hence may be unset.
+  if(!value_opt.has_value() || *value_opt < 0)
+    throw errort().with_location(source_location) << "invalid genvar value";
+
+  auto &value = *value_opt;
+  std::size_t bits = address_bits(value + 1);
+
+  return from_integer(value, unsignedbv_typet{bits})
+    .with_source_location(source_location);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::resolve
 
   Inputs:
@@ -1863,20 +1892,7 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
     else if(symbol->type.id() == ID_verilog_genvar)
     {
       // This must be a constant.
-      mp_integer int_value = genvar_value(base_name);
-
-      if(int_value<0)
-      {
-        throw errort().with_location(expr.source_location())
-          << "invalid genvar value";
-      }
-
-      std::size_t bits = address_bits(int_value + 1);
-      source_locationt source_location=expr.source_location();
-
-      exprt result=from_integer(int_value, unsignedbv_typet(bits));
-      result.add_source_location()=source_location;
-      return result;
+      return genvar_constant(base_name, expr.source_location());
     }
     else if(
       symbol->type.id() == ID_verilog_sva_named_sequence ||
@@ -1889,6 +1905,13 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
     {
       return symbol->symbol_expr().with_source_location(expr);
     }
+  }
+  else if(genvar_value(base_name).has_value())
+  {
+    // A genvar that is declared in the header of a loop generate construct
+    // is local to that loop, and hence does not have a symbol.
+    // 1800-2017 27.4.
+    return genvar_constant(base_name, expr.source_location());
   }
   else
   {
