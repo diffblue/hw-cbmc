@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "sva_expr.h"
 #include "verilog_typecheck_base.h"
 
+#include <optional>
 #include <stack>
 
 class function_call_exprt;
@@ -128,11 +129,15 @@ protected:
 
   ranget convert_range(const exprt &range);
 
-  // to be overridden
-  virtual mp_integer genvar_value(const irep_idt &identifier)
+  // The value of the genvar with the given base name, if any.
+  // To be overridden.
+  virtual std::optional<mp_integer> genvar_value(const irep_idt &)
   {
-    PRECONDITION(false);
+    return {};
   }
+
+  // Turn the value of a genvar into a constant.
+  exprt genvar_constant(const irep_idt &base_name, const source_locationt &);
 
   virtual void elaborate_symbol_rec(irep_idt)
   {

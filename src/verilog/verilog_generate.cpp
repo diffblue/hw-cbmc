@@ -64,7 +64,8 @@ Function: verilog_typecheckt::elaborate_generate_decl
 
 void verilog_typecheckt::elaborate_generate_decl(
   const verilog_generate_declt &generate_decl,
-  module_itemst &)
+  module_itemst &,
+  bool loop_local)
 {
   symbolt symbol{irep_idt{}, verilog_genvar_typet{}, mode};
 
@@ -87,7 +88,13 @@ void verilog_typecheckt::elaborate_generate_decl(
 
     genvars[symbol.base_name] = -1;
 
-    add_symbol(symbol);
+    // A genvar that is declared in the header of a loop generate construct
+    // is local to that loop (1800-2017 27.4), and hence is not added to
+    // the enclosing scope. Its value is tracked in the genvars map, and
+    // references to it are resolved using that map. We still report a
+    // clash with a symbol that is already present in the enclosing scope.
+    if(!loop_local || symbol_table.lookup(symbol.name) != nullptr)
+      add_symbol(symbol);
 
     // When used in a for loop, these come with an initial value.
     if(declarator.has_value())
@@ -339,7 +346,22 @@ void verilog_typecheckt::elaborate_generate_for(
   const verilog_generate_fort &for_statement,
   module_itemst &dest)
 {
-  elaborate_generate_item(for_statement.init(), dest);
+  // A genvar that is declared in the header of the loop generate construct
+  // is local to that loop, 1800-2017 27.4. Remember its name, to remove it
+  // from the genvar environment once the loop has been elaborated.
+  std::vector<irep_idt> loop_local_genvars;
+
+  if(for_statement.init().id() == ID_verilog_generate_decl)
+  {
+    auto &generate_decl = to_verilog_generate_decl(for_statement.init());
+
+    elaborate_generate_decl(generate_decl, dest, true);
+
+    for(auto &declarator : generate_decl.declarators())
+      loop_local_genvars.push_back(declarator.base_name());
+  }
+  else
+    elaborate_generate_item(for_statement.init(), dest);
 
   // work out what the loop index is
   auto loop_index = generate_for_loop_index(for_statement.init());
@@ -398,4 +420,8 @@ void verilog_typecheckt::elaborate_generate_for(
       }
     }
   }
+
+  // The genvars that are declared in the loop header now go out of scope.
+  for(auto &base_name : loop_local_genvars)
+    genvars.erase(base_name);
 }
