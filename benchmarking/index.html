@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EBMC Benchmark Reports</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, system-ui, sans-serif;
+         margin: 2rem auto; max-width: 48rem; padding: 0 1rem;
+         line-height: 1.6; }
+  h1 { margin-bottom: 0.5rem; }
+  p { margin-bottom: 1.5rem; }
+  .reports { display: grid; gap: 1rem; }
+  .report {
+    display: block;
+    border: 1px solid #ccc;
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    color: inherit;
+    text-decoration: none;
+  }
+  .report strong {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+  }
+  .report:hover {
+    border-color: #666;
+    background: color-mix(in srgb, Canvas 96%, CanvasText 4%);
+  }
+</style>
+</head>
+<body>
+<h1>EBMC Benchmark Reports</h1>
+<p>
+  Published reports for benchmark suites run from the
+  <a href="https://github.com/diffblue/hw-cbmc">hw-cbmc</a>
+  repository.
+</p>
+<div class="reports">
+  <a class="report" href="logikbench/">
+    <strong>LogikBench</strong>
+    Parse-and-elaborate coverage for a broad SystemVerilog RTL suite.
+  </a>
+  <a class="report" href="hwmcc/">
+    <strong>HWMCC08</strong>
+    BMC results over the HWMCC08 AIG benchmark suite.
+  </a>
+</div>
+</body>
+</html>
