@@ -962,9 +962,6 @@ public:
   {
     return static_cast<verilog_module_itemt &>(op0());
   }
-
-  typedef std::map<irep_idt, mp_integer> genvarst;
-  genvarst build_map() const;
 };
 
 inline const verilog_set_genvarst &to_verilog_set_genvars(const exprt &expr)
