@@ -1,0 +1,10 @@
+CORE
+genvar_scope5.sv
+--bound 0
+^\[main\.property\.p1\] always main\.some_wire == 16'h100: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+A genvar declared in the header of a loop generate construct shadows a symbol
+with the same name in a scope that encloses the loop.
