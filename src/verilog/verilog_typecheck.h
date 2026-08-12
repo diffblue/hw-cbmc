@@ -257,21 +257,29 @@ protected:
   void elaborate_generate_if(const verilog_generate_ift &, module_itemst &dest);
   void
   elaborate_case_generate(const verilog_case_generatet &, module_itemst &dest);
-  void elaborate_generate_decl(const verilog_generate_declt &, module_itemst &);
+  // When loop_local is true, the genvar is declared in the header of a
+  // loop generate construct, and hence is local to that loop.
+  void elaborate_generate_decl(
+    const verilog_generate_declt &,
+    module_itemst &,
+    bool loop_local = false);
   void
   elaborate_generate_for(const verilog_generate_fort &, module_itemst &dest);
   exprt
   generate_for_loop_index(const verilog_module_itemt &initialization) const;
 
   // generate state
-  typedef std::map<irep_idt, mp_integer> genvarst;
+  typedef std::map<irep_idt, genvart> genvarst;
   genvarst genvars;
 
-  mp_integer genvar_value(const irep_idt &identifier) override
+  // The genvar environment that is recorded in a set_genvars module item.
+  static genvarst build_genvars(const verilog_set_genvarst &);
+
+  std::optional<genvart> genvar_lookup(const irep_idt &identifier) override
   {
-    genvarst::const_iterator it=genvars.find(identifier);
-    if(it==genvars.end())
-      return -1;
+    genvarst::const_iterator it = genvars.find(identifier);
+    if(it == genvars.end())
+      return {};
     else
       return it->second;
   }

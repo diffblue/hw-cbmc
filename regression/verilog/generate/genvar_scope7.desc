@@ -1,0 +1,10 @@
+CORE
+genvar_scope7.sv
+--bound 0
+^\[main\.property\.p1\] always main\.some_wire\[1:0\] == 2'b10: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Two nested loop generate constructs may both declare a genvar with the same
+name in their header.

@@ -162,8 +162,12 @@ void verilog_typecheckt::elaborate_module_instances(
   }
   else if(module_item.id() == ID_set_genvars)
   {
-    elaborate_module_instances(
-      to_verilog_set_genvars(module_item).module_item());
+    // Port connections may use genvars, which hence need to be in scope.
+    auto old_genvars = genvars;
+    auto &set_genvars = to_verilog_set_genvars(module_item);
+    genvars = build_genvars(set_genvars);
+    elaborate_module_instances(set_genvars.module_item());
+    genvars = std::move(old_genvars);
   }
 }
 
@@ -243,11 +247,12 @@ void verilog_typecheckt::process_parameter_override(
   }
   else if(item.id() == ID_set_genvars)
   {
-    for(auto &sub_item : item.operands())
-    {
-      if(sub_item.id() == ID_parameter_override)
-        process_parameter_override(to_verilog_parameter_override(sub_item));
-    }
+    // Parameter overrides may use genvars, which hence need to be in scope.
+    auto old_genvars = genvars;
+    auto &set_genvars = to_verilog_set_genvars(item);
+    genvars = build_genvars(set_genvars);
+    process_parameter_override(set_genvars.module_item());
+    genvars = std::move(old_genvars);
   }
 }
 
@@ -295,8 +300,12 @@ void verilog_typecheckt::parameterize_instantiated_modules(
   }
   else if(module_item.id() == ID_set_genvars)
   {
-    parameterize_instantiated_modules(
-      to_verilog_set_genvars(module_item).module_item());
+    // Parameter values may use genvars, which hence need to be in scope.
+    auto old_genvars = genvars;
+    auto &set_genvars = to_verilog_set_genvars(module_item);
+    genvars = build_genvars(set_genvars);
+    parameterize_instantiated_modules(set_genvars.module_item());
+    genvars = std::move(old_genvars);
   }
 }
 

@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "sva_expr.h"
 #include "verilog_typecheck_base.h"
 
+#include <optional>
 #include <stack>
 
 class function_call_exprt;
@@ -128,11 +129,46 @@ protected:
 
   ranget convert_range(const exprt &range);
 
-  // to be overridden
-  virtual mp_integer genvar_value(const irep_idt &identifier)
+  // The state of a genvar during elaboration.
+  struct genvart
   {
-    PRECONDITION(false);
+    genvart() = default;
+
+    genvart(mp_integer _value, irep_idt _loop_scope)
+      : value(std::move(_value)), loop_scope(std::move(_loop_scope))
+    {
+    }
+
+    // The current value; negative when the genvar is not set yet.
+    mp_integer value = -1;
+
+    // When the genvar is declared in the header of a loop generate
+    // construct, it is local to that loop (1800-2017 27.4), and this is
+    // the prefix of the identifiers in the scope that contains the loop.
+    // The prefix is empty for a genvar that is declared separately from
+    // the loop, and hence is not local to any loop.
+    irep_idt loop_scope;
+
+    bool is_loop_local() const
+    {
+      return !loop_scope.empty();
+    }
+
+    // Does this genvar shadow the given symbol, which may be nullptr?
+    // A loop-local genvar shadows any symbol that is not declared inside
+    // the loop, i.e., any symbol in the scope that contains the loop or
+    // in a scope that encloses it.
+    bool shadows(const symbolt *) const;
+  };
+
+  // The genvar with the given base name, if any. To be overridden.
+  virtual std::optional<genvart> genvar_lookup(const irep_idt &)
+  {
+    return {};
   }
+
+  // Turn the value of a genvar into a constant.
+  exprt genvar_constant(const irep_idt &base_name, const source_locationt &);
 
   virtual void elaborate_symbol_rec(irep_idt)
   {
