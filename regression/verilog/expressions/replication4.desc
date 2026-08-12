@@ -1,0 +1,12 @@
+KNOWNBUG
+replication4.sv
+
+^\[main\.assert\.1\] main\.p == 4'b1001: PROVED .*$
+^\[main\.assert\.2\] main\.x == 4'b1001: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The zero-width replication is fine in the net declaration, but the
+constant-expression interpreter does not evaluate it, and hence gives
+"expected constant expression" for the localparam.
