@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 array_of_structs2.sv
 --module main --bound 0
 ^\[main\.s\.p0\] main\.s\.data\[0\] == 171: PROVED up to bound 0$
@@ -8,9 +8,6 @@ array_of_structs2.sv
 --
 ^warning: ignoring
 --
-An unpacked array of a packed struct is not recognised as being of a type
-equivalent to an unpacked array of a vector of the same width, and hence
-the port connection is rejected with "failed to convert `unpacked array
-[2] of struct packed' to `unpacked array [2] of [7:0]'".  The same
-diagnostic is given for a plain assignment between the two, i.e., the gap
-is in the type equivalence rules and not specific to ports.
+An unpacked array of a packed struct is of a type equivalent to an
+unpacked array of a vector of the same width, and hence can be connected
+to the port.

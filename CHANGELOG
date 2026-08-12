@@ -22,6 +22,7 @@
 * SystemVerilog: $typename for logic types
 * SystemVerilog: interface ports no longer require the interface to be
   declared before the module that uses it
+* SystemVerilog: assignments between unpacked arrays of equivalent types
 * Refreshed IC3 engine --new-ic3
 
 # EBMC 6.0

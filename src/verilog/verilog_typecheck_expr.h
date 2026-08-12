@@ -169,6 +169,11 @@ protected:
     return type.id() == ID_verilog_signedbv ||
            type.id() == ID_verilog_unsignedbv;
   }
+  static bool is_signed_type(const typet &);
+  static bool is_integral_type(const typet &);
+
+  // 1800-2017 6.22.1
+  bool equivalent_type(const typet &, const typet &) const;
 
   // named blocks
   typedef std::vector<std::string> named_blockst;
