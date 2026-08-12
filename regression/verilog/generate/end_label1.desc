@@ -1,0 +1,14 @@
+KNOWNBUG
+end_label1.sv
+--bound 0
+^\[main\.g1\.p0\] main\.g1\.w == 42: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Per 1800-2017 27.6, the name of a named generate block may be repeated after
+the "end" keyword, and per A.4.2 generate_block ends with
+"end [ : generate_block_identifier ]".  The end label is rejected with
+"syntax error, unexpected :, expecting class", as the generate_block rule
+stops at the "end" keyword.
