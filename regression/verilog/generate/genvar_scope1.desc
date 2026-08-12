@@ -1,0 +1,11 @@
+KNOWNBUG
+genvar_scope1.sv
+
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+A genvar declared in a loop generate construct header is not local to that
+loop, and hence the second loop yields "definition of symbol `gi' conflicts
+with earlier definition".
