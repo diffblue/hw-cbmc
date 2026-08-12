@@ -1316,6 +1316,148 @@ const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
 
 /*******************************************************************\
 
+Function: verilog_synthesist::bind_interface_instance
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Equate the members of the interface that was instantiated
+          under the given port with those of the interface instance
+          that is bound to that port.
+
+\*******************************************************************/
+
+void verilog_synthesist::bind_interface_instance(
+  const irep_idt &port_identifier,
+  const irep_idt &bound_instance_identifier,
+  transt &trans)
+{
+  auto port_prefix = id2string(port_identifier) + ".";
+  auto bound_prefix = id2string(bound_instance_identifier) + ".";
+
+  for(auto &entry : symbol_table.symbols)
+  {
+    auto id = id2string(entry.first);
+    if(
+      id.size() > port_prefix.size() &&
+      id.substr(0, port_prefix.size()) == port_prefix &&
+      id.find('.', port_prefix.size()) == std::string::npos)
+    {
+      auto member_name = id.substr(port_prefix.size());
+      auto bound_id = bound_prefix + member_name;
+
+      const symbolt *bound_sym;
+      if(ns.lookup(bound_id, bound_sym))
+        continue;
+
+      if(bound_sym->type.id() == ID_verilog_module_instance)
+        continue;
+
+      symbol_exprt port_member{entry.first, entry.second.type};
+      symbol_exprt bound_member{bound_id, bound_sym->type};
+
+      equal_exprt invar_expr{port_member, bound_member};
+      trans.invar().add_to_operands(std::move(invar_expr));
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_synthesist::bind_interface_instance_array
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Bind the elements of an array of interface ports,
+          1800-2017 25.4, to the given interface instances.
+
+\*******************************************************************/
+
+void verilog_synthesist::bind_interface_instance_array(
+  const irep_idt &port_identifier,
+  const typet &port_type,
+  const exprt &value,
+  transt &trans)
+{
+  auto &array_type = to_verilog_array_type(port_type);
+  auto size = array_type.size_int();
+  auto offset = array_type.offset();
+  auto &element_type = array_type.element_type();
+
+  // The actual may be another array of interfaces, given by its name. The
+  // elements are then bound pairwise, in the order of the two ranges.
+  if(value.id() == ID_symbol)
+  {
+    auto &actual_type = to_verilog_array_type(value.type());
+    auto actual_offset = actual_type.offset();
+    auto &actual_identifier = to_symbol_expr(value).identifier();
+
+    for(mp_integer i = 0; i < size; ++i)
+    {
+      auto index = array_type.increasing() ? offset + i : offset + size - 1 - i;
+      auto actual_index = actual_type.increasing()
+                            ? actual_offset + i
+                            : actual_offset + size - 1 - i;
+
+      auto element_identifier =
+        id2string(port_identifier) + '[' + integer2string(index) + ']';
+      auto actual_element_identifier =
+        id2string(actual_identifier) + '[' + integer2string(actual_index) + ']';
+
+      if(is_interface_array_type(element_type))
+      {
+        // recursive call, for further dimensions
+        bind_interface_instance_array(
+          element_identifier,
+          element_type,
+          symbol_exprt{actual_element_identifier, actual_type.element_type()},
+          trans);
+      }
+      else
+      {
+        bind_interface_instance(
+          element_identifier, actual_element_identifier, trans);
+      }
+    }
+
+    return;
+  }
+
+  // The type checker has established that there is one operand per element.
+  DATA_INVARIANT(
+    value.operands().size() == size,
+    "one interface instance per array element");
+
+  for(mp_integer i = 0; i < size; ++i)
+  {
+    // The operands are stored starting from the left index of the range,
+    // as are the element symbols.
+    auto index = array_type.increasing() ? offset + i : offset + size - 1 - i;
+
+    auto element_identifier =
+      id2string(port_identifier) + '[' + integer2string(index) + ']';
+
+    auto &element = value.operands()[numeric_cast_v<std::size_t>(i)];
+
+    if(is_interface_array_type(element_type))
+    {
+      // recursive call, for further dimensions
+      bind_interface_instance_array(
+        element_identifier, element_type, element, trans);
+    }
+    else if(element.id() == ID_symbol)
+    {
+      bind_interface_instance(
+        element_identifier, to_symbol_expr(element).identifier(), trans);
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::instantiate_port
 
   Inputs:
@@ -1339,35 +1481,18 @@ void verilog_synthesist::instantiate_port(
     if(value.id() != ID_symbol)
       return;
 
-    auto &bound_instance_id = to_symbol_expr(value).identifier();
-    auto port_prefix = id2string(port.identifier()) + ".";
-    auto bound_prefix = id2string(bound_instance_id) + ".";
+    bind_interface_instance(
+      port.identifier(), to_symbol_expr(value).identifier(), trans);
+    return;
+  }
 
-    for(auto &entry : symbol_table.symbols)
-    {
-      auto id = id2string(entry.first);
-      if(
-        id.size() > port_prefix.size() &&
-        id.substr(0, port_prefix.size()) == port_prefix &&
-        id.find('.', port_prefix.size()) == std::string::npos)
-      {
-        auto member_name = id.substr(port_prefix.size());
-        auto bound_id = bound_prefix + member_name;
-
-        const symbolt *bound_sym;
-        if(ns.lookup(bound_id, bound_sym))
-          continue;
-
-        if(bound_sym->type.id() == ID_verilog_module_instance)
-          continue;
-
-        symbol_exprt port_member{entry.first, entry.second.type};
-        symbol_exprt bound_member{bound_id, bound_sym->type};
-
-        equal_exprt invar_expr{port_member, bound_member};
-        trans.invar().add_to_operands(std::move(invar_expr));
-      }
-    }
+  // An array of interface ports, 1800-2017 25.4: bind one interface
+  // instance per array element. The type checker has ensured that the
+  // value is an assignment pattern with one interface instance per
+  // element of the port.
+  if(is_interface_array_type(port.type()))
+  {
+    bind_interface_instance_array(port.identifier(), port.type(), value, trans);
     return;
   }
 

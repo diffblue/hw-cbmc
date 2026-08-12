@@ -3302,6 +3302,13 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(
   if(src.type().id() == ID_array)
   {
     auto &array_type = to_array_type(src.type());
+
+    // An element of an array of interface instances, 1800-2017 25.4, is
+    // not an ordinary array element: each element is a symbol of its own,
+    // named bus[0], bus[1], and so on. Resolve to that symbol.
+    if(is_interface_array_type(src.type()))
+      return convert_interface_array_element(std::move(expr));
+
     expr.type() = array_type.element_type();
   }
   else
@@ -3328,6 +3335,69 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(
   }
 
   return std::move(expr);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::convert_interface_array_element
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::convert_interface_array_element(
+  verilog_bit_select_exprt expr)
+{
+  // The elements of an array of interface instances, 1800-2017 25.4, are
+  // separate symbols, named bus[0], bus[1], and so on. Hence the index
+  // must be an elaboration-time constant, and the expression resolves to
+  // the symbol for that element.
+  auto &src = expr.src();
+
+  const irep_idt &src_identifier = [](const exprt &src)
+  {
+    if(src.id() == ID_symbol)
+      return to_symbol_expr(src).identifier();
+    else if(src.id() == ID_hierarchical_identifier)
+      return to_hierarchical_identifier_expr(src).identifier();
+    else
+    {
+      throw errort().with_location(src.source_location())
+        << "expected symbol or hierarchical identifier for an array of "
+           "interfaces";
+    }
+  }(src);
+
+  auto &array_type = to_verilog_array_type(src.type());
+  auto index = convert_integer_constant_expression(expr.index());
+
+  auto size = array_type.size_int();
+  auto offset = array_type.offset();
+  auto smallest = offset;
+  auto largest = offset + size - 1;
+
+  if(index < smallest || index > largest)
+  {
+    throw errort().with_location(expr.index().source_location())
+      << "index " << index << " is out of the range [" << smallest << ':'
+      << largest << "] of the array of interfaces";
+  }
+
+  const irep_idt element_identifier =
+    id2string(src_identifier) + '[' + integer2string(index) + ']';
+
+  const symbolt *symbol;
+  if(ns.lookup(element_identifier, symbol))
+  {
+    throw errort().with_location(expr.source_location())
+      << "failed to find interface instance `" << element_identifier << '\'';
+  }
+
+  return symbol->symbol_expr().with_source_location(expr);
 }
 
 /*******************************************************************\

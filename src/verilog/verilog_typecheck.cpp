@@ -29,6 +29,86 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::typecheck_interface_array_port_connection
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::typecheck_interface_array_port_connection(
+  exprt &op,
+  const typet &port_type)
+{
+  auto &array_type = to_verilog_array_type(port_type);
+  auto size = array_type.size_int();
+
+  // The actual may be another array of interfaces, given by its name,
+  // e.g., when a module passes on an array of interface ports that it has
+  // itself been given.
+  if(op.id() != ID_verilog_assignment_pattern)
+  {
+    convert_expr(op);
+
+    if(!is_interface_array_type(op.type()))
+    {
+      throw errort().with_location(op.source_location())
+        << "an array of interface ports must be connected to an array of "
+           "interface instances";
+    }
+
+    auto &actual_type = to_verilog_array_type(op.type());
+
+    if(actual_type.size_int() != size)
+    {
+      throw errort().with_location(op.source_location())
+        << "expected an array of " << size
+        << " interface instances for this array of interface ports, but got an"
+           " array of "
+        << actual_type.size_int();
+    }
+
+    return;
+  }
+
+  if(op.operands().size() != size)
+  {
+    throw errort().with_location(op.source_location())
+      << "expected " << size
+      << " interface instances for this array of interface ports, but got "
+      << op.operands().size();
+  }
+
+  auto &element_type = array_type.element_type();
+
+  for(auto &element : op.operands())
+  {
+    if(is_interface_array_type(element_type))
+    {
+      // recursive call, for further dimensions
+      typecheck_interface_array_port_connection(element, element_type);
+    }
+    else
+    {
+      convert_expr(element);
+
+      if(element.type().id() != ID_verilog_module_instance)
+      {
+        throw errort().with_location(element.source_location())
+          << "expected an interface instance, but got `"
+          << to_string(element.type()) << '\'';
+      }
+    }
+  }
+
+  op.type() = port_type;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::typecheck_port_connection
 
   Inputs:
@@ -54,7 +134,16 @@ void verilog_typecheckt::typecheck_port_connection(
     }
   }
 
-  if(op.is_nil())
+  if(is_interface_array_type(port.type()))
+  {
+    // An array of interface ports, 1800-2017 25.4. This is not connected
+    // by an assignment: the actual gives one interface instance per array
+    // element, and each of those is bound to the corresponding element of
+    // the port.
+    if(op.is_not_nil())
+      typecheck_interface_array_port_connection(op, port.type());
+  }
+  else if(op.is_nil())
   {
     // *not* connected
   }

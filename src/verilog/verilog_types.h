@@ -998,6 +998,11 @@ public:
   }
 };
 
+/// Is the given type an array of instances of a Verilog interface,
+/// i.e., the type of an array of interface ports, 1800-2017 25.4?
+/// The array may have any number of dimensions.
+bool is_interface_array_type(const typet &);
+
 /// replaces all four-valued types by their corresponding two-valued type
 typet make_two_valued(typet);
 
