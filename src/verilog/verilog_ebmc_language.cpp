@@ -462,6 +462,21 @@ void verilog_ebmc_languaget::resolve_library_modules(parse_treest &parse_trees)
   for(auto &dir : cmdline.get_values("libdir"))
     library_dirs.push_back(dir);
 
+  // Get file extensions from +libext+, or default to .v and .sv
+  auto &libext_values = cmdline.get_values("libext");
+  std::vector<std::string> extensions;
+
+  if(!libext_values.empty())
+  {
+    for(auto &ext : libext_values)
+      extensions.push_back(ext);
+  }
+  else
+  {
+    extensions.push_back(".v");
+    extensions.push_back(".sv");
+  }
+
   messaget log{message_handler};
 
   // Iteratively resolve library dependencies until no new
@@ -488,8 +503,7 @@ void verilog_ebmc_languaget::resolve_library_modules(parse_treest &parse_trees)
 
       for(auto &dir : library_dirs)
       {
-        // Try <dir>/<module>.v and <dir>/<module>.sv
-        for(auto ext : {".v", ".sv"})
+        for(auto &ext : extensions)
         {
           auto path =
             std::filesystem::path{dir} / (id2string(module_name) + ext);
