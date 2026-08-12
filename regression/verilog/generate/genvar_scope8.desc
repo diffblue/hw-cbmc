@@ -1,0 +1,10 @@
+CORE
+genvar_scope8.sv
+--bound 0
+^\[main\.property\.p1\] always main\.q == 4'b0010: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+A genvar declared in the header of a loop generate construct is in scope in the
+port connections and parameter values of a module instance.

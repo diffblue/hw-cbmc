@@ -281,6 +281,9 @@ protected:
   typedef std::map<irep_idt, genvart> genvarst;
   genvarst genvars;
 
+  // The genvar environment that is recorded in a set_genvars module item.
+  static genvarst build_genvars(const verilog_set_genvarst &);
+
   std::optional<genvart> genvar_lookup(const irep_idt &identifier) override
   {
     genvarst::const_iterator it = genvars.find(identifier);
