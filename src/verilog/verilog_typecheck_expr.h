@@ -198,6 +198,11 @@ protected:
     const std::optional<typet> &implicit_net_type);
   [[nodiscard]] exprt
     convert_hierarchical_identifier(class hierarchical_identifier_exprt);
+  // Resolve a hierarchical name that has not been converted yet, appending
+  // the given suffix to the last base name.  Returns nullptr when there is
+  // no such symbol.
+  [[nodiscard]] const symbolt *
+  resolve_scope_name(const exprt &, const std::string &suffix);
   [[nodiscard]] exprt convert_nullary_expr(nullary_exprt);
   [[nodiscard]] exprt convert_unary_expr(unary_exprt);
   [[nodiscard]] exprt convert_binary_expr(binary_exprt);

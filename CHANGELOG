@@ -15,6 +15,7 @@
 * Verilog: +incdir+ command-line option
 * Verilog: -l and +libfile+ command-line options
 * Verilog: -y and +libdir+ command-line options
+* Verilog: hierarchical references into named generate blocks
 * Refreshed IC3 engine --new-ic3
 
 # EBMC 6.0
