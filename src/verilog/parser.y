@@ -725,7 +725,7 @@ module_keyword:
 interface_declaration:
           interface_nonansi_header
           interface_item_brace
-          TOK_ENDINTERFACE
+          TOK_ENDINTERFACE endinterface_identifier_opt
                 {
                   pop_scope();
                   init($$);
@@ -740,7 +740,7 @@ interface_declaration:
                 }
         | interface_ansi_header
           interface_item_brace
-          TOK_ENDINTERFACE
+          TOK_ENDINTERFACE endinterface_identifier_opt
                 {
                   pop_scope();
                   init($$);
@@ -753,6 +753,16 @@ interface_declaration:
                     stack_expr($2));              // module_items
                   stack_expr($$).id(ID_verilog_interface);
                 }
+        ;
+
+// Optional interface name repeated after "endinterface",
+// IEEE 1800-2017 A.1.2. The name is accepted and discarded, mirroring
+// endmodule_identifier_opt. Note that the scanner classifies the name of
+// an interface that is in scope as TOK_INTERFACE_IDENTIFIER, which is
+// why interface_identifier is used here.
+endinterface_identifier_opt:
+          /* Optional */
+        | TOK_COLON interface_identifier
         ;
 
 // This deviates from the IEEE 1800-2017 grammar, which uses the
