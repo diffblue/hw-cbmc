@@ -1,0 +1,19 @@
+KNOWNBUG
+cycle_delay5.sv
+--bound 10
+^\[main\.p0\] always \(main\.x == 0 \|-> \(##main\.CYCLES main\.x == main\.CYCLES\)\): PROVED up to bound 10$
+^\[main\.p1\] always \(main\.x == 0 \|-> \(##main\.CYCLES main\.x == main\.CYCLES\)\): PROVED up to bound 10$
+^\[main\.p2\] always \(main\.x == 0 \|-> \(##main\.DELAY main\.x == main\.DELAY\)\): PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The delay of the SVA cycle delay operator ## is parsed as a literal number
+only, whereas 1800-2017 A.2.10 gives cycle_delay_range as
+"## constant_primary".  A parameter or localparam identifier hence yields
+"syntax error, unexpected TOK_NON_TYPE_IDENTIFIER, expecting [* or [+ or
+TOK_NUMBER or '['", and a parenthesized constant expression ##(CYCLES) fails
+in the same way.  See cycle_delay_range in src/verilog/parser.y.  The range
+form ##[CYCLES:CYCLES] does accept a constant expression and can be used as
+a workaround.
