@@ -885,7 +885,7 @@ checker_declaration:
           }
           checker_port_list_paren_opt ';'
           checker_or_generate_item_brace
-          TOK_ENDCHECKER
+          TOK_ENDCHECKER end_identifier_opt
                 {
                   pop_scope();
                   init($$);
@@ -5564,9 +5564,9 @@ endmodule_identifier_opt:
 
 // Optional block name repeated after the keyword that ends a named
 // construct, e.g. "endfunction : is_width_valid" (IEEE 1800-2017 A.9.3),
+// "endchecker : chk" (A.7.1),
 // "end : blk" for a named sequential or generate block (9.3.4, A.4.2,
-// A.6.3), and
-// "join : blk" for a named parallel block (9.3.4).
+// A.6.3), and "join : blk" for a named parallel block (9.3.4).
 // The identifier is accepted and discarded, mirroring the treatment of
 // endmodule_identifier_opt and friends.
 end_identifier_opt:
