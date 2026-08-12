@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 genvar_scope7.sv
 --bound 0
 ^\[main\.property\.p1\] always main\.some_wire == 4'b1010: PROVED up to bound 0$
@@ -8,5 +8,3 @@ genvar_scope7.sv
 --
 Two nested loop generate constructs may both declare a genvar with the same
 name in their header.
-The inner genvar currently does not shadow the outer one, and the property is
-refuted.
