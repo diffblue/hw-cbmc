@@ -1626,6 +1626,34 @@ void verilog_typecheckt::convert_statement(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::build_genvars
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+verilog_typecheckt::genvarst
+verilog_typecheckt::build_genvars(const verilog_set_genvarst &set_genvars)
+{
+  genvarst genvars;
+
+  for(auto &var : set_genvars.build_map())
+    genvars[var.first].value = var.second;
+
+  // The genvars that are local to a loop generate construct come with
+  // the scope of that loop. 1800-2017 27.4.
+  for(auto &var : set_genvars.loop_scopes())
+    genvars[var.first].loop_scope = var.second.id();
+
+  return genvars;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::convert_module_item
 
   Inputs:
@@ -1715,15 +1743,7 @@ void verilog_typecheckt::convert_module_item(
   }
   else if(module_item.id() == ID_set_genvars)
   {
-    auto &set_genvars = to_verilog_set_genvars(module_item);
-    genvars.clear();
-    for(auto &var : set_genvars.build_map())
-      genvars[var.first].value = var.second;
-
-    // The genvars that are local to a loop generate construct come with
-    // the scope of that loop. 1800-2017 27.4.
-    for(auto &var : set_genvars.loop_scopes())
-      genvars[var.first].loop_scope = var.second.id();
+    genvars = build_genvars(to_verilog_set_genvars(module_item));
 
     exprt tmp;
     tmp.swap(to_unary_expr(module_item).op());
