@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 conditional_operator_short_circuit1.sv
 
 ^\[main\.assert\.1\] \$bits\(main\.x\) == 3: PROVED .*$
@@ -6,6 +6,6 @@ conditional_operator_short_circuit1.sv
 ^SIGNAL=0$
 --
 --
-The constant-expression interpreter evaluates both operands of the
-conditional operator, and hence gives "expected constant expression, but got
-`(0 ? 1 / 0 : 3) - 1'".
+The constant-expression interpreter short-circuits the conditional
+operator, as mandated by 1800-2017 11.4.11, and hence does not evaluate
+1/0.
