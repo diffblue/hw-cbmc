@@ -1,0 +1,11 @@
+KNOWNBUG
+named_port_connection2.sv
+
+^\[main\.assert\.1\] main\.m1\.a == 1: PROVED .*$
+^\[main\.assert\.2\] main\.m1\.c == 1: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+A null element in a named port connection list is rejected by the parser:
+syntax error, unexpected ','.
