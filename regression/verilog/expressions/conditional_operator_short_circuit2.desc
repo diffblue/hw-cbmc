@@ -1,0 +1,11 @@
+KNOWNBUG
+conditional_operator_short_circuit2.sv
+
+^\[main\.assert\.1\] \$bits\(main\.x\) == 3: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The constant-expression interpreter evaluates both operands of the
+conditional operator, and hence gives "expected constant expression, but got
+`(1 ? 3 : 1 / 0) - 1'".
