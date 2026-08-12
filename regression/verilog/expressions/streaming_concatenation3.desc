@@ -1,0 +1,16 @@
+KNOWNBUG
+streaming_concatenation3.sv
+
+^\[main\.p1\] main\.s1 == 171: PROVED .*$
+^\[main\.p2\] main\.s2 == 186: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A streaming concatenation with more than one stream_expression is not
+implemented.  The streaming operator is type checked as a unary expression
+whose operand is required to be a concatenation with exactly one operand,
+and hence any such streaming concatenation trips the precondition
+`expr.op().operands().size() == 1' in convert_unary_expr.  This is an
+invariant violation rather than a diagnostic, i.e., ebmc aborts.
