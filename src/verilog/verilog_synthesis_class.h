@@ -349,6 +349,9 @@ protected:
   exprt
   expand_function_call(const class function_call_exprt &call, symbol_statet);
 
+  // For $time, $stime and $realtime
+  const symbolt &simulation_time_symbol();
+
   void instantiate_ports(
     const irep_idt &instance,
     const verilog_instt::instancet &inst,

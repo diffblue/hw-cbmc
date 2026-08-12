@@ -1,0 +1,13 @@
+CORE
+time1.sv
+--bound 5
+^\[main\.p0\] ##0 \$time\(\) == 0: PROVED up to bound 5$
+^\[main\.p1\] ##1 \$time\(\) == 1: PROVED up to bound 5$
+^\[main\.p2\] ##2 \$time\(\) == 2: PROVED up to bound 5$
+^\[main\.p3\] ##3 \$time\(\) == 3: PROVED up to bound 5$
+^\[main\.p4\] always \$bits\(\$time\(\)\) == 64: PROVED up to bound 5$
+^\[main\.p5\] ##2 \$time\(\) == 0: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
