@@ -1,0 +1,11 @@
+CORE
+end_label2.sv
+--bound 0
+^\[main\.fb\.p0\] main\.W == 7: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Per 1800-2017 9.3.4, the name of a named parallel block may be repeated
+after the "join" keyword.  The end label is accepted and discarded.

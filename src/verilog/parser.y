@@ -4325,14 +4325,14 @@ seq_block:
                   push_scope(id, ".", verilog_scopet::BLOCK);
                   init($$); stack_expr($$).set(ID_block_id, id); }
           block_item_declaration_or_statement_or_null_brace
-          TOK_END
+          TOK_END end_identifier_opt
                 { init($$, ID_block); swapop($$, $3);
                   stack_expr($$).set(ID_block_id, stack_expr($2).get(ID_block_id));
                   pop_scope(); }
         | TOK_BEGIN TOK_COLON any_identifier
                 { push_scope(stack_expr($3).get(ID_base_name), ".", verilog_scopet::BLOCK); }
           block_item_declaration_or_statement_or_null_brace
-          TOK_END
+          TOK_END end_identifier_opt
                 { init($$, ID_block);
                   swapop($$, $5);
                   stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
@@ -4341,10 +4341,10 @@ seq_block:
         ;
 
 par_block:
-          TOK_FORK statement_or_null_brace TOK_JOIN
+          TOK_FORK statement_or_null_brace TOK_JOIN end_identifier_opt
                 { init($$, ID_fork); swapop($$, $2); }
         | TOK_FORK TOK_COLON any_identifier
-          statement_or_null_brace TOK_JOIN
+          statement_or_null_brace TOK_JOIN end_identifier_opt
                 { init($$, ID_block);
                   swapop($$, $4);
                   stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
@@ -5562,8 +5562,12 @@ endmodule_identifier_opt:
         | TOK_COLON module_identifier
         ;
 
-// Optional block name repeated after endfunction/endtask etc.,
-// e.g. "endfunction : is_width_valid". IEEE 1800-2017 A.9.3.
+// Optional block name repeated after the keyword that ends a named
+// construct, e.g. "endfunction : is_width_valid" (IEEE 1800-2017 A.9.3),
+// "end : blk" for a named sequential block (9.3.4, A.6.3), and
+// "join : blk" for a named parallel block (9.3.4).
+// The identifier is accepted and discarded, mirroring the treatment of
+// endmodule_identifier_opt and friends.
 end_identifier_opt:
           /* Optional */
         | TOK_COLON any_identifier
