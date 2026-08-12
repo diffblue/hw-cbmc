@@ -1,0 +1,10 @@
+CORE
+port6.sv
+--bound 5
+^\[main\.s\.p0\] always main\.s\.bus\.v == 1: PROVED up to bound 5$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+An interface port with a modport, where the interface is declared after the
+module that uses it.
