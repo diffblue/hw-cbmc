@@ -1,0 +1,8 @@
+CORE
+constraint_refuted1.smv
+--new-ic3
+^Property refuted with counterexample of length 4$
+^\[spec1\] AG cnt != 3: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--

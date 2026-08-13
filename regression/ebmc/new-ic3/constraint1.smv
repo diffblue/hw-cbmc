@@ -1,0 +1,20 @@
+-- The INVAR forbids x=1 while y=0; y is constantly 0, so x can never
+-- be 1, and z (which latches x) stays 0: AG !z holds.
+-- Lifting must not widen a predecessor cube to include the
+-- constraint-violating state (x=1,y=0), which would yield a spurious
+-- refutation.
+MODULE main
+VAR
+  x : boolean;
+  y : boolean;
+  z : boolean;
+  i : boolean;
+ASSIGN
+  init(x) := FALSE;
+  next(x) := i;
+  init(y) := FALSE;
+  next(y) := FALSE;
+  init(z) := FALSE;
+  next(z) := x;
+INVAR !(x & !y)
+SPEC AG !z

@@ -55,12 +55,19 @@ property_checker_resultt new_ic3_engine(
   if(cmdline.isset("liveness-to-safety"))
     liveness_to_safety(transition_system, properties);
 
+  // Check whether all assumptions are supported (invariant-only).
   for(auto &property : properties.properties)
   {
     if(property.is_assumed())
     {
-      message.error() << "no support for assumptions" << messaget::eom;
-      return property_checker_resultt::error();
+      if(!new_ic3_supports_property(property.normalized_expr))
+      {
+        message.error()
+          << "assumption " << property.name
+          << " not supported by new IC3 engine (only invariant assumptions)"
+          << messaget::eom;
+        return property_checker_resultt::error();
+      }
     }
   }
 
@@ -74,6 +81,22 @@ property_checker_resultt new_ic3_engine(
   message.statistics() << "Latches: " << netlist.var_map.latches.size()
                        << ", nodes: " << netlist.number_of_nodes()
                        << messaget::eom;
+
+  // Convert invariant assumptions to netlist constraints.
+  for(auto &property : properties.properties)
+  {
+    if(property.is_assumed())
+    {
+      aig_prop_constraintt aig_prop(netlist, message_handler);
+      literalt assumption_lit = instantiate_convert(
+        aig_prop,
+        netlist.var_map,
+        to_unary_expr(property.normalized_expr).op(),
+        ns,
+        message_handler);
+      netlist.constraints.push_back(assumption_lit);
+    }
+  }
 
   for(auto &property : properties.properties)
   {
@@ -103,7 +126,7 @@ property_checker_resultt new_ic3_engine(
         message_handler);
     }();
 
-    ic3_solvert solver{prop_netlist, prop_lit, message_handler};
+    ic3_solvert solver{std::move(prop_netlist), prop_lit, message_handler};
     auto result = solver.solve();
 
     // record the outcome produced by this engine

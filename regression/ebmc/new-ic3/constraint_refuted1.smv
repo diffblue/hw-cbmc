@@ -1,0 +1,19 @@
+-- A property that is refuted despite the INVAR constraint.
+-- The constraint restricts x to TRUE, but the property checks y,
+-- which counts and eventually reaches 3.
+
+MODULE main
+
+VAR x : boolean;
+VAR cnt : 0..3;
+
+INVAR x
+
+ASSIGN
+  init(cnt) := 0;
+  next(cnt) := case
+    cnt < 3 : cnt + 1;
+    TRUE    : cnt;
+  esac;
+
+SPEC AG cnt != 3
