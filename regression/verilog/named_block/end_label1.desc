@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 end_label1.sv
 --bound 0
 ^\[main\.blk\.p0\] main\.blk\.x == 3: PROVED up to bound 0$
@@ -9,5 +9,4 @@ end_label1.sv
 --
 Per 1800-2017 9.3.4, a block name may be repeated after the "end" of a named
 block, and per A.6.3 seq_block ends with "end [ : block_identifier ]".  The
-end label is rejected with "syntax error, unexpected :, expecting class", as
-the seq_block rule stops at the "end" keyword.
+end label is accepted and discarded.

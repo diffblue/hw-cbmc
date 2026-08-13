@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 end_label1.sv
 --show-parse
 ^Checker: c$
@@ -8,6 +8,5 @@ end_label1.sv
 ^warning: ignoring
 --
 Per 1800-2017 A.7.1, checker_declaration ends with
-"endchecker [ : checker_identifier ]".  The end label is rejected with
-"syntax error, unexpected :, expecting class", as checker_declaration has no
-equivalent of the endmodule_identifier_opt rule used for endmodule.
+"endchecker [ : checker_identifier ]".  The end label is accepted and
+discarded.

@@ -725,7 +725,7 @@ module_keyword:
 interface_declaration:
           interface_nonansi_header
           interface_item_brace
-          TOK_ENDINTERFACE
+          TOK_ENDINTERFACE endinterface_identifier_opt
                 {
                   pop_scope();
                   init($$);
@@ -740,7 +740,7 @@ interface_declaration:
                 }
         | interface_ansi_header
           interface_item_brace
-          TOK_ENDINTERFACE
+          TOK_ENDINTERFACE endinterface_identifier_opt
                 {
                   pop_scope();
                   init($$);
@@ -753,6 +753,16 @@ interface_declaration:
                     stack_expr($2));              // module_items
                   stack_expr($$).id(ID_verilog_interface);
                 }
+        ;
+
+// Optional interface name repeated after "endinterface",
+// IEEE 1800-2017 A.1.2. The name is accepted and discarded, mirroring
+// endmodule_identifier_opt. Note that the scanner classifies the name of
+// an interface that is in scope as TOK_INTERFACE_IDENTIFIER, which is
+// why interface_identifier is used here.
+endinterface_identifier_opt:
+          /* Optional */
+        | TOK_COLON interface_identifier
         ;
 
 // This deviates from the IEEE 1800-2017 grammar, which uses the
@@ -875,7 +885,7 @@ checker_declaration:
           }
           checker_port_list_paren_opt ';'
           checker_or_generate_item_brace
-          TOK_ENDCHECKER
+          TOK_ENDCHECKER end_identifier_opt
                 {
                   pop_scope();
                   init($$);
@@ -3994,11 +4004,11 @@ case_generate_item:
 
 generate_block:
           generate_item
-        | TOK_BEGIN generate_item_brace TOK_END
+        | TOK_BEGIN generate_item_brace TOK_END end_identifier_opt
                 { init($$, ID_generate_block); swapop($$, $2); }
         | TOK_BEGIN TOK_COLON any_identifier
                 { push_scope(stack_expr($3).get(ID_base_name), ".", verilog_scopet::BLOCK); }
-          generate_item_brace TOK_END
+          generate_item_brace TOK_END end_identifier_opt
                 { pop_scope();
                   init($$, ID_generate_block);
                   swapop($$, $5);
@@ -4324,14 +4334,14 @@ seq_block:
                   push_scope(id, ".", verilog_scopet::BLOCK);
                   init($$); stack_expr($$).set(ID_block_id, id); }
           block_item_declaration_or_statement_or_null_brace
-          TOK_END
+          TOK_END end_identifier_opt
                 { init($$, ID_block); swapop($$, $3);
                   stack_expr($$).set(ID_block_id, stack_expr($2).get(ID_block_id));
                   pop_scope(); }
         | TOK_BEGIN TOK_COLON any_identifier
                 { push_scope(stack_expr($3).get(ID_base_name), ".", verilog_scopet::BLOCK); }
           block_item_declaration_or_statement_or_null_brace
-          TOK_END
+          TOK_END end_identifier_opt
                 { init($$, ID_block);
                   swapop($$, $5);
                   stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
@@ -4340,10 +4350,10 @@ seq_block:
         ;
 
 par_block:
-          TOK_FORK statement_or_null_brace TOK_JOIN
+          TOK_FORK statement_or_null_brace TOK_JOIN end_identifier_opt
                 { init($$, ID_fork); swapop($$, $2); }
         | TOK_FORK TOK_COLON any_identifier
-          statement_or_null_brace TOK_JOIN
+          statement_or_null_brace TOK_JOIN end_identifier_opt
                 { init($$, ID_block);
                   swapop($$, $4);
                   stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
@@ -5561,8 +5571,13 @@ endmodule_identifier_opt:
         | TOK_COLON module_identifier
         ;
 
-// Optional block name repeated after endfunction/endtask etc.,
-// e.g. "endfunction : is_width_valid". IEEE 1800-2017 A.9.3.
+// Optional block name repeated after the keyword that ends a named
+// construct, e.g. "endfunction : is_width_valid" (IEEE 1800-2017 A.9.3),
+// "endchecker : chk" (A.7.1),
+// "end : blk" for a named sequential or generate block (9.3.4, A.4.2,
+// A.6.3), and "join : blk" for a named parallel block (9.3.4).
+// The identifier is accepted and discarded, mirroring the treatment of
+// endmodule_identifier_opt and friends.
 end_identifier_opt:
           /* Optional */
         | TOK_COLON any_identifier

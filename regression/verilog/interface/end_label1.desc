@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 end_label1.sv
 --bound 0
 ^\[main\.p0\] main\.i\.W == 8: PROVED up to bound 0$
@@ -8,6 +8,5 @@ end_label1.sv
 ^warning: ignoring
 --
 Per 1800-2017 A.1.3, interface_declaration ends with
-"endinterface [ : interface_identifier ]".  The end label is rejected with
-"syntax error, unexpected :, expecting class", as interface_declaration has
-no equivalent of the endmodule_identifier_opt rule used for endmodule.
+"endinterface [ : interface_identifier ]".  The end label is accepted and
+discarded.
