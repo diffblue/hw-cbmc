@@ -1,0 +1,7 @@
+CORE
+assume1.sv
+--new-ic3 --top main
+^\[main\.p0\] always main\.z: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
