@@ -3466,7 +3466,7 @@ goto_repetition:
         ;
 
 cycle_delay_range:
-          "##" number
+          "##" cycle_delay_constant_primary
                 { init($$, ID_sva_cycle_delay); mto($$, $2); stack_expr($$).operands().push_back(nil_exprt()); }
         | "##" '[' cycle_delay_const_range_expression ']'
                 { $$ = $3; }
@@ -3474,6 +3474,26 @@ cycle_delay_range:
                 { init($$, ID_sva_cycle_delay_star); }
         | "##" "[+" ']'
                 { init($$, ID_sva_cycle_delay_plus); }
+        ;
+
+// 1800-2017 gives the delay of ## as a constant_primary (A.8.4).  The
+// full constant_primary yields grammar conflicts here, as ## may be
+// followed by a sequence_expr, which may start with '(' or with a system
+// function call.  We hence allow the subset of constant_primary that is
+// unambiguous in this context, which covers numbers, (hierarchical and
+// package-scoped) parameter identifiers, and parenthesized constant
+// expressions.
+cycle_delay_constant_primary:
+          number
+        | hierarchical_identifier_select
+        | package_scope hierarchical_identifier_select
+                { $$ = $1;
+                  mto($$, $2);
+                  // exit the package scope
+                  pop_scope();
+                }
+        | '(' constant_expression ')'
+                { $$ = $2; }
         ;
 
 const_or_range_expression:
