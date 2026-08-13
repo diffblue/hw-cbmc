@@ -37,7 +37,10 @@ skip=0
 ROWS=`mktemp`
 trap 'rm -f "$ROWS" ebmc.out' EXIT
 
-(# Ignore the three-line CSV header.
+# Note the use of a brace group, not a subshell: the counters below must
+# survive the loop.
+{
+# Ignore the three-line CSV header.
 read -r line
 read -r line
 read -r line
@@ -71,7 +74,7 @@ while read -r line; do
     if [ "$status" = 10 ] ; then
       echo $BENCHMARK: got unexpected counterexample
       css=fail
-      label=unexpected counterexample
+      label="unexpected counterexample"
       observed="counterexample at bound $bound"
     else
       echo $BENCHMARK: ok "(UNSAT smoke test)"
@@ -87,7 +90,7 @@ while read -r line; do
     if [ "$LENGTH" = "*" ] ; then
       echo $BENCHMARK: no counterexample length
       css=skip
-      label=no reference bound
+      label="no reference bound"
       observed="expected SAT, but no published counterexample length"
     else
       bound=$LENGTH
@@ -104,14 +107,14 @@ while read -r line; do
       else
         echo $BENCHMARK: failed to find counterexample at bound $LENGTH
         css=fail
-        label=missed counterexample
+        label="missed counterexample"
         observed="no counterexample at bound $LENGTH (exit $status)"
       fi
     fi
   else
     echo $BENCHMARK: unknown expected result \"$RESULT\"
     css=skip
-    label=unknown expectation
+    label="unknown expectation"
     observed="unsupported expected result \"$RESULT\""
   fi
 
@@ -125,7 +128,8 @@ while read -r line; do
 
   printf '<tr class="%s"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class="result" data-log="log-%s">%s</td></tr>\n<tr class="log-row" id="log-%s"><td colspan="5"><pre>%s</pre></td></tr>\n' \
     "$css" "$BENCHMARK" "$expected" "$bound" "$observed" "$total" "$label" "$total" "${log_html:-no log captured}" >> "$ROWS"
-done ) < hwmcc08results.csv
+done
+} < hwmcc08results.csv
 
 echo
 echo "HWMCC08 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
