@@ -710,7 +710,15 @@ void verilog_synthesist::assignment_rec(
 
     assignmentt &assignment=assignments[symbol.name];
 
-    if(assignment.is_cycle_local)
+    // Variables declared with the Verilog 'integer' type are idiomatically
+    // used as loop counters and combinational scratch. They are effectively
+    // a fresh temporary in each always/initial block and may therefore
+    // legitimately be (blocking-)assigned by more than one block. Exempt
+    // them from assignment-type and driver-conflict tracking, which would
+    // otherwise flag the reuse as a spurious multiple-driver conflict.
+    bool is_integer = symbol.type.get(ID_C_verilog_type) == ID_integer;
+
+    if(assignment.is_cycle_local || is_integer)
     {
     }
     else
