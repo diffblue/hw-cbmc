@@ -1,0 +1,14 @@
+KNOWNBUG
+macro_default_param1.sv
+--preprocess
+// Macro default parameter values (IEEE 1800-2017 22.5.1):
+// `define M(A, B=x) makes B default to x when the argument is omitted.
+// EBMC currently rejects '=' in a macro parameter list with
+// "default parameters are not supported yet".
+// Enable multi-line checking
+activate-multi-line-match
+^`line 1 "macro_default_param1.sv" 0\n\na\+b\na\+x$
+^EXIT=0$
+^SIGNAL=0$
+--
+^PREPROCESSING FAILED$
