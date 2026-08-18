@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 nested_ifdef1.sv
 --preprocess
 ^module main;$
@@ -8,10 +8,9 @@ nested_ifdef1.sv
 --
 ^warning: ignoring
 --
-A nested `ifdef appearing on the same line as an enclosing FALSE `ifdef is
-silently swallowed together with the rest of the file. The `ifdef directive
-reads its identifier and then skips to end of line, discarding the inline
-`ifdef/`endif/`endif that follow. As a result the outer conditional is never
-closed, the preprocessor stays in skip state, and "module main; endmodule" is
-dropped with EXIT=0 instead of being emitted (or an "unterminated `ifdef"
-error being reported).
+A nested `ifdef appearing on the same line as an enclosing FALSE `ifdef must
+still be processed: the inline `ifdef/`endif/`endif close the conditional
+nesting so that the code following the block is emitted. This used to be
+broken because the `ifdef/`else/`elsif/`endif directives skipped to the end
+of the line, discarding any inline directives and, inside a FALSE region,
+silently swallowing the rest of the file.

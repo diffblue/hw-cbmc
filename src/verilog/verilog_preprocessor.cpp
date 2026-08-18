@@ -552,7 +552,12 @@ void verilog_preprocessort::directive()
 
     auto &identifier = identifier_token.text;
 
-    tokenizer().skip_until_eol();
+    // Only skip trailing whitespace, not the rest of the line: any further
+    // tokens (in particular a nested `ifdef/`endif on the same line) must
+    // still be processed. Skipping to end of line here would discard inline
+    // directives and, inside a FALSE region, silently swallow the remainder
+    // of the file.
+    tokenizer().skip_ws();
 
     bool defined = defines.find(identifier) != defines.end();
 
@@ -572,7 +577,9 @@ void verilog_preprocessort::directive()
     if(conditionals.empty())
       throw verilog_preprocessor_errort() << "`else without `ifdef/`ifndef";
 
-    tokenizer().skip_until_eol();
+    // Only skip trailing whitespace; inline directives on the same line
+    // must still be processed.
+    tokenizer().skip_ws();
 
     conditionalt &conditional=conditionals.back();
 
@@ -601,7 +608,9 @@ void verilog_preprocessort::directive()
 
     auto &identifier = identifier_token.text;
 
-    tokenizer().skip_until_eol();
+    // Only skip trailing whitespace; inline directives on the same line
+    // must still be processed.
+    tokenizer().skip_ws();
 
     bool defined = defines.find(identifier) != defines.end();
 
@@ -622,7 +631,9 @@ void verilog_preprocessort::directive()
       throw verilog_preprocessor_errort() << "`endif without `ifdef/`ifndef";
     }
 
-    tokenizer().skip_until_eol();
+    // Only skip trailing whitespace; inline directives on the same line
+    // must still be processed.
+    tokenizer().skip_ws();
 
     conditionals.pop_back();
 
