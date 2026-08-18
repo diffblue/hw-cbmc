@@ -1682,7 +1682,7 @@ package_item_brace:
 package_item:
           package_or_generate_item_declaration
 //      | anonymous_program
-//      | package_export_declaration
+        | package_export_declaration
         | timeunits_declaration
         ;
 
@@ -1852,6 +1852,11 @@ package_import_item:
                   stack_expr($$).set(ID_verilog_package, package_base_name);
                   stack_expr($$).set(ID_base_name, "*");
                   PARSER.scopes.wildcard_import(package_base_name); }
+        ;
+
+package_export_declaration:
+          TOK_EXPORT package_import_item_brace ';'
+                { init($$, ID_verilog_empty_item); }
         ;
 
 genvar_declaration:
