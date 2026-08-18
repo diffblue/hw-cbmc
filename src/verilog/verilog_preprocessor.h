@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <list>
 #include <map>
+#include <optional>
 
 class verilog_preprocessort:public preprocessort
 {
@@ -42,7 +43,14 @@ protected:
 
   struct definet
   {
-    using parameterst = std::vector<std::string>;
+    // A macro formal argument, with an optional default value
+    // (1800-2017 22.5.1).
+    struct parametert
+    {
+      std::string name;
+      std::optional<std::vector<tokent>> default_value;
+    };
+    using parameterst = std::vector<parametert>;
     parameterst parameters;
     std::vector<tokent> tokens;
     definet() = default;

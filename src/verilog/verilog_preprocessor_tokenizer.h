@@ -57,6 +57,11 @@ public:
     {
       return ::verilog_is_ws_not_nl(static_cast<int>(kind));
     }
+    bool is_ws() const
+    {
+      return ::verilog_is_ws_not_nl(static_cast<int>(kind)) ||
+             static_cast<int>(kind) == '\n';
+    }
     bool operator==(char ch) const
     {
       return static_cast<int>(kind) == ch;
