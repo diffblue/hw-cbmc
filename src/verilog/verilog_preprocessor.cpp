@@ -305,19 +305,69 @@ auto verilog_preprocessort::parse_define_parameters() -> definet::parameterst
     if(!parameter.is_identifier())
       throw verilog_preprocessor_errort() << "expecting a define parameter";
 
-    result.push_back(parameter.text);
+    definet::parametert define_parameter;
+    define_parameter.name = parameter.text;
 
     tokenizer().skip_ws();
 
     auto token = tokenizer().next_token();
 
+    if(token == '=') // SystemVerilog 2009: a default argument value
+    {
+      // 1800-2017 22.5.1: a formal argument may be followed by "= value",
+      // giving a default value that is used when the actual argument is
+      // omitted or empty. The default text runs up to the next comma or
+      // the closing parenthesis at nesting depth zero; commas nested
+      // inside (), [] or {} are part of the default text.
+      tokenizer().skip_ws();
+
+      std::vector<tokent> default_value;
+      std::size_t nesting = 0;
+
+      while(true)
+      {
+        if(tokenizer().eof())
+          throw verilog_preprocessor_errort()
+            << "eof inside a define parameter list";
+
+        if(
+          nesting == 0 &&
+          (tokenizer().peek() == ',' || tokenizer().peek() == ')'))
+        {
+          break;
+        }
+
+        auto value_token = tokenizer().next_token();
+
+        if(value_token == '(' || value_token == '[' || value_token == '{')
+          nesting++;
+        else if(value_token == ')' || value_token == ']' || value_token == '}')
+          nesting--;
+
+        default_value.push_back(std::move(value_token));
+      }
+
+      // trim trailing whitespace off the default text
+      while(!default_value.empty() && default_value.back().is_ws_not_nl())
+      {
+        default_value.pop_back();
+      }
+
+      define_parameter.default_value = std::move(default_value);
+
+      result.push_back(std::move(define_parameter));
+
+      token = tokenizer().next_token(); // the ',' or ')'
+    }
+    else
+    {
+      result.push_back(std::move(define_parameter));
+    }
+
     if(token == ')')
       break; // done
     else if(token == ',')
-      continue;           // keep going
-    else if(token == '=') // SystemVerilog 2009
-      throw verilog_preprocessor_errort()
-        << "default parameters are not supported yet";
+      continue; // keep going
     else
       throw verilog_preprocessor_errort() << "expecting a define parameter";
   }
@@ -382,8 +432,20 @@ auto verilog_preprocessort::parse_define_arguments(const definet &define)
     }
   }
 
-  // does the number of arguments match the number of parameters?
-  if(arguments.size() != define.parameters.size())
+  // An actual argument that is empty or whitespace only is treated as
+  // omitted (1800-2017 22.5.1).
+  auto is_empty = [](const std::vector<tokent> &tokens)
+  {
+    for(auto &token : tokens)
+      if(!token.is_ws())
+        return false;
+    return true;
+  };
+
+  // The number of actual arguments may be smaller than the number of
+  // formal arguments when the trailing formal arguments have default
+  // values. It may never exceed the number of formal arguments.
+  if(arguments.size() > define.parameters.size())
     throw verilog_preprocessor_errort()
       << "expected " << define.parameters.size() << " arguments, but got "
       << arguments.size();
@@ -392,7 +454,32 @@ auto verilog_preprocessort::parse_define_arguments(const definet &define)
   std::map<std::string, std::vector<tokent>> result;
 
   for(std::size_t i = 0; i < define.parameters.size(); i++)
-    result[define.parameters[i]] = std::move(arguments[i]);
+  {
+    const auto &parameter = define.parameters[i];
+    const bool have_argument = i < arguments.size();
+
+    if(have_argument && !is_empty(arguments[i]))
+    {
+      // an actual argument was given
+      result[parameter.name] = std::move(arguments[i]);
+    }
+    else if(parameter.default_value.has_value())
+    {
+      // omitted or empty, but a default value is available
+      result[parameter.name] = *parameter.default_value;
+    }
+    else if(have_argument)
+    {
+      // omitted argument without default: empty substitution
+      result[parameter.name] = std::move(arguments[i]);
+    }
+    else
+    {
+      throw verilog_preprocessor_errort()
+        << "expected " << define.parameters.size() << " arguments, but got "
+        << arguments.size();
+    }
+  }
 
   return result;
 }
