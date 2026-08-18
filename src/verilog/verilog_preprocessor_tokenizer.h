@@ -13,6 +13,15 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <vector>
 
+// returns true if the argument is space, tab, vertical tab,
+// formfeed, carriage return, but not a newline
+static bool verilog_is_ws_not_nl(int ch)
+{
+  // We don't use isspace, since that requires that the argument
+  // is representable as an unsigned char.
+  return ch == ' ' || ch == '\t' || ch == '\v' || ch == '\f' || ch == '\r';
+}
+
 /// Note that the set of tokens recognised by the Verilog preprocessor
 /// differs from the set of tokens used by the main parser.
 
@@ -44,13 +53,17 @@ public:
     {
       return kind == STRING_LITERAL;
     }
+    bool is_ws_not_nl() const
+    {
+      return ::verilog_is_ws_not_nl(static_cast<int>(kind));
+    }
     bool operator==(char ch) const
     {
-      return static_cast<char>(kind) == ch;
+      return static_cast<int>(kind) == ch;
     }
     bool operator!=(char ch) const
     {
-      return static_cast<char>(kind) != ch;
+      return static_cast<int>(kind) != ch;
     }
     friend std::ostream &operator<<(std::ostream &out, const tokent &t)
     {
