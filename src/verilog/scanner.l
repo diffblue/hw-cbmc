@@ -23,6 +23,7 @@ static int isatty(int) { return 0; }
 
 #include "verilog_parser.h"
 #include "verilog_y.tab.h"
+#include "verilog_preprocessor_tokenizer.h"
 #include "verilog_scanner.h"
 
 int yyverilogerror(const char *error);
@@ -34,8 +35,8 @@ static void line_directive()
   // skip directive
   while(*tptr!=' ' && *tptr!='\t' && *tptr!=0) tptr++;
 
-  // skip whitespace
-  while(*tptr==' ' || *tptr=='\t') tptr++;
+  // skip whitespace except newline
+  while(verilog_is_ws_not_nl(*tptr)) tptr++;
 
   PARSER.set_line_no(atoi(tptr)-1);
 
@@ -43,8 +44,8 @@ static void line_directive()
 
   while(isdigit(*tptr)) tptr++;
 
-  // skip whitespace
-  while(*tptr==' ' || *tptr=='\t') tptr++;
+  // skip whitespace except newline
+  while(verilog_is_ws_not_nl(*tptr)) tptr++;
 
   if(*tptr=='"') // filename?
   {
@@ -130,7 +131,7 @@ YYSTYPE make_identifier(irep_idt base_name, exprt &dest)
 %s STRING
 
 NL              [\n]
-WS              [ \t\r\b]
+WS              [ \t\v\f\r]
 WSNL            [{WS}{NL}]
 Digit           [0-9]
 DigitU          [0-9_]
@@ -583,8 +584,6 @@ prove           { VL2SMV_VERILOG_KEYWORD(TOK_PROVE); }
 \`line{WS}[^\n]*{NL} { line_directive(); continue; }
 \`default_nettype{WS}[^\n]*{NL} { /* ignore for now */ continue; }
 \`{Word}        { preprocessor(); continue; }
-
-\f              { /* ignore */ }
 
                 /* Identifiers and numbers */
 

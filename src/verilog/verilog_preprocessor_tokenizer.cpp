@@ -26,7 +26,7 @@ void verilog_preprocessor_token_sourcet::skip_ws()
   while(true)
   {
     auto token = peek();
-    if(token != ' ' && token != '\t')
+    if(!token.is_ws_not_nl())
       break;
     next_token(); // eat
   }
