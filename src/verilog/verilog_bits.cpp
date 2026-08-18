@@ -61,6 +61,15 @@ std::optional<mp_integer> verilog_bits_opt(const typet &type)
     return max;
   }
 
+  if(type.id() == ID_integer)
+  {
+    // A mathematical (unbounded) integer, e.g. the result of $clog2 or an
+    // unsized integer constant expression. In a context that requires a
+    // concrete width it is treated as the 32-bit integer type
+    // (IEEE 1800-2017 Sec. 6.11, 11.8.1).
+    return 32;
+  }
+
   if(type.id() == ID_verilog_shortint)
     return 16;
   else if(type.id() == ID_verilog_int)

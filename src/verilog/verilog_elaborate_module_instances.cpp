@@ -295,8 +295,22 @@ void verilog_typecheckt::parameterize_instantiated_modules(
   }
   else if(module_item.id() == ID_set_genvars)
   {
+    // Restore the genvar values that were in effect when this generate
+    // item was elaborated. Parameter assignments and port connections of
+    // the enclosed instance may refer to genvars (e.g. an output connected
+    // to arr[g]); without this the live genvars map still holds the
+    // post-loop value and such references are mis-evaluated. This mirrors
+    // the restore done in convert_module_item.
+    auto saved_genvars = genvars;
+    genvars.clear();
+    const auto &variables = to_verilog_set_genvars(module_item).variables();
+    for(auto &var : variables)
+      genvars[id2string(var.first)] = string2integer(var.second.id_string());
+
     parameterize_instantiated_modules(
       to_verilog_set_genvars(module_item).module_item());
+
+    genvars = std::move(saved_genvars);
   }
 }
 
