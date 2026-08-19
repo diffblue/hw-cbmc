@@ -1,0 +1,9 @@
+CORE
+import1.sv
+
+^\[main\.p0\] always main\.i\.data == 255: PROVED \(.*\)$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Package import declaration inside an interface.
