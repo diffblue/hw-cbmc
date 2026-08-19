@@ -675,6 +675,7 @@ void verilog_preprocessort::directive()
       throw verilog_preprocessor_errort() << "`else without `ifdef/`ifndef";
     }
 
+    conditional.into_next_branch();
     conditional.else_part=true;
     condition=conditional.get_cond();
   }
@@ -708,6 +709,7 @@ void verilog_preprocessort::directive()
       throw verilog_preprocessor_errort() << "`elsif after `else";
     }
 
+    conditional.into_next_branch();
     conditional.condition = defined;
     condition = conditional.get_cond();
   }
