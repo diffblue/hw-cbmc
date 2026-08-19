@@ -69,6 +69,10 @@ protected:
   void register_languages();
   void plus_arg(const std::string &);
 
+  void log_version_and_architecture(
+    const std::string_view &front_end,
+    const std::string_view &version);
+
   ui_message_handlert ui_message_handler;
 };
 
