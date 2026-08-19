@@ -81,17 +81,36 @@ protected:
   class conditionalt
   {
   public:
+    // The current branch's own condition, i.e. whether the identifier
+    // named by the most recent `ifdef/`ifndef/`elsif is defined.
     bool condition;
+    // The condition of the enclosing scope, evaluated when the `ifdef/
+    // `ifndef was seen.
     bool previous_condition;
+    // Set once the trailing `else branch has been entered.
     bool else_part;
-    
-    conditionalt()
-    { else_part=false; }
-     
+    // Set once any earlier branch in this `ifdef/`elsif/`else chain has
+    // matched. A branch (and the trailing `else) may only be active if no
+    // earlier branch has already matched.
+    bool matched;
+
+    conditionalt() : else_part(false), matched(false)
+    {
+    }
+
+    // Fold the current branch's condition into the "already matched" flag.
+    // Called before moving on to an `elsif or `else branch.
+    void into_next_branch()
+    {
+      matched = matched || condition;
+    }
+
     bool get_cond()
     {
-      return previous_condition &&
-             (else_part?(!condition):condition);
+      if(else_part)
+        return previous_condition && !matched;
+      else
+        return previous_condition && !matched && condition;
     }
   };
 
