@@ -1,0 +1,24 @@
+KNOWNBUG
+elsif3.v
+--preprocess -D A
+^BRANCH_A$
+^EXIT=0$
+^SIGNAL=0$
+--
+^BRANCH_B$
+^BRANCH_C$
+^BRANCH_ELSE$
+--
+In an `ifdef/`elsif/`elsif/`else chain, when a branch *before* the final
+`elsif matches, the preprocessor incorrectly emits both the matched branch
+and the trailing `else branch.  Here `ifdef A matches (A is defined via -D),
+so only BRANCH_A should be emitted, but BRANCH_ELSE is emitted as well.
+
+Root cause: conditionalt (src/verilog/verilog_preprocessor.h) stores only the
+most recent branch condition and has no "a branch was already taken" flag.
+An `elsif/`else computes its own activity from the previous branch's condition
+alone (get_cond() negates conditionalt::condition for the else part), so it
+cannot tell that an earlier branch in the chain already matched.  Plain
+`ifdef/`else works because there is a single branch condition to negate, and
+a chain whose *final* `elsif matches also happens to work because that last
+condition is the one `else negates.
