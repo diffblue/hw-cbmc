@@ -29,6 +29,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "verilog_lowering.h"
 #include "verilog_parser.h"
 #include "verilog_preprocessor.h"
+#include "verilog_rtl.h"
 #include "verilog_synthesis.h"
 #include "verilog_typecheck.h"
 #include "verilog_types.h"
@@ -185,6 +186,22 @@ void verilog_ebmc_languaget::typecheck_module(
   {
     log.error() << "CONVERSION ERROR" << messaget::eom;
     throw ebmc_errort{}.with_exit_code(2);
+  }
+
+  // The RTL representation follows type checking and
+  // precedes synthesis.
+  if(cmdline.isset("show-rtl"))
+  {
+    auto rtl = verilog_rtl(
+      symbol_table,
+      module.identifier,
+      module.parse_tree.standard,
+      message_handler);
+
+    const namespacet ns(symbol_table);
+    rtl.output(ns, std::cout);
+
+    return; // no synthesis
   }
 
   messaget message(message_handler);
@@ -656,6 +673,10 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   // check that the bind directives with an instance target
   // have been applied
   check_bind_directives(transition_system.symbol_table);
+
+  // --show-rtl is handled between type checking and synthesis
+  if(cmdline.isset("show-rtl"))
+    return {};
 
   // Create the $root module instance and synthesize it
   create_root_module(
