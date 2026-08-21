@@ -283,13 +283,14 @@ jobs:
       - name: Install Packages
         run: |
           sed -i -e "s|mirrorlist=|#mirrorlist=|g" -e "s|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g" /etc/yum.repos.d/CentOS-Linux-*
-          yum -y install make gcc-c++ flex bison git rpmdevtools wget
+          yum -y install make gcc-toolset-11-gcc-c++ flex bison git rpmdevtools wget
           wget --no-verbose https://github.com/ccache/ccache/releases/download/v4.8.3/ccache-4.8.3-linux-x86_64.tar.xz
           tar xJf ccache-4.8.3-linux-x86_64.tar.xz
           cp ccache-4.8.3-linux-x86_64/ccache /usr/bin/
-          # yum install dnf-plugins-core
-          # yum config-manager --set-enabled powertools
-          # yum install glibc-static libstdc++-static
+          # Put gcc-toolset-11 (GCC 11) on PATH for all subsequent steps.
+          # GCC 11 has std::filesystem in the main libstdc++, so no -lstdc++fs
+          # is needed.
+          echo "/opt/rh/gcc-toolset-11/root/usr/bin" >> "$GITHUB_PATH"
       - name: cache for ccache
         uses: actions/cache/restore@v6
         with:
@@ -306,9 +307,9 @@ jobs:
       - name: Get cadical and minisat
         run: make -C lib/cbmc/src cadical-download minisat2-download
       - name: Build with make
-        run: make CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs" -C src -j4 MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
+        run: make CXX="ccache g++ -Wno-class-memaccess" -C src -j4 MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
       - name: Run unit tests
-        run: make -C unit -j4 CXX="ccache g++ -Wno-class-memaccess" LIBS="-lstdc++fs"
+        run: make -C unit -j4 CXX="ccache g++ -Wno-class-memaccess"
       - name: Save ccache
         uses: actions/cache/save@v6
         if: always()
