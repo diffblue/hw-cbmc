@@ -1874,6 +1874,90 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
 
 /*******************************************************************\
 
+Function: is_scope
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+static bool is_scope(const symbolt &symbol)
+{
+  // Something that can be given on the left-hand side of a dot in a
+  // hierarchical identifier.
+  return symbol.type.id() == ID_named_block ||
+         symbol.type.id() == ID_verilog_module_instance;
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::resolve_scope_name
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+const symbolt *verilog_typecheck_exprt::resolve_scope_name(
+  const exprt &expr,
+  const std::string &suffix)
+{
+  if(expr.id() == ID_verilog_identifier)
+  {
+    auto base_name = to_verilog_identifier_expr(expr).base_name();
+    return resolve(id2string(base_name) + suffix);
+  }
+  else if(expr.id() == ID_hierarchical_identifier)
+  {
+    // Resolve the scope on the left of the dot first.
+    auto &hierarchical_identifier = to_hierarchical_identifier_expr(expr);
+    auto scope = resolve_scope_name(hierarchical_identifier.lhs(), "");
+
+    if(scope == nullptr || !is_scope(*scope))
+      return nullptr;
+
+    auto full_identifier =
+      id2string(scope->name) + '.' +
+      id2string(hierarchical_identifier.rhs().base_name()) + suffix;
+
+    const symbolt *symbol;
+    return ns.lookup(full_identifier, symbol) ? nullptr : symbol;
+  }
+  else if(expr.id() == ID_verilog_bit_select && suffix.empty())
+  {
+    // 1800-2017 27.6: a generate loop with a block name yields an array of
+    // generate blocks, the individual blocks being named block_name[0],
+    // block_name[1], and so on.  The parser has read the brackets as a bit
+    // select, which we undo here.
+    auto &bit_select = to_binary_expr(expr);
+
+    // An object of the given name takes precedence; the brackets are then
+    // a bit select or an array index, and the index need not be constant.
+    if(resolve_scope_name(bit_select.op0(), "") != nullptr)
+      return nullptr;
+
+    auto index = convert_integer_constant_expression(bit_select.op1());
+    auto block_suffix = '[' + integer2string(index) + ']';
+
+    auto symbol = resolve_scope_name(bit_select.op0(), block_suffix);
+
+    if(symbol == nullptr || symbol->type.id() != ID_named_block)
+      return nullptr;
+
+    return symbol;
+  }
+  else
+    return nullptr;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_hierarchical_identifier
 
   Inputs:
@@ -1909,7 +1993,16 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     return symbol->symbol_expr().with_source_location(expr);
   }
 
-  convert_expr(expr.lhs());
+  // The brackets in a reference to a block of a generate loop are read as a
+  // bit select by the parser, which resolve_scope_name undoes.
+  auto generate_block = expr.lhs().id() == ID_verilog_bit_select
+                          ? resolve_scope_name(expr.lhs(), "")
+                          : nullptr;
+
+  if(generate_block != nullptr)
+    expr.lhs() = generate_block->symbol_expr().with_source_location(expr.lhs());
+  else
+    convert_expr(expr.lhs());
 
   DATA_INVARIANT(
     expr.rhs().id() == ID_verilog_identifier,
