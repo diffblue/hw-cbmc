@@ -1118,8 +1118,16 @@ list_of_port_declarations: '(' ansi_port_declaration_brace ')' { $$=$2; }
 ansi_port_declaration_brace:
           attribute_instance_brace ansi_port_declaration
                 { init($$); mts($$, $2); }
+          // Interface ports are a separate alternative here, rather than an
+          // alternative of ansi_port_declaration, to keep the grammar LALR(1):
+          // the leading identifier of an interface port has to be shifted
+          // before the (possibly empty) attribute_instance_brace is reduced.
+        | interface_port_declaration
+                { init($$); mts($$, $1); }
         | ansi_port_declaration_brace ',' attribute_instance_brace ansi_port_declaration
                 { $$=$1; mts($$, $4); }
+        | ansi_port_declaration_brace ',' interface_port_declaration
+                { $$=$1; mts($$, $3); }
 
           // append to last one -- required to make
           // the grammar LR1
@@ -1183,7 +1191,19 @@ ansi_port_declaration:
                   addswap($2, ID_type, $3);
                   stack_expr($2).set(ID_value, stack_expr($4));
                   mto($$, $2); /* declarator */ }
-        | TOK_INTERFACE_IDENTIFIER port_identifier
+        ;
+
+// IEEE 1800-2017 A.1.3 interface_port_header, applied to
+// ansi_port_declaration.
+//
+// The interface name is accepted as a plain identifier, and not just as
+// TOK_INTERFACE_IDENTIFIER: an interface may be declared in a file that is
+// parsed after the file that uses it, in which case the scanner has not yet
+// seen the interface and returns TOK_NON_TYPE_IDENTIFIER. Inside a port list,
+// an identifier that is followed by another identifier, with or without an
+// intervening ".modport", can only be an interface port.
+interface_port_declaration:
+          interface_identifier port_identifier unpacked_dimension_brace
                 {
                   // Interface port: myInterface bus
                   PARSER.scopes.add_identifier(stack_expr($2).get(ID_base_name), verilog_scopet::VAR);
@@ -1192,8 +1212,12 @@ ansi_port_declaration:
                   auto interface_base_name = stack_expr($1).get(ID_base_name);
                   stack_expr($$).type() = typet(ID_verilog_interface);
                   stack_expr($$).type().set(ID_base_name, interface_base_name);
+                  // The interface type goes onto the declaration,
+                  // and the unpacked_array_type goes onto the declarator.
+                  addswap($2, ID_type, $3);
                   mto($$, $2); /* declarator */ }
-        | TOK_INTERFACE_IDENTIFIER '.' non_type_identifier port_identifier
+        | interface_identifier '.' non_type_identifier port_identifier
+          unpacked_dimension_brace
                 {
                   // Interface port with modport: myInterface.some_port bus
                   PARSER.scopes.add_identifier(stack_expr($4).get(ID_base_name), verilog_scopet::VAR);
@@ -1203,6 +1227,9 @@ ansi_port_declaration:
                   stack_expr($$).type() = typet(ID_verilog_interface);
                   stack_expr($$).type().set(ID_base_name, interface_base_name);
                   stack_expr($$).type().set(ID_verilog_modport, stack_expr($3).get(ID_base_name));
+                  // The interface type goes onto the declaration,
+                  // and the unpacked_array_type goes onto the declarator.
+                  addswap($4, ID_type, $5);
                   mto($$, $4); /* declarator */ }
         ;
 
@@ -1839,19 +1866,36 @@ package_import_item_brace:
         ;
 
 package_import_item:
-          package_identifier "::" identifier
+          import_package_identifier "::" identifier
                 { init($$, ID_verilog_import_item);
                   auto package_base_name = stack_expr($1).get(ID_base_name);
                   auto identifier_base_name = stack_expr($3).get(ID_base_name);
                   stack_expr($$).set(ID_verilog_package, package_base_name);
                   stack_expr($$).set(ID_base_name, identifier_base_name);
                   PARSER.scopes.import(package_base_name, identifier_base_name); }
-        | package_identifier "::" "*"
+        | import_package_identifier "::" "*"
                 { init($$, ID_verilog_import_item);
                   auto package_base_name = stack_expr($1).get(ID_base_name);
                   stack_expr($$).set(ID_verilog_package, package_base_name);
                   stack_expr($$).set(ID_base_name, "*");
                   PARSER.scopes.wildcard_import(package_base_name); }
+        ;
+
+// The operand of an import can only ever be a package name, and hence we
+// also accept an identifier that the scanner did not classify as a package
+// name. That yields a diagnostic that names the offending package, instead
+// of a syntax error about the token class.
+import_package_identifier:
+          package_identifier
+        | non_type_identifier
+                { $$ = $1;
+                  auto base_name = stack_expr($$).get(ID_base_name);
+                  PARSER.error(
+                    stack_expr($$).source_location(),
+                    PARSER.scopes.lookup(base_name) == nullptr
+                      ? "unknown package `" + id2string(base_name) + '\''
+                      : '`' + id2string(base_name) + "' is not a package");
+                  YYERROR; }
         ;
 
 genvar_declaration:
@@ -1996,7 +2040,8 @@ data_type:
         | TOK_CHANDLE
                 { init($$, ID_verilog_chandle); }
         | TOK_VIRTUAL interface_opt interface_identifier
-                { init($$, "virtual_interface"); }
+                { init($$, ID_verilog_virtual_interface);
+                  stack_type($$).set(ID_base_name, stack_expr($3).get(ID_base_name)); }
         | type_identifier packed_dimension_brace
                 { add_as_subtype(stack_type($2), stack_type($1));
                   $$ = $2; }

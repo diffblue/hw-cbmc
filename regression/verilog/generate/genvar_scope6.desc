@@ -1,0 +1,11 @@
+CORE
+genvar_scope6.sv
+--bound 0
+^\[main\.property\.p1\] always main\.some_wire1 == 16'h100: PROVED up to bound 0$
+^\[main\.property\.p2\] always main\.some_wire2 == 16'hB0A: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+A genvar declared in the header of a loop generate construct shadows a
+localparam or a genvar with the same name in an enclosing scope.

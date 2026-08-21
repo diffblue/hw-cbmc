@@ -14,7 +14,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/c_types.h>
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
+#include <util/floatbv_expr.h>
 #include <util/identifier.h>
+#include <util/ieee_float.h>
 #include <util/mathematical_types.h>
 #include <util/simplify_expr.h>
 #include <util/std_expr.h>
@@ -27,6 +29,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_expr.h"
 #include "verilog_initializer.h"
 #include "verilog_lowering.h"
+#include "verilog_simplifier.h"
 #include "verilog_typecheck_expr.h"
 
 #include <cassert>
@@ -345,6 +348,59 @@ void verilog_synthesist::function_locality(const symbolt &function_symbol)
 
 /*******************************************************************\
 
+Function: verilog_synthesist::simulation_time_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Returns the state variable that models the simulation
+          time, creating it on first use.
+
+\*******************************************************************/
+
+const symbolt &verilog_synthesist::simulation_time_symbol()
+{
+  // 1800-2017 20.3 defines the simulation time system functions in terms
+  // of the simulation time that an event-driven simulator maintains.
+  // EBMC's model of time is the sequence of timeframes of the transition
+  // system: there is no continuous time, delay controls are ignored, and
+  // so is the `timescale directive.  We therefore let the time advance by
+  // exactly one time unit per timeframe, which we model using a state
+  // variable that counts the timeframes.  Note that the simulation time
+  // is global, and hence the state variable lives in $root.
+  const auto type = unsignedbv_typet{64}; // 1800-2017 20.3.1
+
+  const irep_idt identifier =
+    id2string(verilog_root_module_identifier()) + ".$time";
+
+  // Created already?
+  auto existing_symbol = symbol_table.get_writeable(identifier);
+  if(existing_symbol != nullptr)
+    return *existing_symbol;
+
+  symbolt new_symbol{identifier, type, ID_Verilog};
+  new_symbol.base_name = "$time";
+  new_symbol.pretty_name = strip_verilog_root_prefix(identifier);
+  new_symbol.module = verilog_root_module_identifier();
+  new_symbol.is_lvalue = true; // this is a state variable
+  new_symbol.value = nil_exprt();
+
+  auto insert_result = symbol_table.insert(std::move(new_symbol));
+  CHECK_RETURN(insert_result.second);
+
+  // The time starts at zero, and is incremented once per timeframe.
+  const symbol_exprt symbol_expr{identifier, type};
+  auto &assignment = assignments[identifier];
+  assignment.init.value = from_integer(0, type);
+  assignment.next.value = plus_exprt{symbol_expr, from_integer(1, type)};
+  local_symbols.insert(identifier);
+
+  return insert_result.first;
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::expand_function_call
 
   Inputs:
@@ -426,6 +482,37 @@ exprt verilog_synthesist::expand_function_call(
       // IEEE 1800-2017 section 21.6
       // Return 0, indicating plusarg not found.
       return from_integer(0, call.type()).with_source_location(call);
+    }
+    else if(
+      base_name == "$time" || base_name == "$stime" || base_name == "$realtime")
+    {
+      // IEEE 1800-2017 section 20.3
+      // Read the state variable that counts the timeframes.
+      exprt result = simulation_time_symbol().symbol_expr();
+
+      // The type of the call is not lowered yet.
+      auto type = verilog_lowering(call.type());
+
+      if(type.id() == ID_floatbv)
+      {
+        // $realtime.  1800-2017 does not say how to round integers to
+        // floating-point; we use the same rounding mode as the lowering
+        // of integer-to-real casts.
+        result = floatbv_typecast_exprt{
+          result,
+          ieee_floatt::rounding_mode_expr(
+            ieee_floatt::rounding_modet::ROUND_TO_AWAY),
+          type};
+      }
+      else
+      {
+        // $time and $stime.  1800-2017 20.3.3 gives the low-order 32 bits
+        // of the current simulation time for $stime, which is what the
+        // truncating cast yields.
+        result = typecast_exprt::conditional_cast(result, type);
+      }
+
+      return result.with_source_location(call);
     }
     else
     {
@@ -710,7 +797,15 @@ void verilog_synthesist::assignment_rec(
 
     assignmentt &assignment=assignments[symbol.name];
 
-    if(assignment.is_cycle_local)
+    // Variables declared with the Verilog 'integer' type are idiomatically
+    // used as loop counters and combinational scratch. They are effectively
+    // a fresh temporary in each always/initial block and may therefore
+    // legitimately be (blocking-)assigned by more than one block. Exempt
+    // them from assignment-type and driver-conflict tracking, which would
+    // otherwise flag the reuse as a spurious multiple-driver conflict.
+    bool is_integer = symbol.type.get(ID_C_verilog_type) == ID_integer;
+
+    if(assignment.is_cycle_local || is_integer)
     {
     }
     else
@@ -1316,6 +1411,148 @@ const symbolt &verilog_synthesist::assignment_symbol(const exprt &lhs)
 
 /*******************************************************************\
 
+Function: verilog_synthesist::bind_interface_instance
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Equate the members of the interface that was instantiated
+          under the given port with those of the interface instance
+          that is bound to that port.
+
+\*******************************************************************/
+
+void verilog_synthesist::bind_interface_instance(
+  const irep_idt &port_identifier,
+  const irep_idt &bound_instance_identifier,
+  transt &trans)
+{
+  auto port_prefix = id2string(port_identifier) + ".";
+  auto bound_prefix = id2string(bound_instance_identifier) + ".";
+
+  for(auto &entry : symbol_table.symbols)
+  {
+    auto id = id2string(entry.first);
+    if(
+      id.size() > port_prefix.size() &&
+      id.substr(0, port_prefix.size()) == port_prefix &&
+      id.find('.', port_prefix.size()) == std::string::npos)
+    {
+      auto member_name = id.substr(port_prefix.size());
+      auto bound_id = bound_prefix + member_name;
+
+      const symbolt *bound_sym;
+      if(ns.lookup(bound_id, bound_sym))
+        continue;
+
+      if(bound_sym->type.id() == ID_verilog_module_instance)
+        continue;
+
+      symbol_exprt port_member{entry.first, entry.second.type};
+      symbol_exprt bound_member{bound_id, bound_sym->type};
+
+      equal_exprt invar_expr{port_member, bound_member};
+      trans.invar().add_to_operands(std::move(invar_expr));
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_synthesist::bind_interface_instance_array
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Bind the elements of an array of interface ports,
+          1800-2017 25.4, to the given interface instances.
+
+\*******************************************************************/
+
+void verilog_synthesist::bind_interface_instance_array(
+  const irep_idt &port_identifier,
+  const typet &port_type,
+  const exprt &value,
+  transt &trans)
+{
+  auto &array_type = to_verilog_array_type(port_type);
+  auto size = array_type.size_int();
+  auto offset = array_type.offset();
+  auto &element_type = array_type.element_type();
+
+  // The actual may be another array of interfaces, given by its name. The
+  // elements are then bound pairwise, in the order of the two ranges.
+  if(value.id() == ID_symbol)
+  {
+    auto &actual_type = to_verilog_array_type(value.type());
+    auto actual_offset = actual_type.offset();
+    auto &actual_identifier = to_symbol_expr(value).identifier();
+
+    for(mp_integer i = 0; i < size; ++i)
+    {
+      auto index = array_type.increasing() ? offset + i : offset + size - 1 - i;
+      auto actual_index = actual_type.increasing()
+                            ? actual_offset + i
+                            : actual_offset + size - 1 - i;
+
+      auto element_identifier =
+        id2string(port_identifier) + '[' + integer2string(index) + ']';
+      auto actual_element_identifier = id2string(actual_identifier) + '[' +
+                                       integer2string(actual_index) + ']';
+
+      if(is_interface_array_type(element_type))
+      {
+        // recursive call, for further dimensions
+        bind_interface_instance_array(
+          element_identifier,
+          element_type,
+          symbol_exprt{actual_element_identifier, actual_type.element_type()},
+          trans);
+      }
+      else
+      {
+        bind_interface_instance(
+          element_identifier, actual_element_identifier, trans);
+      }
+    }
+
+    return;
+  }
+
+  // The type checker has established that there is one operand per element.
+  DATA_INVARIANT(
+    value.operands().size() == size,
+    "one interface instance per array element");
+
+  for(mp_integer i = 0; i < size; ++i)
+  {
+    // The operands are stored starting from the left index of the range,
+    // as are the element symbols.
+    auto index = array_type.increasing() ? offset + i : offset + size - 1 - i;
+
+    auto element_identifier =
+      id2string(port_identifier) + '[' + integer2string(index) + ']';
+
+    auto &element = value.operands()[numeric_cast_v<std::size_t>(i)];
+
+    if(is_interface_array_type(element_type))
+    {
+      // recursive call, for further dimensions
+      bind_interface_instance_array(
+        element_identifier, element_type, element, trans);
+    }
+    else if(element.id() == ID_symbol)
+    {
+      bind_interface_instance(
+        element_identifier, to_symbol_expr(element).identifier(), trans);
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::instantiate_port
 
   Inputs:
@@ -1339,35 +1576,18 @@ void verilog_synthesist::instantiate_port(
     if(value.id() != ID_symbol)
       return;
 
-    auto &bound_instance_id = to_symbol_expr(value).identifier();
-    auto port_prefix = id2string(port.identifier()) + ".";
-    auto bound_prefix = id2string(bound_instance_id) + ".";
+    bind_interface_instance(
+      port.identifier(), to_symbol_expr(value).identifier(), trans);
+    return;
+  }
 
-    for(auto &entry : symbol_table.symbols)
-    {
-      auto id = id2string(entry.first);
-      if(
-        id.size() > port_prefix.size() &&
-        id.substr(0, port_prefix.size()) == port_prefix &&
-        id.find('.', port_prefix.size()) == std::string::npos)
-      {
-        auto member_name = id.substr(port_prefix.size());
-        auto bound_id = bound_prefix + member_name;
-
-        const symbolt *bound_sym;
-        if(ns.lookup(bound_id, bound_sym))
-          continue;
-
-        if(bound_sym->type.id() == ID_verilog_module_instance)
-          continue;
-
-        symbol_exprt port_member{entry.first, entry.second.type};
-        symbol_exprt bound_member{bound_id, bound_sym->type};
-
-        equal_exprt invar_expr{port_member, bound_member};
-        trans.invar().add_to_operands(std::move(invar_expr));
-      }
-    }
+  // An array of interface ports, 1800-2017 25.4: bind one interface
+  // instance per array element. The type checker has ensured that the
+  // value is an assignment pattern with one interface instance per
+  // element of the port.
+  if(is_interface_array_type(port.type()))
+  {
+    bind_interface_instance_array(port.identifier(), port.type(), value, trans);
     return;
   }
 
@@ -1538,6 +1758,80 @@ void verilog_synthesist::synth_module_instance(
 
     // must be in symbol_table
     const symbolt &module_symbol = ns.lookup(module_identifier);
+
+    // For interface ports, update the port member types to match the
+    // actual bound interface instance before synthesising the submodule.
+    // The port's interface was instantiated with default parameters during
+    // type checking, but the actual interface may use different parameters.
+    {
+      auto &module_type = to_module_type(module_symbol.type);
+      auto &ports = module_type.ports();
+      auto &connections = instance.connections();
+
+      std::size_t port_index = 0;
+      for(auto &port : ports)
+      {
+        if(port.type().id() == ID_verilog_module_instance)
+        {
+          // Find the corresponding connection
+          const exprt *connection = nullptr;
+          if(instance.named_port_connections())
+          {
+            for(auto &conn : connections)
+            {
+              if(conn.id() == ID_verilog_named_port_connection)
+              {
+                auto &named = to_verilog_named_port_connection(conn);
+                if(
+                  to_symbol_expr(named.port()).identifier() ==
+                  port.identifier())
+                {
+                  connection = &named.value();
+                  break;
+                }
+              }
+            }
+          }
+          else if(port_index < connections.size())
+          {
+            connection = &connections[port_index];
+          }
+
+          if(
+            connection != nullptr && connection->is_not_nil() &&
+            connection->id() == ID_symbol)
+          {
+            auto &bound_id = to_symbol_expr(*connection).identifier();
+            auto port_prefix = id2string(port.identifier()) + ".";
+            auto bound_prefix = id2string(bound_id) + ".";
+
+            for(auto &entry : symbol_table.symbols)
+            {
+              auto id = id2string(entry.first);
+              if(
+                id.size() > port_prefix.size() &&
+                id.substr(0, port_prefix.size()) == port_prefix &&
+                id.find('.', port_prefix.size()) == std::string::npos)
+              {
+                auto member_name = id.substr(port_prefix.size());
+                auto bound_member_id = bound_prefix + member_name;
+
+                const symbolt *bound_sym;
+                if(!ns.lookup(bound_member_id, bound_sym))
+                {
+                  if(entry.second.type != bound_sym->type)
+                  {
+                    symbolt &port_member_sym = symbol_table_lookup(entry.first);
+                    port_member_sym.type = bound_sym->type;
+                  }
+                }
+              }
+            }
+          }
+        }
+        port_index++;
+      }
+    }
 
     // get the transition relation of the instantiated module
     auto trans_inst = verilog_synthesis(
@@ -2326,7 +2620,12 @@ void verilog_synthesist::synth_assign(const verilog_assignt &statement)
   }
 
   // Can the rhs be simplified to a constant, for propagation?
-  auto rhs_simplified = simplify_expr(rhs, ns);
+  // We use the Verilog-aware simplifier so that Verilog-specific constructs
+  // such as replication (e.g. the loop-variable initializer
+  // {1'b1, {DW-1{1'b0}}}) are folded; the plain simplifier does not know how
+  // to reduce these to a constant, which would otherwise leave an unrolled
+  // loop guard unevaluable.
+  auto rhs_simplified = verilog_simplifier(rhs, ns);
 
   if(rhs_simplified.is_constant())
     rhs = rhs_simplified;

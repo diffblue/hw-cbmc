@@ -9,8 +9,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_EXPR_H
 #define CPROVER_VERILOG_EXPR_H
 
+#include <util/mp_arith.h>
 #include <util/std_expr.h>
 
+#include <map>
 #include <set>
 
 /// A simple Verilog identifier, unqualified
@@ -939,26 +941,40 @@ public:
     return find(ID_variables).get_named_sub();
   }
 
+  // The scope of the loop generate construct a genvar is local to,
+  // for those genvars that are local to a loop. 1800-2017 27.4.
+  named_subt &loop_scopes()
+  {
+    return add("loop_scopes").get_named_sub();
+  }
+
+  const named_subt &loop_scopes() const
+  {
+    return find("loop_scopes").get_named_sub();
+  }
+
   const verilog_module_itemt &module_item() const
   {
-    return static_cast<const verilog_module_itemt &>(get_sub()[0]);
+    return static_cast<const verilog_module_itemt &>(op0());
   }
 
   verilog_module_itemt &module_item()
   {
-    return static_cast<verilog_module_itemt &>(get_sub()[0]);
+    return static_cast<verilog_module_itemt &>(op0());
   }
 };
 
 inline const verilog_set_genvarst &to_verilog_set_genvars(const exprt &expr)
 {
   PRECONDITION(expr.id() == ID_set_genvars);
+  PRECONDITION(expr.operands().size() == 1);
   return static_cast<const verilog_set_genvarst &>(expr);
 }
 
 inline verilog_set_genvarst &to_verilog_set_genvars(exprt &expr)
 {
   PRECONDITION(expr.id() == ID_set_genvars);
+  PRECONDITION(expr.operands().size() == 1);
   return static_cast<verilog_set_genvarst &>(expr);
 }
 

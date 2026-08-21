@@ -29,6 +29,86 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::typecheck_interface_array_port_connection
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::typecheck_interface_array_port_connection(
+  exprt &op,
+  const typet &port_type)
+{
+  auto &array_type = to_verilog_array_type(port_type);
+  auto size = array_type.size_int();
+
+  // The actual may be another array of interfaces, given by its name,
+  // e.g., when a module passes on an array of interface ports that it has
+  // itself been given.
+  if(op.id() != ID_verilog_assignment_pattern)
+  {
+    convert_expr(op);
+
+    if(!is_interface_array_type(op.type()))
+    {
+      throw errort().with_location(op.source_location())
+        << "an array of interface ports must be connected to an array of "
+           "interface instances";
+    }
+
+    auto &actual_type = to_verilog_array_type(op.type());
+
+    if(actual_type.size_int() != size)
+    {
+      throw errort().with_location(op.source_location())
+        << "expected an array of " << size
+        << " interface instances for this array of interface ports, but got an"
+           " array of "
+        << actual_type.size_int();
+    }
+
+    return;
+  }
+
+  if(op.operands().size() != size)
+  {
+    throw errort().with_location(op.source_location())
+      << "expected " << size
+      << " interface instances for this array of interface ports, but got "
+      << op.operands().size();
+  }
+
+  auto &element_type = array_type.element_type();
+
+  for(auto &element : op.operands())
+  {
+    if(is_interface_array_type(element_type))
+    {
+      // recursive call, for further dimensions
+      typecheck_interface_array_port_connection(element, element_type);
+    }
+    else
+    {
+      convert_expr(element);
+
+      if(element.type().id() != ID_verilog_module_instance)
+      {
+        throw errort().with_location(element.source_location())
+          << "expected an interface instance, but got `"
+          << to_string(element.type()) << '\'';
+      }
+    }
+  }
+
+  op.type() = port_type;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::typecheck_port_connection
 
   Inputs:
@@ -54,7 +134,16 @@ void verilog_typecheckt::typecheck_port_connection(
     }
   }
 
-  if(op.is_nil())
+  if(is_interface_array_type(port.type()))
+  {
+    // An array of interface ports, 1800-2017 25.4. This is not connected
+    // by an assignment: the actual gives one interface instance per array
+    // element, and each of those is bound to the corresponding element of
+    // the port.
+    if(op.is_not_nil())
+      typecheck_interface_array_port_connection(op, port.type());
+  }
+  else if(op.is_nil())
   {
     // *not* connected
   }
@@ -1618,6 +1707,34 @@ void verilog_typecheckt::convert_statement(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::build_genvars
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+verilog_typecheckt::genvarst
+verilog_typecheckt::build_genvars(const verilog_set_genvarst &set_genvars)
+{
+  genvarst genvars;
+
+  for(auto &var : set_genvars.variables())
+    genvars[var.first].value = string2integer(var.second.id_string());
+
+  // The genvars that are local to a loop generate construct come with
+  // the scope of that loop. 1800-2017 27.4.
+  for(auto &var : set_genvars.loop_scopes())
+    genvars[var.first].loop_scope = var.second.id();
+
+  return genvars;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::convert_module_item
 
   Inputs:
@@ -1707,10 +1824,7 @@ void verilog_typecheckt::convert_module_item(
   }
   else if(module_item.id() == ID_set_genvars)
   {
-    genvars.clear();
-    const auto &variables = to_verilog_set_genvars(module_item).variables();
-    for(auto &var : variables)
-      genvars[id2string(var.first)] = string2integer(var.second.id_string());
+    genvars = build_genvars(to_verilog_set_genvars(module_item));
 
     if(module_item.operands().size()!=1)
     {
@@ -1818,7 +1932,15 @@ void verilog_typecheckt::preresolve_identifiers(exprt &expr)
         auto &identifier_expr = to_verilog_identifier_expr(node);
         auto base_name = identifier_expr.base_name();
         auto symbol_ptr = resolve(base_name);
-        if(symbol_ptr != nullptr)
+        auto genvar = genvar_lookup(base_name);
+
+        if(genvar.has_value() && genvar->shadows(symbol_ptr))
+        {
+          // A genvar that is local to a loop generate construct, 1800-2017
+          // 27.4. These do not have a symbol, and are resolved when the
+          // expression is converted.
+        }
+        else if(symbol_ptr != nullptr)
         {
           identifier_expr.preresolved(symbol_ptr->name);
         }

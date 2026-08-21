@@ -159,6 +159,13 @@ protected:
   // interfaces
   void check_module_ports(const verilog_module_sourcet &);
   void instantiate_interface_ports(const verilog_module_sourcet &);
+  void instantiate_interface_port(
+    const typet &,
+    const source_locationt &,
+    const irep_idt &interface_module_id,
+    const irep_idt &interface_base_name,
+    const irep_idt &base_name,
+    const irep_idt &identifier);
   void interface_module_item(const class verilog_module_itemt &);
   void interface_block(const class verilog_blockt &);
   void interface_generate_block(const class verilog_generate_blockt &);
@@ -227,6 +234,8 @@ protected:
   void typecheck_builtin_port_connections(verilog_inst_baset::instancet &);
 
   void typecheck_port_connection(exprt &op, const module_typet::portt &);
+  void
+  typecheck_interface_array_port_connection(exprt &op, const typet &port_type);
 
   bool replace_symbols(const replace_mapt &what, exprt &dest);
   void replace_symbols(const std::string &target, exprt &dest);
@@ -257,21 +266,29 @@ protected:
   void elaborate_generate_if(const verilog_generate_ift &, module_itemst &dest);
   void
   elaborate_case_generate(const verilog_case_generatet &, module_itemst &dest);
-  void elaborate_generate_decl(const verilog_generate_declt &, module_itemst &);
+  // When loop_local is true, the genvar is declared in the header of a
+  // loop generate construct, and hence is local to that loop.
+  void elaborate_generate_decl(
+    const verilog_generate_declt &,
+    module_itemst &,
+    bool loop_local = false);
   void
   elaborate_generate_for(const verilog_generate_fort &, module_itemst &dest);
   exprt
   generate_for_loop_index(const verilog_module_itemt &initialization) const;
 
   // generate state
-  typedef std::map<irep_idt, mp_integer> genvarst;
+  typedef std::map<irep_idt, genvart> genvarst;
   genvarst genvars;
 
-  mp_integer genvar_value(const irep_idt &identifier) override
+  // The genvar environment that is recorded in a set_genvars module item.
+  static genvarst build_genvars(const verilog_set_genvarst &);
+
+  std::optional<genvart> genvar_lookup(const irep_idt &identifier) override
   {
-    genvarst::const_iterator it=genvars.find(identifier);
-    if(it==genvars.end())
-      return -1;
+    genvarst::const_iterator it = genvars.find(identifier);
+    if(it == genvars.end())
+      return {};
     else
       return it->second;
   }

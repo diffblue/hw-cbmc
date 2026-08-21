@@ -1,0 +1,10 @@
+CORE
+port_array8.sv
+--top main
+^file .* line 12: expected 3 interface instances for this array of interface ports, but got 2$
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+The number of interface instances given for an array of interface ports
+(1800-2017 25.4) must match the dimension of the port.

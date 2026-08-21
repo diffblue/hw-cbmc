@@ -1,0 +1,9 @@
+CORE
+combinational_and_clocked.sv
+--bound 0
+^\[main\.p0\] always main\.a == main\.din: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+conflicting assignment types

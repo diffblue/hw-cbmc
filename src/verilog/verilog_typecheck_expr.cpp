@@ -484,6 +484,13 @@ void verilog_typecheck_exprt::assignment_conversion(
     }
   }
 
+  if(lhs_type.id() == ID_verilog_virtual_interface)
+  {
+    // virtual interface assignment (IEEE 1800-2017 25.9)
+    rhs = typecast_exprt{rhs, lhs_type};
+    return;
+  }
+
   // "The size of the left-hand side of an assignment forms
   // the context for the right-hand expression."
 
@@ -1608,6 +1615,37 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
 
     return std::move(expr);
   }
+  else if(
+    base_name == "$time" || base_name == "$stime" || base_name == "$realtime")
+  {
+    // IEEE 1800-2017 section 20.3, simulation time system functions
+    if(!arguments.empty())
+    {
+      throw errort().with_location(expr.source_location())
+        << base_name << " takes no arguments";
+    }
+
+    if(base_name == "$time")
+    {
+      // 1800-2017 20.3.1: $time returns the time as a 64-bit integer.
+      // The values delivered are always known, and hence we use the
+      // two-valued type.
+      expr.type() = unsignedbv_typet{64};
+    }
+    else if(base_name == "$stime")
+    {
+      // 1800-2017 20.3.3: $stime returns an unsigned integer of 32 bits.
+      expr.type() = unsignedbv_typet{32};
+    }
+    else
+    {
+      // 1800-2017 20.3.2: $realtime returns a real number.
+      // Note that 1800-2017 6.12.1 makes 'realtime' a synonym of 'real'.
+      expr.type() = verilog_real_typet{};
+    }
+
+    return std::move(expr);
+  }
   else
   {
     throw errort().with_location(expr.function().source_location())
@@ -1675,6 +1713,61 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
     throw errort().with_location(expr.source_location())
       << "no conversion for no-operand expression " << expr.id();
   }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::genvar_constant
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::genvar_constant(
+  const irep_idt &base_name,
+  const source_locationt &source_location)
+{
+  auto genvar_opt = genvar_lookup(base_name);
+
+  // Genvars are declared without a value, and hence may be unset.
+  if(!genvar_opt.has_value() || genvar_opt->value < 0)
+    throw errort().with_location(source_location) << "invalid genvar value";
+
+  auto &value = genvar_opt->value;
+  std::size_t bits = address_bits(value + 1);
+
+  return from_integer(value, unsignedbv_typet{bits})
+    .with_source_location(source_location);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::genvart::shadows
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool verilog_typecheck_exprt::genvart::shadows(const symbolt *symbol) const
+{
+  // A genvar that is declared separately from the loop generate construct
+  // has a symbol of its own, which is found by resolve.
+  if(!is_loop_local())
+    return false;
+
+  // A loop-local genvar shadows anything that is not declared inside the
+  // loop. Note that a clash with a symbol in the scope that contains the
+  // loop is rejected when the genvar is declared.
+  return symbol == nullptr ||
+         !has_prefix(id2string(symbol->name), id2string(loop_scope));
 }
 
 /*******************************************************************\
@@ -1809,6 +1902,15 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
   else
   {
     symbol = resolve(base_name);
+
+    // A genvar that is declared in the header of a loop generate construct
+    // is local to that loop, 1800-2017 27.4. It does not have a symbol of
+    // its own, and takes precedence over any symbol that is visible from
+    // the scope that contains the loop.
+    auto genvar = genvar_lookup(base_name);
+
+    if(genvar.has_value() && genvar->shadows(symbol))
+      return genvar_constant(base_name, expr.source_location());
   }
 
   if(symbol != nullptr)
@@ -1825,20 +1927,7 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
     else if(symbol->type.id() == ID_verilog_genvar)
     {
       // This must be a constant.
-      mp_integer int_value = genvar_value(base_name);
-
-      if(int_value<0)
-      {
-        throw errort().with_location(expr.source_location())
-          << "invalid genvar value";
-      }
-
-      std::size_t bits = address_bits(int_value + 1);
-      source_locationt source_location=expr.source_location();
-
-      exprt result=from_integer(int_value, unsignedbv_typet(bits));
-      result.add_source_location()=source_location;
-      return result;
+      return genvar_constant(base_name, expr.source_location());
     }
     else if(
       symbol->type.id() == ID_verilog_sva_named_sequence ||
@@ -1965,6 +2054,37 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     }
     else
     {
+      // Check if the rhs is a modport name of the interface.
+      // Per IEEE 1800-2017 25.5.3, sb.receiver in a port connection
+      // means "pass interface instance sb with modport receiver".
+      const symbolt *lhs_symbol;
+      if(
+        !ns.lookup(lhs_identifier, lhs_symbol) &&
+        lhs_symbol->value.id() == ID_verilog_module_instance)
+      {
+        auto &module_id =
+          to_verilog_module_instance(lhs_symbol->value).module_identifier();
+        const symbolt *module_symbol;
+        if(!ns.lookup(module_id, module_symbol))
+        {
+          auto &module_expr = to_verilog_module_expr(module_symbol->value);
+          for(auto &item : module_expr.module_items())
+          {
+            if(item.id() == ID_verilog_modport_declaration)
+            {
+              for(auto &modport_item : item.operands())
+              {
+                if(modport_item.get(ID_base_name) == rhs_base_name)
+                {
+                  // The modport selection resolves to the interface
+                  // instance itself; the modport is informational.
+                  return expr.lhs();
+                }
+              }
+            }
+          }
+        }
+      }
       throw errort().with_location(expr.source_location())
         << "identifier `" << rhs_base_name << "' not found in module `"
         << lhs_identifier << '\'';
@@ -2226,6 +2346,36 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression_rec(exprt expr)
 
 /*******************************************************************\
 
+Function: is_constant_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: returns true iff the given expression is a constant,
+          including struct, union and array expressions with
+          all-constant members
+
+\*******************************************************************/
+
+static bool is_constant_rec(const exprt &expr)
+{
+  if(expr.is_constant() || expr.id() == ID_infinity)
+    return true;
+
+  if(expr.id() == ID_struct || expr.id() == ID_array || expr.id() == ID_union)
+  {
+    for(auto &op : expr.operands())
+      if(!is_constant_rec(op))
+        return false;
+    return true;
+  }
+
+  return false;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::elaborate_constant_expression_check
 
   Inputs:
@@ -2242,8 +2392,7 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression_check(exprt expr)
 
   exprt tmp = elaborate_constant_expression(std::move(expr));
 
-  // $ counts as a constant
-  if(!tmp.is_constant() && tmp.id() != ID_infinity)
+  if(!is_constant_rec(tmp))
   {
     throw errort().with_location(source_location)
       << "expected constant expression, but got `" << to_string(tmp) << '\'';
@@ -3302,6 +3451,13 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(
   if(src.type().id() == ID_array)
   {
     auto &array_type = to_array_type(src.type());
+
+    // An element of an array of interface instances, 1800-2017 25.4, is
+    // not an ordinary array element: each element is a symbol of its own,
+    // named bus[0], bus[1], and so on. Resolve to that symbol.
+    if(is_interface_array_type(src.type()))
+      return convert_interface_array_element(std::move(expr));
+
     expr.type() = array_type.element_type();
   }
   else
@@ -3328,6 +3484,68 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(
   }
 
   return std::move(expr);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::convert_interface_array_element
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::convert_interface_array_element(
+  verilog_bit_select_exprt expr)
+{
+  // The elements of an array of interface instances, 1800-2017 25.4, are
+  // separate symbols, named bus[0], bus[1], and so on. Hence the index
+  // must be an elaboration-time constant, and the expression resolves to
+  // the symbol for that element.
+  auto &src = expr.src();
+
+  const irep_idt &src_identifier = [](const exprt &src) {
+    if(src.id() == ID_symbol)
+      return to_symbol_expr(src).identifier();
+    else if(src.id() == ID_hierarchical_identifier)
+      return to_hierarchical_identifier_expr(src).identifier();
+    else
+    {
+      throw errort().with_location(src.source_location())
+        << "expected symbol or hierarchical identifier for an array of "
+           "interfaces";
+    }
+  }(src);
+
+  auto &array_type = to_verilog_array_type(src.type());
+  auto index = convert_integer_constant_expression(expr.index());
+
+  auto size = array_type.size_int();
+  auto offset = array_type.offset();
+  auto smallest = offset;
+  auto largest = offset + size - 1;
+
+  if(index < smallest || index > largest)
+  {
+    throw errort().with_location(expr.index().source_location())
+      << "index " << index << " is out of the range [" << smallest << ':'
+      << largest << "] of the array of interfaces";
+  }
+
+  const irep_idt element_identifier =
+    id2string(src_identifier) + '[' + integer2string(index) + ']';
+
+  const symbolt *symbol;
+  if(ns.lookup(element_identifier, symbol))
+  {
+    throw errort().with_location(expr.source_location())
+      << "failed to find interface instance `" << element_identifier << '\'';
+  }
+
+  return symbol->symbol_expr().with_source_location(expr);
 }
 
 /*******************************************************************\
