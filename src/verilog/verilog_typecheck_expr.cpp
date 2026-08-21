@@ -949,21 +949,47 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
   }
   else if(f_op.id() == ID_verilog_identifier)
   {
-    base_name = to_verilog_identifier_expr(f_op).base_name();
+    auto &identifier_expr = to_verilog_identifier_expr(f_op);
+    base_name = identifier_expr.base_name();
+    const auto import = identifier_expr.import();
+    const auto preresolved = identifier_expr.preresolved();
 
-    // first look in the current module
-    irep_idt full_identifier =
-      id2string(module_instance) + "." + id2string(base_name);
-
-    if(ns.lookup(full_identifier, symbol))
+    if(import != irep_idt{})
     {
-      // not there? Try compilation-unit scope.
-      full_identifier = verilog_unit_scope_identifier(base_name);
+      // A function/task made visible via a package import
+      // (IEEE 1800-2017 26.3), e.g. 'import pkg::*;' followed by a call.
+      irep_idt full_identifier = "Verilog::" + id2string(import);
 
       if(ns.lookup(full_identifier, symbol))
       {
         throw errort().with_location(f_op.source_location())
           << "unknown function `" << base_name << "'";
+      }
+    }
+    else if(preresolved != irep_idt{})
+    {
+      if(ns.lookup(preresolved, symbol))
+      {
+        throw errort().with_location(f_op.source_location())
+          << "unknown function `" << base_name << "'";
+      }
+    }
+    else
+    {
+      // first look in the current module
+      irep_idt full_identifier =
+        id2string(module_instance) + "." + id2string(base_name);
+
+      if(ns.lookup(full_identifier, symbol))
+      {
+        // not there? Try compilation-unit scope.
+        full_identifier = verilog_unit_scope_identifier(base_name);
+
+        if(ns.lookup(full_identifier, symbol))
+        {
+          throw errort().with_location(f_op.source_location())
+            << "unknown function `" << base_name << "'";
+        }
       }
     }
   }

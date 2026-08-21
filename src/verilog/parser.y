@@ -2948,6 +2948,19 @@ modport_ports_declaration:
         | non_type_identifier
                 { init($$, ID_nil);
                   mto($$, $1); }
+        | TOK_IMPORT modport_tf_port
+                { init($$, ID_verilog_modport_import);
+                  mto($$, $2); }
+        | TOK_EXPORT modport_tf_port
+                { init($$, ID_verilog_modport_export);
+                  mto($$, $2); }
+        ;
+
+// System Verilog standard 1800-2017
+// A.2.9: modport_tf_port ::= method_prototype | tf_identifier
+modport_tf_port:
+          method_prototype
+        | non_type_identifier
         ;
 
 // System Verilog standard 1800-2017
