@@ -26,6 +26,7 @@ public:
         "(diatest)(statebits):(bound):(max-bound):"
         "(show-parse)(show-varmap)(show-symbol-table)(show-netlist)"
         "(show-ldg)(show-modules)(show-module-hierarchy)"
+        "(show-rtl)"
         "(show-trans)(show-bdds)(show-formula)"
         "(show-traces)"
         "(modules-xml):"
