@@ -1,0 +1,16 @@
+KNOWNBUG
+modport_import1.sv
+
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--
+^syntax error$
+--
+IEEE 1800-2017 25.7 allows a modport to import tasks and functions declared
+in the enclosing interface, using the `import` keyword inside the modport
+item list.  The parser rejects this with
+
+  syntax error, unexpected import before 'import'
+
+at the modport declaration.
