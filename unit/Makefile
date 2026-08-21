@@ -18,6 +18,7 @@ SRC += ebmc/bdd_model_checker.cpp \
        trans-netlist/aig.cpp \
        trans-netlist/id2smv.cpp \
        verilog/convert_literals.cpp \
+       verilog/expr2verilog.cpp \
        verilog/indexed_part_select.cpp \
        verilog/typename.cpp \
        verilog/verilog_expr.cpp \

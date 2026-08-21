@@ -1122,13 +1122,13 @@ expr2verilogt::resultt expr2verilogt::convert_extractbits(
   if(src.index().is_constant())
   {
     auto index_int = numeric_cast_v<mp_integer>(to_constant_expr(src.index()));
-    dest += integer2string(index_int + width);
+    dest += integer2string(index_int + width - 1);
   }
   else
   {
     dest += convert_rec(src.index()).s;
     dest += " + ";
-    dest += std::to_string(width);
+    dest += std::to_string(width - 1);
   }
 
   dest+=':';
