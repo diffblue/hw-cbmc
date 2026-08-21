@@ -38,6 +38,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show_properties.h"
 #include "show_trans.h"
 
+#include <climits>
 #include <iostream>
 
 #include "cegar/bmc_cegar.h"
@@ -50,6 +51,28 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "interpolation/compute-interpolant.h"
 #include "coverage/coverage.h"
 #endif
+
+/*******************************************************************\
+
+Function: ebmc_parse_optionst::log_version_and_architecture
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: turn a +plusarg into a cmdlinet option
+
+\*******************************************************************/
+
+void ebmc_parse_optionst::log_version_and_architecture(
+  const std::string_view &front_end,
+  const std::string_view &version)
+{
+  log.status() << front_end << " version " << version << " "
+               << sizeof(void *) * CHAR_BIT << "-bit "
+               << config.this_architecture() << " "
+               << config.this_operating_system() << messaget::eom;
+}
 
 /*******************************************************************\
 
@@ -149,7 +172,7 @@ int ebmc_parse_optionst::doit()
     return 0;
   }
 
-  log_version_and_architecture("EBMC");
+  log_version_and_architecture("EBMC", EBMC_VERSION);
 
   try
   {
