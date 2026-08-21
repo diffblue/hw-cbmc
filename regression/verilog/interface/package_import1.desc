@@ -1,0 +1,18 @@
+KNOWNBUG
+package_import1.sv
+
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--
+^CONVERSION ERROR$
+--
+A package import inside an interface body (IEEE 1800-2017 26.3) parses, and
+imported types are usable, but calling an imported function from interface
+scope fails elaboration with
+
+  unknown function `inv'
+
+i.e. the import makes typedefs visible in the interface but not functions.
+Note the import itself and imported typedefs work; only imported
+tasks/functions are affected.
