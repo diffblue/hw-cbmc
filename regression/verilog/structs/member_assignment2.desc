@@ -1,0 +1,12 @@
+CORE
+member_assignment2.sv
+--bound 3
+^\[main\.p1\] always \(##1 main\.s\.field1 == 0\): PROVED up to bound 3$
+^\[main\.p2\] always \(##1 main\.s\.field2 == 1\): PROVED up to bound 3$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+This is the first example in
+https://github.com/diffblue/hw-cbmc/issues/2103

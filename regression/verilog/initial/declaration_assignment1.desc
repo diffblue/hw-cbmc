@@ -1,9 +1,12 @@
-KNOWNBUG
+CORE
 declaration_assignment1.sv
 
+^\[main\.assert\.1\] main\.some_data == 123: PROVED .*$
+^\[main\.assert\.2\] always main\.some_data == 123: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This gives the wrong result.
+Variable declaration assignments happen before any initial or always
+procedure, per 1800-2017 10.5.
