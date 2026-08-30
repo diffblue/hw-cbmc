@@ -578,6 +578,7 @@ void ebmc_parse_optionst::help()
     " {y--show-parse}                \t show parse trees\n"
     " {y--show-modules}              \t show a list of the modules\n"
     " {y--show-module-hierarchy}     \t show the hierarchy of module instantiations\n"
+    " {y--show-rtl}                  \t show the register-transfer level representation\n"
     " {y--show-varmap}               \t show variable map\n"
     " {y--show-netlist}              \t show netlist\n"
     " {y--aiger}                     \t output netlist in AIGER format\n"
