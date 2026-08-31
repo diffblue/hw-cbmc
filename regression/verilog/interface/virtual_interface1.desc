@@ -1,0 +1,9 @@
+CORE
+virtual_interface1.sv
+
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+Virtual interface declaration and assignment (IEEE 1800-2017 25.9).
