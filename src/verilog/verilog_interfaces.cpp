@@ -209,6 +209,29 @@ void verilog_typecheckt::interface_generate_block(
   if(is_named)
   {
     irep_idt base_name = generate_block.base_name();
+
+    // 1800-2017 27.6: the name of a generate block is part of the
+    // hierarchy, and hence must be visible to hierarchical identifiers.
+    // Add a symbol for the scope, like interface_block does for named
+    // block statements.
+    symbolt symbol;
+
+    symbol.mode = mode;
+    symbol.base_name = base_name;
+    symbol.type = typet(ID_named_block);
+    symbol.module = module_identifier;
+    symbol.name = hierarchical_identifier(base_name);
+    symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+    symbol.value = nil_exprt();
+    symbol.location = generate_block.source_location();
+
+    if(symbol_table.add(symbol))
+    {
+      throw errort().with_location(generate_block.source_location())
+        << "duplicate definition of identifier `" << symbol.base_name
+        << "' in module `" << module_symbol().base_name << '\'';
+    }
+
     enter_named_block(base_name);
   }
 
