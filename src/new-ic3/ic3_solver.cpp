@@ -121,16 +121,11 @@ static void add_minisat_clause(IctMinisat::Solver &S, const bvt &clause)
 // ic3_solvert implementation
 // ============================================================
 
-ic3_solvert::ic3_solvert(
+void ic3_solvert::initialize_base_cnf(
   const netlistt &netlist,
-  literalt prop_netlist_lit,
-  message_handlert &message_handler)
-  : message_handler(message_handler)
+  const bmc_mapt &bmc_map,
+  literalt prop_netlist_lit)
 {
-  // Encode the netlist into CNF: one timeframe only — the next-state
-  // functions are nodes in the same variable space.
-  base_cnf = std::make_unique<recording_cnft>(message_handler);
-  bmc_mapt bmc_map(netlist, 1, *base_cnf);
   {
     messaget message{message_handler};
     ::unwind(netlist, bmc_map, message, *base_cnf, false, 0);
@@ -145,7 +140,12 @@ ic3_solvert::ic3_solvert(
     if(!l.is_true())
       init_units.push_back(l);
   }
+}
 
+void ic3_solvert::collect_latches_and_inputs(
+  const netlistt &netlist,
+  const bmc_mapt &bmc_map)
+{
   // Collect latch and input literals.
   for(auto v_it : netlist.var_map.sorted())
   {
@@ -174,7 +174,10 @@ ic3_solvert::ic3_solvert(
   }
 
   lit_activity.resize(latches.size(), 0.0f);
+}
 
+void ic3_solvert::initialize_init_solver()
+{
   // Create the initial state solver.
   init_solver =
     std::make_unique<satcheck_no_simplifiert>(solver_message_handler);
@@ -182,7 +185,10 @@ ic3_solvert::ic3_solvert(
 
   // Create lifting solver using IC3's MiniSAT (has releaseVar).
   lift_minisat = new_minisat_solver();
+}
 
+void ic3_solvert::analyze_initial_state()
+{
   // Determine which latches have forced initial values. If all are
   // forced, the initial state is unique and intersection checks
   // become purely syntactic.
@@ -205,6 +211,22 @@ ic3_solvert::ic3_solvert(
         init_is_unique_state = false;
     }
   }
+}
+
+ic3_solvert::ic3_solvert(
+  const netlistt &netlist,
+  literalt prop_netlist_lit,
+  message_handlert &message_handler)
+  : message_handler(message_handler)
+{
+  // Encode the netlist into CNF: one timeframe only — the next-state
+  // functions are nodes in the same variable space.
+  base_cnf = std::make_unique<recording_cnft>(message_handler);
+  bmc_mapt bmc_map(netlist, 1, *base_cnf);
+  initialize_base_cnf(netlist, bmc_map, prop_netlist_lit);
+  collect_latches_and_inputs(netlist, bmc_map);
+  initialize_init_solver();
+  analyze_initial_state();
 
   // F_0
   frame_clauses.emplace_back();

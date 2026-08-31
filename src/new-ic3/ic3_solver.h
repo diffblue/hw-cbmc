@@ -33,6 +33,7 @@ clauset negate_cube(const cubet &cube);
 
 class cnft;
 class recording_cnft;
+class bmc_mapt;
 
 namespace IctMinisat
 {
@@ -98,6 +99,11 @@ private:
   struct frame_clauset;
 
   static bool subsumes(const frame_clauset &a, const frame_clauset &b);
+
+  void initialize_base_cnf(const netlistt &, const bmc_mapt &, literalt);
+  void collect_latches_and_inputs(const netlistt &, const bmc_mapt &);
+  void initialize_init_solver();
+  void analyze_initial_state();
 
   bool initial_state_is_bad();
   std::optional<cubet> solve_relative(std::size_t level, const cubet &);
