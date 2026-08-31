@@ -42,7 +42,11 @@ public:
   using boolbvt::get_literal;
   literalt get_literal(const std::string &symbol, const unsigned bit);
 
+  void netlist_set_to(const exprt &, bool value, bvt &);
+
 protected:
+  void netlist_set_equality_to_true(const equal_exprt &, bvt &);
+
   // disable smart variable allocation,
   // we already have literals for all variables
   bool boolbv_set_equality_to_true(const equal_exprt &) override
