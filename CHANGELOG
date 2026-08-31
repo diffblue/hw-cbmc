@@ -1,6 +1,7 @@
 # EBMC 6.1
 
 * cbmc dependency now at 6.11.0
+* .f command files
 * version and architecture banner
 * Netlist: module outputs are now classified as outputs rather than
   wires (visible in --show-varmap); they remain shown in
