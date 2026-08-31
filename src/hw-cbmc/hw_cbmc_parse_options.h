@@ -18,9 +18,9 @@ Author: Daniel Kroening, kroening@kroening.com
 class hw_cbmc_parse_optionst:public cbmc_parse_optionst
 {
 public:
-  virtual int doit();
-  virtual void help();
-  
+  int doit() override;
+  void help() override;
+
   hw_cbmc_parse_optionst(int argc, const char **argv):
     cbmc_parse_optionst(argc, argv, HW_CBMC_OPTIONS)
   {
@@ -30,6 +30,8 @@ public:
   unsigned unwind_no_timeframes;
 
 protected:
+  void register_languages() override;
+
   virtual int get_modules(std::list<exprt> &bmc_constraints);
 
   irep_idt get_top_module();
