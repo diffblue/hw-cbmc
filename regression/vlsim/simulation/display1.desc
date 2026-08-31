@@ -1,0 +1,6 @@
+CORE
+display1.v
+
+^x = 42$
+^EXIT=0$
+^SIGNAL=0$
