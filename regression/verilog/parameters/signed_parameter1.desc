@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 signed_parameter1.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ signed_parameter1.sv
 --
 ^warning: ignoring
 --
-The width is wrong.
