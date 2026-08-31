@@ -1,0 +1,6 @@
+CORE
+test.desc
+--help
+^fastppa - RTL Cost Estimation$
+^EXIT=0$
+^SIGNAL=0$

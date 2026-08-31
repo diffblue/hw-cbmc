@@ -1,0 +1,6 @@
+CORE
+../blocks/adder.sv
+--top adder --process 45nm --toggle-rate xyz
+^error:.*toggle-rate
+^EXIT=1$
+^SIGNAL=0$

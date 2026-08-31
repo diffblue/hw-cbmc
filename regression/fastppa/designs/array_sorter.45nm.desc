@@ -1,0 +1,7 @@
+CORE
+array_sorter.sv
+--top array_sorter --process 45nm
+^  Register bits:       128$
+^  Total:               1704\.2 um2$
+^EXIT=0$
+^SIGNAL=0$

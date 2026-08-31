@@ -1,0 +1,35 @@
+Information: Running switching activity propagation with 8 threads!
+Information: Running averaged power analysis... (PWR-601)
+Information: Running power calculation with 8 threads. (PWR-602)
+****************************************
+Report : Averaged Power
+Design : Rocket
+Version: T-2022.03-SP3
+Date   : Thu May 29 16:13:21 2025
+****************************************
+
+
+
+  Attributes
+  ----------
+      i  -  Including register clock pin internal power
+      u  -  User defined power group
+
+                        Internal  Switching  Leakage    Total
+Power Group             Power     Power      Power      Power   (     %)  Attrs
+--------------------------------------------------------------------------------
+clock_network              0.0174 8.514e-03 8.319e-06    0.0259 (17.11%)  i
+register                   0.0177 7.765e-03 1.808e-04    0.0256 (16.93%)  
+combinational              0.0501    0.0488 9.797e-04    0.0999 (65.96%)  
+sequential                 0.0000    0.0000    0.0000    0.0000 ( 0.00%)  
+memory                     0.0000    0.0000    0.0000    0.0000 ( 0.00%)  
+io_pad                     0.0000    0.0000    0.0000    0.0000 ( 0.00%)  
+black_box                  0.0000    0.0000    0.0000    0.0000 ( 0.00%)  
+
+  Net Switching Power  =    0.0651   (42.96%)
+  Cell Internal Power  =    0.0852   (56.27%)
+  Cell Leakage Power   = 1.169e-03   ( 0.77%)
+                         ---------
+Total Power            =    0.1514  (100.00%)
+
+1
