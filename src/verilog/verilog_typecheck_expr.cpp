@@ -1608,6 +1608,37 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
 
     return std::move(expr);
   }
+  else if(
+    base_name == "$time" || base_name == "$stime" || base_name == "$realtime")
+  {
+    // IEEE 1800-2017 section 20.3, simulation time system functions
+    if(!arguments.empty())
+    {
+      throw errort().with_location(expr.source_location())
+        << base_name << " takes no arguments";
+    }
+
+    if(base_name == "$time")
+    {
+      // 1800-2017 20.3.1: $time returns the time as a 64-bit integer.
+      // The values delivered are always known, and hence we use the
+      // two-valued type.
+      expr.type() = unsignedbv_typet{64};
+    }
+    else if(base_name == "$stime")
+    {
+      // 1800-2017 20.3.3: $stime returns an unsigned integer of 32 bits.
+      expr.type() = unsignedbv_typet{32};
+    }
+    else
+    {
+      // 1800-2017 20.3.2: $realtime returns a real number.
+      // Note that 1800-2017 6.12.1 makes 'realtime' a synonym of 'real'.
+      expr.type() = verilog_real_typet{};
+    }
+
+    return std::move(expr);
+  }
   else
   {
     throw errort().with_location(expr.function().source_location())

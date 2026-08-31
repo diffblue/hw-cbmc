@@ -14,7 +14,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/c_types.h>
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
+#include <util/floatbv_expr.h>
 #include <util/identifier.h>
+#include <util/ieee_float.h>
 #include <util/mathematical_types.h>
 #include <util/simplify_expr.h>
 #include <util/std_expr.h>
@@ -345,6 +347,59 @@ void verilog_synthesist::function_locality(const symbolt &function_symbol)
 
 /*******************************************************************\
 
+Function: verilog_synthesist::simulation_time_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Returns the state variable that models the simulation
+          time, creating it on first use.
+
+\*******************************************************************/
+
+const symbolt &verilog_synthesist::simulation_time_symbol()
+{
+  // 1800-2017 20.3 defines the simulation time system functions in terms
+  // of the simulation time that an event-driven simulator maintains.
+  // EBMC's model of time is the sequence of timeframes of the transition
+  // system: there is no continuous time, delay controls are ignored, and
+  // so is the `timescale directive.  We therefore let the time advance by
+  // exactly one time unit per timeframe, which we model using a state
+  // variable that counts the timeframes.  Note that the simulation time
+  // is global, and hence the state variable lives in $root.
+  const auto type = unsignedbv_typet{64}; // 1800-2017 20.3.1
+
+  const irep_idt identifier =
+    id2string(verilog_root_module_identifier()) + ".$time";
+
+  // Created already?
+  auto existing_symbol = symbol_table.get_writeable(identifier);
+  if(existing_symbol != nullptr)
+    return *existing_symbol;
+
+  symbolt new_symbol{identifier, type, ID_Verilog};
+  new_symbol.base_name = "$time";
+  new_symbol.pretty_name = strip_verilog_root_prefix(identifier);
+  new_symbol.module = verilog_root_module_identifier();
+  new_symbol.is_lvalue = true; // this is a state variable
+  new_symbol.value = nil_exprt();
+
+  auto insert_result = symbol_table.insert(std::move(new_symbol));
+  CHECK_RETURN(insert_result.second);
+
+  // The time starts at zero, and is incremented once per timeframe.
+  const symbol_exprt symbol_expr{identifier, type};
+  auto &assignment = assignments[identifier];
+  assignment.init.value = from_integer(0, type);
+  assignment.next.value = plus_exprt{symbol_expr, from_integer(1, type)};
+  local_symbols.insert(identifier);
+
+  return insert_result.first;
+}
+
+/*******************************************************************\
+
 Function: verilog_synthesist::expand_function_call
 
   Inputs:
@@ -426,6 +481,37 @@ exprt verilog_synthesist::expand_function_call(
       // IEEE 1800-2017 section 21.6
       // Return 0, indicating plusarg not found.
       return from_integer(0, call.type()).with_source_location(call);
+    }
+    else if(
+      base_name == "$time" || base_name == "$stime" || base_name == "$realtime")
+    {
+      // IEEE 1800-2017 section 20.3
+      // Read the state variable that counts the timeframes.
+      exprt result = simulation_time_symbol().symbol_expr();
+
+      // The type of the call is not lowered yet.
+      auto type = verilog_lowering(call.type());
+
+      if(type.id() == ID_floatbv)
+      {
+        // $realtime.  1800-2017 does not say how to round integers to
+        // floating-point; we use the same rounding mode as the lowering
+        // of integer-to-real casts.
+        result = floatbv_typecast_exprt{
+          result,
+          ieee_floatt::rounding_mode_expr(
+            ieee_floatt::rounding_modet::ROUND_TO_AWAY),
+          type};
+      }
+      else
+      {
+        // $time and $stime.  1800-2017 20.3.3 gives the low-order 32 bits
+        // of the current simulation time for $stime, which is what the
+        // truncating cast yields.
+        result = typecast_exprt::conditional_cast(result, type);
+      }
+
+      return result.with_source_location(call);
     }
     else
     {
