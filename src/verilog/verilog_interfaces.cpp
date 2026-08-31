@@ -6,15 +6,16 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <set>
-
 #include <util/ebmc_util.h>
 #include <util/mathematical_types.h>
 #include <util/std_types.h>
 
-#include "verilog_typecheck.h"
 #include "verilog_expr.h"
+#include "verilog_typecheck.h"
+#include "verilog_typecheck_expr.h"
 #include "verilog_types.h"
+
+#include <set>
 
 /*******************************************************************\
 
@@ -185,6 +186,128 @@ void verilog_typecheckt::instantiate_interface_ports(
     symbolt &port_sym = symbol_table_lookup(port_identifier);
     port_sym.value =
       verilog_module_instancet{id2string(port_identifier) + "$module"};
+
+    // Handle modport port expressions (IEEE 1800-2017 25.5.2)
+    irep_idt modport_name = port_symbol->type.get(ID_verilog_modport);
+    if(!modport_name.empty())
+    {
+      instantiate_modport_port_expressions(
+        port_identifier, interface_module_id, modport_name);
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::instantiate_modport_port_expressions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: For modport port expressions (IEEE 1800-2017 25.5.2),
+          create wire symbols that alias the named ports to
+          their underlying expressions. The expression is stored
+          in the symbol's value; the type is resolved by
+          type-checking the expression in the interface context.
+
+\*******************************************************************/
+
+void verilog_typecheckt::instantiate_modport_port_expressions(
+  const irep_idt &port_identifier,
+  const irep_idt &interface_module_id,
+  const irep_idt &modport_name)
+{
+  // Find the interface source
+  auto source_it =
+    symbol_table.symbols.find(id2string(interface_module_id) + "$source");
+
+  if(source_it == symbol_table.symbols.end())
+    return;
+
+  const auto &interface_source =
+    to_verilog_module_source(source_it->second.type.find(ID_module_source));
+
+  // The instantiated module identifier for the interface under this port
+  irep_idt instantiated_module_id = id2string(port_identifier) + "$module";
+
+  // Search through module items for the modport declaration
+  for(auto &item : interface_source.module_items())
+  {
+    if(item.id() != ID_verilog_modport_declaration)
+      continue;
+
+    // Each operand is a modport_item
+    for(auto &modport_item : item.operands())
+    {
+      if(modport_item.get(ID_base_name) != modport_name)
+        continue;
+
+      // Found the matching modport item. Process its port declarations.
+      for(auto &port_decl : modport_item.operands())
+      {
+        // Each port_decl is a direction node (ID_input, ID_output, etc.)
+        // with identifiers as operands.
+        for(auto &port_id : port_decl.operands())
+        {
+          // Check if this is a port expression (has ID_value)
+          const auto &value_irep = port_id.find(ID_value);
+          if(value_irep.is_nil())
+            continue;
+
+          // This is a modport port expression:
+          //   .port_name(expression)
+          irep_idt port_expr_name = port_id.get(ID_base_name);
+          if(port_expr_name.empty())
+            continue;
+
+          irep_idt full_identifier =
+            id2string(port_identifier) + "." + id2string(port_expr_name);
+
+          // Skip if the symbol already exists
+          if(
+            symbol_table.symbols.find(full_identifier) !=
+            symbol_table.symbols.end())
+            continue;
+
+          // Type-check the expression in the interface instance context
+          // to determine its type.
+          exprt value_expr = static_cast<const exprt &>(value_irep);
+
+          verilog_typecheck_exprt expr_checker(
+            standard,
+            warn_implicit_nets,
+            ns,
+            instantiated_module_id,
+            port_identifier,
+            get_message_handler());
+
+          expr_checker.convert_expr(value_expr);
+
+          // Create a wire symbol for the port expression
+          symbolt symbol{full_identifier, value_expr.type(), ID_Verilog};
+
+          symbol.base_name = port_expr_name;
+          symbol.module = module_identifier;
+          symbol.pretty_name = strip_verilog_root_prefix(full_identifier);
+          symbol.is_state_var = true;
+          symbol.is_lvalue = true;
+          symbol.value = value_expr;
+
+          if(port_decl.id() == ID_input)
+            symbol.is_input = true;
+          else if(port_decl.id() == ID_output)
+            symbol.is_output = true;
+          else if(port_decl.id() == ID_inout)
+          {
+            symbol.is_input = true;
+            symbol.is_output = true;
+          }
+
+          symbol_table.add(symbol);
+        }
+      }
+    }
   }
 }
 
