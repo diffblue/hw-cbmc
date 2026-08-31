@@ -41,6 +41,64 @@ static bool new_ic3_supports_property(const exprt &expr)
   return false;
 }
 
+static literalt build_property_literal(
+  netlistt &prop_netlist,
+  const exprt &property_expr,
+  const namespacet &ns,
+  message_handlert &message_handler)
+{
+  aig_prop_constraintt aig_prop(prop_netlist, message_handler);
+  return instantiate_convert(
+    aig_prop,
+    prop_netlist.var_map,
+    to_unary_expr(property_expr).op(),
+    ns,
+    message_handler);
+}
+
+static ic3_resultt check_property(
+  const netlistt &netlist,
+  const ebmc_propertiest::propertyt &property,
+  const namespacet &ns,
+  message_handlert &message_handler)
+{
+  // Add the property cone to a local copy of the netlist and obtain
+  // the property literal in the AIG variable space.
+  netlistt prop_netlist(netlist);
+  literalt prop_lit = build_property_literal(
+    prop_netlist, property.normalized_expr, ns, message_handler);
+
+  ic3_solvert solver{prop_netlist, prop_lit, message_handler};
+  return solver.solve();
+}
+
+static void apply_result(
+  ebmc_propertiest::propertyt &property,
+  ic3_resultt::outcomet outcome)
+{
+  // record the outcome produced by this engine
+  constexpr auto engine = "ic3";
+
+  // For exists-path properties (cover), the normalized expression is
+  // the dual safety property: a refutation is a witness trace, and a
+  // proof shows that no witness exists.
+  switch(outcome)
+  {
+  case ic3_resultt::outcomet::PROVED:
+    if(property.is_exists_path())
+      property.refuted(engine);
+    else
+      property.proved(engine);
+    break;
+  case ic3_resultt::outcomet::REFUTED:
+    if(property.is_exists_path())
+      property.proved(engine);
+    else
+      property.refuted(engine);
+    break;
+  }
+}
+
 property_checker_resultt new_ic3_engine(
   const cmdlinet &cmdline,
   transition_systemt &transition_system,
@@ -89,44 +147,8 @@ property_checker_resultt new_ic3_engine(
     message.status() << "Checking " << property.name << " with new IC3 engine"
                      << messaget::eom;
 
-    // Add the property cone to a local copy of the netlist and obtain
-    // the property literal in the AIG variable space.
-    netlistt prop_netlist(netlist);
-    literalt prop_lit = [&]()
-    {
-      aig_prop_constraintt aig_prop(prop_netlist, message_handler);
-      return instantiate_convert(
-        aig_prop,
-        prop_netlist.var_map,
-        to_unary_expr(property.normalized_expr).op(),
-        ns,
-        message_handler);
-    }();
-
-    ic3_solvert solver{prop_netlist, prop_lit, message_handler};
-    auto result = solver.solve();
-
-    // record the outcome produced by this engine
-    constexpr auto engine = "ic3";
-
-    // For exists-path properties (cover), the normalized expression is
-    // the dual safety property: a refutation is a witness trace, and a
-    // proof shows that no witness exists.
-    switch(result.outcome)
-    {
-    case ic3_resultt::outcomet::PROVED:
-      if(property.is_exists_path())
-        property.refuted(engine);
-      else
-        property.proved(engine);
-      break;
-    case ic3_resultt::outcomet::REFUTED:
-      if(property.is_exists_path())
-        property.proved(engine);
-      else
-        property.refuted(engine);
-      break;
-    }
+    auto result = check_property(netlist, property, ns, message_handler);
+    apply_result(property, result.outcome);
   }
 
   return property_checker_resultt{properties};
