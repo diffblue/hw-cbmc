@@ -1,7 +1,8 @@
 name: github-io-webpages
 
-# Runs ebmc over the LogikBench and HWMCC08 benchmark suites and publishes
-# a small benchmark index plus per-suite HTML reports to GitHub Pages.
+# Runs ebmc over the LogikBench and HWMCC08 benchmark suites and the
+# chipsalliance/sv-tests SystemVerilog conformance suite, and publishes a
+# small benchmark index plus per-suite HTML reports to GitHub Pages.
 
 on:
   # Refresh the published report whenever main changes.
@@ -38,7 +39,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get remove --purge man-db
-          packages_to_install="flex bison libxml2-utils ccache wget"
+          packages_to_install="flex bison libxml2-utils ccache wget python3-pip"
           if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
             sudo apt-get update
             sudo apt-get install --no-install-recommends -yq $packages_to_install
@@ -74,6 +75,11 @@ jobs:
           mkdir -p _site/logikbench _site/hwmcc
           PATH=$PATH:$PWD/src/ebmc benchmarking/logikbench.sh _site/logikbench/index.html
           PATH=$PATH:$PWD/src/ebmc benchmarking/hwmcc08-report.sh _site/hwmcc/index.html
+      - name: Run sv-tests
+        run: |
+          mkdir -p _site/sv-tests
+          PATH=$PATH:$PWD/src/ebmc examples/chipsalliance-sv-tests/sv-tests.sh
+          cp -r sv-tests/out/report/. _site/sv-tests/
       - name: Generate the benchmark landing page
         run: cp benchmarking/index.html _site/index.html
       - name: Upload the report as a Pages artifact
