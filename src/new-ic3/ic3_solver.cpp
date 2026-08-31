@@ -610,14 +610,41 @@ bool ic3_solvert::ctg_down(
     // Counterexample-to-generalization: try to block the predecessor.
     // The budget is shared across the enclosing generalize call —
     // unbounded CTG blocking floods the frames with weak clauses.
-    if(
-      ctg_budget > 0 && level > 0 && !init_intersects(predecessor) &&
-      relative_induction(level, predecessor, nullptr, false))
+    if(ctg_budget > 0 && level > 0 && !init_intersects(predecessor))
     {
-      add_clause(
-        std::min(level + 1, frame_clauses.size() - 1), negate_cube(core));
-      ctg_budget--;
-      continue;
+      // Try direct relative induction of the predecessor.
+      if(relative_induction(level, predecessor, nullptr, false))
+      {
+        add_clause(
+          std::min(level + 1, frame_clauses.size() - 1), negate_cube(core));
+        ctg_budget--;
+        continue;
+      }
+
+      // EXCTG: recursively try to block the predecessor's predecessor.
+      if(ctg_budget > 1 && level > 1)
+      {
+        cubet pred_pred;
+        if(!relative_induction(level - 1, predecessor, &pred_pred, false))
+        {
+          if(!init_intersects(pred_pred) &&
+             relative_induction(level - 1, pred_pred, nullptr, false))
+          {
+            add_clause(
+              std::min(level, frame_clauses.size() - 1), negate_cube(core));
+            ctg_budget--;
+            // Now retry the original predecessor
+            if(relative_induction(level, predecessor, nullptr, false))
+            {
+              add_clause(
+                std::min(level + 1, frame_clauses.size() - 1),
+                negate_cube(core));
+              ctg_budget--;
+              continue;
+            }
+          }
+        }
+      }
     }
 
     // Join cand with the predecessor.
@@ -642,7 +669,7 @@ bool ic3_solvert::ctg_down(
 
 cubet ic3_solvert::generalize(std::size_t level, cubet cube)
 {
-  std::size_t ctg_budget = CTG_MAX;
+  std::size_t ctg_budget = ctg_max;
 
   // Sort by activity: drop least-active literals first
   std::sort(
