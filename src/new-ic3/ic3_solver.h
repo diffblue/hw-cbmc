@@ -155,7 +155,7 @@ private:
   // Max join steps (intersection with predecessor) before giving up
   static constexpr std::size_t JOIN_MAX = 3;
   // Max consecutive MIC literal-drop failures before early termination
-  static constexpr std::size_t MIC_FAIL_MAX = 2;
+  static constexpr std::size_t MIC_FAIL_MAX = 3;
 
   static constexpr bool WITH_NEGATED_CUBE = true;
 
