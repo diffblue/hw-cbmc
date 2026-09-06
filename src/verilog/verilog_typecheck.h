@@ -98,6 +98,13 @@ protected:
   // Elaboration
   using module_itemst = verilog_module_sourcet::module_itemst;
 
+  // Bind directives, IEEE 1800-2017 23.11. Directives that target the
+  // design element that is currently being elaborated are applied in
+  // place; all others are registered for later application.
+  void elaborate_bind_directive(
+    const class verilog_bind_directivet &,
+    module_itemst &dest);
+
   verilog_module_exprt elaborate(const verilog_module_sourcet &);
   module_itemst elaborate_level(const module_itemst &);
   void elaborate_symbol_rec(irep_idt) override;
