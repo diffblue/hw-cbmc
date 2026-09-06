@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ebmc/ebmc_error.h>
 
 #include "expr2verilog.h"
+#include "verilog_bind.h"
 #include "verilog_expr.h"
 #include "verilog_types.h"
 
@@ -2192,15 +2193,27 @@ bool verilog_typecheck(
   bool move_result = symbol_table.move(symbol, new_symbol);
   CHECK_RETURN(!move_result);
 
+  const auto instance_identifier =
+    "Verilog::$root." + id2string(source_symbol.base_name);
+
+  // Copy the module source and apply any bind directives
+  // (1800-2017 23.11). Note that packages are elaborated before the
+  // bind directives are collected, and are hence not affected.
+  auto module_source_copy = module_source;
+
+  apply_bind_directives(
+    module_source_copy,
+    source_symbol.base_name,
+    instance_identifier,
+    symbol_table);
+
   verilog_typecheckt verilog_typecheck(
     standard, warn_implicit_nets, symbol_table, message_handler);
 
   try
   {
     verilog_typecheck.typecheck_design_element(
-      module_source,
-      *new_symbol,
-      "Verilog::$root." + id2string(source_symbol.base_name));
+      module_source_copy, *new_symbol, instance_identifier);
   }
 
   catch(const typecheckt::errort &e)

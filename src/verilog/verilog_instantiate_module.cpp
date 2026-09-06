@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/simplify_expr.h>
 
 #include "typename.h"
+#include "verilog_bind.h"
 #include "verilog_expr.h"
 #include "verilog_typecheck.h"
 
@@ -258,6 +259,10 @@ irep_idt verilog_typecheckt::instantiate_module(
 
   // copy the module source
   verilog_module_sourcet source_copy = module_source;
+
+  // apply any bind directives (1800-2017 23.11)
+  apply_bind_directives(
+    source_copy, source_symbol.base_name, instance_identifier, symbol_table);
 
   // set parameters
   set_parameter_values(source_copy, location, parameter_values);
