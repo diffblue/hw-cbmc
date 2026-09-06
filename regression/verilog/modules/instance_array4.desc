@@ -1,0 +1,10 @@
+CORE
+instance_array4.sv
+--bound 1
+^file .* line 9: cannot split the connection over the 4 elements of the instance array$
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+The width of the connection is neither the width of the port nor the
+width of the port times the number of instances, per 1800-2017 23.3.3.

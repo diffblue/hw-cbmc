@@ -133,6 +133,45 @@ protected:
 
   void elaborate_module_instances(const verilog_module_itemt &);
 
+  // instance arrays, 1800-2017 23.3.2
+public:
+  // One dimension of an instance array, [left:right],
+  // with the indices as written.
+  struct instance_array_dimt
+  {
+    mp_integer left, right;
+
+    mp_integer size() const
+    {
+      return (left <= right ? right - left : left - right) + 1;
+    }
+  };
+
+  using instance_array_dimst = std::vector<instance_array_dimt>;
+
+protected:
+  instance_array_dimst
+  instance_array_dimensions(const typet &, const source_locationt &);
+
+  void elaborate_instance_array(
+    const verilog_inst_baset &,
+    const verilog_instt::instancet &);
+
+  void expand_instance_array(
+    const verilog_instt &,
+    const verilog_instt::instancet &,
+    const irep_idt &module_identifier,
+    const exprt::operandst &parameter_assignments,
+    verilog_instt::instancest &dest);
+
+  exprt instance_array_element_connection(
+    const exprt &connection,
+    const typet &port_type,
+    const instance_array_dimst &,
+    const mp_integer &number_of_elements,
+    const mp_integer &element_index,
+    const source_locationt &);
+
   // Specialize a module to a given instance identifier
   // and parameter assignment
   irep_idt instantiate_module(

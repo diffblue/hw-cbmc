@@ -1,9 +1,15 @@
-KNOWNBUG
+CORE
 instance_array2.sv
-
-^file .* line 9: no support for instance arrays$
-^EXIT=2$
+--bound 1
+^\[main\.assert\.1\] main\.my_instance\[1\]\.i == 0: PROVED up to bound 1$
+^\[main\.assert\.4\] main\.my_instance\[4\]\.i == 0: PROVED up to bound 1$
+^\[main\.assert\.5\] main\.my_instance\[5\]\.i == 1: PROVED up to bound 1$
+^\[main\.assert\.8\] main\.my_instance\[8\]\.i == 1: PROVED up to bound 1$
+^EXIT=0$
 ^SIGNAL=0$
 --
+^warning: ignoring
 --
-This does not parse.
+An array of instances where the connection is split bit-wise over the
+elements, per 1800-2017 23.3.3. The most significant bit connects to
+the instance with the leftmost index.

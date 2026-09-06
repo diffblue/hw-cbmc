@@ -1,0 +1,13 @@
+CORE
+instance_array3.sv
+--bound 1
+^\[main\.p1\] always .*: PROVED up to bound 1$
+^\[main\.p2\] always .*: PROVED up to bound 1$
+^\[main\.p3\] always .*: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+An array of instances with named port connections. Connections that
+match the port width are replicated; wider connections are split
+bit-wise over the elements, per 1800-2017 23.3.3.
