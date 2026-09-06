@@ -23,6 +23,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <trans-word-level/show_module_hierarchy.h>
 
 #include "top_level_modules.h"
+#include "verilog_bind.h"
 #include "verilog_elaborate_compilation_unit.h"
 #include "verilog_language.h"
 #include "verilog_lowering.h"
@@ -398,6 +399,12 @@ static void collect_module_dependencies_rec(
   {
     deps.insert(to_verilog_inst(module_item).module_base_name());
   }
+  else if(module_item.id() == ID_verilog_bind_directive)
+  {
+    deps.insert(to_verilog_bind_directive(module_item)
+                  .instantiation()
+                  .module_base_name());
+  }
   else if(module_item.id() == ID_generate_block)
   {
     for(auto &sub_item : to_verilog_generate_block(module_item).module_items())
@@ -430,6 +437,12 @@ static std::set<irep_idt> collect_all_dependencies(
       {
         for(auto &module_item : to_verilog_module_source(item).items())
           collect_module_dependencies_rec(module_item, deps);
+      }
+      else if(item.id() == ID_verilog_bind_directive)
+      {
+        deps.insert(to_verilog_bind_directive(static_cast<const exprt &>(item))
+                      .instantiation()
+                      .module_base_name());
       }
 
   return deps;
@@ -617,9 +630,17 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   }
 
   //
+  // collect the bind directives (IEEE 1800-2017 23.11);
+  // these are applied during elaboration
+  //
+  auto bind_directives = collect_bind_directives(parse_trees);
+
+  //
   // copy the parse trees into the symbol table
   //
   symbol_tablet symbol_table = elaborate_compilation_units(parse_trees);
+
+  add_bind_directives(bind_directives, symbol_table);
 
   //
   // determine the top-level modules
@@ -637,6 +658,10 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
 
   auto transition_system =
     typecheck(parse_trees, top_level_modules, std::move(symbol_table));
+
+  // check that the bind directives with an instance target
+  // have been applied
+  check_bind_directives(transition_system.symbol_table);
 
   // Create the $root module instance and synthesize it
   create_root_module(

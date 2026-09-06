@@ -1,0 +1,8 @@
+CORE
+bind2.sv
+--bound 5 --module main
+^\[main\.obs\.p0\] always main\.obs\.cnt <= main\.obs\.LIMIT: PROVED up to bound 5$
+^EXIT=0$
+^SIGNAL=0$
+--
+--

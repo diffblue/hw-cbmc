@@ -622,6 +622,8 @@ description:
                 { add_attributes($2, $1);
                   PARSER.parse_tree.add_item(stack_expr($2)); }
         | attribute_instance_brace bind_directive
+                { add_attributes($2, $1);
+                  PARSER.parse_tree.add_item(stack_expr($2)); }
         | config_declaration
         ;
 
@@ -1402,8 +1404,20 @@ config_identifier_opt:
         | TOK_COLON config_identifier
         ;
 
+// IEEE 1800-2017 A.1.4
+// The bind_target_scope in the first form and the bind_target_instance
+// in the second form are both covered by hierarchical_identifier.
 bind_directive:
-          TOK_BIND
+          TOK_BIND bind_target bind_instantiation
+                { init($$, ID_verilog_bind_directive);
+                  mto($$, $2);
+                  mto($$, $3); }
+        ;
+
+bind_target: hierarchical_identifier;
+
+bind_instantiation:
+          module_instantiation
         ;
 
 // System Verilog standard 1800-2017

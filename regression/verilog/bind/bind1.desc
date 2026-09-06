@@ -1,0 +1,8 @@
+CORE
+bind1.sv
+--bound 5 --module main
+^\[main\.obs\.p0\] always main\.obs\.cnt != 3: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--

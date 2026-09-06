@@ -1,0 +1,8 @@
+CORE
+bind_instance_target_not_found1.sv
+--bound 1 --module main
+^file .* line 7: error: bind target `main\.no_such_instance' not found$
+^EXIT=6$
+^SIGNAL=0$
+--
+--

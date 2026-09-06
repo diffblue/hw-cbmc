@@ -1,0 +1,8 @@
+CORE
+bind_instance_target1.sv
+--bound 5 --module main
+^\[main\.c1\.obs\.p0\] always main\.c1\.obs\.cnt != 3: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+main\.c2\.obs

@@ -1241,6 +1241,54 @@ inline verilog_inst_builtint &to_verilog_inst_builtin(exprt &expr)
   return static_cast<verilog_inst_builtint &>(expr);
 }
 
+/// The bind directive, IEEE 1800-2017 23.11.
+/// The target is either a module identifier or a hierarchical
+/// identifier for a module instance. The instantiation is added
+/// to the target module (or the module of the target instance)
+/// as if it was written there.
+class verilog_bind_directivet : public verilog_module_itemt
+{
+public:
+  verilog_bind_directivet() : verilog_module_itemt(ID_verilog_bind_directive)
+  {
+  }
+
+  const exprt &target() const
+  {
+    return op0();
+  }
+
+  exprt &target()
+  {
+    return op0();
+  }
+
+  const verilog_instt &instantiation() const
+  {
+    return static_cast<const verilog_instt &>(op1());
+  }
+
+  verilog_instt &instantiation()
+  {
+    return static_cast<verilog_instt &>(op1());
+  }
+};
+
+inline const verilog_bind_directivet &
+to_verilog_bind_directive(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_bind_directive);
+  binary_exprt::check(expr);
+  return static_cast<const verilog_bind_directivet &>(expr);
+}
+
+inline verilog_bind_directivet &to_verilog_bind_directive(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_verilog_bind_directive);
+  binary_exprt::check(expr);
+  return static_cast<verilog_bind_directivet &>(expr);
+}
+
 /// SystemVerilog has always, always_comb, always_ff and always_latch
 class verilog_always_baset : public verilog_statementt
 {

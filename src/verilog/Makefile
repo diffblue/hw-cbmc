@@ -4,6 +4,7 @@ SRC = aval_bval_encoding.cpp \
       sva_expr.cpp \
       top_level_modules.cpp \
       typename.cpp \
+      verilog_bind.cpp \
       verilog_bits.cpp \
       verilog_ebmc_language.cpp \
       verilog_elaborate.cpp \

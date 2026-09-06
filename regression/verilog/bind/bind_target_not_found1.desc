@@ -1,0 +1,8 @@
+CORE
+bind_target_not_found1.sv
+--bound 1 --module main
+^file .* line 4: error: bind target `no_such_module' not found$
+^EXIT=6$
+^SIGNAL=0$
+--
+--
