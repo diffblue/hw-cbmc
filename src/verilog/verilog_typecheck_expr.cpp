@@ -34,6 +34,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <functional>
 
 /*******************************************************************\
 
@@ -1932,17 +1933,39 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
       .with_source_location(expr);
   }
 
-  const irep_idt &lhs_identifier = [](const exprt &lhs) {
+  // Resolve the identifier on the lhs of the dot, which may
+  // include selects into instance arrays (1800-2017 23.3.2),
+  // e.g., my_array[1][2].some_wire.
+  std::function<irep_idt(const exprt &)> lhs_identifier_rec =
+    [this, &lhs_identifier_rec](const exprt &lhs) -> irep_idt
+  {
     if(lhs.id() == ID_symbol)
       return to_symbol_expr(lhs).identifier();
     else if(lhs.id() == ID_hierarchical_identifier)
       return to_hierarchical_identifier_expr(lhs).identifier();
+    else if(lhs.id() == ID_verilog_bit_select)
+    {
+      // an element of an instance array
+      auto &bit_select = to_verilog_bit_select_expr(lhs);
+
+      auto index_opt = is_constant_integer_post_convert(bit_select.index());
+      if(!index_opt.has_value())
+      {
+        throw errort().with_location(lhs.source_location())
+          << "instance array index must be constant";
+      }
+
+      return id2string(lhs_identifier_rec(bit_select.src())) + '[' +
+             integer2string(*index_opt) + ']';
+    }
     else
     {
       throw errort().with_location(lhs.source_location())
         << "expected symbol or hierarchical identifier on lhs of `.'";
     }
-  }(expr.lhs());
+  };
+
+  const irep_idt lhs_identifier = lhs_identifier_rec(expr.lhs());
 
   if(expr.lhs().type().id() == ID_verilog_module_instance)
   {

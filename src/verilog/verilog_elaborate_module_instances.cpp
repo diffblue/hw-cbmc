@@ -8,8 +8,13 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/arith_tools.h>
 #include <util/mathematical_types.h>
+#include <util/std_expr.h>
 
 #include "verilog_typecheck.h"
+#include "verilog_types.h"
+
+#include <optional>
+#include <set>
 
 /*******************************************************************\
 
@@ -81,8 +86,9 @@ void verilog_typecheckt::elaborate_inst(
 {
   if(op.instance_array().is_not_nil())
   {
-    throw errort().with_location(op.source_location())
-      << "no support for instance arrays";
+    // 1800-2017 23.3.2: an array of instances
+    elaborate_instance_array(statement, op);
+    return;
   }
 
   bool primitive = statement.id() == ID_inst_builtin;
@@ -115,6 +121,199 @@ void verilog_typecheckt::elaborate_inst(
     throw errort().with_location(op.source_location())
       << "duplicate definition of identifier `" << symbol.base_name
       << "' in module `" << module_symbol().base_name << '\'';
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::instance_array_dimensions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Extracts the dimensions of an instance array,
+          outermost (leftmost) dimension first, with the
+          indices as written. Per 1800-2017 23.3.2, a dimension
+          [size] is equivalent to [0:size-1].
+
+\*******************************************************************/
+
+verilog_typecheckt::instance_array_dimst
+verilog_typecheckt::instance_array_dimensions(
+  const typet &instance_array,
+  const source_locationt &source_location)
+{
+  instance_array_dimst dims;
+
+  for(const typet *t = &instance_array; t->id() == ID_verilog_unpacked_array;
+      t = &to_type_with_subtype(*t).subtype())
+  {
+    const exprt &range_expr = static_cast<const exprt &>(t->find(ID_range));
+    const exprt &size_expr = static_cast<const exprt &>(t->find(ID_size));
+
+    instance_array_dimt dim;
+
+    if(range_expr.is_not_nil())
+    {
+      // [left:right]
+      auto range = convert_range(range_expr);
+      dim.left = range.msb;
+      dim.right = range.lsb;
+    }
+    else if(size_expr.is_not_nil())
+    {
+      // [size] is short for [0:size-1]
+      mp_integer size = convert_integer_constant_expression(size_expr);
+
+      if(size <= 0)
+      {
+        throw errort().with_location(source_location)
+          << "instance array size must be positive";
+      }
+
+      dim.left = 0;
+      dim.right = size - 1;
+    }
+    else
+    {
+      throw errort().with_location(source_location)
+        << "instance array dimension must have a range or a size";
+    }
+
+    dims.push_back(std::move(dim));
+  }
+
+  return dims;
+}
+
+/*******************************************************************\
+
+Function: instance_array_suffixes
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Enumerates the element name suffixes of an instance
+          array in declaration order, i.e., the element given
+          by the leftmost index of every dimension comes first.
+          E.g., the dimensions [1:0][2] yield the suffixes
+          [1][0], [1][1], [0][0], [0][1].
+
+\*******************************************************************/
+
+static std::vector<std::string>
+instance_array_suffixes(const verilog_typecheckt::instance_array_dimst &dims)
+{
+  std::vector<std::string> result{""};
+
+  for(auto &dim : dims)
+  {
+    std::vector<std::string> next;
+    next.reserve(result.size() * numeric_cast_v<std::size_t>(dim.size()));
+
+    const mp_integer step = dim.left <= dim.right ? 1 : -1;
+
+    for(auto &prefix : result)
+    {
+      for(mp_integer i = dim.left;; i += step)
+      {
+        next.push_back(prefix + '[' + integer2string(i) + ']');
+        if(i == dim.right)
+          break;
+      }
+    }
+
+    result = std::move(next);
+  }
+
+  return result;
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::elaborate_instance_array
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Creates the symbols for an array of instances
+          (1800-2017 23.3.2): one symbol per element, plus a
+          symbol for the array itself, which is used to resolve
+          hierarchical references to the elements.
+
+\*******************************************************************/
+
+void verilog_typecheckt::elaborate_instance_array(
+  const verilog_inst_baset &statement,
+  const verilog_instt::instancet &op)
+{
+  bool primitive = statement.id() == ID_inst_builtin;
+
+  irep_idt instantiated_module_identifier =
+    verilog_module_symbol(statement.module_base_name());
+
+  auto dims =
+    instance_array_dimensions(op.instance_array(), op.source_location());
+
+  const typet instance_type{
+    primitive ? ID_primitive_module_instance : ID_verilog_module_instance};
+
+  // The symbol for the array itself.
+  {
+    typet array_type = instance_type;
+
+    for(auto it = dims.rbegin(); it != dims.rend(); ++it)
+    {
+      array_type = verilog_array_typet{
+        ID_verilog_unpacked_array,
+        std::move(array_type),
+        it->size(),
+        std::min(it->left, it->right),
+        it->left < it->right};
+    }
+
+    symbolt symbol;
+
+    symbol.mode = mode;
+    symbol.base_name = op.base_name();
+    symbol.type = std::move(array_type);
+    symbol.module = verilog_root_module_identifier();
+    symbol.name = hierarchical_identifier(symbol.base_name);
+    symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+    symbol.value = nil_exprt{};
+
+    if(symbol_table.add(symbol))
+    {
+      throw errort().with_location(op.source_location())
+        << "duplicate definition of identifier `" << symbol.base_name
+        << "' in module `" << module_symbol().base_name << '\'';
+    }
+  }
+
+  // One symbol per element of the array.
+  for(auto &suffix : instance_array_suffixes(dims))
+  {
+    irep_idt element_base_name = id2string(op.base_name()) + suffix;
+
+    symbolt symbol;
+
+    symbol.mode = mode;
+    symbol.base_name = element_base_name;
+    symbol.type = instance_type;
+    symbol.module = verilog_root_module_identifier();
+    symbol.name = hierarchical_identifier(element_base_name);
+    symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+    symbol.value = verilog_module_instancet{instantiated_module_identifier};
+
+    if(symbol_table.add(symbol))
+    {
+      throw errort().with_location(op.source_location())
+        << "duplicate definition of identifier `" << symbol.base_name
+        << "' in module `" << module_symbol().base_name << '\'';
+    }
   }
 }
 
@@ -358,8 +557,24 @@ void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
   }
 
   // get the instance symbols
+  verilog_instt::instancest new_instances;
+  new_instances.reserve(inst.instances().size());
+
   for(auto &instance : inst.instances())
   {
+    if(instance.instance_array().is_not_nil())
+    {
+      // 1800-2017 23.3.2: expand the instance array into
+      // one instance per element
+      expand_instance_array(
+        inst,
+        instance,
+        module_identifier,
+        parameter_assignments,
+        new_instances);
+      continue;
+    }
+
     const auto instance_base_name = instance.base_name();
 
     const irep_idt instance_identifier =
@@ -389,7 +604,439 @@ void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
 
     // check the port connections
     typecheck_port_connections(instance, parameterized_module_symbol);
+
+    new_instances.push_back(std::move(instance));
   }
+
+  inst.instances() = std::move(new_instances);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::expand_instance_array
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Expands an array of instances (1800-2017 23.3.2) into
+          one instance per element, splitting up the port
+          connections as required by 1800-2017 23.3.3.
+
+\*******************************************************************/
+
+void verilog_typecheckt::expand_instance_array(
+  const verilog_instt &inst,
+  const verilog_instt::instancet &instance,
+  const irep_idt &module_identifier,
+  const exprt::operandst &parameter_assignments,
+  verilog_instt::instancest &dest)
+{
+  const irep_idt &inst_module = inst.module_base_name();
+
+  auto dims = instance_array_dimensions(
+    instance.instance_array(), instance.source_location());
+
+  auto suffixes = instance_array_suffixes(dims);
+
+  const mp_integer number_of_elements = suffixes.size();
+
+  // Instantiate the module for each element of the array.
+  std::vector<irep_idt> element_base_names, element_identifiers,
+    element_modules;
+
+  element_base_names.reserve(suffixes.size());
+  element_identifiers.reserve(suffixes.size());
+  element_modules.reserve(suffixes.size());
+
+  for(auto &suffix : suffixes)
+  {
+    irep_idt element_base_name = id2string(instance.base_name()) + suffix;
+    irep_idt element_identifier = hierarchical_identifier(element_base_name);
+
+    // add relevant defparam assignments
+    auto &instance_defparams = defparams[element_identifier];
+
+    irep_idt element_module_identifier = instantiate_module(
+      inst.source_location(),
+      module_identifier,
+      inst_module,
+      element_identifier,
+      parameter_assignments,
+      instance_defparams);
+
+    // fix the module in the instance symbol
+    symbolt &element_symbol = symbol_table_lookup(element_identifier);
+    element_symbol.value.set(ID_module, element_module_identifier);
+
+    element_base_names.push_back(element_base_name);
+    element_identifiers.push_back(element_identifier);
+    element_modules.push_back(element_module_identifier);
+  }
+
+  // Now do the port connections. All elements have the same list
+  // of ports; use the ports of the first element to resolve the
+  // connections.
+  const auto &first_ports =
+    to_module_type(symbol_table_lookup(element_modules.front()).type).ports();
+
+  // 'no connection' is one connection that is nil
+  exprt::operandst connections = instance.connections();
+
+  if(connections.size() == 1 && connections.front().is_nil())
+    connections.clear();
+
+  const bool named = instance.named_port_connections();
+
+  // The connection values, converted, with the index of the port
+  // they connect to.
+  struct resolved_connectiont
+  {
+    std::size_t port_index;
+    exprt value;
+  };
+
+  std::vector<resolved_connectiont> resolved_connections;
+  resolved_connections.reserve(connections.size());
+
+  auto convert_connection = [this](exprt &op)
+  {
+    if(op.is_nil())
+    {
+      // *not* connected
+    }
+    else if(op.id() == ID_verilog_identifier)
+    {
+      // IEEE 1800 2017 6.10 allows implicit declarations of nets when
+      // used in a port connection.
+      op = convert_verilog_identifier(
+        to_verilog_identifier_expr(op), bool_typet{});
+    }
+    else
+      convert_expr(op);
+  };
+
+  if(named)
+  {
+    std::set<irep_idt> assigned_ports;
+
+    for(auto &connection : connections)
+    {
+      if(connection.id() == ID_verilog_wildcard_port_connection)
+      {
+        throw errort{}.with_location(connection.source_location())
+          << "no support for wildcard port connections on instance arrays";
+      }
+
+      if(connection.id() != ID_verilog_named_port_connection)
+      {
+        throw errort().with_location(instance.source_location())
+          << "expected a named port connection";
+      }
+
+      auto &named_port_connection =
+        to_verilog_named_port_connection(connection);
+
+      const irep_idt &base_name =
+        to_verilog_identifier_expr(named_port_connection.port()).base_name();
+
+      if(assigned_ports.find(base_name) != assigned_ports.end())
+      {
+        throw errort().with_location(connection.source_location())
+          << "port name " << base_name << " assigned twice";
+      }
+
+      assigned_ports.insert(base_name);
+
+      std::optional<std::size_t> port_index;
+
+      for(std::size_t p = 0; p < first_ports.size(); p++)
+        if(first_ports[p].base_name() == base_name)
+        {
+          port_index = p;
+          break;
+        }
+
+      if(!port_index.has_value())
+      {
+        throw errort().with_location(connection.source_location())
+          << "port name " << base_name << " not found";
+      }
+
+      exprt value = named_port_connection.value();
+      convert_connection(value);
+
+      resolved_connections.push_back({*port_index, std::move(value)});
+    }
+  }
+  else // positional connections
+  {
+    if(connections.size() != first_ports.size())
+    {
+      throw errort().with_location(instance.source_location())
+        << "wrong number of port connections: expected " << first_ports.size()
+        << " but got " << connections.size();
+    }
+
+    for(std::size_t p = 0; p < connections.size(); p++)
+    {
+      exprt value = connections[p];
+      convert_connection(value);
+      resolved_connections.push_back({p, std::move(value)});
+    }
+  }
+
+  // Create one instance per element of the array.
+  for(std::size_t k = 0; k < suffixes.size(); k++)
+  {
+    const auto &ports =
+      to_module_type(symbol_table_lookup(element_modules[k]).type).ports();
+
+    exprt::operandst element_connections;
+    element_connections.reserve(resolved_connections.size());
+
+    for(auto &resolved : resolved_connections)
+    {
+      const auto &port = ports[resolved.port_index];
+
+      exprt element_value = resolved.value.is_nil()
+                              ? resolved.value
+                              : instance_array_element_connection(
+                                  resolved.value,
+                                  port.type(),
+                                  dims,
+                                  number_of_elements,
+                                  k,
+                                  instance.source_location());
+
+      if(element_value.is_not_nil())
+      {
+        // like typecheck_port_connection
+        if(port.output())
+          check_lhs(element_value, A_CONTINUOUS);
+        else if(port.direction() != ID_verilog_ref)
+          assignment_conversion(element_value, port.type());
+      }
+
+      if(named)
+      {
+        auto port_expr =
+          symbol_exprt{port.identifier(), port.type()}.with_source_location(
+            instance.source_location());
+
+        element_connections.push_back(
+          verilog_inst_baset::named_port_connectiont{
+            std::move(port_expr), std::move(element_value)});
+      }
+      else
+        element_connections.push_back(std::move(element_value));
+    }
+
+    verilog_instt::instancet element = instance; // copy
+    element.remove(ID_verilog_instance_array);
+    element.base_name(element_base_names[k]);
+    element.identifier(element_identifiers[k]);
+    element.module_identifier(element_modules[k]);
+    element.connections() = std::move(element_connections);
+
+    dest.push_back(std::move(element));
+  }
+}
+
+/*******************************************************************\
+
+Function: instance_array_types_match
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: True iff a connection of the given type connects to a
+          port of the given type without splitting.
+
+\*******************************************************************/
+
+static std::optional<mp_integer> instance_array_vector_width(const typet &type)
+{
+  if(type.id() == ID_bool)
+    return mp_integer{1};
+  else if(
+    type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
+    type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv)
+  {
+    return string2integer(type.get_string(ID_width));
+  }
+  else
+    return {};
+}
+
+static bool instance_array_types_match(const typet &a, const typet &b)
+{
+  if(
+    a.id() == ID_array && b.id() == ID_array &&
+    a.get(ID_C_verilog_type) == ID_verilog_unpacked_array &&
+    b.get(ID_C_verilog_type) == ID_verilog_unpacked_array)
+  {
+    auto &array_a = to_verilog_array_type(a);
+    auto &array_b = to_verilog_array_type(b);
+    return array_a.size_int() == array_b.size_int() &&
+           instance_array_types_match(
+             array_a.element_type(), array_b.element_type());
+  }
+
+  auto width_a = instance_array_vector_width(a);
+  auto width_b = instance_array_vector_width(b);
+
+  return width_a.has_value() && width_b.has_value() && *width_a == *width_b;
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::instance_array_element_connection
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Given the (type-checked) connection of an instance
+          array port, returns the connection for the element
+          with the given index (0-based, in declaration order),
+          per 1800-2017 23.3.3.
+
+\*******************************************************************/
+
+exprt verilog_typecheckt::instance_array_element_connection(
+  const exprt &connection,
+  const typet &port_type,
+  const instance_array_dimst &dims,
+  const mp_integer &number_of_elements,
+  const mp_integer &element_index,
+  const source_locationt &source_location)
+{
+  // 1800-2017 23.3.3: if the connection matches the port type,
+  // it connects to every element of the array.
+  if(instance_array_types_match(connection.type(), port_type))
+    return connection;
+
+  // Unpacked array connections are split element-wise
+  // (1800-2017 23.3.3.5): the outermost dimensions of the
+  // connection must match the dimensions of the instance array,
+  // and the leftmost element of the connection connects to the
+  // leftmost instance.
+  if(connection.type().id() == ID_array)
+  {
+    exprt result = connection;
+    mp_integer remaining = element_index;
+
+    for(std::size_t d = 0; d < dims.size(); d++)
+    {
+      if(
+        result.type().id() != ID_array ||
+        result.type().get(ID_C_verilog_type) != ID_verilog_unpacked_array)
+      {
+        throw errort().with_location(source_location)
+          << "instance array connection has too few unpacked dimensions";
+      }
+
+      auto &array_type = to_verilog_array_type(result.type());
+
+      if(array_type.size_int() != dims[d].size())
+      {
+        throw errort().with_location(source_location)
+          << "instance array connection dimension has size "
+          << array_type.size_int() << ", but the instance array has size "
+          << dims[d].size();
+      }
+
+      // the position within this dimension, 0-based from the left
+      mp_integer stride = 1;
+      for(std::size_t d2 = d + 1; d2 < dims.size(); d2++)
+        stride *= dims[d2].size();
+
+      mp_integer position = remaining / stride;
+      remaining %= stride;
+
+      // The leftmost element of the connection connects to the
+      // leftmost instance.
+      mp_integer verilog_index =
+        array_type.increasing()
+          ? array_type.offset() + position
+          : array_type.offset() + array_type.size_int() - 1 - position;
+
+      result =
+        verilog_bit_select_exprt{
+          std::move(result),
+          from_integer(verilog_index, integer_typet{}),
+          array_type.element_type()}
+          .with_source_location(source_location);
+    }
+
+    if(!instance_array_types_match(result.type(), port_type))
+    {
+      throw errort().with_location(source_location)
+        << "instance array connection element does not match the port type";
+    }
+
+    return result;
+  }
+
+  // Vector connections are split bit-wise (1800-2017 23.3.3):
+  // the width of the connection must be the width of the port
+  // times the number of elements, and the most significant bits
+  // connect to the leftmost instance.
+  auto port_width = instance_array_vector_width(port_type);
+  auto connection_width = instance_array_vector_width(connection.type());
+
+  if(
+    port_width.has_value() && connection_width.has_value() &&
+    *connection_width == *port_width * number_of_elements)
+  {
+    // The significance of the element's most significant bit,
+    // 0-based from the least significant bit of the connection.
+    mp_integer msb_position =
+      *connection_width - 1 - element_index * *port_width;
+
+    // Map bit significance to a Verilog index, honouring the
+    // declared range of the connection, if any.
+    const mp_integer offset =
+      string2integer(connection.type().get_string(ID_C_offset));
+    const bool increasing = connection.type().get_bool(ID_C_increasing);
+
+    auto verilog_index = [&](const mp_integer &significance)
+    {
+      return increasing ? offset + *connection_width - 1 - significance
+                        : offset + significance;
+    };
+
+    if(*port_width == 1)
+    {
+      return verilog_bit_select_exprt{
+        connection,
+        from_integer(verilog_index(msb_position), integer_typet{}),
+        bool_typet{}}
+        .with_source_location(source_location);
+    }
+    else
+    {
+      mp_integer index1 = verilog_index(msb_position);
+      mp_integer index2 = verilog_index(msb_position - *port_width + 1);
+
+      if(index1 < index2)
+        std::swap(index1, index2); // now index1 >= index2
+
+      // Part-select expressions are unsigned.
+      return verilog_non_indexed_part_select_exprt{
+        connection,
+        from_integer(index1, integer_typet{}),
+        from_integer(index2, integer_typet{}),
+        unsignedbv_typet{numeric_cast_v<std::size_t>(*port_width)}}
+        .with_source_location(source_location);
+    }
+  }
+
+  throw errort().with_location(source_location)
+    << "cannot split the connection over the " << number_of_elements
+    << " elements of the instance array";
 }
 
 /*******************************************************************\

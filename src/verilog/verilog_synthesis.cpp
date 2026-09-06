@@ -559,30 +559,37 @@ exprt verilog_synthesist::expand_hierarchical_identifier(
   hierarchical_identifier_exprt expr,
   symbol_statet symbol_state)
 {
-  expr.lhs() = synth_expr(expr.lhs(), symbol_state);
+  // The type checker resolves hierarchical identifiers into module
+  // instances (including instance array elements) and stores the
+  // identifier of the symbol. Use it when available.
+  irep_idt full_identifier = expr.identifier();
 
-  if(expr.lhs().id() != ID_symbol)
+  if(full_identifier.empty())
   {
-    throw errort().with_location(expr.source_location())
-      << "synthesis expected symbol on lhs of `.'";
+    expr.lhs() = synth_expr(expr.lhs(), symbol_state);
+
+    if(expr.lhs().id() != ID_symbol)
+    {
+      throw errort().with_location(expr.source_location())
+        << "synthesis expected symbol on lhs of `.'";
+    }
+
+    if(expr.lhs().type().id() != ID_verilog_module_instance)
+    {
+      throw errort().with_location(expr.source_location())
+        << "synthesis expected module instance on lhs of `.', but got `"
+        << to_string(expr.lhs().type()) << '\'';
+    }
+
+    const irep_idt &lhs_identifier = to_symbol_expr(expr.lhs()).identifier();
+
+    // rhs
+    const irep_idt &rhs_base_name = expr.rhs().base_name();
+
+    // just patch together
+    full_identifier =
+      id2string(lhs_identifier) + '.' + id2string(rhs_base_name);
   }
-
-  if(expr.lhs().type().id() != ID_verilog_module_instance)
-  {
-    throw errort().with_location(expr.source_location())
-      << "synthesis expected module instance on lhs of `.', but got `"
-      << to_string(expr.lhs().type()) << '\'';
-  }
-
-  const irep_idt &lhs_identifier = to_symbol_expr(expr.lhs()).identifier();
-
-  // rhs
-  const irep_idt &rhs_base_name = expr.rhs().base_name();
-
-  // just patch together
-
-  irep_idt full_identifier =
-    id2string(lhs_identifier) + '.' + id2string(rhs_base_name);
 
   // The identifier might be a macro, e.g., a parameter of the
   // module instance. If so, substitute.

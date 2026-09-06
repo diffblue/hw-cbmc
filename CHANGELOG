@@ -10,6 +10,7 @@
 * Fix for lowering of s_until_with to LTL
 * Verilog: $root.
 * Verilog: procedural assignments to hierarchical identifiers
+* Verilog: arrays of module instances, including multi-dimensional ones
 * SystemVerilog: ports for sequence and property declarations
 * SystemVerilog: $typename for logic types
 * SystemVerilog: interface ports no longer require the interface to be

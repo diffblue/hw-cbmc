@@ -1,8 +1,11 @@
 CORE
 instance_array1.sv
-
-^file .* line 9: no support for instance arrays$
-^EXIT=2$
+--top parent --bound 1
+^\[parent\.p1\] always .*: PROVED up to bound 1$
+^\[parent\.p2\] always .*: PROVED up to bound 1$
+^EXIT=0$
 ^SIGNAL=0$
 --
 --
+An array of instances with multiple dimensions and unpacked array
+port connections, which are split element-wise per 1800-2017 23.3.3.5.
