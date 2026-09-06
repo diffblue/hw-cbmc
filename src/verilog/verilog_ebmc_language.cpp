@@ -630,17 +630,11 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   }
 
   //
-  // collect the bind directives (IEEE 1800-2017 23.11);
-  // these are applied during elaboration
-  //
-  auto bind_directives = collect_bind_directives(parse_trees);
-
-  //
-  // copy the parse trees into the symbol table
+  // copy the parse trees into the symbol table;
+  // this also registers the compilation-unit level
+  // bind directives (IEEE 1800-2017 23.11)
   //
   symbol_tablet symbol_table = elaborate_compilation_units(parse_trees);
-
-  add_bind_directives(bind_directives, symbol_table);
 
   //
   // determine the top-level modules

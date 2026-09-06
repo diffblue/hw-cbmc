@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/ebmc_util.h>
 #include <util/expr_util.h>
 #include <util/mathematical_types.h>
+#include <util/prefix.h>
 #include <util/replace_symbol.h>
 #include <util/simplify_expr.h>
 #include <util/std_expr.h>
@@ -2197,15 +2198,18 @@ bool verilog_typecheck(
     "Verilog::$root." + id2string(source_symbol.base_name);
 
   // Copy the module source and apply any bind directives
-  // (1800-2017 23.11). Note that packages are elaborated before the
-  // bind directives are collected, and are hence not affected.
+  // (1800-2017 23.11). Packages have a separate name space
+  // and cannot be bind targets.
   auto module_source_copy = module_source;
 
-  apply_bind_directives(
-    module_source_copy,
-    source_symbol.base_name,
-    instance_identifier,
-    symbol_table);
+  if(!has_prefix(id2string(module_identifier), "Verilog::package::"))
+  {
+    apply_bind_directives(
+      module_source_copy,
+      source_symbol.base_name,
+      instance_identifier,
+      symbol_table);
+  }
 
   verilog_typecheckt verilog_typecheck(
     standard, warn_implicit_nets, symbol_table, message_handler);

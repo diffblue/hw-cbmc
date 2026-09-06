@@ -10,6 +10,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <ebmc/ebmc_error.h>
 
+#include "verilog_bind.h"
 #include "verilog_typecheck.h"
 
 void verilog_elaborate_compilation_unit(
@@ -108,6 +109,14 @@ void verilog_elaborate_compilation_unit(
         else
           throw ebmc_errort{};
       }
+    }
+    else if(item.id() == ID_verilog_bind_directive)
+    {
+      // IEEE 1800-2017 23.11; registered here, and applied
+      // when the target is elaborated.
+      register_bind_directive(
+        to_verilog_bind_directive(static_cast<const exprt &>(item)),
+        symbol_table);
     }
     else if(item.id() == ID_verilog_class)
     {

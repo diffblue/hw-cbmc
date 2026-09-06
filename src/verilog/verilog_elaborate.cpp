@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/mathematical_types.h>
 #include <util/prefix.h>
 
+#include "verilog_bind.h"
 #include "verilog_typecheck.h"
 #include "verilog_types.h"
 
@@ -1057,6 +1058,10 @@ void verilog_typecheckt::collect_symbols(
   {
     // postpone until constants are elaborated
   }
+  else if(module_item.id() == ID_verilog_bind_directive)
+  {
+    // no symbols; these are handled in elaborate_level
+  }
   else if(module_item.id() == ID_inst)
   {
     // these symbols are currently created in verilog_interfaces
@@ -1199,11 +1204,64 @@ verilog_typecheckt::elaborate_level(const module_itemst &module_items)
       // recursively.
       elaborate_generate_item(module_item, result);
     }
+    else if(module_item.id() == ID_verilog_bind_directive)
+    {
+      elaborate_bind_directive(to_verilog_bind_directive(module_item), result);
+    }
+    else if(
+      module_item.id() == ID_set_genvars &&
+      to_verilog_set_genvars(module_item).module_item().id() ==
+        ID_verilog_bind_directive)
+    {
+      // a bind directive inside a generate construct
+      elaborate_bind_directive(
+        to_verilog_bind_directive(
+          to_verilog_set_genvars(module_item).module_item()),
+        result);
+    }
     else
       result.push_back(module_item);
   }
 
   return result;
+}
+
+void verilog_typecheckt::elaborate_bind_directive(
+  const verilog_bind_directivet &bind_directive,
+  module_itemst &dest)
+{
+  auto &target = bind_directive.target();
+
+  // Does the directive target the design element instance that is
+  // currently being elaborated?
+  bool in_place;
+
+  if(target.id() == ID_verilog_identifier)
+    in_place = target.get(ID_base_name) == module_symbol().base_name;
+  else
+    in_place = bind_target_instance_identifier(target) == module_instance;
+
+  if(in_place)
+  {
+    // Reject directives that bind a module to itself, which
+    // would result in an unbounded recursion.
+    if(
+      bind_directive.instantiation().module_base_name() ==
+      module_symbol().base_name)
+    {
+      throw errort().with_location(bind_directive.source_location())
+        << "cannot bind module `" << module_symbol().base_name << "' to itself";
+    }
+
+    // Add the instantiation in place, as if it was written here.
+    dest.push_back(bind_directive.instantiation());
+  }
+  else
+  {
+    // Register the directive; it is applied when the target
+    // is elaborated.
+    register_bind_directive(bind_directive, symbol_table);
+  }
 }
 
 void verilog_typecheckt::add_symbol(symbolt symbol)
