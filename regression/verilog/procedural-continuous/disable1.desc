@@ -1,0 +1,14 @@
+CORE
+disable1.sv
+--bound 1
+^Type-checking Verilog::main$
+^file .* line 9: unexpected statement during synthesis: disable$
+^EXIT=2$
+^SIGNAL=0$
+--
+^file .* unexpected statement: disable$
+^Invariant check failed$
+--
+The disable statement is accepted by the type checker and only fails later
+during synthesis, rather than the earlier "unexpected statement" type-check
+failure.

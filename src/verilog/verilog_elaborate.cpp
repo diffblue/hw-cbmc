@@ -970,6 +970,9 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
   else if(statement.id() == ID_force)
   {
   }
+  else if(statement.id() == ID_release)
+  {
+  }
   else if(statement.id() == ID_repeat)
   {
     collect_symbols(to_verilog_repeat(statement).body());
