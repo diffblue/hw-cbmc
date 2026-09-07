@@ -1,0 +1,12 @@
+CORE
+join_any_named1.sv
+
+^\[main\.fb\.p0\] main\.W == 7: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+^unexpected statement
+--
+A named fork ... join_any is parsed as a named parallel block (ID_block)
+and behaves like a named join, IEEE 1800-2017 9.3.2.

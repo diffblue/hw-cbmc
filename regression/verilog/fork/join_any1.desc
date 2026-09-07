@@ -1,0 +1,15 @@
+CORE
+join_any1.sv
+
+^file .* line [0-9]+: unexpected statement: fork$
+^CONVERSION ERROR$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+^Invariant check failed$
+--
+An unnamed fork ... join_any parses successfully (this PR adds the grammar)
+and then reaches the same "unexpected statement: fork" diagnostic as an
+unnamed fork ... join, i.e., ID_fork is not yet handled beyond parsing.
+This documents that join_any is accepted by the parser.
