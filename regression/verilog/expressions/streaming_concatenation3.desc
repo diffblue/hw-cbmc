@@ -1,16 +1,17 @@
-KNOWNBUG
+CORE
 streaming_concatenation3.sv
 
 ^\[main\.p1\] main\.s1 == 171: PROVED .*$
 ^\[main\.p2\] main\.s2 == 186: PROVED .*$
+^\[main\.p3\] main\.s3 == 213: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
+^Invariant check failed$
 --
-A streaming concatenation with more than one stream_expression is not
-implemented.  The streaming operator is type checked as a unary expression
-whose operand is required to be a concatenation with exactly one operand,
-and hence any such streaming concatenation trips the precondition
-`expr.op().operands().size() == 1' in convert_unary_expr.  This is an
-invariant violation rather than a diagnostic, i.e., ebmc aborts.
+Per 1800-2017 11.4.14, the stream_concatenation of a streaming
+concatenation may contain more than one stream_expression, e.g.
+{>>{a, b}} or {<<4{a, b}}. Such streaming concatenations are packed into a
+single bit vector (preserving written order) and, for the left-shift form,
+reversed in blocks of the slice size.

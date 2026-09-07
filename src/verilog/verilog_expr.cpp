@@ -332,34 +332,46 @@ exprt verilog_indexed_part_select_plus_or_minus_exprt::lower() const
 
 exprt verilog_streaming_concatenation_exprt::lower() const
 {
+  // The stream_concatenation is a braced list of one or more
+  // stream_expressions (1800-2017 11.4.14). We first pack these into a
+  // single bit vector, preserving the written (left-to-right) order, which
+  // matches the semantics of an ordinary concatenation.
+  auto pack = [](const exprt::operandst &stream_expressions) -> exprt
+  {
+    PRECONDITION(!stream_expressions.empty());
+
+    if(stream_expressions.size() == 1)
+      return stream_expressions.front();
+
+    mp_integer width = 0;
+    for(auto &op : stream_expressions)
+      width += to_bitvector_type(op.type()).get_width();
+
+    return concatenation_exprt{
+      stream_expressions, unsignedbv_typet{numeric_cast_v<std::size_t>(width)}};
+  };
+
   if(id() == ID_verilog_streaming_concatenation_left_to_right)
   {
-    // slice size does not matter
-    if(stream_expressions().size() == 1)
-      return stream_expressions().front();
-    else
-      PRECONDITION(false);
+    // The slice size does not matter; the packed stream is the result.
+    return pack(stream_expressions());
   }
   else if(id() == ID_verilog_streaming_concatenation_right_to_left)
   {
-    if(stream_expressions().size() == 1)
-    {
-      if(stream_expressions().front().type().id() == ID_bool)
-        return stream_expressions().front();
-      else
-      {
-        auto slice_size_int =
-          has_slice_size()
-            ? numeric_cast_v<std::size_t>(to_constant_expr(slice_size()))
-            : std::size_t(1);
-        if(slice_size_int == 1)
-          return bitreverse_exprt{stream_expressions().front()};
-        else
-          return bswap_exprt{stream_expressions().front(), slice_size_int};
-      }
-    }
+    auto packed = pack(stream_expressions());
+
+    if(packed.type().id() == ID_bool)
+      return packed;
+
+    // The packed stream is reversed in blocks of slice_size bits (default 1).
+    auto slice_size_int =
+      has_slice_size()
+        ? numeric_cast_v<std::size_t>(to_constant_expr(slice_size()))
+        : std::size_t(1);
+    if(slice_size_int == 1)
+      return bitreverse_exprt{std::move(packed)};
     else
-      PRECONDITION(false);
+      return bswap_exprt{std::move(packed), slice_size_int};
   }
   else
     PRECONDITION(false);
