@@ -24,11 +24,13 @@ SRC = aval_bval_encoding.cpp \
       verilog_preprocessor.cpp \
       verilog_preprocessor_lex.yy.cpp \
       verilog_preprocessor_tokenizer.cpp \
+      verilog_rtl.cpp \
       verilog_scope.cpp \
       verilog_simplifier.cpp \
       verilog_standard.cpp \
       verilog_symbol_table.cpp \
       verilog_synthesis.cpp \
+      verilog_transition_relation.cpp \
       verilog_typecheck.cpp \
       verilog_typecheck_base.cpp \
       verilog_typecheck_expr.cpp \

@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 always_comb2.sv
 --aig
 ^\[main\.p0\] always main\.data == 0 -> main\.decoded == 1: PROVED .*$
@@ -9,4 +9,4 @@ always_comb2.sv
 --
 ^warning: ignoring
 --
-This segfaults.
+This used to segfault.

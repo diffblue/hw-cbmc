@@ -488,6 +488,11 @@ int hw_cbmc_parse_optionst::doit()
 
     verilog_ebmc_languaget verilog_language(
       verilog_cmdline, ui_message_handler);
+
+    // We unwind the module that is given on the command line, and
+    // hence need the transition relation of that module.
+    verilog_language.use_synthesis = true;
+
     auto transition_system = verilog_language.transition_system();
 
     if(!transition_system.has_value())
