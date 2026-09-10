@@ -12,14 +12,15 @@
 * Verilog: $root.
 * Verilog: procedural assignments to hierarchical identifiers
 * Verilog: arrays of module instances, including multi-dimensional ones
-* SystemVerilog: ports for sequence and property declarations
-* SystemVerilog: $typename for logic types
-* SystemVerilog: interface ports no longer require the interface to be
-  declared before the module that uses it
+* Verilog: functions in generate/block scopes
 * Verilog: +define+ command-line option
 * Verilog: +incdir+ command-line option
 * Verilog: -l and +libfile+ command-line options
 * Verilog: -y and +libdir+ command-line options
+* SystemVerilog: ports for sequence and property declarations
+* SystemVerilog: $typename for logic types
+* SystemVerilog: interface ports no longer require the interface to be
+  declared before the module that uses it
 * Refreshed IC3 engine --new-ic3
 
 # EBMC 6.0
