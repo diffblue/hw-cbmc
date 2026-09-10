@@ -26,12 +26,12 @@ std::string bind_target_as_string(const exprt &target)
 {
   if(target.id() == ID_hierarchical_identifier)
   {
-    auto &binary = to_binary_expr(target);
-    return bind_target_as_string(binary.op0()) + '.' +
-           id2string(binary.op1().get(ID_base_name));
+    auto &hierarchical_identifier = to_hierarchical_identifier_expr(target);
+    return bind_target_as_string(hierarchical_identifier.module_instance()) +
+           '.' + id2string(hierarchical_identifier.item().base_name());
   }
   else
-    return id2string(target.get(ID_base_name));
+    return id2string(to_verilog_identifier_expr(target).base_name());
 }
 
 irep_idt bind_target_instance_identifier(const exprt &target)
@@ -80,7 +80,7 @@ void register_bind_directive(
 
   if(target.id() == ID_verilog_identifier)
   {
-    auto base_name = target.get(ID_base_name);
+    auto base_name = to_verilog_identifier_expr(target).base_name();
 
     // Reject directives that bind a module to itself, which
     // would result in an unbounded recursion.
@@ -138,7 +138,8 @@ void apply_bind_directives(
     if(target.id() == ID_verilog_identifier)
     {
       // Module target: applies to all instances of the module.
-      matches = target.get(ID_base_name) == module_base_name;
+      matches =
+        to_verilog_identifier_expr(target).base_name() == module_base_name;
     }
     else
     {
@@ -170,7 +171,7 @@ void check_bind_directives(const symbol_table_baset &symbol_table)
     if(target.id() == ID_verilog_identifier)
     {
       // The target module must exist.
-      auto base_name = target.get(ID_base_name);
+      auto base_name = to_verilog_identifier_expr(target).base_name();
       auto source_identifier =
         id2string(verilog_module_symbol(base_name)) + "$source";
 
