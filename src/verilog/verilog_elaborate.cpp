@@ -1237,7 +1237,8 @@ void verilog_typecheckt::elaborate_bind_directive(
   bool in_place;
 
   if(target.id() == ID_verilog_identifier)
-    in_place = target.get(ID_base_name) == module_symbol().base_name;
+    in_place = to_verilog_identifier_expr(target).base_name() ==
+               module_symbol().base_name;
   else
     in_place = bind_target_instance_identifier(target) == module_instance;
 
