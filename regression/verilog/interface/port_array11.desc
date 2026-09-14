@@ -1,0 +1,10 @@
+CORE
+port_array11.sv
+--top main
+^\[main\.sub_inst\.assert\.1\] main\.sub_inst\.bus\[0\]\.i == main\.sub_inst\.bus\[1\]\.i: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+The elements of an array of interface ports (1800-2017 25.4) are bound to
+distinct interface instances, i.e., the binding is not vacuous.

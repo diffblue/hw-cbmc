@@ -1,0 +1,10 @@
+CORE
+port_array6.sv
+--top main
+^\[main\.sub_inst\.assert\.1\] main\.sub_inst\.bus\[0\]\[2\]\.i == 7: PROVED
+^\[main\.sub_inst\.assert\.2\] main\.sub_inst\.bus\[1\]\[0\]\.i == 7: PROVED
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+An array of interface ports (1800-2017 25.4) with more than one dimension.

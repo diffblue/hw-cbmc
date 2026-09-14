@@ -1,0 +1,13 @@
+CORE
+port_array4.sv
+--top main
+^\[main\.sub_inst\.assert\.1\] main\.sub_inst\.bus\[0\]\.i == 30: PROVED
+^\[main\.sub_inst\.assert\.2\] main\.sub_inst\.bus\[1\]\.i == 20: PROVED
+^\[main\.sub_inst\.assert\.3\] main\.sub_inst\.bus\[2\]\.i == 10: PROVED
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The elements of an array of interface ports (1800-2017 25.4) are bound in the
+order in which they are given, i.e., the leftmost element of the port
+connection is the element with the leftmost index of the declared range.
