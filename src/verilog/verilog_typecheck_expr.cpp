@@ -1939,7 +1939,37 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
     return symbol->symbol_expr().with_source_location(expr);
   }
 
-  convert_expr(expr.lhs());
+  // Upward name referencing (1800-2017 23.8): a hierarchical reference may
+  // start at the name of a top-level module, from where it descends into
+  // the instance hierarchy, e.g. `top.prod.sig' used from within a sibling
+  // instance. The leading name is a top-level instance registered under
+  // `$root'. We only treat it this way when it does not resolve as an
+  // ordinary identifier in the current scope, so a local object of the same
+  // name takes precedence (1800-2017 23.8, longest-prefix resolution).
+  if(expr.lhs().id() == ID_verilog_identifier)
+  {
+    auto lhs_base_name = to_verilog_identifier_expr(expr.lhs()).base_name();
+
+    if(resolve(lhs_base_name) == nullptr)
+    {
+      const irep_idt full_instance_identifier =
+        id2string(verilog_root_module_identifier()) + '.' +
+        id2string(lhs_base_name);
+
+      const symbolt *symbol;
+      if(
+        !ns.lookup(full_instance_identifier, symbol) &&
+        symbol->type.id() == ID_verilog_module_instance)
+      {
+        // Replace the leading identifier by the top-level instance, then
+        // fall through to the ordinary module-instance handling below.
+        expr.lhs() = symbol->symbol_expr().with_source_location(expr.lhs());
+      }
+    }
+  }
+
+  if(expr.lhs().id() != ID_symbol)
+    convert_expr(expr.lhs());
 
   DATA_INVARIANT(
     expr.rhs().id() == ID_verilog_identifier,
