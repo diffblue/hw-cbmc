@@ -1,0 +1,23 @@
+-- A refuted property where the INVAR constraint involves an INPUT.
+-- The counter only advances while the input i is TRUE, and INVAR i
+-- forces i TRUE in every state.  The counterexample therefore relies on
+-- the constrained input assignment in every step -- exactly the case
+-- where a lifted cube's input literals matter.  Without INVAR i the
+-- shortest counterexample is the same length, but the constraint has to
+-- be respected in the input part of every lifted cube.
+
+MODULE main
+
+IVAR i : boolean;
+VAR cnt : 0..3;
+
+INVAR i
+
+ASSIGN
+  init(cnt) := 0;
+  next(cnt) := case
+    i & cnt < 3 : cnt + 1;
+    TRUE        : cnt;
+  esac;
+
+SPEC AG cnt != 3
