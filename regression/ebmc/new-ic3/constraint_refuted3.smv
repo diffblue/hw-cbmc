@@ -1,0 +1,22 @@
+-- A refuted property whose counterexample length DIFFERS because of the
+-- INVAR constraint on the input.  Without the constraint the input
+-- "fast" could be TRUE, advancing the counter by 2 and reaching the bad
+-- state cnt==4 in 2 steps.  INVAR !fast forbids that, so the only
+-- counterexample advances by 1 per step and has length 5 instead.
+
+MODULE main
+
+IVAR fast : boolean;
+VAR cnt : 0..4;
+
+INVAR !fast
+
+ASSIGN
+  init(cnt) := 0;
+  next(cnt) := case
+    fast & cnt + 2 <= 4 : cnt + 2;
+    cnt < 4             : cnt + 1;
+    TRUE                : cnt;
+  esac;
+
+SPEC AG cnt != 4

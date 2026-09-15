@@ -1,0 +1,15 @@
+-- A property that is only provable because of the INVAR constraint.
+-- Without INVAR x, the variable x is unconstrained and AG x would be refuted.
+
+MODULE main
+
+VAR x : boolean;
+VAR y : boolean;
+
+INVAR x
+
+ASSIGN
+  init(y) := FALSE;
+  next(y) := x & y;
+
+SPEC AG x
