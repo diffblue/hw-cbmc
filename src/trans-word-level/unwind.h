@@ -15,12 +15,16 @@ Author: Daniel Kroening, kroening@kroening.com
 
 // word-level
 
+/// @param initial_state When set, the initial strate constraint is added.
+/// @param constraints When set, in-state constraints
+///        (transt::invar()) are added.
 void unwind(
   const transt &,
   message_handlert &,
   class decision_proceduret &,
   std::size_t no_timeframes,
   const class namespacet &,
-  bool initial_state = true);
+  bool initial_state = true,
+  bool constraints = true);
 
 #endif

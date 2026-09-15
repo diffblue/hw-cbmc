@@ -21,7 +21,8 @@ void unwind(
   const bmc_mapt &bmc_map,
   messaget &message,
   cnft &solver,
-  bool add_initial_state = true);
+  bool add_initial_state = true,
+  bool add_constraints = true);
 
 // unwind timeframes individually
 void unwind(
@@ -30,6 +31,7 @@ void unwind(
   messaget &message,
   cnft &solver,
   bool add_initial_state,
+  bool add_constraints,
   std::size_t timeframe);
 
 // Is the property supported?

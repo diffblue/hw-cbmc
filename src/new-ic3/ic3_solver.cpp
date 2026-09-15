@@ -122,7 +122,7 @@ static void add_minisat_clause(IctMinisat::Solver &S, const bvt &clause)
 // ============================================================
 
 ic3_solvert::ic3_solvert(
-  netlistt netlist,
+  const netlistt &netlist,
   literalt prop_netlist_lit,
   message_handlert &message_handler)
   : message_handler(message_handler)
@@ -131,19 +131,16 @@ ic3_solvert::ic3_solvert(
   // functions are nodes in the same variable space.
   base_cnf = std::make_unique<recording_cnft>(message_handler);
 
-  // Take the invariant constraints out of the netlist: unwind() would
-  // assert them as unit clauses in base_cnf, which every solver
-  // replays. In the lifting solver they would weaken lift()'s
-  // implication "cube ∧ inputs ∧ T ⇒ target" to hold only modulo the
-  // constraints, admitting constraint-violating states into widened
-  // cubes and hence spurious counterexample chains.
-  const auto constraints = std::move(netlist.constraints);
-  netlist.constraints.clear();
-
   bmc_mapt bmc_map(netlist, 1, *base_cnf);
+
   {
+    // We ask unwind() not to asser the in-state AIG constraints.
+    // In the lifting solver they would weaken lift()'s
+    // implication "cube ∧ inputs ∧ T ⇒ target" to hold only modulo the
+    // constraints, admitting constraint-violating states into widened
+    // cubes and hence spurious counterexample chains.
     messaget message{message_handler};
-    ::unwind(netlist, bmc_map, message, *base_cnf, false, 0);
+    ::unwind(netlist, bmc_map, message, *base_cnf, false, false, 0);
   }
 
   prop_current = bmc_map.translate(0, prop_netlist_lit);
@@ -195,10 +192,10 @@ ic3_solvert::ic3_solvert(
   // cube via its lift core, each unlifted (full-state) cube via the
   // constraint unit in the frame solver that produced it, and the bad
   // state via the weakened property.
-  if(!constraints.empty())
+  if(!netlist.constraints.empty())
   {
     literalt c_all = const_literal(true);
-    for(auto c : constraints)
+    for(auto c : netlist.constraints)
       c_all = base_cnf->land(c_all, bmc_map.translate(0, c));
 
     if(!c_all.is_true())
