@@ -140,7 +140,15 @@ std::pair<tvt, std::optional<trans_tracet>> is_ranking_function(
   auto &solver = solver_wrapper.decision_procedure();
 
   // *no* initial state, two time frames
-  unwind(transition_system.trans_expr, message_handler, solver, 2, ns, false);
+  word_level_unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false;
+  unwind(
+    transition_system.trans_expr,
+    message_handler,
+    solver,
+    2,
+    ns,
+    unwind_options);
 
   const auto p = [&property]() -> exprt
   {

@@ -134,7 +134,11 @@ int interpolationt_netlist::check_initial_state()
 
   netlist_bmc_map_init.map_timeframes(working_netlist, 1, satcheck);
 
-  ::unwind(working_netlist, netlist_bmc_map_init, *this, satcheck, true); 
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = true;
+  unwind_options.add_constraints = true;
+  ::unwind(
+    working_netlist, netlist_bmc_map_init, *this, satcheck, unwind_options);
 
   std::cout << "construct property\n";
 
@@ -632,7 +636,10 @@ void interpolationt_netlist::build_partition1(
   bmc_mapt &nbm)
 {
   status("build_partition1");
-  ::unwind(working_netlist, nbm, *this, interp, false, 0);
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false;
+  unwind_options.add_constraints = true;
+  ::unwind(working_netlist, nbm, *this, interp, unwind_options, 0);
 
   if(forward_interpolants.empty())
   {
@@ -720,9 +727,12 @@ void interpolationt_netlist::build_partition2(
   unsigned no_timeframes=bound+1;
 
     // unwinding for frames 1,..,bound
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false;
+  unwind_options.add_constraints = true;
   for(unsigned c=1; c<no_timeframes; c++) //note the difference here
   {
-    ::unwind(working_netlist, nbm, *this, interp, false, c);
+    ::unwind(working_netlist, nbm, *this, interp, unwind_options, c);
   }
   
   status("build_partition2 done");
@@ -825,7 +835,16 @@ int interpolationt_netlist::induction_step()
 
     // *no* initial state
   status("instantiating trans");
-  ::unwind(working_netlist, netlist_bmc_map_induction, *this, satcheck, false, 0);
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false;
+  unwind_options.add_constraints = true;
+  ::unwind(
+    working_netlist,
+    netlist_bmc_map_induction,
+    *this,
+    satcheck,
+    unwind_options,
+    0);
   build_partition2(satcheck, netlist_bmc_map_induction);
 
   unsigned no_timeframes=bound+1;
@@ -1020,10 +1039,13 @@ else {
   l_unwinding = solver.lor(l_unwinding, l_approx);
 
   solver.l_set_to(l_unwinding, true);
-  
-  ::unwind(working_netlist, bmc_map, *this, solver, false);
-  
-//  std::list<bvt> prop_bv;
+
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false;
+  unwind_options.add_constraints = true;
+  ::unwind(working_netlist, bmc_map, *this, solver, unwind_options);
+
+  //  std::list<bvt> prop_bv;
   prop_bv.clear();
   ::unwind_property(working_netlist, bmc_map, *this, prop_bv, solver);
 //  build_property(solver, bmc_map);

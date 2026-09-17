@@ -133,7 +133,7 @@ ic3_solvert::ic3_solvert(
   bmc_mapt bmc_map(netlist, 1, *base_cnf);
   {
     messaget message{message_handler};
-    ::unwind(netlist, bmc_map, message, *base_cnf, false, 0);
+    ::unwind(netlist, bmc_map, message, *base_cnf, unwind_optionst{false}, 0);
   }
 
   prop_current = bmc_map.translate(0, prop_netlist_lit);

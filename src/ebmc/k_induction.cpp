@@ -299,13 +299,15 @@ void k_inductiont::induction_step()
     auto &solver = solver_wrapper.decision_procedure();
 
     // *no* initial state
+    word_level_unwind_optionst unwind_options;
+    unwind_options.add_initial_state = false;
     unwind(
       transition_system.trans_expr,
       message.get_message_handler(),
       solver,
       no_timeframes,
       ns,
-      false);
+      unwind_options);
 
     // add all assumptions for all time frames
     for(auto &property : properties.properties)

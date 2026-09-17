@@ -126,13 +126,15 @@ property_checker_resultt transition_property(
   // the transition relation.
 
   // One transition: 2 timeframes, no initial state.
+  word_level_unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false; // no initial state constraint
   unwind(
     transition_system.trans_expr,
     message_handler,
     solver,
     2, // no_timeframes
     ns,
-    false); // no initial state constraint
+    unwind_options);
 
   std::map<irep_idt, exprt> handles;
 

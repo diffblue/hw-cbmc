@@ -252,13 +252,15 @@ property_checker_resultt bmc(
   auto &solver = solver_wrapper.decision_procedure();
   auto no_timeframes = bound + 1;
 
+  word_level_unwind_optionst unwind_options;
+  unwind_options.add_initial_state = true;
   ::unwind(
     transition_system.trans_expr,
     message_handler,
     solver,
     no_timeframes,
     ns,
-    true);
+    unwind_options);
 
   // convert the properties
   message.status() << "Properties" << messaget::eom;

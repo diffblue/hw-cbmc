@@ -60,7 +60,10 @@ property_checker_resultt word_level_bmc(
 #if 0
         const namespacet ns(transition_system.symbol_table);
         CHECK_RETURN(trans_expr.has_value());
-        ::unwind(*trans_expr, *message_handler, solver, bound+1, ns, true);
+        word_level_unwind_optionst unwind_options;
+        unwind_options.add_initial_state = true;
+        ::unwind(
+          *trans_expr, *message_handler, solver, bound + 1, ns, unwind_options);
         result=finish_word_level_bmc(solver);
 #endif
       }

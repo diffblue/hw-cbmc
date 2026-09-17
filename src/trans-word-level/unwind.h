@@ -15,12 +15,20 @@ Author: Daniel Kroening, kroening@kroening.com
 
 // word-level
 
+struct word_level_unwind_optionst
+{
+  /// assert the initial-state constraint (transt::init()) at timeframe 0
+  bool add_initial_state = true;
+  /// assert the in-state constraints (transt::invar())
+  bool add_constraints = true;
+};
+
 void unwind(
   const transt &,
   message_handlert &,
   class decision_proceduret &,
   std::size_t no_timeframes,
   const class namespacet &,
-  bool initial_state = true);
+  word_level_unwind_optionst options = {});
 
 #endif
