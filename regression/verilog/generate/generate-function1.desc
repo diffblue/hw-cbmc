@@ -1,13 +1,12 @@
-KNOWNBUG
+CORE
 generate-function1.sv
 --module main --bound 0
+^\[main\.gen_block\.p1\] always main\.gen_block\.val == 42: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^CONVERSION ERROR$
 --
 IEEE 1800-2017 27.2 permits function declarations inside generate blocks;
-the function is usable within the scope of the generate block.  Elaboration
-rejects a call to such a function with
-
-  unknown function `plus_one'
+the function is usable within the scope of the generate block.  A call to
+such a function is resolved against the enclosing generate-block scope.
