@@ -1,0 +1,21 @@
+-- Multiple INVAR constraints that together prove a property.
+-- Each constraint alone is insufficient: we need both x and y
+-- to be constrained for the implication x -> y to hold,
+-- because y is unconstrained otherwise.
+
+MODULE main
+
+VAR x : boolean;
+VAR y : boolean;
+VAR z : boolean;
+
+-- Constrain x to TRUE and z to FALSE
+INVAR x
+INVAR !z
+
+ASSIGN
+  init(y) := TRUE;
+  next(y) := x & !z;
+
+-- y stays TRUE because x=TRUE and z=FALSE in every state
+SPEC AG y

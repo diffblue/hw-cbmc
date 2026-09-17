@@ -1,0 +1,9 @@
+CORE
+assume_refuted1.sv
+--new-ic3 --top main
+^Property refuted with counterexample of length 4$
+^\[main\.a0\] always main\.en: ASSUMED$
+^\[main\.p0\] always main\.cnt != 3: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
