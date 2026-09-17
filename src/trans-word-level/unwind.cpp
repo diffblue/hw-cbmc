@@ -34,7 +34,7 @@ void unwind(
   decision_proceduret &decision_procedure,
   std::size_t no_timeframes,
   const namespacet &ns,
-  bool initial_state)
+  word_level_unwind_optionst options)
 {
   messaget message{message_handler};
   const exprt &op_invar=trans.invar();
@@ -43,15 +43,18 @@ void unwind(
 
   // in-state constraints
 
-  message.progress() << "In-state constraints" << messaget::eom;
+  if(options.add_constraints)
+  {
+    message.progress() << "In-state constraints" << messaget::eom;
 
-  if(!op_invar.is_true())
-    for(std::size_t c = 0; c < no_timeframes; c++)
-      decision_procedure.set_to_true(instantiate(op_invar, c, no_timeframes));
+    if(!op_invar.is_true())
+      for(std::size_t c = 0; c < no_timeframes; c++)
+        decision_procedure.set_to_true(instantiate(op_invar, c, no_timeframes));
+  }
 
   // initial state
 
-  if(initial_state)
+  if(options.add_initial_state)
   {
     message.progress() << "Initial state" << messaget::eom;
 

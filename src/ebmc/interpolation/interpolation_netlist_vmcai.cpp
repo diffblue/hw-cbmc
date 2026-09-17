@@ -455,7 +455,9 @@ void interpolationt_netlist_vmcai::build_forward_partition1(
   interpolatort &interp)
 {
   status("interpolationt_netlist_vmcai::build_partition1");
-  ::unwind(netlist, netlist_bmc_map, *this, interp, false, 0);
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false;
+  ::unwind(netlist, netlist_bmc_map, *this, interp, unwind_options, 0);
 
   if((forward_interpolants.empty()))
   {
@@ -527,8 +529,10 @@ void interpolationt_netlist_vmcai::build_forward_partition2(
   unsigned no_timeframes=bound+1;
 
     // unwinding for frames 1,..,bound+1
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false;
   for(unsigned c=1; c<no_timeframes; c++)
-    ::unwind(netlist, netlist_bmc_map, *this, interp, false, c);
+    ::unwind(netlist, netlist_bmc_map, *this, interp, unwind_options, c);
 
   status("build_partition2 done");
 }
@@ -661,7 +665,9 @@ int interpolationt_netlist_vmcai::check_forward_reachable_states()
   netlist_bmc_map_check.map_timeframes(netlist, check_bound, satcheck);
 
   std::cout << "bmc map done\n";
-  ::unwind(netlist, netlist_bmc_map_check, *this, satcheck, false);
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false;
+  ::unwind(netlist, netlist_bmc_map_check, *this, satcheck, unwind_options);
 
   std::cout << "unwindng over\n";
   bmc_mapt bmc_map_check;
@@ -981,7 +987,9 @@ int interpolationt_netlist_vmcai::check_backward_reachable_states()
   unsigned check_bound = 2;
   netlist_bmc_mapt netlist_bmc_map_check;
   netlist_bmc_map_check.map_timeframes(netlist, check_bound, satcheck);
-  ::unwind(netlist, netlist_bmc_map_check, *this, satcheck, false);
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false;
+  ::unwind(netlist, netlist_bmc_map_check, *this, satcheck, unwind_options);
 
   bmc_mapt bmc_map_check;
   netlist_bmc_map_check.build_bmc_map(netlist, bmc_map_check);
@@ -1066,8 +1074,10 @@ void interpolationt_netlist_vmcai::build_backward_partition1(interpolatort &solv
 {
   status("build_partition1");
 
-  ::unwind(netlist, netlist_bmc_map, *this, solver, false, bound);
-  ::unwind(netlist, netlist_bmc_map, *this, solver, false, bound-1);
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false;
+  ::unwind(netlist, netlist_bmc_map, *this, solver, unwind_options, bound);
+  ::unwind(netlist, netlist_bmc_map, *this, solver, unwind_options, bound - 1);
 
   namespacet ns(symbol_table);
   bvt all_prop_bv;
@@ -1113,8 +1123,10 @@ void interpolationt_netlist_vmcai::build_backward_partition2(
 {
   status("build_backward_partition2");
     // unwinding for frames 1,..,bound+1
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false;
   for(unsigned c=0; c<bound-1; c++)
-    ::unwind(netlist, netlist_bmc_map, *this, interp, false, c);
+    ::unwind(netlist, netlist_bmc_map, *this, interp, unwind_options, c);
   status("build_backward_partition2 done");
 }
 

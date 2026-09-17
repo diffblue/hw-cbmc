@@ -36,13 +36,13 @@ void unwind(
   const bmc_mapt &bmc_map,
   messaget &message,
   cnft &solver,
-  bool add_initial_state,
+  unwind_optionst options,
   std::size_t t)
 {
   bool first=(t==0);
   bool last=(t==bmc_map.timeframe_map.size()-1);
 
-  if(add_initial_state && first)
+  if(options.add_initial_state && first)
   {
     // do initial state
     message.progress() << "Initial State" << messaget::eom;
@@ -73,9 +73,12 @@ void unwind(
     }
   }
 
-  // general AIG constraints
-  for(const auto & c : netlist.constraints)
-    solver.l_set_to(bmc_map.translate(t, c), true);
+  // general in-state AIG constraints
+  if(options.add_constraints)
+  {
+    for(const auto &c : netlist.constraints)
+      solver.l_set_to(bmc_map.translate(t, c), true);
+  }
 
   // transition constraints
   for(const auto & c : netlist.transition)
@@ -122,10 +125,10 @@ void unwind(
   const bmc_mapt &bmc_map,
   messaget &message,
   cnft &solver,
-  bool add_initial_state)
+  unwind_optionst options)
 {
   for(std::size_t t = 0; t < bmc_map.timeframe_map.size(); t++)
-    unwind(netlist, bmc_map, message, solver, add_initial_state, t);
+    unwind(netlist, bmc_map, message, solver, options, t);
 }
 
 /*******************************************************************\

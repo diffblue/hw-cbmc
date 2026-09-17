@@ -323,7 +323,15 @@ int interpolation_coveraget::induction_step()
 
     // *no* initial state
   status("instantiating trans");
-  ::unwind(working_netlist, netlist_bmc_map_induction, *this, satcheck, 0);
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false;
+  unwind_options.add_constraints = true;
+  ::unwind(
+    working_netlist,
+    netlist_bmc_map_induction,
+    *this,
+    satcheck,
+    unwind_options);
   build_partition2(satcheck, netlist_bmc_map_induction);
 
   bvt assumptions;  
@@ -480,10 +488,13 @@ else {
   l_unwinding = solver.lor(l_unwinding, l_approx);
 
   solver.l_set_to(l_unwinding, true);
-  
-  ::unwind(working_netlist, bmc_map, *this, solver, false);
-  
-//  std::list<bvt> prop_bv;
+
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = false;
+  unwind_options.add_constraints = true;
+  ::unwind(working_netlist, bmc_map, *this, solver, unwind_options);
+
+  //  std::list<bvt> prop_bv;
   prop_bv.clear();
   ::unwind_property(working_netlist, bmc_map, *this, prop_bv, solver);
 //  build_property(solver, bmc_map);

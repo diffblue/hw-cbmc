@@ -223,7 +223,10 @@ void induction_coveraget::check_ce(unsigned bound)
   bmc_mapt bmc_map_ce;
   std::list<bvt> prop_bv;
   bmc_map_ce.map_timeframes(netlist, bound+1, solver_ce); //original_interpolator.get_size_of_interpolants()+2 timeframes
-  ::unwind(netlist, bmc_map_ce, *this, solver_ce, true);
+  unwind_optionst unwind_options;
+  unwind_options.add_initial_state = true;
+  unwind_options.add_constraints = true;
+  ::unwind(netlist, bmc_map_ce, *this, solver_ce, unwind_options);
   ::unwind_property(netlist, bmc_map_ce, *this, prop_bv, solver_ce);
 
   bvt assumptions;
@@ -578,7 +581,15 @@ induction_resultt induction_coveraget::is_inductive(bool force,
 //      show_counterexample(*this, interpolator, netlist_bmc_map_induction,
 //                          ns, ui_message_handlert::PLAIN);
 
-      ::unwind(netlist, netlist_bmc_map_induction, *this, interpolator, true);
+      unwind_optionst unwind_options;
+      unwind_options.add_initial_state = true;
+      unwind_options.add_constraints = true;
+      ::unwind(
+        netlist,
+        netlist_bmc_map_induction,
+        *this,
+        interpolator,
+        unwind_options);
 
       std::list<bvt> prop_bv2;
       ::unwind_property(netlist, netlist_bmc_map_induction, *this, prop_bv2, interpolator);
@@ -711,7 +722,15 @@ induction_resultt induction_coveraget::is_inductive1(bool force,
 //      show_counterexample(*this, interpolator, netlist_bmc_map_induction,
 //                          ns, ui_message_handlert::PLAIN);
 
-      ::unwind(netlist, netlist_bmc_map_induction, *this, interpolator, true);
+      unwind_optionst unwind_options;
+      unwind_options.add_initial_state = true;
+      unwind_options.add_constraints = true;
+      ::unwind(
+        netlist,
+        netlist_bmc_map_induction,
+        *this,
+        interpolator,
+        unwind_options);
 
       std::list<bvt> prop_bv2;
       ::unwind_property(netlist, netlist_bmc_map_induction, *this, prop_bv2, interpolator);

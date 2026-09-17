@@ -573,13 +573,15 @@ void random_tracest::operator()(
   auto solver_container = solver_factory(ns, message.get_message_handler());
   auto &solver = solver_container.decision_procedure();
 
+  word_level_unwind_optionst unwind_options;
+  unwind_options.add_initial_state = true;
   ::unwind(
     transition_system.trans_expr,
     message.get_message_handler(),
     solver,
     number_of_timeframes,
     ns,
-    true);
+    unwind_options);
 
   auto inputs = transition_system.inputs();
 
