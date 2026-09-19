@@ -6,7 +6,6 @@ activate-multi-line-match
   Verilog::\$root.main\.clk=0->false \(input\)
   Verilog::\$root.main\.data=1->false \(input\)
   Verilog::\$root.main\.some_register=2->!3 \(latch\)
-  Verilog::\$root.main\.some_register_aux0=!3->false \(wire\)
 
 Total no. of variable bits: 3
 Total no. of latch bits: 1

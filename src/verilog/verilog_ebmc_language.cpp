@@ -31,6 +31,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "verilog_preprocessor.h"
 #include "verilog_rtl.h"
 #include "verilog_synthesis.h"
+#include "verilog_transition_relation.h"
 #include "verilog_typecheck.h"
 #include "verilog_types.h"
 
@@ -201,30 +202,38 @@ void verilog_ebmc_languaget::typecheck_module(
     const namespacet ns(symbol_table);
     rtl.output(ns, std::cout);
 
-    return; // no synthesis
+    return;
   }
 
-  messaget message(message_handler);
-  log.status() << "Synthesis " << module.identifier << messaget::eom;
-
-  const bool ignore_initial = cmdline.isset("ignore-initial");
-  const bool initial_zero = cmdline.isset("initial-zero");
-
-  try
+  // The hw-cbmc flow continues to use synthesis, since it unwinds
+  // the module that is given on the command line, and hence requires
+  // the transition relation of that module.
+  if(use_synthesis)
   {
-    verilog_synthesis(
-      symbol_table,
-      module.identifier,
-      module.parse_tree.standard,
-      ignore_initial,
-      initial_zero,
-      message_handler);
+    log.status() << "Synthesis " << module.identifier << messaget::eom;
+
+    const bool ignore_initial = cmdline.isset("ignore-initial");
+    const bool initial_zero = cmdline.isset("initial-zero");
+
+    try
+    {
+      verilog_synthesis(
+        symbol_table,
+        module.identifier,
+        module.parse_tree.standard,
+        ignore_initial,
+        initial_zero,
+        message_handler);
+    }
+    catch(ebmc_errort)
+    {
+      log.error() << "CONVERSION ERROR" << messaget::eom;
+      throw ebmc_errort{}.with_exit_code(2);
+    }
   }
-  catch(ebmc_errort)
-  {
-    log.error() << "CONVERSION ERROR" << messaget::eom;
-    throw ebmc_errort{}.with_exit_code(2);
-  }
+
+  // Otherwise, the transition relation is created from the RTL
+  // representation when the $root module is converted.
 }
 
 transition_systemt verilog_ebmc_languaget::typecheck(
@@ -347,14 +356,38 @@ void verilog_ebmc_languaget::create_root_module(
   const bool ignore_initial = cmdline.isset("ignore-initial");
   const bool initial_zero = cmdline.isset("initial-zero");
 
-  // Synthesize $root, which expands the top-level module instance
-  transition_system.trans_expr = verilog_synthesis(
-    symbol_table,
-    root_identifier,
-    standard,
-    ignore_initial,
-    initial_zero,
-    message_handler);
+  // Create the transition relation for $root from its RTL
+  // representation, which expands the top-level module instance.
+  // The hw-cbmc flow uses synthesis instead.
+  try
+  {
+    if(use_synthesis)
+    {
+      transition_system.trans_expr = verilog_synthesis(
+        symbol_table,
+        root_identifier,
+        standard,
+        ignore_initial,
+        initial_zero,
+        message_handler);
+    }
+    else
+    {
+      transition_system.trans_expr = verilog_transition_relation(
+        symbol_table,
+        root_identifier,
+        standard,
+        ignore_initial,
+        initial_zero,
+        message_handler);
+    }
+  }
+  catch(ebmc_errort &)
+  {
+    messaget log{message_handler};
+    log.error() << "CONVERSION ERROR" << messaget::eom;
+    throw;
+  }
 }
 
 static void make_next_state(exprt &expr)
