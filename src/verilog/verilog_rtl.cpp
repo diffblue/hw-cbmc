@@ -100,7 +100,23 @@ protected:
     exprt::operandst guard;
   };
 
-  /// an lvalue, decomposed into its base symbol and the slice selected
+  /// An lvalue, decomposed into its base symbol and the slice selected.
+  ///
+  /// The slice gives the bits of \ref symbol that the lvalue denotes,
+  /// as zero-based indices into the bit-level representation of the
+  /// symbol's type (see \ref verilog_rtl_slicet for the layout). The
+  /// symbol's type is expected to have a bit width, i.e.,
+  /// verilog_bits_opt() returns a value; for types without one (e.g.,
+  /// real or string) the only slice that is produced is {0, 0},
+  /// which denotes the entire value.
+  ///
+  /// The slice is not required to lie within the width of the symbol:
+  /// bit and part selects with constant but out-of-range indices yield
+  /// slices that extend below bit 0 or beyond the most significant bit.
+  /// The caller (assign_to) clips such slices to the symbol's
+  /// width before recording them, following 1800-2017 11.5.1.
+  /// Slices that are stored in \ref statet or in the resulting
+  /// \ref verilog_rtlt are always within the width of the symbol.
   class lhst
   {
   public:
