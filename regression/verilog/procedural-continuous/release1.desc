@@ -1,0 +1,15 @@
+CORE
+release1.sv
+--bound 1
+^Type-checking Verilog::main$
+^Synthesis Verilog::main$
+^EXIT=2$
+^SIGNAL=0$
+--
+unexpected statement
+^Invariant check failed$
+--
+The release statement is accepted by the type checker and by symbol
+collection during elaboration. Previously it triggered an invariant
+violation (abort) in collect_symbols; it now reaches synthesis and fails
+with a clean conversion error instead.

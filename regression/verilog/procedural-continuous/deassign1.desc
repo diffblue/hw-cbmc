@@ -1,0 +1,14 @@
+CORE
+deassign1.sv
+--bound 1
+^Type-checking Verilog::main$
+^file .* line 9: synthesis of procedural continuous assignment not supported$
+^EXIT=2$
+^SIGNAL=0$
+--
+unexpected statement
+^Invariant check failed$
+--
+The deassign statement is accepted by the type checker (it operates on an
+already-typed lvalue) and only fails later during synthesis with a clean
+error, rather than the earlier "unexpected statement" type-check failure.
