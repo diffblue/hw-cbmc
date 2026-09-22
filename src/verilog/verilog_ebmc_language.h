@@ -36,6 +36,12 @@ public:
   // produce the transition system, and return it
   std::optional<transition_systemt> transition_system() override;
 
+  /// Use synthesis instead of the conversion from the register-
+  /// transfer level representation. This is used by hw-cbmc, which
+  /// unwinds the module that is given on the command line, and hence
+  /// requires the transition relation of that module.
+  bool use_synthesis = false;
+
   /// a Verilog parse tree forest
   using parse_treet = verilog_parse_treet;
   using parse_treest = std::list<parse_treet>;

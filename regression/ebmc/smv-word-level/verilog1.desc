@@ -4,8 +4,7 @@ verilog1.sv
 ^MODULE main$
 ^VAR x : unsigned word\[32\];$
 ^INIT x = 0ud32_0$
-^INVAR x_aux0 = x \+ unsigned\(0sd32_1\)$
-^TRANS next\(x\) = x_aux0$
+^TRANS next\(x\) = x \+ unsigned\(0sd32_1\)$
 ^LTLSPEC F x = unsigned\(0sd32_10\)$
 ^EXIT=0$
 ^SIGNAL=0$
