@@ -4,9 +4,10 @@ module main;
   pA1: assert final ($onehot(8'b00001010)==0);
   pA2: assert final ($onehot(8'b11110111)==0);
 
-  pB0: assert final ($onehot0(8'b00001000)==0);
+  pB0: assert final ($onehot0(8'b00001000)==1);
   pB1: assert final ($onehot0(8'b00001010)==0);
-  pB2: assert final ($onehot0(8'b11110111)==1);
+  pB2: assert final ($onehot0(8'b11110111)==0);
+  pB3: assert final ($onehot0(8'b00000000)==1);
 
   // $onehot and $onehot0 yield elaboration-time constants
   parameter Q1 = $onehot(3'b101);
