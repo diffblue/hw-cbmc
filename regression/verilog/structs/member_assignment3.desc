@@ -1,0 +1,16 @@
+KNOWNBUG
+member_assignment3.sv
+--bound 2
+^\[main\.p0\] always main\.s\.lo == 4'b0101: PROVED up to bound 2$
+^\[main\.p1\] always \(##1 main\.s == 165\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The transition relation composes the next-state value of s from the
+slice for s.hi and, for the unassigned slice of s.lo, bits extracted
+from the struct-typed symbol s. The bit-level layout of a packed struct
+has the first member as the most significant, but the extraction is
+applied to the struct directly rather than to its bit-vector
+representation, and hence yields the bits of the wrong member.
