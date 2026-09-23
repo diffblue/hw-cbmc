@@ -1,0 +1,14 @@
+KNOWNBUG
+partial-assignment-before-non-constant-index1.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.v\[7:4\] == 4'b1111\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The assignment to v[i] is rewritten into an assignment to the whole of
+v, using the value of v before the assignment. That value is taken to
+be the current-state value of v whenever no single recorded slice
+covers all of v, and hence the preceding blocking assignment to
+v[7:4] is lost.
