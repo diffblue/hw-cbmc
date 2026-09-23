@@ -1,0 +1,7 @@
+CORE
+syntax-error1.v
+--show-parse
+^Parsing
+syntax error
+^EXIT=1$
+^SIGNAL=0$
