@@ -2,14 +2,13 @@ CORE
 release1.sv
 --bound 1
 ^Type-checking Verilog::main$
-^Synthesis Verilog::main$
+^file .* line 9: statement `force' is not supported by RTL construction$
 ^EXIT=2$
 ^SIGNAL=0$
 --
-unexpected statement
 ^Invariant check failed$
 --
-The release statement is accepted by the type checker and by symbol
-collection during elaboration. Previously it triggered an invariant
-violation (abort) in collect_symbols; it now reaches synthesis and fails
-with a clean conversion error instead.
+The force/release statements are accepted by the type checker and by symbol
+collection during elaboration. Previously they triggered an invariant
+violation (abort) in collect_symbols; they now reach RTL construction and
+fail with a clean conversion error instead.
