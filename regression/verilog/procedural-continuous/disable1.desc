@@ -2,13 +2,12 @@ CORE
 disable1.sv
 --bound 1
 ^Type-checking Verilog::main$
-^file .* line 9: unexpected statement during synthesis: disable$
+^file .* line 9: statement `disable' is not supported by RTL construction$
 ^EXIT=2$
 ^SIGNAL=0$
 --
-^file .* unexpected statement: disable$
 ^Invariant check failed$
 --
 The disable statement is accepted by the type checker and only fails later
-during synthesis, rather than the earlier "unexpected statement" type-check
-failure.
+during RTL construction with a clean conversion error, rather than the
+earlier "unexpected statement" type-check failure or an invariant violation.
