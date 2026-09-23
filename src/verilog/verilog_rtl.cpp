@@ -621,18 +621,48 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
       auto size = array_type.size_int();
       auto offset = array_type.offset();
 
-      // elements are stored starting from the left index of the range
-      auto internal = array_type.increasing()
-                        ? *index_opt - offset
-                        : (offset + size - 1) - *index_opt;
+      // The bit-level layout must match the read side, i.e., the
+      // to_bitvector/from_bitvector functions in verilog_lowering.cpp.
+      mp_integer lower;
 
-      if(internal < 0 || internal >= size)
+      if(array_type.is_unpacked())
       {
-        throw errort().with_location(lhs.source_location())
-          << "array index out of range";
-      }
+        // For unpacked arrays, the elements are stored starting from the
+        // left index of the declared range, i.e., the element with the
+        // left index occupies the least significant bits.
+        auto internal = array_type.increasing()
+                          ? *index_opt - offset
+                          : (offset + size - 1) - *index_opt;
 
-      auto lower = sub_opt->slice.lower + internal * element_width;
+        if(internal < 0 || internal >= size)
+        {
+          throw errort().with_location(lhs.source_location())
+            << "array index out of range";
+        }
+
+        lower = sub_opt->slice.lower + internal * element_width;
+      }
+      else
+      {
+        // For packed arrays, the element with the left index of the
+        // declared range is the most significant (1800-2017 7.4.1).
+        // The element with declared index i is the (i - offset)-th
+        // element counting from the low index. For an increasing range,
+        // that element is the most significant; for a decreasing range,
+        // the least significant.
+        auto element = *index_opt - offset;
+
+        if(element < 0 || element >= size)
+        {
+          throw errort().with_location(lhs.source_location())
+            << "array index out of range";
+        }
+
+        auto internal =
+          array_type.increasing() ? (size - 1 - element) : element;
+
+        lower = sub_opt->slice.lower + internal * element_width;
+      }
 
       return lhst{
         sub_opt->symbol, verilog_rtl_slicet{lower, lower + element_width - 1}};

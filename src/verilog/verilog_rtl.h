@@ -30,10 +30,12 @@ class symbol_table_baset;
 /// The indices refer to the bit-level representation of the identifier's
 /// type, independently of the declared index ranges: bit 0 is the least
 /// significant bit, as used by extractbits_exprt and concatenation_exprt.
-/// Array elements are stored starting from the left index of the
-/// declared range, i.e., the element with the left index occupies the
-/// least significant bits; the first member of a packed struct is the
-/// most significant; all members of a packed union start at bit 0.
+/// For unpacked arrays, the elements are stored starting from the left
+/// index of the declared range, i.e., the element with the left index
+/// occupies the least significant bits. For packed arrays, the element
+/// with the left index of the declared range is the most significant
+/// (1800-2017 7.4.1). The first member of a packed struct is the most
+/// significant; all members of a packed union start at bit 0.
 class verilog_rtl_slicet
 {
 public:

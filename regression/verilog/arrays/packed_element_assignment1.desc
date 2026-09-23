@@ -1,18 +1,14 @@
-KNOWNBUG
+CORE
 packed_element_assignment1.sv
 --bound 2
 ^\[main\.p0\] always \(##1 main\.a1 == 165\): PROVED up to bound 2$
 ^\[main\.p1\] always \(##1 main\.a2 == 165\): PROVED up to bound 2$
 ^\[main\.p2\] always \(##1 main\.a1\[1\] == 4'b1010\): PROVED up to bound 2$
 ^\[main\.p3\] always \(##1 main\.a2\[0\] == 4'b1010\): PROVED up to bound 2$
+^\[main\.p4\] always \(##1 main\.a3 == 165\): PROVED up to bound 2$
+^\[main\.p5\] always \(##1 main\.a4 == 165\): PROVED up to bound 2$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-The RTL construction places the elements of packed arrays as it does
-for unpacked arrays, i.e., the element with the left index of the
-declared range in the least significant position. In a packed array,
-the element with the left index is the most significant (1800-2017
-7.4.1), which is what the lowering of reads assumes. The elements are
-hence written in reverse order.
