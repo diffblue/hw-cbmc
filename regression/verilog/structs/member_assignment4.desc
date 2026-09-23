@@ -1,0 +1,15 @@
+KNOWNBUG
+member_assignment4.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.r == 165\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The value of s after the blocking assignment to s.hi is composed from
+the new value of s.hi and, for s.lo, bits extracted from the
+struct-typed symbol s. The bit-level layout of a packed struct has the
+first member as the most significant, but the extraction is applied to
+the struct directly rather than to its bit-vector representation, and
+hence yields the bits of the wrong member.
