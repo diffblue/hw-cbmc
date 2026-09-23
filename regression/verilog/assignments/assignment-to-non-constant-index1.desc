@@ -1,0 +1,16 @@
+KNOWNBUG
+assignment-to-non-constant-index1.sv
+--bound 2
+^\[main\.p0\] always \(##1 \$past\(main\.we\) -> main\.mem\[\$past\(main\.addr\)\] == \$past\(main\.d\)\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The RTL construction rewrites an assignment to an array element with
+a non-constant index into a with-expression on the whole array, using
+the Verilog index as is. The internal representation stores the
+element with the left index of the declared range in the first
+position, and hence the index of an array with a decreasing range
+must be mirrored, as done when lowering reads. The write and the read
+of mem[addr] therefore disagree on the element.

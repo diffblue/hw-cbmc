@@ -1,0 +1,16 @@
+KNOWNBUG
+assignment-to-non-constant-index3.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.v1\[\$past\(main\.i\) \+ 4\] == 1\): PROVED up to bound 2$
+^\[main\.p1\] always \(##1 main\.v2\[\$past\(main\.i\)\] == 1\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The RTL construction rewrites a bit-select with a non-constant index
+on the left-hand side into a with-expression on the whole vector,
+using the Verilog index as is. Neither the offset of the declared
+range nor its direction are taken into account, as done when lowering
+reads, and hence the write and the read of the bit disagree on the
+bit position.
