@@ -45,6 +45,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "map_vars.h"
 
 #include <iostream>
+#include <optional>
 
 /*******************************************************************\
 
@@ -228,7 +229,7 @@ Function: build_hw_cbmc_assumptions
 
 static code_blockt build_hw_cbmc_assumptions(
   const symbol_table_baset &symbol_table,
-  const irep_idt &unwind_module,
+  const std::optional<transt> &trans,
   const unsigned unwind_no_timeframes,
   const std::list<exprt> &constraints)
 {
@@ -262,35 +263,31 @@ static code_blockt build_hw_cbmc_assumptions(
       code_assumet(equal_exprt(symbol.symbol_expr(), symbol.value)));
   }
 
-  if(!unwind_module.empty() && unwind_no_timeframes != 0)
+  if(trans.has_value() && unwind_no_timeframes != 0)
   {
-    const namespacet ns(symbol_table);
-    const symbolt &symbol = ns.lookup(unwind_module);
-    const transt &trans = to_trans_expr(symbol.value);
-
-    if(!trans.invar().is_true())
+    if(!trans->invar().is_true())
     {
       for(std::size_t timeframe = 0; timeframe < unwind_no_timeframes;
           ++timeframe)
       {
         assumptions.add(code_assumet(
-          instantiate(trans.invar(), timeframe, unwind_no_timeframes)));
+          instantiate(trans->invar(), timeframe, unwind_no_timeframes)));
       }
     }
 
-    if(!trans.init().is_true())
+    if(!trans->init().is_true())
     {
       assumptions.add(
-        code_assumet(instantiate(trans.init(), 0, unwind_no_timeframes)));
+        code_assumet(instantiate(trans->init(), 0, unwind_no_timeframes)));
     }
 
-    if(!trans.trans().is_true())
+    if(!trans->trans().is_true())
     {
       for(std::size_t timeframe = 0; timeframe < unwind_no_timeframes;
           ++timeframe)
       {
         assumptions.add(code_assumet(
-          instantiate(trans.trans(), timeframe, unwind_no_timeframes)));
+          instantiate(trans->trans(), timeframe, unwind_no_timeframes)));
       }
     }
   }
@@ -364,12 +361,12 @@ static void instrument_entry_function_with_assumptions(
   symbol_table_baset &symbol_table,
   const optionst &options,
   message_handlert &message_handler,
-  const irep_idt &unwind_module,
+  const std::optional<transt> &trans,
   const unsigned unwind_no_timeframes,
   const std::list<exprt> &constraints)
 {
   code_blockt assumptions = build_hw_cbmc_assumptions(
-    symbol_table, unwind_module, unwind_no_timeframes, constraints);
+    symbol_table, trans, unwind_no_timeframes, constraints);
 
   if(assumptions.operands().empty())
     return;
@@ -481,6 +478,10 @@ int hw_cbmc_parse_optionst::doit()
     return CPROVER_EXIT_INCORRECT_TASK;
   }
 
+  // The transition relation of the Verilog top-level module(s),
+  // if any. This is used to constrain the unwound hardware state.
+  std::optional<transt> trans;
+
   if(!verilog_sources.empty())
   {
     cmdlinet verilog_cmdline = cmdline;
@@ -489,14 +490,12 @@ int hw_cbmc_parse_optionst::doit()
     verilog_ebmc_languaget verilog_language(
       verilog_cmdline, ui_message_handler);
 
-    // We unwind the module that is given on the command line, and
-    // hence need the transition relation of that module.
-    verilog_language.use_synthesis = true;
-
     auto transition_system = verilog_language.transition_system();
 
     if(!transition_system.has_value())
       return CPROVER_EXIT_SUCCESS;
+
+    trans = transition_system->trans_expr;
 
     merge_symbol_tables(
       goto_model.symbol_table,
@@ -513,14 +512,17 @@ int hw_cbmc_parse_optionst::doit()
   unwind_no_timeframes = get_bound();
   unwind_module = get_top_module();
 
-  if(!constraints.empty() || !unwind_module.empty())
+  if(unwind_module.empty())
+    trans = {};
+
+  if(!constraints.empty() || trans.has_value())
   {
     log.status() << "Encoding hardware constraints" << messaget::eom;
     instrument_entry_function_with_assumptions(
       goto_model.symbol_table,
       options,
       ui_message_handler,
-      unwind_module,
+      trans,
       unwind_no_timeframes,
       constraints);
   }
