@@ -822,6 +822,53 @@ verilog_rtl_buildert::lower_lhs(const exprt &lhs, exprt rhs, statet &state)
     auto old_value = read_lhs(src, state);
     auto index = substitute(bit_select.index(), state);
 
+    // The with-expression uses the internal index, whereas the Verilog
+    // index follows the declared range. Map the Verilog index to the
+    // internal index, mirroring the read side (verilog_lowering.cpp).
+    if(src.type().id() == ID_array)
+    {
+      auto &array_type = to_verilog_array_type(src.type());
+      auto index_type = array_type.index_type();
+      index = typecast_exprt{std::move(index), index_type};
+
+      if(array_type.is_unpacked())
+      {
+        // Elements are stored starting from the left index of the range.
+        auto array_size = array_type.size_int();
+        auto offset = array_type.offset();
+
+        if(array_type.increasing())
+        {
+          // internal index = verilog_index - offset
+          if(offset != 0)
+            index = minus_exprt{index, from_integer(offset, index_type)};
+        }
+        else
+        {
+          // internal index = (offset + size - 1) - verilog_index
+          index = minus_exprt{
+            minus_exprt{
+              plus_exprt{
+                from_integer(offset, index_type),
+                from_integer(array_size, index_type)},
+              from_integer(1, index_type)},
+            index};
+        }
+      }
+    }
+    else
+    {
+      // A bit-select on a vector.
+      auto width = verilog_bits(src.type());
+      auto offset = src.type().get_int(ID_C_offset);
+
+      if(offset != 0)
+        index = minus_exprt{index, from_integer(offset, index.type())};
+
+      if(src.type().get_bool(ID_C_increasing))
+        index = minus_exprt{from_integer(width - 1, index.type()), index};
+    }
+
     with_exprt new_value{
       std::move(old_value), std::move(index), std::move(rhs)};
 
