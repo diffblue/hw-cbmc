@@ -1,0 +1,16 @@
+KNOWNBUG
+nonblocking-then-blocking1.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.x == 1\): PROVED up to bound 2$
+^\[main\.p1\] always \(##1 main\.y == \$past\(main\.y\) \+ 10\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A nonblocking assignment schedules the update of the variable in the
+NBA region, which follows the active region in which blocking
+assignments are executed (1800-2017 4.9.3). A blocking assignment to
+the same variable later in the block is hence overridden by the
+nonblocking one. Both the RTL construction and synthesis instead let
+the last assignment in program order win.
