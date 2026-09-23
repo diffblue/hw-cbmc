@@ -1,0 +1,19 @@
+KNOWNBUG
+increasing-range-part-select1.sv
+--module main
+^\[main\.p0\] always main\.w\[0\] == 1: PROVED .*$
+^\[main\.p1\] always main\.w\[3:0\] == 4'b1010: PROVED .*$
+^\[main\.p2\] always main\.w\[7:4\] == 4'b0101: PROVED .*$
+^\[main\.p3\] always main\.w\[2\+:2\] == 2'b10: PROVED .*$
+^\[main\.p4\] always main\.w\[3-:2\] == 2'b10: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+For a vector declared with an increasing range, the part-select w[0:3]
+denotes the most significant four bits (1800-2017 7.4.1, 11.5.1). The
+lowering of part-selects only subtracts the offset of the range, and
+does not take the direction of the range into account, and hence
+selects the least significant bits. The same applies to indexed
+part-selects. Bit-selects are lowered correctly.
