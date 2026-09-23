@@ -640,7 +640,17 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
     else
     {
       auto offset = mp_integer{src.type().get_int(ID_C_offset)};
-      auto bit = sub_opt->slice.lower + *index_opt - offset;
+
+      // The internal bit position within the source, following the same
+      // mapping as the read side (verilog_lowering.cpp): for an increasing
+      // range [l:r] with l<r (1800-2017 7.4.1), index l is the most
+      // significant bit, so the internal bit is (width-1)-(index-offset).
+      auto internal = *index_opt - offset;
+
+      if(src.type().get_bool(ID_C_increasing))
+        internal = (verilog_bits(src.type()) - 1) - internal;
+
+      auto bit = sub_opt->slice.lower + internal;
 
       return lhst{sub_opt->symbol, verilog_rtl_slicet{bit, bit}};
     }
