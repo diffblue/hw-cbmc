@@ -1,0 +1,9 @@
+CORE
+member_assignment5.sv
+--bound 2
+^\[main\.p0\] always main\.s\.hi == main\.in: PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
