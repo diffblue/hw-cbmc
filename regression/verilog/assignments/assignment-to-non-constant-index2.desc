@@ -1,0 +1,14 @@
+KNOWNBUG
+assignment-to-non-constant-index2.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.a\[\$past\(main\.i\) \+ 4\] == 17\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The RTL construction rewrites an assignment to an array element with
+a non-constant index into a with-expression on the whole array, using
+the Verilog index as is. The offset of the declared range is not
+subtracted, as done when lowering reads, and hence the write and the
+read of a[i + 4] disagree on the element.
