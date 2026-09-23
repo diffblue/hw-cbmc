@@ -1,0 +1,14 @@
+KNOWNBUG
+partial-assignment-before-non-constant-index3.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.s\.hi == 4'b1111\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The assignment to s.arr[i] is rewritten into an assignment to the
+whole of s, using the value of s before the assignment. That value is
+taken to be the current-state value of s whenever no single recorded
+slice covers all of s, and hence the preceding blocking assignment to
+s.hi is lost.
