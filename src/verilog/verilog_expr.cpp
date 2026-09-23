@@ -198,6 +198,30 @@ static exprt lower(const verilog_non_indexed_part_select_exprt &part_select)
 
   mp_integer src_width = get_width(src.type());
   mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
+  bool increasing = src.type().get_bool(ID_C_increasing);
+
+  // op1/op2 are the declared indices, normalised so that op1>=op2.
+  //
+  // We map the declared range op2..op1 to a contiguous range of internal
+  // (extractbits) bits [bottom, top]. For a decreasing range [msb:lsb]
+  // (msb>=lsb) the declared index i maps to internal bit i-offset. For an
+  // increasing range [lsb:msb] (lsb<=msb) the declared index offset is the
+  // most significant bit, so index i maps to internal bit
+  // (width-1)-(i-offset) (1800-2017 7.4.1, 11.5.1). Hence for an increasing
+  // range the numerically larger declared index op1 maps to the lowest
+  // internal bit.
+  mp_integer bottom, top;
+
+  if(increasing)
+  {
+    bottom = (src_width - 1) - (op1 - src_offset);
+    top = (src_width - 1) - (op2 - src_offset);
+  }
+  else
+  {
+    bottom = op2 - src_offset;
+    top = op1 - src_offset;
+  }
 
   // 1800-2017 sec 11.5.1: out-of-bounds bit-select is
   // x for 4-state and 0 for 2-state values. We
@@ -205,23 +229,25 @@ static exprt lower(const verilog_non_indexed_part_select_exprt &part_select)
   // or both.
   exprt src_padded = src;
 
-  if(op2 < src_offset)
+  if(bottom < 0)
   {
-    // lsb too small, pad below
-    auto padding_width = src_offset - op2;
+    // Pad below (at the LSB internal end); this shifts the internal bit
+    // positions up, so bottom/top are adjusted accordingly.
+    auto padding_width = -bottom;
     auto padding = from_integer(
       0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
     auto new_type = unsignedbv_typet{numeric_cast_v<std::size_t>(
       get_width(src_padded.type()) + padding_width)};
     src_padded = concatenation_exprt(src_padded, padding, new_type);
-    op2 += padding_width;
-    op1 += padding_width;
+    bottom += padding_width;
+    top += padding_width;
   }
 
-  if(op1 >= src_width + src_offset)
+  if(top >= get_width(src_padded.type()))
   {
-    // msb too large, pad above
-    auto padding_width = op1 - (src_width + src_offset) + 1;
+    // Pad above (at the MSB internal end); this does not change the
+    // internal bit positions.
+    auto padding_width = top - get_width(src_padded.type()) + 1;
     auto padding = from_integer(
       0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
     auto new_type = unsignedbv_typet{numeric_cast_v<std::size_t>(
@@ -229,12 +255,9 @@ static exprt lower(const verilog_non_indexed_part_select_exprt &part_select)
     src_padded = concatenation_exprt(padding, src_padded, new_type);
   }
 
-  op2 -= src_offset;
-  op1 -= src_offset;
-
   // Construct the extractbits expression
   return extractbits_exprt{
-    src_padded, from_integer(op2, integer_typet()), part_select.type()}
+    src_padded, from_integer(bottom, integer_typet()), part_select.type()}
     .with_source_location(part_select.source_location());
 }
 
@@ -269,6 +292,7 @@ lower(const verilog_indexed_part_select_plus_or_minus_exprt &part_select)
 
   mp_integer src_width = get_width(src.type());
   mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
+  bool increasing = src.type().get_bool(ID_C_increasing);
 
   // The width of the indexed part select must be an
   // elaboration-time constant.
@@ -277,6 +301,13 @@ lower(const verilog_indexed_part_select_plus_or_minus_exprt &part_select)
 
   // The index need not be a constant.
   const exprt &index = part_select.index();
+
+  // A `+:' select covers the declared range index..index+width-1, a `-:'
+  // select covers index-width+1..index. For a decreasing range the declared
+  // index i maps to internal (extractbits) bit i-offset; for an increasing
+  // range it maps to (src_width-1)-(i-offset) (1800-2017 7.4.1, 11.5.1), so
+  // the lowest internal bit corresponds to the largest declared index in the
+  // selection.
 
   if(index.is_constant())
   {
@@ -287,11 +318,17 @@ lower(const verilog_indexed_part_select_plus_or_minus_exprt &part_select)
 
     if(part_select.id() == ID_verilog_indexed_part_select_plus)
     {
-      bottom = index_int - src_offset;
+      if(increasing)
+        bottom = (src_width - 1) - (index_int - src_offset) - (width - 1);
+      else
+        bottom = index_int - src_offset;
     }
     else // ID_verilog_indexed_part_select_minus
     {
-      bottom = index_int - src_offset - width + 1;
+      if(increasing)
+        bottom = (src_width - 1) - (index_int - src_offset);
+      else
+        bottom = index_int - src_offset - width + 1;
     }
 
     return extractbits_exprt{
@@ -302,17 +339,38 @@ lower(const verilog_indexed_part_select_plus_or_minus_exprt &part_select)
   {
     // Index not constant.
     // Use logical right-shift followed by (constant) extractbits.
+    // The shift amount equals the lowest internal bit of the selection.
     exprt index_adjusted;
 
     if(part_select.id() == ID_verilog_indexed_part_select_plus)
     {
-      index_adjusted =
-        minus_exprt{index, from_integer(src_offset, index.type())};
+      if(increasing)
+      {
+        //   (src_width - 1) - (index - src_offset) - (width - 1)
+        // = (src_width - 1) - (width - 1) + src_offset - index
+        // = src_width - width + src_offset - index
+        index_adjusted = minus_exprt{
+          from_integer(src_width - width + src_offset, index.type()), index};
+      }
+      else
+      {
+        index_adjusted =
+          minus_exprt{index, from_integer(src_offset, index.type())};
+      }
     }
     else // ID_verilog_indexed_part_select_minus
     {
-      index_adjusted =
-        minus_exprt{index, from_integer(src_offset + width - 1, index.type())};
+      if(increasing)
+      {
+        // (src_width - 1) - (index - offset)
+        index_adjusted = minus_exprt{
+          from_integer(src_width - 1 + src_offset, index.type()), index};
+      }
+      else
+      {
+        index_adjusted = minus_exprt{
+          index, from_integer(src_offset + width - 1, index.type())};
+      }
     }
 
     auto src_shifted = lshr_exprt(src, index_adjusted);

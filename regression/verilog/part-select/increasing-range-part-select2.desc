@@ -1,0 +1,12 @@
+CORE
+increasing-range-part-select2.sv
+--module main --bound 1
+^\[main\.p0\] always \(##1 main\.v == 160\): PROVED up to bound 1$
+^\[main\.p1\] always \(##1 main\.v\[3:0\] == 4'b1010\): PROVED up to bound 1$
+^\[main\.p2\] always \(##1 main\.v\[7:4\] == 4'b0000\): PROVED up to bound 1$
+^\[main\.p3\] always \(##1 main\.u == 12\): PROVED up to bound 1$
+^\[main\.p4\] always \(##1 main\.u\[8\+:2\] == 2'b11\): PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
