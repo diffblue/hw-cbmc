@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 increasing-range-part-select1.sv
 --module main
 ^\[main\.p0\] always main\.w\[0\] == 1: PROVED .*$
@@ -10,10 +10,3 @@ increasing-range-part-select1.sv
 ^SIGNAL=0$
 --
 ^warning: ignoring
---
-For a vector declared with an increasing range, the part-select w[0:3]
-denotes the most significant four bits (1800-2017 7.4.1, 11.5.1). The
-lowering of part-selects only subtracts the offset of the range, and
-does not take the direction of the range into account, and hence
-selects the least significant bits. The same applies to indexed
-part-selects. Bit-selects are lowered correctly.

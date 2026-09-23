@@ -717,9 +717,24 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
     auto offset = mp_integer{src.type().get_int(ID_C_offset)};
     auto lower = sub_opt->slice.lower;
 
-    return lhst{
-      sub_opt->symbol,
-      verilog_rtl_slicet{lower + from - offset, lower + to - offset}};
+    // For a decreasing range the declared index i maps to the internal bit
+    // i-offset; for an increasing range it maps to (width-1)-(i-offset)
+    // (1800-2017 7.4.1, 11.5.1). This must match the read side (lower()).
+    if(src.type().get_bool(ID_C_increasing))
+    {
+      auto width = get_width(src.type());
+      return lhst{
+        sub_opt->symbol,
+        verilog_rtl_slicet{
+          lower + (width - 1) - (to - offset),
+          lower + (width - 1) - (from - offset)}};
+    }
+    else
+    {
+      return lhst{
+        sub_opt->symbol,
+        verilog_rtl_slicet{lower + from - offset, lower + to - offset}};
+    }
   }
   else if(
     lhs.id() == ID_verilog_indexed_part_select_plus ||
@@ -755,9 +770,24 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
     auto offset = mp_integer{src.type().get_int(ID_C_offset)};
     auto lower = sub_opt->slice.lower;
 
-    return lhst{
-      sub_opt->symbol,
-      verilog_rtl_slicet{lower + lo - offset, lower + hi - offset}};
+    // For a decreasing range the declared index i maps to the internal bit
+    // i-offset; for an increasing range it maps to (width-1)-(i-offset)
+    // (1800-2017 7.4.1, 11.5.1). This must match the read side (lower()).
+    if(src.type().get_bool(ID_C_increasing))
+    {
+      auto width = get_width(src.type());
+      return lhst{
+        sub_opt->symbol,
+        verilog_rtl_slicet{
+          lower + (width - 1) - (hi - offset),
+          lower + (width - 1) - (lo - offset)}};
+    }
+    else
+    {
+      return lhst{
+        sub_opt->symbol,
+        verilog_rtl_slicet{lower + lo - offset, lower + hi - offset}};
+    }
   }
   else if(lhs.id() == ID_member)
   {
