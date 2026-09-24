@@ -1,0 +1,12 @@
+CORE
+port_array5.sv
+--top main
+^\[main\.sub_inst\.assert\.1\] main\.sub_inst\.bus\[3\]\.i == 30: PROVED
+^\[main\.sub_inst\.assert\.2\] main\.sub_inst\.bus\[2\]\.i == 20: PROVED
+^\[main\.sub_inst\.assert\.3\] main\.sub_inst\.bus\[1\]\.i == 10: PROVED
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+An array of interface ports (1800-2017 25.4) with a descending range. The
+leftmost element of the port connection is the element with index 3.
