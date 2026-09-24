@@ -1,0 +1,19 @@
+KNOWNBUG
+sequence_not2.sv
+--bound 0
+^\[main\.p0\] always not strong\(main\.a ##1 main\.b\): PROVED up to bound 0$
+^\[main\.p1\] always not weak\(main\.a ##1 main\.b\): PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+property_obligations_rec (src/trans-word-level/property.cpp) handles
+"not sequence" by requiring that no match of the sequence occurs,
+including pending matches, i.e., matches that cannot complete within
+the bound.  A pending match is inconclusive, and is no evidence for a
+match, hence must not refute the negated sequence.  EBMC reports
+REFUTED with a one-state counterexample.  Note that the same defect
+also affects "not sequence" used as an assumption, where the pending
+match is then wrongly ruled out, which makes the assumption stronger
+than intended.  The sva_or1 KNOWNBUG test is likely another instance.
