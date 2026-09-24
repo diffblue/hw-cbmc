@@ -398,6 +398,19 @@ exprt verilog_transition_relationt::lower_system_functions(exprt expr)
       // Return 0, indicating plusarg not found.
       return from_integer(0, call.type()).with_source_location(call);
     }
+    else if(
+      base_name == "$time" || base_name == "$stime" || base_name == "$realtime")
+    {
+      // IEEE 1800-2017 section 20.3, simulation time system functions.
+      // EBMC has no notion of continuous simulation time, so we give a
+      // nondeterministic result.
+      std::string identifier =
+        id2string(module) + "::nondet::" + std::to_string(nondet_count++);
+
+      exprt result{ID_nondet_symbol, call.type()};
+      result.set(ID_identifier, identifier);
+      return result.with_source_location(call);
+    }
     else
     {
       // Attempt to constant fold.
