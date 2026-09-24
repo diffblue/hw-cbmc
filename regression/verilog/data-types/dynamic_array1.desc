@@ -1,0 +1,12 @@
+CORE
+dynamic_array1.sv
+
+^file .* line 3: unexpected type: `unsized'$
+^CONVERSION ERROR$
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+Dynamic array declarators are parsed and merged into the declaration type
+without violating the merged_type invariant; elaboration of the unsized
+dimension is not yet supported and yields a clean conversion error.
