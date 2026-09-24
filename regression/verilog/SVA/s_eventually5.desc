@@ -1,0 +1,19 @@
+KNOWNBUG
+s_eventually5.sv
+--bound 2
+^\[main\.p0\] always \(s_eventually \[3:3\] main\.c == 3\): PROVED up to bound 2$
+^\[main\.p1\] always \(s_eventually \[2:3\] main\.c == 3\): PROVED up to bound 2$
+^\[main\.p2\] always \(s_nexttime\[3\] main\.c == 3\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+property_obligations_rec (src/trans-word-level/property.cpp) truncates
+the range of sva_ranged_s_eventually at the last time frame, and then
+requires the operand to hold in the truncated range.  When the range
+extends beyond the bound, the truncated disjunction can be false even
+though the operand may hold in a time frame that is not in the
+unwinding.  EBMC reports REFUTED for p0 and p1.  The same defect also
+affects "s_eventually [a:b] p" used as an assumption, where the truncated
+range makes the assumption stronger than intended.
