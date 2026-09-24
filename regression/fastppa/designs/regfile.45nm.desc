@@ -1,0 +1,7 @@
+CORE
+regfile.sv
+--top regfile --process 45nm
+^  Register bits:       1088$
+^  Total:               15526\.4 um2$
+^EXIT=0$
+^SIGNAL=0$
