@@ -349,135 +349,108 @@ void top1(unsigned int SAMPLE, _Bool IN_VALID, _Bool RESET, _Bool CLK, _Bool *OU
 
 void main()
 {
+  // The FSM in fir_fsm is a 4-state loop: after reset, state_out takes
+  // the values 0, 1, 2, 3, 4, 1, 2, 3, 4, ... . The data path asserts
+  // output_data_ready in the cycle in which state_out is 4, and the
+  // registers in 'top' pick that up one cycle later.
+  //
+  // The registers acc and shift0..shift15 in fir_data are written in a
+  // combinational always block without being assigned on all paths;
+  // their retained value is unconstrained, and hence RESULT is not
+  // checked in the cycles in which it is computed from them.
+
+  // Reset. state_out is not reset, and hence the outputs in the
+  // next cycle are unconstrained.
   top.RESET = 1;
   top.IN_VALID = 0;
   set_inputs();
   next_timeframe();
-  //assert(top.RESULT == 0);
-  //assert(top.OUTPUT_DATA_READY == 0);
-  
+
+  // state 0 -> 1, state_out = 0
   top.RESET = 0;
   top.IN_VALID = 1;
   top.SAMPLE = 23;
   set_inputs();
   next_timeframe();
-  assert(top.RESULT == 0);
-  assert(top.OUTPUT_DATA_READY == 0);
-  
-  top.RESET = 0;
-  top.IN_VALID = 1;
+
+  // state 1 -> 2, state_out = 1
   top.SAMPLE = 32;
   set_inputs();
   next_timeframe();
   assert(top.RESULT == 0);
   assert(top.OUTPUT_DATA_READY == 0);
 
+  // state 2 -> 3, state_out = 2
+  top.SAMPLE = 54;
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT == 0);
+  assert(top.OUTPUT_DATA_READY == 0);
 
-  top.RESET = 0;
-  top.IN_VALID = 1;
-  top.SAMPLE = 54;
+  // state 3 -> 4, state_out = 3
   set_inputs();
   next_timeframe();
   assert(top.RESULT == 0);
   assert(top.OUTPUT_DATA_READY == 0);
-  
-  top.RESET = 0;
-  top.IN_VALID = 1;
-  top.SAMPLE = 54;
+
+  // state 4 -> 1, state_out = 4
   set_inputs();
   next_timeframe();
   assert(top.RESULT == 0);
   assert(top.OUTPUT_DATA_READY == 0);
-  
-  top.RESET = 0;
-  top.IN_VALID = 1;
-  top.SAMPLE = 54;
-  set_inputs();
-  next_timeframe();
-  assert(top.RESULT == 0);
-  assert(top.OUTPUT_DATA_READY == 0);
-  
-  top.RESET = 0;
-  top.IN_VALID = 1;
+
+  // state 1 -> 2, state_out = 1; registers see state_out == 4
   top.SAMPLE = 24;
   set_inputs();
   next_timeframe();
-  assert(top.RESULT == 0);
   assert(top.OUTPUT_DATA_READY != 0);
-  //assert(top.OUTPUT_DATA_READY != 0);
-  
-  top.RESET = 0;
-  top.IN_VALID = 1;
-  top.SAMPLE = 24;
+
+  // state 2 -> 3, state_out = 2
   set_inputs();
   next_timeframe();
   assert(top.RESULT == 0);
-  assert(top.OUTPUT_DATA_READY != 0);
-  
-  top.RESET = 0;
-  top.IN_VALID = 1;
+  assert(top.OUTPUT_DATA_READY == 0);
+
+  // state 3 -> 4, state_out = 3
   top.SAMPLE = 54;
   set_inputs();
   next_timeframe();
-  assert(top.RESULT != 0);
-  assert(top.OUTPUT_DATA_READY != 0);
-  
-  top.RESET = 0;
-  top.IN_VALID = 1;
-  top.SAMPLE = 54;
+  assert(top.RESULT == 0);
+  assert(top.OUTPUT_DATA_READY == 0);
+
+  // state 4 -> 1, state_out = 4
   set_inputs();
   next_timeframe();
-  assert(top.RESULT != 0);
+  assert(top.RESULT == 0);
+  assert(top.OUTPUT_DATA_READY == 0);
+
+  // registers see state_out == 4
+  set_inputs();
+  next_timeframe();
   assert(top.OUTPUT_DATA_READY != 0);
 
-  top.RESET = 0;
-  top.IN_VALID = 1;
-  top.SAMPLE = 54;
   set_inputs();
   next_timeframe();
-  assert(top.RESULT != 0);
+  assert(top.RESULT == 0);
+  assert(top.OUTPUT_DATA_READY == 0);
+
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT == 0);
+  assert(top.OUTPUT_DATA_READY == 0);
+
+  set_inputs();
+  next_timeframe();
+  assert(top.RESULT == 0);
+  assert(top.OUTPUT_DATA_READY == 0);
+
+  // registers see state_out == 4
+  set_inputs();
+  next_timeframe();
   assert(top.OUTPUT_DATA_READY != 0);
 
-
-  top.RESET = 0;
-  top.IN_VALID = 1;
-  top.SAMPLE = 54;
   set_inputs();
   next_timeframe();
-  assert(top.RESULT != 0);
-  assert(top.OUTPUT_DATA_READY != 0);
-
-  top.RESET = 0;
-  top.IN_VALID = 1;
-  top.SAMPLE = 54;
-  set_inputs();
-  next_timeframe();
-  assert(top.RESULT != 0);
-  assert(top.OUTPUT_DATA_READY != 0);
-
-  top.RESET = 0;
-  top.IN_VALID = 1;
-  top.SAMPLE = 54;
-  set_inputs();
-  next_timeframe();
-  assert(top.RESULT != 0);
-  assert(top.OUTPUT_DATA_READY != 0);
-
-  top.RESET = 0;
-  top.IN_VALID = 1;
-  top.SAMPLE = 54;
-  set_inputs();
-  next_timeframe();
-  assert(top.RESULT != 0);
-  assert(top.OUTPUT_DATA_READY != 0);
-  
-  top.RESET = 0;
-  top.IN_VALID = 1;
-  top.SAMPLE = 54;
-  set_inputs();
-  next_timeframe();
-  assert(top.RESULT != 0);
-  assert(top.OUTPUT_DATA_READY != 0);
+  assert(top.RESULT == 0);
+  assert(top.OUTPUT_DATA_READY == 0);
 }
-
-
