@@ -1,0 +1,11 @@
+CORE
+generate_loop_block3.sv
+--module main --bound 0
+^\[main\.p0\] main\.s\.blk\[0\]\.x == 10: PROVED up to bound 0$
+^\[main\.p1\] main\.s\.blk\[1\]\.x == 11: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Hierarchical references into the blocks of a generate loop in a submodule.
