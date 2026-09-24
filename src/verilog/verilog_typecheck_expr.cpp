@@ -950,52 +950,78 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
   }
   else if(f_op.id() == ID_verilog_identifier)
   {
-    base_name = to_verilog_identifier_expr(f_op).base_name();
+    auto &identifier_expr = to_verilog_identifier_expr(f_op);
+    base_name = identifier_expr.base_name();
+    const auto import = identifier_expr.import();
+    const auto preresolved = identifier_expr.preresolved();
 
-    // A function or task may be declared inside a named block or a
-    // generate block, which introduces a scope (IEEE 1800-2017 27.2).
-    // Resolve by looking in the enclosing named blocks first, beginning
-    // with the innermost one, then in the current module, and finally in
-    // the compilation-unit scope.
-    const symbolt *found = nullptr;
-
-    for(auto it = named_blocks.rbegin();
-        found == nullptr && it != named_blocks.rend();
-        it++)
+    if(import != irep_idt{})
     {
-      irep_idt full_identifier = id2string(module_instance) + '.' +
-                                 id2string(*it) + id2string(base_name);
+      // A function/task made visible via a package import
+      // (IEEE 1800-2017 26.3), e.g. 'import pkg::*;' followed by a call.
+      irep_idt full_identifier = "Verilog::" + id2string(import);
 
-      if(ns.lookup(full_identifier, found))
-        found = nullptr; // not found
+      if(ns.lookup(full_identifier, symbol))
+      {
+        throw errort().with_location(f_op.source_location())
+          << "unknown function `" << base_name << "'";
+      }
     }
-
-    if(found == nullptr)
+    else if(preresolved != irep_idt{})
     {
-      // current module scope
-      irep_idt full_identifier =
-        id2string(module_instance) + '.' + id2string(base_name);
-
-      if(ns.lookup(full_identifier, found))
-        found = nullptr; // not found
+      if(ns.lookup(preresolved, symbol))
+      {
+        throw errort().with_location(f_op.source_location())
+          << "unknown function `" << base_name << "'";
+      }
     }
-
-    if(found == nullptr)
+    else
     {
-      // compilation-unit scope
-      irep_idt full_identifier = verilog_unit_scope_identifier(base_name);
+      // A function or task may be declared inside a named block or a
+      // generate block, which introduces a scope (IEEE 1800-2017 27.2).
+      // Resolve by looking in the enclosing named blocks first, beginning
+      // with the innermost one, then in the current module, and finally in
+      // the compilation-unit scope.
+      const symbolt *found = nullptr;
 
-      if(ns.lookup(full_identifier, found))
-        found = nullptr; // not found
+      for(auto it = named_blocks.rbegin();
+          found == nullptr && it != named_blocks.rend();
+          it++)
+      {
+        irep_idt full_identifier = id2string(module_instance) + '.' +
+                                   id2string(*it) + id2string(base_name);
+
+        if(ns.lookup(full_identifier, found))
+          found = nullptr; // not found
+      }
+
+      if(found == nullptr)
+      {
+        // current module scope
+        irep_idt full_identifier =
+          id2string(module_instance) + '.' + id2string(base_name);
+
+        if(ns.lookup(full_identifier, found))
+          found = nullptr; // not found
+      }
+
+      if(found == nullptr)
+      {
+        // compilation-unit scope
+        irep_idt full_identifier = verilog_unit_scope_identifier(base_name);
+
+        if(ns.lookup(full_identifier, found))
+          found = nullptr; // not found
+      }
+
+      if(found == nullptr)
+      {
+        throw errort().with_location(f_op.source_location())
+          << "unknown function `" << base_name << "'";
+      }
+
+      symbol = found;
     }
-
-    if(found == nullptr)
-    {
-      throw errort().with_location(f_op.source_location())
-        << "unknown function `" << base_name << "'";
-    }
-
-    symbol = found;
   }
   else
   {
