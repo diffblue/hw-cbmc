@@ -25,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "sva_expr.h"
 #include "verilog_bits.h"
 #include "verilog_expr.h"
+#include "verilog_lowering.h"
 #include "verilog_typecheck_base.h"
 #include "verilog_typecheck_expr.h"
 #include "verilog_types.h"
@@ -906,17 +907,20 @@ exprt verilog_rtl_buildert::slice_of(
   if(slice == whole_slice(symbol))
     return symbol;
 
+  // A packed struct/union/array does not have a bit-vector type; its
+  // bit-level layout (1800-2017 7.2.1) is only realized by to_bitvector.
+  // Convert to the bit-vector representation before extracting a range.
+  exprt value = to_bitvector(symbol);
+
   if(slice.width() == 1)
   {
-    return extractbit_exprt{symbol, from_integer(slice.lower, integer_typet{})};
+    return extractbit_exprt{value, from_integer(slice.lower, integer_typet{})};
   }
 
   auto width = numeric_cast_v<std::size_t>(slice.width());
 
   return extractbits_exprt{
-    symbol,
-    from_integer(slice.lower, integer_typet{}),
-    unsignedbv_typet{width}};
+    value, from_integer(slice.lower, integer_typet{}), unsignedbv_typet{width}};
 }
 
 /*******************************************************************\
@@ -1269,16 +1273,21 @@ exprt verilog_rtl_buildert::extract_range(
   if(sub == from)
     return value;
 
+  // A packed struct/union/array does not have a bit-vector type; its
+  // bit-level layout (1800-2017 7.2.1) is only realized by to_bitvector.
+  // Convert to the bit-vector representation before extracting a range.
+  exprt bv_value = to_bitvector(value);
+
   if(sub.width() == 1)
   {
     return extractbit_exprt{
-      value, from_integer(sub.lower - from.lower, integer_typet{})};
+      bv_value, from_integer(sub.lower - from.lower, integer_typet{})};
   }
 
   auto width = numeric_cast_v<std::size_t>(sub.width());
 
   return extractbits_exprt{
-    value,
+    bv_value,
     from_integer(sub.lower - from.lower, integer_typet{}),
     unsignedbv_typet{width}};
 }

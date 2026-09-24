@@ -159,16 +159,21 @@ exprt verilog_transition_relationt::extract_range(
   if(sub == from)
     return value;
 
+  // A packed struct/union/array does not have a bit-vector type; its
+  // bit-level layout (1800-2017 7.2.1) is only realized by to_bitvector.
+  // Convert to the bit-vector representation before extracting a range.
+  exprt bv_value = to_bitvector(value);
+
   if(sub.width() == 1)
   {
     return extractbit_exprt{
-      value, from_integer(sub.lower - from.lower, integer_typet{})};
+      bv_value, from_integer(sub.lower - from.lower, integer_typet{})};
   }
 
   auto width = numeric_cast_v<std::size_t>(sub.width());
 
   return extractbits_exprt{
-    value,
+    bv_value,
     from_integer(sub.lower - from.lower, integer_typet{}),
     unsignedbv_typet{width}};
 }
