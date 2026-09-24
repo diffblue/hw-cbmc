@@ -1,0 +1,10 @@
+CORE
+partial-assignment-nonblocking-old-value1.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.r == 10\): PROVED up to bound 2$
+^\[main\.p1\] always \(##1 main\.a\[1\] == 7\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

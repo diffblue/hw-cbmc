@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 partial-assignment-before-non-constant-index2.sv
 --bound 2
 ^\[main\.p0\] always \(##1 \$past\(main\.i\) == 0 -> main\.a\[1\] == 7\): PROVED up to bound 2$
@@ -7,8 +7,3 @@ partial-assignment-before-non-constant-index2.sv
 --
 ^warning: ignoring
 --
-The assignment to a[i] is rewritten into an assignment to the whole of
-a, using the value of a before the assignment. That value is taken to
-be the current-state value of a whenever no single recorded slice
-covers all of a, and hence the preceding blocking assignment to a[1]
-is lost.

@@ -393,12 +393,19 @@ protected:
   /// Rewrite the assignment lhs = rhs into an equivalent assignment
   /// to a whole symbol, using with-expressions. Used for lvalues that
   /// do not correspond to a constant slice, e.g., array elements with
-  /// a non-constant index.
-  loweredt lower_lhs(const exprt &lhs, exprt rhs, statet &);
+  /// a non-constant index. The \p blocking flag selects which
+  /// values are visible as the old value in the with-expressions
+  /// (see read_lhs).
+  loweredt lower_lhs(const exprt &lhs, exprt rhs, statet &, bool blocking);
 
   /// the current value of the given lvalue-shaped expression,
-  /// composing the values recorded in the given state
-  exprt read_lhs(exprt, statet &);
+  /// composing the values recorded in the given state. For a blocking
+  /// assignment only the blocking-assignment values are visible
+  /// (1800-2017 4.9.3, 10.4.2); for a non-blocking assignment the
+  /// values recorded so far (including earlier non-blocking updates in
+  /// the same block) are used, since the result becomes the committed
+  /// next-state value.
+  exprt read_lhs(exprt, statet &, bool blocking);
 
   /// the LSB offset and the width of the given member
   /// of a struct or union type
@@ -766,16 +773,28 @@ Function: verilog_rtl_buildert::read_lhs
 
 \*******************************************************************/
 
-exprt verilog_rtl_buildert::read_lhs(exprt expr, statet &state)
+exprt verilog_rtl_buildert::read_lhs(exprt expr, statet &state, bool blocking)
 {
   if(expr.id() == ID_symbol)
   {
     auto &symbol_expr = to_symbol_expr(expr);
 
-    return fragment_value(
-      slice_values_of(state.values, symbol_expr.get_identifier()),
-      whole_slice(symbol_expr),
-      symbol_expr);
+    // Compose the value from all recorded slices, taking any
+    // unrecorded fragments from the current state. Using
+    // fragment_value on the whole symbol would drop all partial
+    // slices whenever no single recorded slice covers the whole
+    // symbol, losing earlier partial assignments.
+    //
+    // A blocking assignment only sees the values written by earlier
+    // blocking assignments (non-blocking updates are not visible to
+    // the block yet, 1800-2017 4.9.3, 10.4.2). A non-blocking
+    // assignment's with-expression becomes the committed next-state
+    // value, so it uses the values recorded so far, which include
+    // earlier non-blocking updates in the same block.
+    const auto &value_map = blocking ? state.blocking_values : state.values;
+
+    return composed_value(
+      slice_values_of(value_map, symbol_expr.get_identifier()), symbol_expr);
   }
 
   // an lvalue-shaped expression: the first operand is the base
@@ -783,7 +802,7 @@ exprt verilog_rtl_buildert::read_lhs(exprt expr, statet &state)
 
   PRECONDITION(!operands.empty());
 
-  operands.front() = read_lhs(operands.front(), state);
+  operands.front() = read_lhs(operands.front(), state, blocking);
 
   for(std::size_t i = 1; i < operands.size(); i++)
     operands[i] = substitute(operands[i], state);
@@ -803,8 +822,11 @@ Function: verilog_rtl_buildert::lower_lhs
 
 \*******************************************************************/
 
-verilog_rtl_buildert::loweredt
-verilog_rtl_buildert::lower_lhs(const exprt &lhs, exprt rhs, statet &state)
+verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
+  const exprt &lhs,
+  exprt rhs,
+  statet &state,
+  bool blocking)
 {
   if(lhs.id() == ID_symbol)
   {
@@ -819,13 +841,14 @@ verilog_rtl_buildert::lower_lhs(const exprt &lhs, exprt rhs, statet &state)
     auto &bit_select = to_verilog_bit_select_expr(lhs);
     auto &src = bit_select.src();
 
-    auto old_value = read_lhs(src, state);
+    auto old_value = read_lhs(src, state, blocking);
     auto index = substitute(bit_select.index(), state);
 
     with_exprt new_value{
       std::move(old_value), std::move(index), std::move(rhs)};
 
-    return lower_lhs(src, std::move(new_value), state); // recursive call
+    // recursive call
+    return lower_lhs(src, std::move(new_value), state, blocking);
   }
   else if(lhs.id() == ID_member)
   {
@@ -836,14 +859,15 @@ verilog_rtl_buildert::lower_lhs(const exprt &lhs, exprt rhs, statet &state)
     auto &member_expr = to_member_expr(lhs);
     auto &compound = member_expr.struct_op();
 
-    auto old_value = read_lhs(compound, state);
+    auto old_value = read_lhs(compound, state, blocking);
 
     with_exprt new_value{
       std::move(old_value),
       member_designatort{member_expr.get_component_name()},
       std::move(rhs)};
 
-    return lower_lhs(compound, std::move(new_value), state); // recursive call
+    // recursive call
+    return lower_lhs(compound, std::move(new_value), state, blocking);
   }
   else if(lhs.id() == ID_typecast)
   {
@@ -853,8 +877,8 @@ verilog_rtl_buildert::lower_lhs(const exprt &lhs, exprt rhs, statet &state)
     auto new_value =
       typecast_exprt::conditional_cast(rhs, typecast_expr.op().type());
 
-    return lower_lhs(
-      typecast_expr.op(), std::move(new_value), state); // recursive call
+    // recursive call
+    return lower_lhs(typecast_expr.op(), std::move(new_value), state, blocking);
   }
   else
   {
@@ -1475,7 +1499,7 @@ void verilog_rtl_buildert::assign_to(
     // Not a constant slice, e.g., an array element with a
     // non-constant index. Rewrite into an assignment to the
     // whole symbol.
-    auto lowered = lower_lhs(lhs, std::move(rhs), state);
+    auto lowered = lower_lhs(lhs, std::move(rhs), state, blocking);
     record_assignment(
       lowered.symbol,
       whole_slice(lowered.symbol),
