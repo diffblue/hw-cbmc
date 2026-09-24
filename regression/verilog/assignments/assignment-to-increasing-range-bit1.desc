@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 assignment-to-increasing-range-bit1.sv
 --bound 2
 ^\[main\.p0\] always \(##1 main\.v\[0\] == 1\): PROVED up to bound 2$
@@ -8,9 +8,3 @@ assignment-to-increasing-range-bit1.sv
 --
 ^warning: ignoring
 --
-The RTL construction maps a constant bit-select on the left-hand side
-to a bit position without taking the direction of the range into
-account: for a vector declared with an increasing range [0:7], v[0]
-must denote the most significant bit (1800-2017 7.4.1), but the
-assignment writes the least significant bit. The read of v[0] in the
-property is lowered correctly, and hence p0 is refuted.
