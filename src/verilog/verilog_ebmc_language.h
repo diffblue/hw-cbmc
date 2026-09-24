@@ -15,10 +15,12 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <ebmc/ebmc_language.h>
 
 #include "verilog_parse_tree.h"
+#include "verilog_standard.h"
 
 #include <filesystem>
 #include <iosfwd>
 #include <map>
+#include <vector>
 
 class symbol_tablet;
 class verilog_scopest;
@@ -43,6 +45,9 @@ public:
 protected:
   void preprocess(const std::filesystem::path &, std::ostream &);
   void preprocess();
+  verilog_standardt standard(const std::filesystem::path &) const;
+  verilog_parse_treet
+  parse(const std::filesystem::path &, std::istream &, verilog_scopest &);
   verilog_parse_treet parse(const std::filesystem::path &, verilog_scopest &);
   void show_parse(const std::filesystem::path &);
   void show_parse();
@@ -50,6 +55,11 @@ protected:
   parse_treest parse();
 
   void resolve_library_modules(parse_treest &);
+
+  /// The order in which the compilation units are to be elaborated, given as
+  /// indices into the parse tree list that parse() has returned. A package is
+  /// elaborated before the compilation units that import it.
+  std::vector<std::size_t> elaboration_order;
 
   void copy_parse_tree(const parse_treet &, symbol_tablet &);
 
