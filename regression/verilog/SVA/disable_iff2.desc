@@ -1,0 +1,16 @@
+KNOWNBUG
+disable_iff2.sv
+--bound 3
+^\[main\.assume\.1\] always \(main\.a \|=> main\.rst\): ASSUMED$
+^\[main\.p0\] always \(disable iff \(main\.rst\) main\.a \|=> main\.b\): PROVED up to bound 3$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The disable condition is only evaluated at the start of the evaluation
+attempt: rewrite_disable_iff (src/temporal-logic/normalize_property.cpp)
+turns "disable iff (rst) p" into "rst || p", where rst is a state
+predicate evaluated in the first cycle of the attempt.  Per 1800-2017
+16.12, the attempt is disabled if rst becomes true at any cycle during
+the evaluation of p.  EBMC reports REFUTED.
