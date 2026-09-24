@@ -2,6 +2,6 @@ CORE
 fp_multiplier.sv
 --top multiplier --process 28nm
 ^  Register bits:       291$
-^  Total:               1349\.9 um2$
+^  Total:               961\.9 um2$
 ^EXIT=0$
 ^SIGNAL=0$
