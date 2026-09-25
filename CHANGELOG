@@ -24,6 +24,7 @@
   declared before the module that uses it
 * SystemVerilog: named port connections and named parameter assignments
   may name formals that clash with interface, package or class names
+* SystemVerilog: $time, $stime and $realtime
 * Refreshed IC3 engine --new-ic3
 
 # EBMC 6.0
