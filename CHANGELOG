@@ -14,6 +14,7 @@
 * BMC: fix for s_eventually [a:b] beyond the bound
 * liveness-to-safety: fix for assumptions
 * Buechi translation: fix always [a:b]
+* Buechi translation: fix w ##[*] x
 * Verilog: fix semantics of $onehot0
 * Verilog: $root.
 * Verilog: procedural assignments to hierarchical identifiers
