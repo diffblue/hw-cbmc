@@ -1,0 +1,15 @@
+KNOWNBUG
+temporal_assumption1.sv
+--bdd
+^\[main\.p0\] always main\.r -> main\.b: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+bdd_enginet::build_BDDs (src/ebmc/bdd_engine.cpp) only adds
+assumptions of the form "always p" with a state predicate p to the
+transition relation, and silently ignores all other assumptions.  The
+property is then checked without the assumption, and EBMC reports
+REFUTED.  Assumptions that are not supported must result in an error or
+in the properties being marked as inconclusive.

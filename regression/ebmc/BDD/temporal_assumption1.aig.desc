@@ -1,0 +1,13 @@
+KNOWNBUG
+temporal_assumption1.sv
+--aig --bound 5
+^\[main\.p0\] always main\.r -> main\.b: PROVED up to bound 5$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+bit_level_bmc (src/ebmc/property_checker.cpp) marks the assumption as
+FAILURE ("property not supported by netlist BMC engine"), but then
+proceeds to check the remaining properties without the assumption, and
+reports REFUTED for a property that holds under the assumption.
