@@ -296,8 +296,6 @@ static obligationst property_obligations_rec(
     if(from < 0)
       throw ebmc_errort() << "SVA s_eventually from index must not be negative";
 
-    from = std::min(no_timeframes - 1, current + from);
-
     mp_integer to;
 
     if(s_eventually.is_unbounded())
@@ -310,13 +308,23 @@ static obligationst property_obligations_rec(
       auto to_opt = numeric_cast<mp_integer>(s_eventually.to());
       if(!to_opt.has_value())
         throw ebmc_errort() << "failed to convert SVA s_eventually to index";
-      to = std::min(current + *to_opt, no_timeframes - 1);
+      to = *to_opt;
+    }
+
+    // We rely on NNF.
+    // If the window extends beyond the bound, the operand may hold in a
+    // time frame that is not part of the unwinding.  Such an attempt is
+    // inconclusive and must not produce a counterexample.
+    if(current + from >= no_timeframes || current + to >= no_timeframes)
+    {
+      DATA_INVARIANT(no_timeframes != 0, "must have timeframe");
+      return obligationst{no_timeframes - 1, true_exprt()};
     }
 
     exprt::operandst disjuncts;
     mp_integer time = 0;
 
-    for(mp_integer c = from; c <= to; ++c)
+    for(mp_integer c = current + from; c <= current + to; ++c)
     {
       auto tmp =
         property_obligations_rec(
