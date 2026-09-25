@@ -1,0 +1,13 @@
+CORE
+justice-fairness1.aag
+--bound 5
+^\[justice0\] : PROVED up to bound 5$
+^\[fairness0\] : PROVED up to bound 5$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+AIGER regression covering a model with an always-true latch used as a
+justice condition and a fairness condition.  Both properties are
+reported as PROVED up to the bound.
