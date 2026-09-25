@@ -1,15 +1,16 @@
-KNOWNBUG
+CORE
 temporal_assumption1.sv
 --bdd
-^\[main\.p0\] always main\.r -> main\.b: PROVED$
-^EXIT=0$
+^\[main\.assume\.1\] always \(main\.a \|=> main\.b\): UNSUPPORTED: assumption not supported by BDD engine$
+^\[main\.p0\] always main\.r -> main\.b: INCONCLUSIVE$
+^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-bdd_enginet::build_BDDs (src/ebmc/bdd_engine.cpp) only adds
-assumptions of the form "always p" with a state predicate p to the
-transition relation, and silently ignores all other assumptions.  The
-property is then checked without the assumption, and EBMC reports
-REFUTED.  Assumptions that are not supported must result in an error or
-in the properties being marked as inconclusive.
+The BDD engine can only add assumptions of the form "always p" with a
+state predicate p to the transition relation.  An assumption with a
+temporal operator is unsupported and must not be silently ignored, as
+this is unsound: the property holds under the assumption, but would be
+reported as REFUTED without it.  The assumption is therefore marked
+UNSUPPORTED, and the dependent property INCONCLUSIVE.
