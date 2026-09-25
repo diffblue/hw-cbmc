@@ -1,0 +1,6 @@
+CORE
+range_repetition_inclusive.sv
+--top main --bound 5 --smv-word-level
+^LTLSPEC G \(\(req & X req -> X c\) & \(req & X req & X X req -> X X c\)\)$
+^EXIT=0$
+^SIGNAL=0$

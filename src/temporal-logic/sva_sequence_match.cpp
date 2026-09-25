@@ -80,7 +80,7 @@ std::vector<sva_sequence_matcht> sva_sequence_matches_rec(const exprt &sequence)
           auto from = numeric_cast_v<mp_integer>(repetition.from());
           auto to = numeric_cast_v<mp_integer>(repetition.to());
 
-          for(mp_integer n = from; n < to; ++n)
+          for(mp_integer n = from; n <= to; ++n)
             for(auto &match_op : matches_op)
               result.push_back(repeat(match_op, n));
         }
