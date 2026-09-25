@@ -43,13 +43,13 @@ public:
   mini_bddt EX(mini_bddt);
   mini_bddt EF(mini_bddt);
   mini_bddt EG(mini_bddt);
+  mini_bddt AG(mini_bddt);
   mini_bddt EU(mini_bddt, mini_bddt);
   mini_bddt AU(mini_bddt, mini_bddt);
 
   // clang-format off
   mini_bddt AX(mini_bddt f) { return !EX(!f); }
   mini_bddt AF(mini_bddt f) { return !EG(!f); }
-  mini_bddt AG(mini_bddt f) { return !EF(!f); }
   mini_bddt ER(mini_bddt f1, mini_bddt f2) { return !AU(!f1, !f2); }
   mini_bddt AR(mini_bddt f1, mini_bddt f2) { return !EU(!f1, !f2); }
   // clang-format on
