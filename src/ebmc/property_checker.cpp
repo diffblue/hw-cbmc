@@ -148,6 +148,9 @@ property_checker_resultt finish_bit_level_bmc(
     if(property.is_failure())
       continue;
 
+    if(property.is_unsupported())
+      continue;
+
     if(property.is_assumed())
       continue;
 
@@ -249,6 +252,8 @@ property_checker_resultt bit_level_bmc(
     const namespacet ns(transition_system.symbol_table);
 
     // convert the properties
+    bool assumption_unsupported = false;
+
     for(auto &property : properties.properties)
     {
       if(property.is_disabled())
@@ -256,7 +261,21 @@ property_checker_resultt bit_level_bmc(
 
       if(!netlist_bmc_supports_property(property.normalized_expr))
       {
-        property.failure("property not supported by netlist BMC engine");
+        if(property.is_assumed())
+        {
+          // An assumption that cannot be added to the netlist must not be
+          // silently dropped, as this is unsound: properties that hold under
+          // the assumption might otherwise be reported as refuted. Mark the
+          // assumption as unsupported, and mark refuted properties as
+          // inconclusive below.
+          assumption_unsupported = true;
+          property.unsupported(
+            "assumption not supported by netlist BMC engine");
+        }
+        else
+        {
+          property.failure("property not supported by netlist BMC engine");
+        }
         continue;
       }
 
@@ -286,8 +305,22 @@ property_checker_resultt bit_level_bmc(
       return property_checker_resultt::success();
     else
     {
-      return finish_bit_level_bmc(
+      auto result = finish_bit_level_bmc(
         bound, bmc_map, solver, transition_system, properties, message_handler);
+
+      // Any refuted property is really inconclusive if there are unsupported
+      // assumptions, as the assumption might have proven the property.
+      if(
+        assumption_unsupported &&
+        result.status ==
+          property_checker_resultt::statust::VERIFICATION_RESULT)
+      {
+        for(auto &property : result.properties)
+          if(property.is_refuted())
+            property.inconclusive();
+      }
+
+      return result;
     }
   }
 
