@@ -1,4 +1,4 @@
-KNOWNBUG buechi
+CORE buechi
 cycle_delay_star5.sv
 --buechi --bound 20
 ^\[main\.p0\] always \(main\.c == 1 \|-> strong\(main\.c == 1 ##\[\*\] main\.c == 1\)\): PROVED up to bound 20$
@@ -7,8 +7,3 @@ cycle_delay_star5.sv
 --
 ^warning: ignoring
 --
-ltl_sva_to_stringt::rec (src/temporal-logic/ltl_sva_to_string.cpp)
-emits "w ##[*] x" as "w : 1[*] ; x", which Spot parses as
-"{w : 1[*]} ; x", i.e., x is required to start at least one cycle after
-w.  The zero-delay case of ##[0:$] is lost.  EBMC reports REFUTED with
---buechi, whereas the word-level BMC encoding gives the correct result.
