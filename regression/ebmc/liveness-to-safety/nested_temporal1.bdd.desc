@@ -1,0 +1,15 @@
+KNOWNBUG
+nested_temporal1.sv
+--liveness-to-safety --bdd
+^EXIT=0$
+^SIGNAL=0$
+^\[main\.p0\] always s_eventually always main\.c != 20: PROVED$
+--
+--
+property_supported (src/ebmc/liveness_to_safety.cpp) accepts any
+"always s_eventually p", without checking that p is a state predicate.
+translate_GFp then uses p in the next-state constraint of the 'live'
+variable as if it were a state predicate.  With a temporal operand, the
+BDD engine reports REFUTED for a property that holds; the word-level
+engines fail with "instantiate_word_level got temporal operator".
+Properties with temporal operands should be rejected by the translation.
