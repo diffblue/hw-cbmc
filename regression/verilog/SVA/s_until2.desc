@@ -1,0 +1,17 @@
+KNOWNBUG
+s_until2.sv
+--bound 3
+^\[main\.p0\] always \(main\.s == 1 \|-> \(main\.s == 1 s_until main\.s == 2\)\): PROVED up to bound 3$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+When encoding until/R for lasso-shaped counterexamples,
+property_obligations_rec (src/trans-word-level/property.cpp) iterates
+over the time frames from min(current, lasso.start), i.e., it includes
+time frames before the current time frame when the loop starts earlier.
+The operands are hence evaluated in time frames that precede the start
+of the evaluation attempt.  With bound 3, the lasso from t=3 back to t=0
+causes the attempt starting at t=1 to check the operands at t=0, and
+EBMC reports REFUTED.
