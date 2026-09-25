@@ -163,14 +163,14 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
     auto new_expr = unary_exprt{ID_sva_ranged_always, always.op()};
     auto from = numeric_cast_v<mp_integer>(always.from());
     if(!always.is_range())
-      return prefix("F[" + integer2string(from) + "]", new_expr, mode);
+      return prefix("G[" + integer2string(from) + "]", new_expr, mode);
     else if(always.is_unbounded())
-      return prefix("F[" + integer2string(from) + ":]", new_expr, mode);
+      return prefix("G[" + integer2string(from) + ":]", new_expr, mode);
     else
     {
       auto to = numeric_cast_v<mp_integer>(to_constant_expr(always.to()));
       return prefix(
-        "F[" + integer2string(from) + ":" + integer2string(to) + "]",
+        "G[" + integer2string(from) + ":" + integer2string(to) + "]",
         new_expr,
         mode);
     }
