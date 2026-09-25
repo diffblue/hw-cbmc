@@ -64,7 +64,8 @@ Function: verilog_typecheckt::elaborate_generate_decl
 
 void verilog_typecheckt::elaborate_generate_decl(
   const verilog_generate_declt &generate_decl,
-  module_itemst &)
+  module_itemst &,
+  bool loop_local)
 {
   symbolt symbol{irep_idt{}, verilog_genvar_typet{}, mode};
 
@@ -85,9 +86,20 @@ void verilog_typecheckt::elaborate_generate_decl(
     symbol.name = hierarchical_identifier(symbol.base_name);
     symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
 
-    genvars[symbol.base_name] = -1;
-
-    add_symbol(symbol);
+    // A genvar that is declared in the header of a loop generate construct
+    // is local to that loop (1800-2017 27.4), and hence is not added to
+    // the scope that contains the loop. Its state is tracked in the genvars
+    // map, together with the scope of that loop, and references to it are
+    // resolved using that map. We still report a clash with a symbol that
+    // is already present in the scope that contains the loop.
+    if(loop_local && symbol_table.lookup(symbol.name) == nullptr)
+      genvars[symbol.base_name] =
+        genvart{-1, hierarchical_identifier(irep_idt{})};
+    else
+    {
+      genvars[symbol.base_name] = genvart{-1, irep_idt{}};
+      add_symbol(symbol);
+    }
 
     // When used in a for loop, these come with an initial value.
     if(declarator.has_value())
@@ -100,7 +112,7 @@ void verilog_typecheckt::elaborate_generate_decl(
           << "must not assign negative value to genvar";
       }
 
-      genvars[symbol.base_name] = rhs;
+      genvars[symbol.base_name].value = rhs;
     }
   }
 }
@@ -140,9 +152,16 @@ verilog_typecheckt::module_itemst verilog_typecheckt::elaborate_generate_item(
     // generate variables.
     verilog_set_genvarst set_genvars(module_item);
     irept &variables = set_genvars.add("variables");
+    irept &loop_scopes = set_genvars.add("loop_scopes");
 
     for(const auto &it : genvars)
-      variables.set(it.first, integer2string(it.second));
+    {
+      variables.set(it.first, integer2string(it.second.value));
+
+      // Remember the scope of the loop a genvar is local to, if any.
+      if(it.second.is_loop_local())
+        loop_scopes.set(it.first, it.second.loop_scope);
+    }
 
     dest = elaborate_level({set_genvars});
   }
@@ -286,8 +305,8 @@ void verilog_typecheckt::elaborate_generate_assign(
     throw errort().with_location(statement.rhs().source_location())
       << "must not assign negative value to genvar";
   }
-  
-  it->second=rhs;
+
+  it->second.value = rhs;
 }
 
 /*******************************************************************\
@@ -339,7 +358,27 @@ void verilog_typecheckt::elaborate_generate_for(
   const verilog_generate_fort &for_statement,
   module_itemst &dest)
 {
-  elaborate_generate_item(for_statement.init(), dest);
+  // A genvar that is declared in the header of the loop generate construct
+  // is local to that loop, 1800-2017 27.4. Remember the state of the genvars
+  // it shadows, to restore it once the loop has been elaborated.
+  std::vector<std::pair<irep_idt, std::optional<genvart>>> shadowed_genvars;
+
+  if(for_statement.init().id() == ID_verilog_generate_decl)
+  {
+    auto &generate_decl = to_verilog_generate_decl(for_statement.init());
+
+    for(auto &declarator : generate_decl.declarators())
+    {
+      auto base_name = declarator.base_name();
+      auto it = genvars.find(base_name);
+      shadowed_genvars.emplace_back(
+        base_name, it == genvars.end() ? std::optional<genvart>{} : it->second);
+    }
+
+    elaborate_generate_decl(generate_decl, dest, true);
+  }
+  else
+    elaborate_generate_item(for_statement.init(), dest);
 
   // work out what the loop index is
   auto loop_index = generate_for_loop_index(for_statement.init());
@@ -397,5 +436,14 @@ void verilog_typecheckt::elaborate_generate_for(
           for_statement.iteration().pretty());
       }
     }
+  }
+
+  // The genvars that are declared in the loop header now go out of scope.
+  for(auto &[base_name, shadowed] : shadowed_genvars)
+  {
+    if(shadowed.has_value())
+      genvars[base_name] = *shadowed;
+    else
+      genvars.erase(base_name);
   }
 }
