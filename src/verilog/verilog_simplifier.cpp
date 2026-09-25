@@ -43,12 +43,9 @@ static constant_exprt onehot(const constant_exprt &expr, const namespacet &ns)
 
 static constant_exprt onehot0(const constant_exprt &expr, const namespacet &ns)
 {
-  if(
-    numeric_cast_v<mp_integer>(countones(expr, ns)) ==
-    to_bitvector_type(expr.type()).get_width() - 1)
-  {
+  // at most one bit is set
+  if(numeric_cast_v<mp_integer>(countones(expr, ns)) <= 1)
     return true_exprt();
-  }
   else
     return false_exprt();
 }
