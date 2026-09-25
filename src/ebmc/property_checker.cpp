@@ -312,8 +312,7 @@ property_checker_resultt bit_level_bmc(
       // assumptions, as the assumption might have proven the property.
       if(
         assumption_unsupported &&
-        result.status ==
-          property_checker_resultt::statust::VERIFICATION_RESULT)
+        result.status == property_checker_resultt::statust::VERIFICATION_RESULT)
       {
         for(auto &property : result.properties)
           if(property.is_refuted())
