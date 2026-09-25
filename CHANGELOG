@@ -10,6 +10,7 @@
 * --aiger outputs the model in AIGER format, now including module
   outputs and input/output symbol names
 * Fix for lowering of s_until_with to LTL
+* BMC: fix for s_eventually [a:b] beyond the bound
 * Verilog: $root.
 * Verilog: procedural assignments to hierarchical identifiers
 * Verilog: arrays of module instances, including multi-dimensional ones
