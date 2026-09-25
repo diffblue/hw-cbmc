@@ -1,0 +1,19 @@
+KNOWNBUG
+justice-fairness1.aag
+--bound 5
+^\[justice0\] : PROVED up to bound 5$
+^\[fairness0\] : PROVED up to bound 5$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+AIGER justice sets describe fair-loop witness conditions, while
+fairness constraints restrict which witness loops are considered.  They
+are not ordinary universal LTL properties.  EBMC currently lowers this
+model's justice and fairness entries to standalone GF properties and
+reports both as PROVED.  The justice polarity is therefore opposite to
+the fair-loop witness interpretation, and the standalone fairness result
+is fabricated.  This test remains a KNOWNBUG until AIGER justice and
+fairness semantics are represented explicitly or the unsupported input is
+rejected.
