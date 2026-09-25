@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "ltl_sva_to_string.h"
 
 #include <util/arith_tools.h>
+#include <util/mathematical_types.h>
 #include <util/string2int.h>
 
 #include <ebmc/ebmc_error.h>
@@ -432,17 +433,29 @@ ltl_sva_to_stringt::rec(const exprt &expr, modet mode)
   else if(expr.id() == ID_sva_cycle_delay_star) // ##[*] something
   {
     // ##[*] x ---> 1[*] ; x
-    // w ##[*] x ---> w : 1[*] ; x
     PRECONDITION(mode == SEQUENCE);
 
     auto &cycle_delay_expr = to_sva_cycle_delay_star_expr(expr);
     if(cycle_delay_expr.has_lhs())
     {
-      auto new_expr = binary_exprt{
+      // w ##[*] x is w ##[0:$] x (1800-2017 16.9.2), which matches with
+      // zero delay.  Emitting "w : 1[*] ; x" is wrong, as Spot parses this
+      // as "{w : 1[*]} ; x", requiring x to start at least one cycle after
+      // w, so the zero-delay case is lost.  We instead decompose into the
+      // zero-delay (fusion) case and the positive-delay case:
+      //   w ##[0:$] x ---> (w ##0 x) | (w ##[1:$] x)
+      auto zero_delay = sva_cycle_delay_exprt{
         cycle_delay_expr.lhs(),
-        ID_sva_cycle_delay_star,
+        from_integer(0, integer_typet{}),
         cycle_delay_expr.rhs()};
-      return infix(" : 1[*] ; ", new_expr, mode);
+      auto positive_delay = sva_cycle_delay_plus_exprt{
+        cycle_delay_expr.lhs(), cycle_delay_expr.rhs()};
+      return rec(
+        sva_or_exprt{
+          std::move(zero_delay),
+          std::move(positive_delay),
+          verilog_sva_sequence_typet{}},
+        mode);
     }
     else
     {
