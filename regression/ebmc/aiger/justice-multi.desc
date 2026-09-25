@@ -1,0 +1,16 @@
+CORE
+justice-multi.aag
+--bound 10
+^\[justice0\] : PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+AIGER regression for a justice set with more than one literal. The latch
+"toggle" alternates between 0 and 1, so both literals of the justice set
+{toggle, !toggle} hold infinitely often, but never simultaneously.
+
+A justice set is a generalized Büchi condition and must be encoded as
+GF(l1) & ... & GF(ln), not GF(l1 & ... & ln). The correct encoding
+reports PROVED; the (previously buggy) simultaneous encoding would
+compute GF(toggle & !toggle) = GF(false) and spuriously report REFUTED.
