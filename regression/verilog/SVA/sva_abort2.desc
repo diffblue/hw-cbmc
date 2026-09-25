@@ -1,0 +1,16 @@
+KNOWNBUG
+sva_abort2.sv
+--bound 10
+^\[main\.p0\] always \(main\.counter == 1 \|=> \(reject_on \(main\.counter == 4\) always \[0:5\] main\.counter < 100\)\): REFUTED$
+^\[main\.p1\] always \(main\.counter == 1 \|=> \(accept_on \(main\.counter == 3\) always \[0:5\] main\.counter < 4\)\): PROVED up to bound 10$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+trivial_sva (src/temporal-logic/trivial_sva.cpp) rewrites
+"accept_on (c) p" into "c || p" and "reject_on (c) p" into "!c && p",
+which evaluates the abort condition c only in the first cycle of the
+evaluation of p.  Per 1800-2017 16.12.11, the abort condition is
+checked in every cycle until the evaluation of p completes.  EBMC gives
+PROVED for p0 and REFUTED for p1.
