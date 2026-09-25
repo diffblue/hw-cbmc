@@ -1,4 +1,4 @@
-KNOWNBUG buechi
+CORE buechi
 always_with_range2.sv
 --buechi --bound 10
 ^\[main\.p0\] always \(always \[0:2\] main\.c != 5\): REFUTED$
@@ -10,9 +10,3 @@ always_with_range2.sv
 --
 ^warning: ignoring
 --
-ltl_sva_to_stringt::rec (src/temporal-logic/ltl_sva_to_string.cpp)
-emits sva_ranged_always as the Spot operator F[a:b] (bounded
-eventually) instead of G[a:b] (bounded always).  The Buechi automaton
-therefore encodes "eventually [a:b]", and EBMC reports PROVED for all
-four properties with --buechi.  The non-Buechi word-level BMC encoding
-gives the correct result.
