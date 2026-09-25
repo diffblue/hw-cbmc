@@ -1,0 +1,17 @@
+KNOWNBUG
+out_of_range_index1.sv
+--bound 1
+^\[main\.assume\.1\] always main\.idx == 5: ASSUMED$
+^\[main\.p0\] always main\.mem\[main\.idx\] == 0: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+verilog_lowering (src/verilog/verilog_lowering.cpp) casts the index of
+an unpacked array access to the index type of the array, which has just
+enough bits to address the elements.  Out-of-range indices are thus
+truncated and wrap around: mem[5] reads mem[1].  EBMC reports REFUTED
+with mem[idx]==2.  Per 1800-2017 7.4.6, the read must yield the default
+value of the element type (0 for 2-state, 'x for 4-state types), and a
+write to an out-of-range index must be ignored.
