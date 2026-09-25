@@ -1,0 +1,16 @@
+KNOWNBUG
+temporal_assumption1.sv
+
+^\[main\.assume\.1\] always \(main\.a \|=> main\.b\): ASSUMED$
+^\[main\.p0\] always main\.s -> main\.b: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+recurrence_diameter (src/ebmc/completeness_threshold.cpp) computes the
+completeness threshold from the state variables of the design only.
+Assumptions with temporal operators add hidden state (here, the value
+of a in the previous cycle), which increases the recurrence diameter.
+The heuristic engine reports "PROVED (CT=1)", but BMC with bound 2
+finds a counterexample that satisfies the assumption.
