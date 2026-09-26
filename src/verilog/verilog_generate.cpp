@@ -52,7 +52,7 @@ void verilog_typecheckt::elaborate_generate_block(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::elaborate_generate_decl
+Function: verilog_typecheckt::elaborate_genvar_decl
 
   Inputs:
 
@@ -62,8 +62,8 @@ Function: verilog_typecheckt::elaborate_generate_decl
 
 \*******************************************************************/
 
-void verilog_typecheckt::elaborate_generate_decl(
-  const verilog_generate_declt &generate_decl,
+void verilog_typecheckt::elaborate_genvar_decl(
+  const verilog_genvar_declt &genvar_decl,
   module_itemst &)
 {
   symbolt symbol{irep_idt{}, verilog_genvar_typet{}, mode};
@@ -71,7 +71,7 @@ void verilog_typecheckt::elaborate_generate_decl(
   symbol.module = module_identifier;
   symbol.value.make_nil();
 
-  for(auto &declarator : generate_decl.declarators())
+  for(auto &declarator : genvar_decl.declarators())
   {
     DATA_INVARIANT(declarator.id() == ID_declarator, "must have declarator");
 
@@ -79,7 +79,7 @@ void verilog_typecheckt::elaborate_generate_decl(
     symbol.location = declarator.source_location();
 
     if(symbol.base_name.empty())
-      throw errort().with_location(generate_decl.source_location())
+      throw errort().with_location(genvar_decl.source_location())
         << "empty symbol name";
 
     symbol.name = hierarchical_identifier(symbol.base_name);
@@ -128,8 +128,8 @@ verilog_typecheckt::module_itemst verilog_typecheckt::elaborate_generate_item(
     elaborate_generate_block(to_verilog_generate_block(module_item), dest);
   else if(module_item.id() == ID_verilog_case_generate)
     elaborate_case_generate(to_verilog_case_generate(module_item), dest);
-  else if(module_item.id() == ID_verilog_generate_decl)
-    elaborate_generate_decl(to_verilog_generate_decl(module_item), dest);
+  else if(module_item.id() == ID_verilog_genvar_decl)
+    elaborate_genvar_decl(to_verilog_genvar_decl(module_item), dest);
   else if(module_item.id() == ID_generate_if)
     elaborate_generate_if(to_verilog_generate_if(module_item), dest);
   else if(module_item.id() == ID_generate_for)
@@ -310,9 +310,9 @@ exprt verilog_typecheckt::generate_for_loop_index(
     auto &assignment = to_verilog_generate_assign(initialization);
     return assignment.lhs();
   }
-  else if(initialization.id() == ID_verilog_generate_decl)
+  else if(initialization.id() == ID_verilog_genvar_decl)
   {
-    auto &decl = to_verilog_generate_decl(initialization);
+    auto &decl = to_verilog_genvar_decl(initialization);
     PRECONDITION(decl.declarators().size() == 1);
     return decl.declarators().front().verilog_identifier_expr();
   }

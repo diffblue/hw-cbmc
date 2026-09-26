@@ -303,7 +303,7 @@ protected:
   void elaborate_generate_if(const verilog_generate_ift &, module_itemst &dest);
   void
   elaborate_case_generate(const verilog_case_generatet &, module_itemst &dest);
-  void elaborate_generate_decl(const verilog_generate_declt &, module_itemst &);
+  void elaborate_genvar_decl(const verilog_genvar_declt &, module_itemst &);
   void
   elaborate_generate_for(const verilog_generate_fort &, module_itemst &dest);
   exprt

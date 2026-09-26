@@ -1040,7 +1040,7 @@ void verilog_typecheckt::collect_symbols(
     else
       collect_symbols(to_verilog_decl(module_item));
   }
-  else if(module_item.id() == ID_verilog_generate_decl)
+  else if(module_item.id() == ID_verilog_genvar_decl)
   {
   }
   else if(
@@ -1200,7 +1200,7 @@ verilog_typecheckt::elaborate_level(const module_itemst &module_items)
   {
     if(
       module_item.id() == ID_generate_block ||
-      module_item.id() == ID_verilog_generate_decl ||
+      module_item.id() == ID_verilog_genvar_decl ||
       module_item.id() == ID_generate_for || module_item.id() == ID_generate_if)
     {
       // elaborate_generate_item calls elaborate_level
