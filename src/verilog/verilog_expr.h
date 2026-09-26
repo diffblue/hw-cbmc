@@ -823,24 +823,24 @@ inline verilog_case_generatet &to_verilog_case_generate(exprt &expr)
 }
 
 /// a SystemVerilog genvar declaration
-class verilog_generate_declt : public verilog_declt
+class verilog_genvar_declt : public verilog_declt
 {
 public:
-  inline verilog_generate_declt() : verilog_declt{ID_verilog_generate_decl}
+  inline verilog_genvar_declt() : verilog_declt{ID_verilog_genvar_decl}
   {
   }
 };
 
-inline const verilog_generate_declt &to_verilog_generate_decl(const irept &irep)
+inline const verilog_genvar_declt &to_verilog_genvar_decl(const irept &irep)
 {
-  PRECONDITION(irep.id() == ID_verilog_generate_decl);
-  return static_cast<const verilog_generate_declt &>(irep);
+  PRECONDITION(irep.id() == ID_verilog_genvar_decl);
+  return static_cast<const verilog_genvar_declt &>(irep);
 }
 
-inline verilog_generate_declt &to_verilog_generate_decl(irept &irep)
+inline verilog_genvar_declt &to_verilog_genvar_decl(irept &irep)
 {
-  PRECONDITION(irep.id() == ID_verilog_generate_decl);
-  return static_cast<verilog_generate_declt &>(irep);
+  PRECONDITION(irep.id() == ID_verilog_genvar_decl);
+  return static_cast<verilog_genvar_declt &>(irep);
 }
 
 class verilog_generate_ift : public verilog_module_itemt

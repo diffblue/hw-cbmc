@@ -1895,7 +1895,7 @@ package_export_declaration:
 
 genvar_declaration:
           TOK_GENVAR list_of_genvar_identifiers ';'
-                { init($$, ID_verilog_generate_decl); swapop($$, $2); }
+                { init($$, ID_verilog_genvar_decl); swapop($$, $2); }
         ;
 
 net_declaration:
@@ -4007,7 +4007,7 @@ genvar_initialization:
           genvar_identifier '=' constant_expression
                 { init($$, ID_generate_assign); mto($$, $1); mto($$, $3); }
         | TOK_GENVAR genvar_identifier '=' constant_expression
-                { init($$, ID_verilog_generate_decl);
+                { init($$, ID_verilog_genvar_decl);
                   PARSER.scopes.add_identifier(stack_expr($2).get(ID_base_name), verilog_scopet::OTHER);
                   stack_expr($2).id(ID_declarator);
                   addswap($2, ID_value, $4);
