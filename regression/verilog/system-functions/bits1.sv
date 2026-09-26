@@ -7,6 +7,9 @@ module main;
   always assert ($bits(some_typedef)==2);
   always assert ($bits(bit)==1);
 
+  // returns an integer
+  always assert ($typename($bits(bit)) == "integer");
+
   // $bits yields an elaboration-time constant
   parameter P = $bits(bit);
 

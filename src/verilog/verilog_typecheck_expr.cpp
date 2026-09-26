@@ -1423,7 +1423,7 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
     }
 
     // The return type is integer.
-    expr.type() = integer_typet();
+    expr.type() = verilog_integer_typet{};
 
     return std::move(expr);
   }
@@ -1476,7 +1476,9 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
         << "$clog2 takes one argument";
     }
 
-    expr.type() = integer_typet();
+    // IEEE 1800-2017 20.8.1 does not specify the return type.
+    // 32 bits suffice.
+    expr.type() = verilog_integer_typet{};
 
     return std::move(expr);
   }
@@ -1627,7 +1629,7 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
     }
 
     // Returns integer: 1 if plusarg found, 0 otherwise.
-    expr.type() = integer_typet();
+    expr.type() = verilog_integer_typet{};
 
     return std::move(expr);
   }
@@ -1641,7 +1643,7 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
     }
 
     // Returns integer: 1 if plusarg found, 0 otherwise.
-    expr.type() = integer_typet();
+    expr.type() = verilog_integer_typet{};
 
     return std::move(expr);
   }
@@ -2422,16 +2424,16 @@ exprt verilog_typecheck_exprt::elaborate_constant_system_function_call(
     if(!value_opt.has_value())
       return std::move(expr); // give up
 
-    // SystemVerilog (20.8.1, page 567)
+    // SystemVerilog (1800-2017 20.8.1, page 567)
     if(*value_opt == 0 || *value_opt == 1)
-      return from_integer(0, integer_typet());
+      return from_integer(0, verilog_integer_typet{});
     else
     {
       mp_integer result = 1;
       for(mp_integer x = 2; x < *value_opt; ++result, x *= 2)
         ;
 
-      return from_integer(result, integer_typet());
+      return from_integer(result, verilog_integer_typet{});
     }
   }
   else if(base_name == "$typename")
