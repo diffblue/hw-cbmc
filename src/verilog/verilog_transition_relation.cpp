@@ -390,13 +390,15 @@ exprt verilog_transition_relationt::lower_system_functions(exprt expr)
     {
       DATA_INVARIANT(
         call.arguments().size() == 1, "$countones must have one argument");
-      return popcount_exprt{call.arguments()[0], call.type()};
+      auto result_type = verilog_lowering(call.type());
+      return popcount_exprt{call.arguments()[0], result_type};
     }
     else if(base_name == "$value$plusargs" || base_name == "$test$plusargs")
     {
       // IEEE 1800-2017 section 21.6
       // Return 0, indicating plusarg not found.
-      return from_integer(0, call.type()).with_source_location(call);
+      auto result_type = verilog_lowering(call.type());
+      return from_integer(0, result_type).with_source_location(call);
     }
     else
     {
