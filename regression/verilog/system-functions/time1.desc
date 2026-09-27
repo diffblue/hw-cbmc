@@ -1,0 +1,15 @@
+CORE
+time1.sv
+--bound 1
+^\[main\.p0\] always \$bits\(\$time\(\)\) == 64: PROVED up to bound 1$
+^\[main\.p1\] always \$bits\(\$stime\(\)\) == 32: PROVED up to bound 1$
+^\[main\.p2\] always \$time\(\) == 0: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+$time and $stime type-check (1800-2017 20.3.1, 20.3.3). $bits gives
+the width of the result. As EBMC has no notion of continuous
+simulation time, the value of $time is nondeterministic, and hence the
+property fixing it to 0 is refuted.

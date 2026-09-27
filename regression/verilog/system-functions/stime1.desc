@@ -1,0 +1,14 @@
+CORE
+stime1.sv
+--bound 1
+^\[main\.p0\] always \$bits\(\$stime\(\)\) == 32: PROVED up to bound 1$
+^\[main\.p1\] always \$stime\(\) == 0: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+$stime type-checks (1800-2017 20.3.3), yielding a 32-bit unsigned
+integer. As EBMC has no notion of continuous simulation time, the
+value is nondeterministic, and hence the property fixing it to 0 is
+refuted.
