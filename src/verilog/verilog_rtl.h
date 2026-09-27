@@ -221,4 +221,14 @@ verilog_rtlt verilog_rtl(
   verilog_standardt,
   message_handlert &);
 
+class hierarchical_identifier_exprt;
+
+/// Resolve a hierarchical identifier that the type checker has left
+/// referring to a signal within a module instance into the symbol
+/// expression for that signal. Throws verilog_typecheck_baset::errort
+/// (typecheckt::errort) on failure.
+exprt resolve_hierarchical_identifier(
+  const hierarchical_identifier_exprt &,
+  const namespacet &);
+
 #endif // CPROVER_VERILOG_VERILOG_RTL_H
