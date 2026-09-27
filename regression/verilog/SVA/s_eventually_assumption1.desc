@@ -1,0 +1,18 @@
+KNOWNBUG
+s_eventually_assumption1.sv
+--bound 2
+^\[main\.a0\] always \(s_eventually \[2:3\] main\.c == 3\): ASSUMED$
+^\[main\.p0\] always !main\.bad: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+property_obligations_rec (src/trans-word-level/property.cpp) truncates
+the range of sva_ranged_s_eventually at the last time frame.  Here the
+assumption can only be satisfied at the omitted frame, so the truncated
+assumption becomes false and makes the trace set empty.  EBMC currently
+reports the unrelated assertion as PROVED up to bound 2, although bad_in
+can immediately refute it.  The same truncation causes the existing
+s_eventually5 KNOWNBUG false-refutation case when the operator is an
+assertion.  This test records the false-PROVED assumption manifestation.
