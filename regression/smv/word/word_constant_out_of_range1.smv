@@ -1,0 +1,9 @@
+MODULE main
+
+VAR a : unsigned word[4];
+
+ASSIGN
+  init(a) := 0ud4_20;
+  next(a) := a;
+
+LTLSPEC G(a = 0ud4_4);

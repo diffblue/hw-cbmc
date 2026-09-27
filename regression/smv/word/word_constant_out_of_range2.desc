@@ -1,0 +1,13 @@
+KNOWNBUG
+word_constant_out_of_range2.smv
+
+outside of its width
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+Same bug as word_constant_out_of_range1.smv, for a signed word constant:
+0sd4_10 does not fit in 4 bits and should be rejected, but
+convert_word_constant (smv_typecheck.cpp) silently wraps it (two's
+complement) to -6 instead, so init(a) is built from a value the user
+never wrote.

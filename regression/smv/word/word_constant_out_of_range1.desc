@@ -1,0 +1,16 @@
+KNOWNBUG
+word_constant_out_of_range1.smv
+
+outside of its width
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+convert_word_constant (smv_typecheck.cpp) never checks that the decimal
+value of a sized word constant fits into its declared width; it just
+calls from_integer, which silently wraps the value modulo 2^width. Here
+0ud4_20 (a 4-bit unsigned constant) silently becomes 4 (20 mod 16)
+instead of being rejected, so the model is built from a value the user
+never wrote and LTLSPEC G(a = 0ud4_4) is wrongly reported PROVED. NuSMV
+rejects the same input with a parse error ("value ... is outside of its
+width").
