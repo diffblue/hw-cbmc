@@ -24,4 +24,10 @@ module main;
   pU7: assert final ($increment(unpacked2) == -1);
   pU8: assert final ($increment(unpacked3) == -1);
 
+  ptype1: assert final ($typename($left(packed1)) == "integer");
+  ptype2: assert final ($typename($right(packed1)) == "integer");
+  ptype3: assert final ($typename($low(packed1)) == "integer");
+  ptype4: assert final ($typename($high(packed1)) == "integer");
+  ptype5: assert final ($typename($increment(packed1)) == "integer");
+
 endmodule
