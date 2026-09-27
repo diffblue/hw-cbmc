@@ -1,0 +1,16 @@
+KNOWNBUG
+fair_polarity1.btor2
+
+^\[fair3\] : REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+Same bug as justice_polarity1.btor2, for a BTOR2 `fair` node: a
+fairness condition is a liveness violation pattern like `justice`, so
+finding a path along which it holds infinitely often means the property
+is VIOLATED. btor_ebmc_language.cpp instead lowers `fair` directly as
+G(F(condition)) and checks it with the ordinary universal engine, so
+the polarity is inverted. Here the condition is the constant 1, so a
+fair witness trivially exists on every path, yet the tool reports
+PROVED (as an outright tautology) instead of REFUTED.

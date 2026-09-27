@@ -1,0 +1,19 @@
+KNOWNBUG
+justice_polarity1.btor2
+
+^\[justice3\] : REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+BTOR2 justice/fair nodes are liveness (generalized-Buchi) violation
+patterns, analogous to `bad`: finding a reachable path along which the
+justice condition holds infinitely often means the property is
+VIOLATED (should be REFUTED), exactly as reaching a `bad` state means a
+safety property is violated. Unlike `bad` (correctly negated to
+G(!bad) in btor_ebmc_language.cpp), `justice` is instead lowered
+directly as G(F(condition)) and checked with the ordinary *universal*
+engine -- the polarity is inverted. Here the justice condition is the
+constant 1, so a fair witness trivially exists on every path, yet the
+tool reports PROVED -- in fact recognized as an outright tautology, no
+solver call needed -- instead of REFUTED.
