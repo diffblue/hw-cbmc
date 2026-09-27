@@ -450,6 +450,12 @@ Function: bdd_enginet::assumption_supported
 
 bool bdd_enginet::assumption_supported(const exprt &expr)
 {
+  // A trivially-true assumption imposes no constraint. This is the shape
+  // that a fairness assumption takes after the liveness-to-safety
+  // translation has folded it into the asserted properties.
+  if(expr.is_true())
+    return true;
+
   // The BDD engine can only add assumptions of the form "always p" with a
   // state predicate p (i.e., without nested temporal operators) to the
   // transition relation. This must match the logic in build_BDDs().
