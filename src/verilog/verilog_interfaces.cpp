@@ -237,7 +237,7 @@ void verilog_typecheckt::interface_module_item(
   if(module_item.id()==ID_decl)
   {
   }
-  else if(module_item.id() == ID_verilog_generate_decl)
+  else if(module_item.id() == ID_verilog_genvar_decl)
   {
   }
   else if(module_item.id()==ID_parameter_decl ||

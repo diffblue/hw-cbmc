@@ -1653,7 +1653,7 @@ void verilog_typecheckt::convert_module_item(
     else
       convert_decl(to_verilog_decl(module_item));
   }
-  else if(module_item.id() == ID_verilog_generate_decl)
+  else if(module_item.id() == ID_verilog_genvar_decl)
   {
   }
   else if(module_item.id()==ID_parameter_decl ||
