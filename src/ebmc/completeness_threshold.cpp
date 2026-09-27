@@ -246,10 +246,12 @@ property_checker_resultt completeness_threshold(
   {
     if(property.is_proved_with_bound())
     {
-      // Turn "PROVED up to bound k" into "PROVED" if k>=CT
+      // The BMC run above used the maximum CT over all properties as its
+      // bound. A property is proved unbounded once the bound reached is at
+      // least this property's own CT.
       auto property_ct_opt = completeness_threshold(property, rd_opt);
 
-      if(property_ct_opt.has_value() && property_ct_opt.value() >= bound)
+      if(property_ct_opt.has_value() && bound >= property_ct_opt.value())
         property.proved("CT=" + integer2string(*property_ct_opt));
       else
         property.unknown();

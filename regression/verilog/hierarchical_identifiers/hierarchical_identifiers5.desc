@@ -2,7 +2,7 @@ CORE
 hierarchical_identifiers5.sv
 
 ^\[main\.p0\] always main\.s\.r == 42: REFUTED$
-^\[main\.p1\] main\.s\.r == 42: PROVED up to bound 5$
+^\[main\.p1\] main\.s\.r == 42: PROVED \(CT=0\)$
 ^EXIT=10$
 ^SIGNAL=0$
 --

@@ -31,6 +31,9 @@
   with temporal operators; such assumptions are now marked UNSUPPORTED
   and dependent properties INCONCLUSIVE instead of yielding a spurious
   REFUTED
+* Fix completeness-threshold when a property's own threshold is
+  below the maximum over all properties: such properties are now correctly
+  proved unbounded rather than only "proved up to bound N"
 
 # EBMC 6.0
 
