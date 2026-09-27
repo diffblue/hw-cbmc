@@ -1,0 +1,17 @@
+KNOWNBUG
+port_conflict1.sv
+
+^\[main\.p0] always main\.a == !main\.a: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Port connections are turned into constraints (build_port_connection in
+verilog_rtl.cpp) without going through the multi-driver conflict check
+that ordinary continuous assignments use. Two port-connected drivers
+that disagree on the same net (i_a.y = a, i_b.y = ~a, both connected to
+x) are silently accepted as two contradictory constraints, making the
+whole transition system UNSAT. Every property in the module -- even
+one entirely unrelated to x, like p0 above -- is then vacuously
+reported PROVED (EXIT=0) instead of the correct REFUTED (EXIT=10).
