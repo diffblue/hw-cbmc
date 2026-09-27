@@ -288,7 +288,11 @@ static transition_systemt build_transition_system(const struct aiger &model)
     add_symbol(std::move(prop_symbol));
   }
 
-  // Justice properties (liveness): GF(l1 ∧ l2 ∧ ...)
+  // Justice properties (liveness). A justice set {l1, ..., ln} is a
+  // generalized Büchi condition: a run is accepting iff *each* signal
+  // in the set is true infinitely often, i.e. GF(l1) ∧ ... ∧ GF(ln).
+  // Note this is NOT the same as GF(l1 ∧ ... ∧ ln), which would require
+  // all signals to be true simultaneously.
   for(std::size_t i = 0; i < model.num_justice; i++)
   {
     std::string name = lit_name(model.justice[i].name, "justice", i);
@@ -297,14 +301,15 @@ static transition_systemt build_transition_system(const struct aiger &model)
 
     exprt::operandst conjuncts;
     for(std::size_t j = 0; j < model.justice[i].size; j++)
-      conjuncts.push_back(lit_to_expr(model.justice[i].lits[j], var_map));
+      conjuncts.push_back(
+        G_exprt{F_exprt{lit_to_expr(model.justice[i].lits[j], var_map)}});
 
     symbolt prop_symbol{prop_id, bool_typet(), mode};
     prop_symbol.base_name = name;
     prop_symbol.pretty_name = name;
     prop_symbol.module = module_id;
     prop_symbol.is_property = true;
-    prop_symbol.value = G_exprt{F_exprt{conjunction(conjuncts)}};
+    prop_symbol.value = conjunction(conjuncts);
 
     add_symbol(std::move(prop_symbol));
   }
