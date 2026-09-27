@@ -1,10 +1,13 @@
 CORE buechi
 sva_assume2.sv
 --buechi --bdd
-^\[main\.assume\.1\] always \(main\.a implies \(nexttime main\.a\)\): ASSUMED$
-^\[main\.assert\.2\] always \(main\.a \|=> \$stable\(main\.a\)\): REFUTED$
+^\[main\.assume\.1\] always \(main\.a implies \(nexttime main\.a\)\): UNSUPPORTED: assumption not supported by BDD engine$
+^\[main\.assert\.2\] always \(main\.a \|=> \$stable\(main\.a\)\): INCONCLUSIVE$
 ^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
+The BDD engine cannot add an assumption with a temporal operator to the
+transition relation.  The property holds under the assumption, and thus
+must not be reported as REFUTED.

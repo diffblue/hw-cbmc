@@ -1,13 +1,15 @@
-KNOWNBUG
+CORE
 temporal_assumption1.sv
 --aig --bound 5
-^\[main\.p0\] always main\.r -> main\.b: PROVED up to bound 5$
-^EXIT=0$
+^\[main\.assume\.1\] always \(main\.a \|=> main\.b\): UNSUPPORTED: assumption not supported by netlist BMC engine$
+^\[main\.p0\] always main\.r -> main\.b: INCONCLUSIVE$
+^EXIT=10$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-bit_level_bmc (src/ebmc/property_checker.cpp) marks the assumption as
-FAILURE ("property not supported by netlist BMC engine"), but then
-proceeds to check the remaining properties without the assumption, and
-reports REFUTED for a property that holds under the assumption.
+The netlist BMC engine cannot add an assumption with a temporal
+operator to the netlist.  Such an assumption must not be silently
+dropped, as this is unsound: the property holds under the assumption,
+but would be reported as REFUTED without it.  The assumption is
+therefore marked UNSUPPORTED, and the dependent property INCONCLUSIVE.

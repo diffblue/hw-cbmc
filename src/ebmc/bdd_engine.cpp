@@ -69,6 +69,11 @@ protected:
 
   static std::optional<exprt> property_supported(const exprt &);
 
+  // Can this assumption be added to the transition relation? The BDD
+  // engine only supports assumptions of the form "always p" with a state
+  // predicate p (no nested temporal operators).
+  static bool assumption_supported(const exprt &);
+
   // the Manager must appear before any BDDs
   // to do the cleanup in the right order
   mini_bdd_mgrt mgr;
@@ -171,6 +176,13 @@ property_checker_resultt bdd_enginet::operator()()
                          << ", nodes: " << netlist.number_of_nodes()
                          << messaget::eom;
 
+    // Determine whether any assumption is unsupported by the BDD engine.
+    // Such assumptions cannot be added to the transition relation, and so
+    // any property that is refuted might in fact hold under the assumption.
+    // We mark the assumptions as UNSUPPORTED and, below, mark refuted
+    // properties as INCONCLUSIVE.
+    bool assumption_unsupported = false;
+
     for(auto &property : properties.properties)
     {
       if(!property.is_disabled() && !property.is_assumed())
@@ -183,6 +195,14 @@ property_checker_resultt bdd_enginet::operator()()
         }
         else
           property.failure("property not supported by BDD engine");
+      }
+      else if(property.is_assumed())
+      {
+        if(!assumption_supported(property.normalized_expr))
+        {
+          assumption_unsupported = true;
+          property.unsupported("assumption not supported by BDD engine");
+        }
       }
     }
 
@@ -252,6 +272,15 @@ property_checker_resultt bdd_enginet::operator()()
 
     for(propertyt &p : properties.properties)
       check_property(p);
+
+    // Any refuted property is really inconclusive if there are unsupported
+    // assumptions, as the assumption might have proven the property.
+    if(assumption_unsupported)
+    {
+      for(auto &property : properties.properties)
+        if(property.is_refuted())
+          property.inconclusive();
+    }
 
     return property_checker_resultt{properties};
   }
@@ -409,6 +438,27 @@ std::optional<exprt> bdd_enginet::property_supported(const exprt &expr)
 
 /*******************************************************************\
 
+Function: bdd_enginet::assumption_supported
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool bdd_enginet::assumption_supported(const exprt &expr)
+{
+  // The BDD engine can only add assumptions of the form "always p" with a
+  // state predicate p (i.e., without nested temporal operators) to the
+  // transition relation. This must match the logic in build_BDDs().
+  return expr.id() == ID_sva_always &&
+         !has_temporal_operator(to_unary_expr(expr).op());
+}
+
+/*******************************************************************\
+
 Function: bdd_enginet::check_property
 
   Inputs:
@@ -428,6 +478,9 @@ void bdd_enginet::check_property(propertyt &property)
     return;
 
   if(property.is_failure())
+    return;
+
+  if(property.is_unsupported())
     return;
 
   message.status() << "Checking " << property.name << messaget::eom;

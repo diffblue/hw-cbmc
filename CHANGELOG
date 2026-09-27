@@ -27,6 +27,10 @@
   may name formals that clash with interface, package or class names
 * SystemVerilog: $time, $stime and $realtime
 * Refreshed IC3 engine --new-ic3
+* Fix: the --bdd and --aig engines no longer silently ignore assumptions
+  with temporal operators; such assumptions are now marked UNSUPPORTED
+  and dependent properties INCONCLUSIVE instead of yielding a spurious
+  REFUTED
 
 # EBMC 6.0
 
