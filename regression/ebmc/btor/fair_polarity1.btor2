@@ -1,0 +1,6 @@
+; A fairness condition that is trivially true forever admits a fair
+; witness on every path (the condition holds infinitely often on any
+; path at all), so the fairness property should be REFUTED.
+1 sort bitvec 1
+2 one 1
+3 fair 2
