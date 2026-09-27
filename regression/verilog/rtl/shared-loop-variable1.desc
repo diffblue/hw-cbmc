@@ -1,0 +1,17 @@
+KNOWNBUG
+rtl-construction-clocked-blocks1.sv
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^file .* line \d+: `Verilog::\$root\.main\.i' has multiple drivers$
+^CONVERSION ERROR$
+--
+verilog_rtl_buildert::commit (src/verilog/verilog_rtl.cpp) tracks writes
+to every symbol assigned in an always block, including elaboration-only
+'integer' loop counters, and rejects a counter shared by two blocks as a
+driver conflict. verilog_synthesist::assignment_rec in
+verilog_synthesis.cpp has an analogous bug, already fixed by exempting
+'integer'-typed symbols (PR #2049, "don't treat 'integer' loop counters
+as driver conflicts"); the same
+exemption is still missing from the verilog_rtl.cpp builder used here.
