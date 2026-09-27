@@ -1,0 +1,15 @@
+KNOWNBUG
+assignment-to-indexed-part-select-of-array-element1.sv
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^file .* line \d+: unsupported lvalue for RTL construction: `verilog_indexed_part_select_plus'$
+^CONVERSION ERROR$
+--
+verilog_rtl_buildert::lower_lhs (src/verilog/verilog_rtl.cpp) handles
+ID_symbol, ID_verilog_bit_select, ID_member and ID_typecast lvalues, but
+has no case for ID_verilog_indexed_part_select_plus (or _minus). An
+indexed part-select on a plain vector is accepted (it is turned into a
+bit-select internally before reaching lower_lhs), but the same construct
+on an array element, as in a byte-enabled memory write, is not.
