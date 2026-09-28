@@ -1,0 +1,7 @@
+CORE
+fsm_shared_mult.sv
+--top fsm_shared_mult --process 45nm
+^  Register bits:       66$
+^  Total:               2042\.8 um2$
+^EXIT=0$
+^SIGNAL=0$
