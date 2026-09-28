@@ -230,6 +230,10 @@ protected:
   exprt::operandst interface_parameter_assignments(
     const irep_idt &interface_module_id,
     const irep_idt &actual_identifier);
+  void alias_interface_port_members(
+    const irep_idt &port_identifier,
+    const irep_idt &bound_instance_identifier,
+    const source_locationt &);
   void interface_module_item(const class verilog_module_itemt &);
   void interface_block(const class verilog_blockt &);
   void interface_generate_block(const class verilog_generate_blockt &);

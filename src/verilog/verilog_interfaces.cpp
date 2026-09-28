@@ -526,6 +526,98 @@ void verilog_typecheckt::instantiate_interface_port(
   // Update the instance symbol value to record the module binding
   symbolt &symbol = symbol_table_lookup(identifier);
   symbol.value = verilog_module_instancet{id2string(identifier) + "$module"};
+
+  // The members of the interface under the port are the members of the
+  // bound interface instance.
+  if(actual.id() == ID_symbol)
+    alias_interface_port_members(
+      identifier, to_symbol_expr(actual).get_identifier(), location);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::alias_interface_port_members
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: An interface port is a reference to the bound interface
+          instance, 1800-2017 25.3. The variables and nets of the
+          interface that is instantiated under the port are hence
+          the variables and nets of the bound instance. These are
+          made aliases, i.e., macros whose value is the member of
+          the bound instance, so that reads and writes through the
+          port are reads and writes of the bound instance's member.
+
+\*******************************************************************/
+
+void verilog_typecheckt::alias_interface_port_members(
+  const irep_idt &port_identifier,
+  const irep_idt &bound_instance_identifier,
+  const source_locationt &location)
+{
+  auto port_prefix = id2string(port_identifier) + '.';
+  auto bound_prefix = id2string(bound_instance_identifier) + '.';
+
+  // The symbol table is modified while iterating; collect first.
+  std::vector<irep_idt> members;
+
+  for(auto &entry : symbol_table.symbols)
+  {
+    auto &id = id2string(entry.first);
+
+    // direct members only; nested scopes have their own symbols
+    if(
+      id.size() <= port_prefix.size() ||
+      id.compare(0, port_prefix.size(), port_prefix) != 0 ||
+      id.find('.', port_prefix.size()) != std::string::npos)
+    {
+      continue;
+    }
+
+    auto &member_symbol = entry.second;
+
+    // variables and nets only
+    if(
+      member_symbol.is_type || member_symbol.is_macro ||
+      member_symbol.is_property ||
+      member_symbol.type.id() == ID_verilog_module_instance ||
+      member_symbol.type.id() == ID_code ||
+      member_symbol.type.id() == ID_named_block ||
+      member_symbol.type.id() == ID_module ||
+      member_symbol.type.id() == ID_verilog_genvar)
+    {
+      continue;
+    }
+
+    members.push_back(entry.first);
+  }
+
+  for(auto &member : members)
+  {
+    auto member_name = id2string(member).substr(port_prefix.size());
+    auto bound_id = bound_prefix + member_name;
+
+    const symbolt *bound_symbol;
+    if(ns.lookup(bound_id, bound_symbol))
+      continue; // e.g., a member of a modport that is not in the interface
+
+    symbolt &member_symbol = symbol_table_lookup(member);
+
+    // The interface under the port is instantiated with the parameters
+    // of the bound instance, and hence the types are expected to match.
+    if(member_symbol.type != bound_symbol->type)
+    {
+      throw errort().with_location(location)
+        << "interface port `" << member_symbol.display_name()
+        << "' is bound to `" << bound_symbol->display_name()
+        << "', which has a different type";
+    }
+
+    member_symbol.is_macro = true;
+    member_symbol.value = bound_symbol->symbol_expr();
+  }
 }
 
 /*******************************************************************\
