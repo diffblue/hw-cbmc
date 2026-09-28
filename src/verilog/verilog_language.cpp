@@ -14,11 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2verilog.h"
 #include "verilog_parser.h"
 #include "verilog_preprocessor.h"
-#include "verilog_rtl.h"
 #include "verilog_typecheck.h"
-#include "verilog_typecheck_base.h"
 
-#include <functional>
 #include <sstream>
 
 /*******************************************************************\
@@ -296,40 +293,10 @@ bool verilog_languaget::to_expr(
 
   expr.swap(verilog_parser.parse_tree.expr);
 
-  // typecheck it
-  result =
-    verilog_typecheck(expr, module, module, standard, message_handler, ns);
-  if(result)
-    return true;
-
-  // The type checker leaves references to signals within module
-  // instances as hierarchical_identifier expressions. Turn these into
-  // symbol expressions using the same resolver as the RTL builder, so
-  // that any subsequent lowering can process them.
-  std::function<void(exprt &)> resolve_hierarchical_identifiers =
-    [&ns, &resolve_hierarchical_identifiers](exprt &e)
-  {
-    if(e.id() == ID_hierarchical_identifier)
-    {
-      e = resolve_hierarchical_identifier(
-        to_hierarchical_identifier_expr(e), ns);
-      return;
-    }
-
-    for(auto &op : e.operands())
-      resolve_hierarchical_identifiers(op);
-  };
-
-  try
-  {
-    resolve_hierarchical_identifiers(expr);
-  }
-  catch(const verilog_typecheck_baset::errort &)
-  {
-    return true;
-  }
-
-  return false;
+  // typecheck it; this also resolves references to signals within
+  // module instances into symbol expressions
+  return verilog_typecheck(
+    expr, module, module, standard, message_handler, ns);
 }
 
 /*******************************************************************\
