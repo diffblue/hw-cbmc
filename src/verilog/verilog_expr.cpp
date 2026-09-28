@@ -38,14 +38,16 @@ typet verilog_declaratort::merged_type(const typet &declaration_type) const
   typet *p = &result;
 
   while(p->id() == ID_verilog_unpacked_array ||
-        p->id() == ID_verilog_associative_array || p->id() == ID_verilog_queue)
+        p->id() == ID_verilog_associative_array ||
+        p->id() == ID_verilog_queue || p->id() == "unsized")
   {
     p = &to_type_with_subtype(*p).subtype();
   }
 
   DATA_INVARIANT(
     p->is_nil(),
-    "merged_type only works on unpacked arrays and associative arrays");
+    "merged_type only works on unpacked arrays, associative arrays, "
+    "queues, and dynamic arrays");
 
   *p = declaration_type;
 
