@@ -705,11 +705,18 @@ void verilog_typecheckt::expand_instance_array(
   std::vector<resolved_connectiont> resolved_connections;
   resolved_connections.reserve(connections.size());
 
-  auto convert_connection = [this](exprt &op)
+  auto convert_connection = [this](exprt &op, const module_typet::portt &port)
   {
     if(op.is_nil())
     {
       // *not* connected
+    }
+    else if(is_interface_array_type(port.type()))
+    {
+      // An array of interface ports, 1800-2017 25.4, is connected to an
+      // assignment pattern of interface instances, or to another array
+      // of interfaces.
+      typecheck_interface_array_port_connection(op, port.type());
     }
     else if(op.id() == ID_verilog_identifier)
     {
@@ -770,7 +777,7 @@ void verilog_typecheckt::expand_instance_array(
       }
 
       exprt value = named_port_connection.value();
-      convert_connection(value);
+      convert_connection(value, first_ports[*port_index]);
 
       resolved_connections.push_back({*port_index, std::move(value)});
     }
@@ -787,7 +794,7 @@ void verilog_typecheckt::expand_instance_array(
     for(std::size_t p = 0; p < connections.size(); p++)
     {
       exprt value = connections[p];
-      convert_connection(value);
+      convert_connection(value, first_ports[p]);
       resolved_connections.push_back({p, std::move(value)});
     }
   }
@@ -815,7 +822,10 @@ void verilog_typecheckt::expand_instance_array(
                                   k,
                                   instance.source_location());
 
-      if(element_value.is_not_nil())
+      if(
+        element_value.is_not_nil() &&
+        port.type().id() != ID_verilog_module_instance &&
+        !is_interface_array_type(port.type()))
       {
         // like typecheck_port_connection
         if(port.output())
@@ -923,6 +933,15 @@ exprt verilog_typecheckt::instance_array_element_connection(
   // it connects to every element of the array.
   if(instance_array_types_match(connection.type(), port_type))
     return connection;
+
+  // Interface ports, and arrays thereof, are not split: the interface
+  // instances that are connected are bound to every element.
+  if(
+    port_type.id() == ID_verilog_module_instance ||
+    is_interface_array_type(port_type))
+  {
+    return connection;
+  }
 
   // Unpacked array connections are split element-wise
   // (1800-2017 23.3.3.5): the outermost dimensions of the
