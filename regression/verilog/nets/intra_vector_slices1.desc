@@ -1,0 +1,21 @@
+CORE
+intra_vector_slices1.sv
+--bound 1
+^\[main\.p0\] always main\.v == 228: PROVED up to bound 1$
+^\[main\.p1\] always main\.w == \{ 4 \{ \{ main\.x \} \} \}: PROVED up to bound 1$
+^\[main\.p2\] always main\.y == \{ main\.a, main\.a \}: PROVED up to bound 1$
+^\[main\.p3\] always main\.z == 228: PROVED up to bound 1$
+^\[main\.p4\] always main\.u\[1:0\] == 2'b01: PROVED up to bound 1$
+^\[main\.p5\] always main\.u\[3:2\] == 2'b00: REFUTED$
+^\[main\.p6\] always main\.t == 2'b00: REFUTED$
+^\[main\.p7\] always main\.r\[3:2\] == 2'b00: PROVED up to bound 1$
+^\[main\.p8\] always main\.arr\[0\] == 2'b01: PROVED up to bound 1$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Continuous assignments to slices of a vector may read other slices of the
+same vector. Only slices that depend on themselves, directly or through
+other slices of the vector, are combinational loops, and only those are
+treated as non-deterministic.
