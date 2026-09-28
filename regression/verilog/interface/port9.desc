@@ -1,0 +1,11 @@
+CORE
+port9.sv
+--bound 5
+^\[main\.p0\] always main\.i\.cnt != 3: REFUTED$
+^\[main\.p1\] always main\.i\.cnt == main\.m\.s\.cnt && main\.i\.cnt == main\.m\.l\.s\.cnt: PROVED up to bound 5$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+A member of an interface instance that is written by a clocked assignment
+through a chain of interface ports must not hold its value.

@@ -1,0 +1,11 @@
+CORE
+port8.sv
+--bound 3
+^\[main\.p0\] always !main\.u\.q: REFUTED$
+^\[main\.p1\] always main\.i\.b == main\.u\.q: PROVED up to bound 3$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+A member of an interface instance that is driven through a modport port by
+a submodule must not be treated as a variable that holds its value.
