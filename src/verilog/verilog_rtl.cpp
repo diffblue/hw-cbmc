@@ -3129,6 +3129,16 @@ void verilog_rtl_buildert::build_interface_port_connection(
       if(bound_symbol->type.id() == ID_verilog_module_instance)
         continue;
 
+      // The interface under the port is instantiated with the parameters
+      // of the bound instance, and hence the types are expected to match.
+      if(entry.second.type != bound_symbol->type)
+      {
+        throw errort().with_location(entry.second.location)
+          << "interface port `" << entry.second.display_name()
+          << "' is bound to `" << bound_symbol->display_name()
+          << "', which has a different type";
+      }
+
       symbol_exprt port_member{entry.first, entry.second.type};
       symbol_exprt bound_member{bound_id, bound_symbol->type};
 
