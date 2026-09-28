@@ -12,6 +12,7 @@
 * Fix for lowering of s_until_with to LTL
 * AIGER: fix for justice sets with multiple literals
 * BMC: fix for s_eventually [a:b] beyond the bound
+* liveness-to-safety: fix for assumptions
 * Verilog: $root.
 * Verilog: procedural assignments to hierarchical identifiers
 * Verilog: arrays of module instances, including multi-dimensional ones

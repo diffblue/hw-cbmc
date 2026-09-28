@@ -14,6 +14,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/invariant.h>
 #include <util/namespace.h>
 
+#include <temporal-logic/temporal_logic.h>
 #include <trans-word-level/next_symbol.h>
 #include <verilog/sva_expr.h>
 
@@ -43,6 +44,11 @@ protected:
   using propertyt = ebmc_propertiest::propertyt;
 
   void translate_GFp(propertyt &);
+  void translate_fairness(propertyt &);
+  void create_live_variable(const propertyt &);
+
+  // The 'live' variables of the fairness assumptions.
+  exprt::operandst fairness_conditions;
 
   static symbol_exprt loop_variable(const symbol_exprt &symbol_expr)
   {
@@ -105,12 +111,18 @@ protected:
     return symbol_exprt(id2string(property_identifier) + "#live", bool_typet());
   }
 
-  static exprt
-  safety_replacement(irep_idt property_identifier, const exprt &expr)
+  exprt safety_replacement(irep_idt property_identifier) const
   {
-    // G (looped → live)
-    return sva_always_exprt(
-      implies_exprt(looped_symbol(), live_symbol(property_identifier)));
+    // G (looped ∧ fair → live)
+    // The fairness conjuncts restrict the check to loops on which
+    // all fairness assumptions were observed.
+    exprt::operandst premise_conjuncts = {looped_symbol()};
+
+    for(auto &fairness_condition : fairness_conditions)
+      premise_conjuncts.push_back(fairness_condition);
+
+    return sva_always_exprt(implies_exprt(
+      conjunction(premise_conjuncts), live_symbol(property_identifier)));
   }
 };
 
@@ -123,10 +135,27 @@ static bool property_supported(const exprt &expr)
           to_sva_always_expr(expr).op().id() == ID_sva_s_eventually);
 }
 
+/// returns true iff the given assumption can be used as-is,
+/// without liveness-to-safety translation
+static bool assumption_supported_natively(const exprt &expr)
+{
+  if(!has_temporal_operator(expr))
+    return true;
+
+  if(
+    expr.id() == ID_sva_always &&
+    !has_temporal_operator(to_sva_always_expr(expr).op()))
+  {
+    return true;
+  }
+
+  return false;
+}
+
 static bool have_supported_property(const ebmc_propertiest &properties)
 {
   for(auto &property : properties.properties)
-    if(!property.is_disabled())
+    if(!property.is_disabled() && !property.is_assumed())
       if(property_supported(property.normalized_expr))
         return true;
 
@@ -248,25 +277,47 @@ void liveness_to_safetyt::operator()()
      std::move(saved_trans),
      std::move(loop_trans)});
 
+  // Translate the assumptions first; this sets up the fairness
+  // conditions, which are needed for the translation of the
+  // asserted properties.
   for(auto &property : properties.properties)
   {
-    if(!property.is_disabled())
+    if(property.is_disabled() || !property.is_assumed())
+      continue;
+
+    if(property_supported(property.normalized_expr))
     {
-      // We want GFp.
-      if(property_supported(property.normalized_expr))
-      {
-        translate_GFp(property);
-      }
-      else
-      {
-        throw ebmc_errort().with_location(property.location)
-          << "no liveness-to-safety translation for " << property.description;
-      }
+      // A fairness assumption GFp.
+      translate_fairness(property);
+    }
+    else if(!assumption_supported_natively(property.normalized_expr))
+    {
+      throw ebmc_errort().with_location(property.location)
+        << "no liveness-to-safety translation for assumption "
+        << property.description;
+    }
+  }
+
+  // Now translate the asserted properties.
+  for(auto &property : properties.properties)
+  {
+    if(property.is_disabled() || property.is_assumed())
+      continue;
+
+    // We want GFp.
+    if(property_supported(property.normalized_expr))
+    {
+      translate_GFp(property);
+    }
+    else
+    {
+      throw ebmc_errort().with_location(property.location)
+        << "no liveness-to-safety translation for " << property.description;
     }
   }
 }
 
-void liveness_to_safetyt::translate_GFp(propertyt &property)
+void liveness_to_safetyt::create_live_variable(const propertyt &property)
 {
   auto &p = to_unary_expr(to_unary_expr(property.normalized_expr).op()).op();
 
@@ -300,10 +351,29 @@ void liveness_to_safetyt::translate_GFp(propertyt &property)
 
   transition_system.trans_expr.trans() =
     conjunction({transition_system.trans_expr.trans(), std::move(live_trans)});
+}
+
+void liveness_to_safetyt::translate_fairness(propertyt &property)
+{
+  create_live_variable(property);
+
+  // The 'live' variable is added as a premise to the translation
+  // of the asserted properties, via safety_replacement(...).
+  fairness_conditions.push_back(live_symbol(property.name));
+
+  // The assumption is now folded into the asserted properties,
+  // and must not constrain the translated model itself: enforcing
+  // G (looped → live) at every step would exclude loops that are
+  // revisited before all fairness conditions have been observed.
+  property.normalized_expr = true_exprt{};
+}
+
+void liveness_to_safetyt::translate_GFp(propertyt &property)
+{
+  create_live_variable(property);
 
   // replace the liveness property
-  property.normalized_expr =
-    safety_replacement(property.name, property.normalized_expr);
+  property.normalized_expr = safety_replacement(property.name);
 }
 
 void liveness_to_safety(
