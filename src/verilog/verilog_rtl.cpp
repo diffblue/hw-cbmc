@@ -158,6 +158,17 @@ protected:
     const typet &port_type,
     const exprt &value);
 
+  /// The pairs of identifiers that interface port connections equate:
+  /// a member of the interface instantiated under a port, and the
+  /// corresponding member of the bound interface instance.
+  std::vector<std::pair<irep_idt, irep_idt>> interface_port_connections;
+
+  /// Marks the members equated by interface port connections that have
+  /// no driver of their own, but are equated to a driven member, as
+  /// forced. This is done once the entire module hierarchy has been
+  /// built, since the driver may be in any module.
+  void force_interface_port_connections();
+
   /// per-loop state for break and continue statements
   class loop_framet
   {
@@ -3121,10 +3132,86 @@ void verilog_rtl_buildert::build_interface_port_connection(
       symbol_exprt port_member{entry.first, entry.second.type};
       symbol_exprt bound_member{bound_id, bound_symbol->type};
 
+      interface_port_connections.emplace_back(entry.first, bound_id);
+
       rtl.constraints.push_back(
         equal_exprt{std::move(port_member), std::move(bound_member)});
     }
   }
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::force_interface_port_connections
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: The members equated by an interface port connection are
+          the same variable. A member that is not assigned in the
+          module hierarchy holds its value, unless it is equated
+          to a member that is assigned, forced, or is a net; it is
+          then driven by the connection, and is marked as forced,
+          so that it becomes a wire. The connections may be
+          chained, e.g., when a module passes on an interface port
+          to a submodule, which requires a fixed point.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::force_interface_port_connections()
+{
+  // the members that are driven by way of a connection
+  std::set<irep_idt> driven;
+
+  auto is_driven = [this, &driven](const irep_idt &identifier)
+  {
+    if(driven.find(identifier) != driven.end())
+      return true;
+
+    if(rtl.identifier_map.find(identifier) != rtl.identifier_map.end())
+      return true;
+
+    if(rtl.forced.find(identifier) != rtl.forced.end())
+      return true;
+
+    const symbolt *symbol;
+    if(ns.lookup(identifier, symbol))
+      return false;
+
+    // nets and inputs do not hold their value
+    return !symbol->is_lvalue;
+  };
+
+  bool progress = true;
+
+  while(progress)
+  {
+    progress = false;
+
+    for(auto &connection : interface_port_connections)
+    {
+      bool first_driven = is_driven(connection.first);
+      bool second_driven = is_driven(connection.second);
+
+      if(first_driven && !second_driven)
+      {
+        driven.insert(connection.second);
+        progress = true;
+      }
+      else if(second_driven && !first_driven)
+      {
+        driven.insert(connection.first);
+        progress = true;
+      }
+    }
+  }
+
+  // Variables that are driven by way of a connection must not
+  // hold their value.
+  for(auto &identifier : driven)
+    if(rtl.variables.find(identifier) != rtl.variables.end())
+      rtl.forced.insert(identifier);
 }
 
 /*******************************************************************\
@@ -3768,6 +3855,9 @@ verilog_rtlt verilog_rtl_buildert::build()
   const symbolt &module_symbol = ns.lookup(module);
 
   build_module(module_symbol);
+
+  // now that all drivers are known
+  force_interface_port_connections();
 
   return std::move(rtl);
 }
