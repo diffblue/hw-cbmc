@@ -2019,7 +2019,10 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
       }
       else
       {
-        expr.type()=symbol->type;
+        // Resolve to the symbol of the signal within the module
+        // instance. Display of the symbol strips the $root prefix,
+        // yielding the source-level hierarchical form, e.g. top.sig.
+        return symbol->symbol_expr().with_source_location(expr);
       }
     }
     else
@@ -2028,11 +2031,6 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
         << "identifier `" << rhs_base_name << "' not found in module `"
         << lhs_identifier << '\'';
     }
-
-    // We remember the identifier of the symbol.
-    expr.identifier(full_identifier);
-
-    return std::move(expr);
   }
   else if(expr.lhs().type().id() == ID_named_block)
   {

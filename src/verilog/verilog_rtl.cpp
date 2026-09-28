@@ -1156,7 +1156,47 @@ Function: verilog_rtl_buildert::resolve_hierarchical_identifier
 exprt verilog_rtl_buildert::resolve_hierarchical_identifier(
   const hierarchical_identifier_exprt &expr)
 {
-  return ::resolve_hierarchical_identifier(expr, ns);
+  // The type checker resolves hierarchical identifiers into module
+  // instances (including instance array elements) and stores the
+  // identifier of the symbol. Use it when available.
+  irep_idt full_identifier = expr.identifier();
+
+  if(full_identifier.empty())
+  {
+    exprt lhs = expr.lhs();
+
+    if(lhs.id() == ID_hierarchical_identifier)
+      lhs =
+        resolve_hierarchical_identifier(to_hierarchical_identifier_expr(lhs));
+
+    if(lhs.id() != ID_symbol)
+    {
+      throw errort().with_location(expr.source_location())
+        << "expected symbol on lhs of `.'";
+    }
+
+    if(lhs.type().id() != ID_verilog_module_instance)
+    {
+      throw errort().with_location(expr.source_location())
+        << "expected module instance on lhs of `.'";
+    }
+
+    auto &lhs_identifier = to_symbol_expr(lhs).get_identifier();
+    auto &rhs_base_name = expr.rhs().base_name();
+
+    // just patch together
+    full_identifier =
+      id2string(lhs_identifier) + '.' + id2string(rhs_base_name);
+  }
+
+  const symbolt *symbol;
+  if(ns.lookup(full_identifier, symbol))
+  {
+    throw errort().with_location(expr.source_location())
+      << "failed to find identifier `" << full_identifier << "'";
+  }
+
+  return symbol_exprt{full_identifier, symbol->type};
 }
 
 /*******************************************************************\
@@ -3738,65 +3778,4 @@ verilog_rtlt verilog_rtl(
 
     throw ebmc_errort{}.with_exit_code(2);
   }
-}
-
-/*******************************************************************\
-
-Function: resolve_hierarchical_identifier
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt resolve_hierarchical_identifier(
-  const hierarchical_identifier_exprt &expr,
-  const namespacet &ns)
-{
-  using errort = verilog_typecheck_baset::errort;
-
-  // The type checker resolves hierarchical identifiers into module
-  // instances (including instance array elements) and stores the
-  // identifier of the symbol. Use it when available.
-  irep_idt full_identifier = expr.identifier();
-
-  if(full_identifier.empty())
-  {
-    exprt lhs = expr.lhs();
-
-    if(lhs.id() == ID_hierarchical_identifier)
-      lhs = resolve_hierarchical_identifier(
-        to_hierarchical_identifier_expr(lhs), ns);
-
-    if(lhs.id() != ID_symbol)
-    {
-      throw errort().with_location(expr.source_location())
-        << "expected symbol on lhs of `.'";
-    }
-
-    if(lhs.type().id() != ID_verilog_module_instance)
-    {
-      throw errort().with_location(expr.source_location())
-        << "expected module instance on lhs of `.'";
-    }
-
-    auto &lhs_identifier = to_symbol_expr(lhs).get_identifier();
-    auto &rhs_base_name = expr.rhs().base_name();
-
-    // just patch together
-    full_identifier =
-      id2string(lhs_identifier) + '.' + id2string(rhs_base_name);
-  }
-
-  const symbolt *symbol;
-  if(ns.lookup(full_identifier, symbol))
-  {
-    throw errort().with_location(expr.source_location())
-      << "failed to find identifier `" << full_identifier << "'";
-  }
-
-  return symbol_exprt{full_identifier, symbol->type};
 }
