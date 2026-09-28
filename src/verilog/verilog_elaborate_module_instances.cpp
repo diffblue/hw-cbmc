@@ -45,9 +45,14 @@ void verilog_typecheckt::process_module_instantiations(
   for(auto &module_item : verilog_module_expr.module_items())
     process_parameter_override(module_item);
 
-  // now parameterize the instantiated modules
+  // now parameterize the instantiated modules; the interfaces come first,
+  // since the modules that have interface ports need the parameters of
+  // the interface instances that are bound to those ports
   for(auto &module_item : verilog_module_expr.module_items())
-    parameterize_instantiated_modules(module_item);
+    parameterize_instantiated_modules(module_item, true);
+
+  for(auto &module_item : verilog_module_expr.module_items())
+    parameterize_instantiated_modules(module_item, false);
 }
 
 /*******************************************************************\
@@ -467,15 +472,19 @@ Function: verilog_typecheckt::parameterize_instantiated_modules
 \*******************************************************************/
 
 void verilog_typecheckt::parameterize_instantiated_modules(
-  verilog_module_itemt &module_item)
+  verilog_module_itemt &module_item,
+  bool interfaces)
 {
   if(module_item.id() == ID_inst)
   {
-    parameterize_instantiated_modules(to_verilog_inst(module_item));
+    auto &inst = to_verilog_inst(module_item);
+    if(is_interface(inst.module_base_name()) == interfaces)
+      parameterize_instantiated_modules(inst);
   }
   else if(module_item.id() == ID_inst_builtin)
   {
-    parameterize_instantiated_modules(to_verilog_inst_builtin(module_item));
+    if(!interfaces)
+      parameterize_instantiated_modules(to_verilog_inst_builtin(module_item));
   }
   else if(module_item.id() == ID_generate_block)
   {
@@ -491,7 +500,7 @@ void verilog_typecheckt::parameterize_instantiated_modules(
     }
 
     for(auto &item : generate_block.module_items())
-      parameterize_instantiated_modules(item);
+      parameterize_instantiated_modules(item, interfaces);
 
     if(is_named)
       named_blocks.pop_back();
@@ -501,7 +510,7 @@ void verilog_typecheckt::parameterize_instantiated_modules(
     auto old_genvars = genvars;
     auto &set_genvars = to_verilog_set_genvars(module_item);
     genvars = set_genvars.build_map();
-    parameterize_instantiated_modules(set_genvars.module_item());
+    parameterize_instantiated_modules(set_genvars.module_item(), interfaces);
     genvars = std::move(old_genvars);
   }
 }
@@ -596,7 +605,8 @@ void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
       inst_module,
       instance_identifier,
       parameter_assignments,
-      instance_defparams);
+      instance_defparams,
+      interface_port_actuals(module_identifier, instance));
 
     instance.identifier(instance_identifier);
     instance.module_identifier(new_module_identifier);
@@ -648,6 +658,10 @@ void verilog_typecheckt::expand_instance_array(
 
   const mp_integer number_of_elements = suffixes.size();
 
+  // The interface instances connected to the interface ports, if any;
+  // these are bound to every element of the array.
+  auto actuals = interface_port_actuals(module_identifier, instance);
+
   // Instantiate the module for each element of the array.
   std::vector<irep_idt> element_base_names, element_identifiers,
     element_modules;
@@ -670,7 +684,8 @@ void verilog_typecheckt::expand_instance_array(
       inst_module,
       element_identifier,
       parameter_assignments,
-      instance_defparams);
+      instance_defparams,
+      actuals);
 
     // fix the module in the instance symbol
     symbolt &element_symbol = symbol_table_lookup(element_identifier);

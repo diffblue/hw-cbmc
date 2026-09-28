@@ -2214,7 +2214,8 @@ Function: verilog_typecheckt::typecheck_design_element
 void verilog_typecheckt::typecheck_design_element(
   const verilog_module_sourcet &module_source,
   symbolt &symbol,
-  irep_idt new_module_instance)
+  irep_idt new_module_instance,
+  const std::map<irep_idt, exprt> &interface_port_actuals)
 {
   module_identifier = symbol.name;
   module_instance = new_module_instance;
@@ -2223,15 +2224,16 @@ void verilog_typecheckt::typecheck_design_element(
   // generate constructs, and add the symbols to the symbol table.
   auto verilog_module_expr = elaborate(module_source);
 
+  // Instantiate interface members under interface ports. This precedes
+  // the submodules, which may bind their interface ports to these.
+  instantiate_interface_ports(module_source, interface_port_actuals);
+
   // submodules
   process_module_instantiations(verilog_module_expr);
 
   // Create symbols for the functions, tasks, registers/variables and wires.
   for(auto &module_item : verilog_module_expr.module_items())
     interface_module_item(module_item);
-
-  // Instantiate interface members under interface ports
-  instantiate_interface_ports(module_source);
 
   // Check the module interface
   check_module_ports(module_source);
