@@ -4,6 +4,9 @@ SRC = hw_cbmc_main.cpp hw_cbmc_parse_options.cpp next_timeframe.cpp \
 
 OBJ+= $(CPROVER_DIR)/goto-checker/goto-checker$(LIBEXT) \
       $(CPROVER_DIR)/cbmc/cbmc_parse_options$(OBJEXT) \
+      $(CPROVER_DIR)/cbmc/cbmc_languages$(OBJEXT) \
+      $(CPROVER_DIR)/json-symtab-language/json-symtab-language$(LIBEXT) \
+      $(CPROVER_DIR)/statement-list/statement-list$(LIBEXT) \
       $(CPROVER_DIR)/goto-instrument/cover$(OBJEXT) \
       $(CPROVER_DIR)/goto-instrument/cover_basic_blocks$(OBJEXT) \
       $(CPROVER_DIR)/goto-instrument/cover_instrument_assume$(OBJEXT) \
