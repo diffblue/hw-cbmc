@@ -38,6 +38,7 @@ SRC = aval_bval_encoding.cpp \
       verilog_typecheck_sva.cpp \
       verilog_types.cpp \
       verilog_y.tab.cpp \
+      vl_simulator_state.cpp \
       vtype.cpp
 
 include ../config.inc

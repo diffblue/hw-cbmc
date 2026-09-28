@@ -1,0 +1,6 @@
+CORE
+syntax-error1.v
+
+syntax error
+^EXIT=1$
+^SIGNAL=0$

@@ -1,0 +1,7 @@
+CORE
+define1.v
+--preprocess
+^module top;$
+^  reg \[8-1:0\] data;$
+^EXIT=0$
+^SIGNAL=0$
