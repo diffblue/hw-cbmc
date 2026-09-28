@@ -37,6 +37,7 @@ OBJ+= $(CPROVER_DIR)/goto-checker/goto-checker$(LIBEXT) \
       ../ebmc/ebmc_language$(OBJEXT) \
       ../ebmc/show_modules$(OBJEXT) \
       ../temporal-logic/temporal-logic$(LIBEXT) \
+      ../trans-netlist/trans-netlist$(LIBEXT) \
       ../trans-word-level/trans-word-level$(LIBEXT)
 
 include ../config.inc
