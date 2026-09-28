@@ -21,6 +21,7 @@ SRC += ebmc/bdd_model_checker.cpp \
        verilog/convert_literals.cpp \
        verilog/expr2verilog.cpp \
        verilog/indexed_part_select.cpp \
+       verilog/preprocessor.cpp \
        verilog/typename.cpp \
        verilog/verilog_expr.cpp \
        verilog/verilog_rtl.cpp \

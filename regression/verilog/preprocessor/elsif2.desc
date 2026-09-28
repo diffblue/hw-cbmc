@@ -1,9 +1,0 @@
-CORE
-elsif2.v
---preprocess
-^ELSIF$
-^EXIT=0$
-^SIGNAL=0$
---
-^IFDEF$
---

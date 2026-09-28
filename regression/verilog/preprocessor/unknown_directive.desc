@@ -1,7 +1,0 @@
-CORE
-unknown_directive.v
---preprocess
-^file unknown_directive\.v line 1: unknown preprocessor directive "something"$
-^EXIT=1$
-^SIGNAL=0$
---

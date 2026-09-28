@@ -1,9 +1,0 @@
-CORE
-multi-line-define1.v
---preprocess
-activate-multi-line-match
-^A \nB \nC$
-^EXIT=0$
-^SIGNAL=0$
---
-^PREPROCESSING FAILED$
