@@ -70,10 +70,14 @@ public:
   // type checking for all "item containers", which includes
   // all "design elements" (modules, programs, interfaces,
   // checkers, packages, primitives, and configurations)
+  // The interface port actuals map the base names of the design
+  // element's interface ports to the interface instances that are
+  // bound to them, as far as known.
   void typecheck_design_element(
     const verilog_module_sourcet &,
     symbolt &,
-    irep_idt module_instance);
+    irep_idt module_instance,
+    const std::map<irep_idt, exprt> &interface_port_actuals = {});
 
   // type checking for compilation-unit scoped nets, variables,
   // typedefs, functions, tasks, parameters
@@ -136,7 +140,27 @@ protected:
   void process_module_instantiations(verilog_module_exprt &);
   void process_parameter_override(const class verilog_parameter_overridet &);
   void process_parameter_override(const verilog_module_itemt &);
-  void parameterize_instantiated_modules(verilog_module_itemt &);
+
+  // The module instantiations of a module, which are parameterized in the
+  // order of the dependencies given by their interface port connections.
+  struct pending_instantiationt
+  {
+    verilog_module_itemt *module_item;
+    named_blockst named_blocks;
+    std::map<irep_idt, mp_integer> genvars;
+    enum class statet
+    {
+      NOT_STARTED,
+      IN_PROGRESS,
+      DONE
+    };
+    statet state = statet::NOT_STARTED;
+  };
+  std::vector<pending_instantiationt> pending_instantiations;
+  // instance identifier -> index into pending_instantiations
+  std::map<irep_idt, std::size_t> instance_to_pending;
+  void collect_instantiations(verilog_module_itemt &);
+  void parameterize_pending_instantiation(std::size_t);
   void parameterize_instantiated_modules(class verilog_instt &);
   void parameterize_instantiated_modules(class verilog_inst_builtint &);
 
@@ -187,14 +211,17 @@ protected:
     const source_locationt &);
 
   // Specialize a module to a given instance identifier
-  // and parameter assignment
+  // and parameter assignment. The interface port actuals map the
+  // base names of the module's interface ports to the interface
+  // instances that are bound to them, when known.
   irep_idt instantiate_module(
     const source_locationt &location,
     const irep_idt &module_identifier,
     const irep_idt &module_base_name,
     const irep_idt &instance_identifier,
     const exprt::operandst &parameter_assignment,
-    const std::map<irep_idt, exprt> &defparams);
+    const std::map<irep_idt, exprt> &defparams,
+    const std::map<irep_idt, exprt> &interface_port_actuals = {});
 
   std::vector<verilog_parameter_declt::declaratort>
   get_parameter_declarators(const verilog_module_sourcet &);
@@ -211,14 +238,27 @@ protected:
 
   // interfaces
   void check_module_ports(const verilog_module_sourcet &);
-  void instantiate_interface_ports(const verilog_module_sourcet &);
+  std::map<irep_idt, exprt> interface_port_actuals(
+    const irep_idt &module_identifier,
+    const verilog_instt::instancet &);
+  exprt interface_port_actual(const exprt &);
+  void instantiate_interface_ports(
+    const verilog_module_sourcet &,
+    const std::map<irep_idt, exprt> &interface_port_actuals);
   void instantiate_interface_port(
     const typet &,
     const source_locationt &,
     const irep_idt &interface_module_id,
     const irep_idt &interface_base_name,
     const irep_idt &base_name,
-    const irep_idt &identifier);
+    const irep_idt &identifier,
+    const exprt &actual);
+  std::map<irep_idt, exprt> interface_port_actuals_of_instance(
+    const irep_idt &interface_module_id,
+    const irep_idt &instance_identifier);
+  exprt::operandst interface_parameter_assignments(
+    const irep_idt &interface_module_id,
+    const irep_idt &actual_identifier);
   void interface_module_item(const class verilog_module_itemt &);
   void interface_block(const class verilog_blockt &);
   void interface_generate_block(const class verilog_generate_blockt &);
