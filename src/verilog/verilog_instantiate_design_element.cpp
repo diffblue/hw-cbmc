@@ -223,7 +223,8 @@ irep_idt verilog_typecheckt::instantiate_design_element(
   const irep_idt &design_element_base_name,
   const irep_idt &instance_identifier,
   const exprt::operandst &parameter_assignments,
-  const std::map<irep_idt, exprt> &instance_defparams)
+  const std::map<irep_idt, exprt> &instance_defparams,
+  const std::map<irep_idt, exprt> &interface_port_actuals)
 {
   // find the source symbol of the design element
   symbol_tablet::symbolst::const_iterator it =
@@ -281,7 +282,7 @@ irep_idt verilog_typecheckt::instantiate_design_element(
     standard, warn_implicit_nets, symbol_table, get_message_handler());
 
   verilog_typecheck.typecheck_design_element(
-    source_copy, *new_symbol, instance_identifier);
+    source_copy, *new_symbol, instance_identifier, interface_port_actuals);
 
   return new_design_element_identifier;
 }

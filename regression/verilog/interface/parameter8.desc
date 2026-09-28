@@ -1,0 +1,13 @@
+CORE
+parameter8.sv
+--bound 1
+^\[main\.u1\.p0\] always \$bits\(main\.u1\.s\.a\) == main\.u1\.W: PROVED up to bound 1$
+^\[main\.u2\.p0\] always \$bits\(main\.u2\.s\.a\) == main\.u2\.W: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The parameter values of the interface under an interface port were
+reconstructed from the elaborated parameters of the bound instance, which
+failed for type parameters with "unexpected type".
