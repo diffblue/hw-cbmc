@@ -426,6 +426,27 @@ protected:
   /// Returns {} if the lvalue does not correspond to a constant slice.
   std::optional<lhst> decompose_lhs(const exprt &lhs, statet &);
 
+  /// evaluates an index expression to a constant, if possible
+  using index_functiont =
+    std::function<std::optional<mp_integer>(const exprt &)>;
+
+  /// decompose a select expression into the symbol and the slice
+  /// selected, using the given function to evaluate indices
+  std::optional<lhst> decompose(const exprt &, const index_functiont &);
+
+  /// The slices of the given identifier that the given expression reads.
+  /// Selects with constant indices yield the bits they read; any other
+  /// read of the identifier, including one that cannot be resolved,
+  /// yields the whole slice given.
+  void collect_reads(
+    const exprt &,
+    const irep_idt &,
+    const verilog_rtl_slicet &whole,
+    std::vector<verilog_rtl_slicet> &dest);
+
+  /// mark the wire slices that depend on themselves
+  void mark_self_dependent_wires();
+
   /// an lvalue lowered to an assignment of a whole symbol
   class loweredt
   {
@@ -466,6 +487,9 @@ protected:
   /// evaluate the given expression to a constant, using the
   /// blocking-assignment values in the given state
   std::optional<mp_integer> constant_index(const exprt &, statet &);
+
+  /// constant-fold the given index expression, without substitution
+  std::optional<mp_integer> constant_index(const exprt &) const;
 
   /// constant-fold system function calls such as $bits
   exprt fold_system_functions(exprt) const;
@@ -603,8 +627,13 @@ Function: verilog_rtl_buildert::constant_index
 std::optional<mp_integer>
 verilog_rtl_buildert::constant_index(const exprt &expr, statet &state)
 {
-  auto substituted = substitute(expr, state);
-  auto folded = fold_system_functions(std::move(substituted));
+  return constant_index(substitute(expr, state));
+}
+
+std::optional<mp_integer>
+verilog_rtl_buildert::constant_index(const exprt &expr) const
+{
+  auto folded = fold_system_functions(expr);
   auto simplified = simplify_expr(std::move(folded), ns);
   return numeric_cast<mp_integer>(simplified);
 }
@@ -673,6 +702,26 @@ Function: verilog_rtl_buildert::decompose_lhs
 std::optional<verilog_rtl_buildert::lhst>
 verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
 {
+  return decompose(
+    lhs,
+    [this, &state](const exprt &expr) { return constant_index(expr, state); });
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::decompose
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<verilog_rtl_buildert::lhst>
+verilog_rtl_buildert::decompose(const exprt &lhs, const index_functiont &index)
+{
   if(lhs.id() == ID_symbol)
   {
     auto &symbol_expr = to_symbol_expr(lhs);
@@ -683,12 +732,12 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
     auto &bit_select = to_verilog_bit_select_expr(lhs);
     auto &src = bit_select.src();
 
-    auto index_opt = constant_index(bit_select.index(), state);
+    auto index_opt = index(bit_select.index());
 
     if(!index_opt.has_value())
       return {};
 
-    auto sub_opt = decompose_lhs(src, state);
+    auto sub_opt = decompose(src, index);
 
     if(!sub_opt.has_value())
       return {};
@@ -770,13 +819,13 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
     auto &part_select = to_verilog_non_indexed_part_select_expr(lhs);
     auto &src = part_select.src();
 
-    auto from_opt = constant_index(part_select.lsb(), state);
-    auto to_opt = constant_index(part_select.msb(), state);
+    auto from_opt = index(part_select.lsb());
+    auto to_opt = index(part_select.msb());
 
     if(!from_opt.has_value() || !to_opt.has_value())
       return {};
 
-    auto sub_opt = decompose_lhs(src, state);
+    auto sub_opt = decompose(src, index);
 
     if(!sub_opt.has_value())
       return {};
@@ -854,13 +903,13 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
     auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(lhs);
     auto &src = part_select.src();
 
-    auto index_opt = constant_index(part_select.index(), state);
-    auto width_opt = constant_index(part_select.width(), state);
+    auto index_opt = index(part_select.index());
+    auto width_opt = index(part_select.width());
 
     if(!index_opt.has_value() || !width_opt.has_value())
       return {};
 
-    auto sub_opt = decompose_lhs(src, state);
+    auto sub_opt = decompose(src, index);
 
     if(!sub_opt.has_value())
       return {};
@@ -928,7 +977,7 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
       return {};
     }
 
-    auto sub_opt = decompose_lhs(compound, state);
+    auto sub_opt = decompose(compound, index);
 
     if(!sub_opt.has_value())
       return {};
@@ -945,13 +994,13 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
   else if(lhs.id() == ID_typecast)
   {
     // assumed to be a reinterpret cast; the bit positions are unchanged
-    return decompose_lhs(to_typecast_expr(lhs).op(), state);
+    return decompose(to_typecast_expr(lhs).op(), index);
   }
   else if(lhs.id() == ID_hierarchical_identifier)
   {
-    return decompose_lhs(
+    return decompose(
       resolve_hierarchical_identifier(to_hierarchical_identifier_expr(lhs)),
-      state);
+      index);
   }
   else
     return {};
@@ -3426,6 +3475,184 @@ void verilog_rtl_buildert::commit(
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::mark_self_dependent_wires
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: A wire slice depends on itself if its value reads a bit of
+          the slice, or a bit of another slice of the same wire that
+          in turn depends on it. For each such slice, the slices whose
+          reads close the cycle are recorded; these are the slices in
+          the same strongly connected component of the dependency
+          graph. Reads of these are later treated as non-determinism.
+          Reads of slices that do not lead back to the slice are
+          kept as they are, since these are defined separately.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::mark_self_dependent_wires()
+{
+  for(auto &identifier_entry : rtl.identifier_map)
+  {
+    auto &identifier = identifier_entry.first;
+    auto &slice_map = identifier_entry.second;
+
+    // only wires are affected
+    if(!slice_map.begin()->second.is_wire())
+      continue;
+
+    const symbolt *symbol;
+    if(ns.lookup(identifier, symbol))
+      continue;
+
+    auto whole = whole_slice(symbol_exprt{identifier, symbol->type});
+
+    // The dependency graph: the slices that a slice reads. The reads
+    // are collected once per definition, and then matched against the
+    // defined slices.
+    using slice_ptrt = const verilog_rtl_slicet *;
+    std::map<slice_ptrt, std::vector<slice_ptrt>> successors;
+
+    for(auto &entry : slice_map)
+    {
+      std::vector<verilog_rtl_slicet> reads;
+      collect_reads(entry.second.value, identifier, whole, reads);
+
+      auto &dest = successors[&entry.first];
+
+      for(auto &other : slice_map)
+        for(auto &read : reads)
+          if(read.overlaps(other.first))
+          {
+            dest.push_back(&other.first);
+            break;
+          }
+    }
+
+    // the slices reachable from a slice
+    auto reachable = [&successors](slice_ptrt from)
+    {
+      std::set<slice_ptrt> result;
+      std::vector<slice_ptrt> stack = {from};
+
+      while(!stack.empty())
+      {
+        auto *slice = stack.back();
+        stack.pop_back();
+
+        for(auto *successor : successors[slice])
+          if(result.insert(successor).second)
+            stack.push_back(successor);
+      }
+
+      return result;
+    };
+
+    std::map<slice_ptrt, std::set<slice_ptrt>> reachable_map;
+
+    for(auto &entry : slice_map)
+      reachable_map[&entry.first] = reachable(&entry.first);
+
+    // A slice depends on itself if it can reach itself. The slices in
+    // the cycle are those that it reaches and that reach it.
+    for(auto &entry : slice_map)
+    {
+      auto &from_slice = reachable_map[&entry.first];
+
+      if(from_slice.find(&entry.first) == from_slice.end())
+        continue; // not self-dependent
+
+      for(auto *other : from_slice)
+      {
+        auto &from_other = reachable_map[other];
+        if(from_other.find(&entry.first) != from_other.end())
+          entry.second.cyclic_slices.push_back(*other);
+      }
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::collect_reads
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Collects the slices of the given identifier that the given
+          expression reads. Selects with constant indices are
+          resolved to the bits they read; any other read of the
+          identifier is assumed to read all of its bits.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::collect_reads(
+  const exprt &expr,
+  const irep_idt &identifier,
+  const verilog_rtl_slicet &whole,
+  std::vector<verilog_rtl_slicet> &dest)
+{
+  if(
+    expr.id() == ID_symbol || expr.id() == ID_verilog_bit_select ||
+    expr.id() == ID_verilog_non_indexed_part_select ||
+    expr.id() == ID_verilog_indexed_part_select_plus ||
+    expr.id() == ID_verilog_indexed_part_select_minus ||
+    expr.id() == ID_member || expr.id() == ID_typecast ||
+    expr.id() == ID_hierarchical_identifier)
+  {
+    std::optional<lhst> read_opt;
+
+    // Out-of-range constant indices are errors for lvalues, but yield
+    // 'x' when reading (1800-2017 11.5.1); such reads are unresolved.
+    try
+    {
+      read_opt = decompose(
+        expr, [this](const exprt &index) { return constant_index(index); });
+    }
+    catch(const errort &)
+    {
+    }
+
+    // When the select is resolved, all indices are constants, and
+    // hence the only symbol that is read is the base symbol.
+    if(read_opt.has_value())
+    {
+      if(read_opt->symbol.get_identifier() == identifier)
+      {
+        // clip to the width of the identifier
+        auto lower = std::max(read_opt->slice.lower, whole.lower);
+        auto higher = std::min(read_opt->slice.higher, whole.higher);
+        if(lower <= higher)
+          dest.emplace_back(lower, higher);
+      }
+
+      return;
+    }
+  }
+
+  // Unresolved: any read of the identifier reads all of its bits.
+  if(expr.id() == ID_symbol)
+  {
+    if(to_symbol_expr(expr).get_identifier() == identifier)
+      dest.push_back(whole);
+    return;
+  }
+  else if(expr.id() == ID_hierarchical_identifier)
+  {
+    if(to_hierarchical_identifier_expr(expr).identifier() == identifier)
+      dest.push_back(whole);
+    return;
+  }
+
+  for(auto &op : expr.operands())
+    collect_reads(op, identifier, whole, dest);
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::build_always
 
   Inputs:
@@ -4490,6 +4717,7 @@ verilog_rtlt verilog_rtl_buildert::build()
 
   // now that all drivers are known
   force_interface_port_connections();
+  mark_self_dependent_wires();
 
   return std::move(rtl);
 }

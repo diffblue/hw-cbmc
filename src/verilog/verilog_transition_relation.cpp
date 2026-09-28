@@ -132,7 +132,10 @@ protected:
 
   /// replace reads of the given wire in its own definition
   /// by non-determinism
-  static void post_process_wire(const irep_idt &identifier, exprt &);
+  /// replace the reads of the given symbol in the given expression
+  /// by the given replacement
+  static void
+  replace_symbol(const irep_idt &identifier, const exprt &replacement, exprt &);
 
   static void set_default_sequence_semantics(exprt &, bool strong);
 };
@@ -452,7 +455,7 @@ exprt verilog_transition_relationt::lower(exprt expr)
 
 /*******************************************************************\
 
-Function: verilog_transition_relationt::post_process_wire
+Function: verilog_transition_relationt::replace_symbol
 
   Inputs:
 
@@ -462,17 +465,22 @@ Function: verilog_transition_relationt::post_process_wire
 
 \*******************************************************************/
 
-void verilog_transition_relationt::post_process_wire(
+void verilog_transition_relationt::replace_symbol(
   const irep_idt &identifier,
+  const exprt &replacement,
   exprt &expr)
 {
-  // look if the wire is used to define itself
+  if(expr.id() == ID_symbol && expr.get(ID_identifier) == identifier)
+  {
+    // preserve the type, including its attributes
+    auto type = expr.type();
+    expr = replacement;
+    expr.type() = std::move(type);
+    return;
+  }
 
   for(auto &op : expr.operands())
-    post_process_wire(identifier, op);
-
-  if(expr.id() == ID_symbol && expr.get(ID_identifier) == identifier)
-    expr.id(ID_nondet_symbol);
+    replace_symbol(identifier, replacement, op);
 }
 
 /*******************************************************************\
@@ -648,17 +656,47 @@ void verilog_transition_relationt::convert_definitions(
       exprt nondet = symbol_expr_raw;
       nondet.id(ID_nondet_symbol);
 
-      auto value = compose(
-        slice_map,
+      // Reads of a slice in its own definition, directly or via a cycle
+      // through other slices, are non-determinism. Reads of the other
+      // slices of the wire are kept, since these are defined separately
+      // and do not lead back to the slice.
+      std::map<verilog_rtl_slicet, exprt> slice_values;
+
+      for(auto &slice_entry : slice_map)
+      {
+        exprt slice_value = slice_entry.second.value;
+        auto &cyclic_slices = slice_entry.second.cyclic_slices;
+
+        if(!cyclic_slices.empty())
+        {
+          // the wire, with the bits of the cyclic slices replaced
+          // by non-determinism
+          std::map<verilog_rtl_slicet, exprt> cyclic_values;
+
+          for(auto &cyclic_slice : cyclic_slices)
+            cyclic_values.emplace(
+              cyclic_slice, extract_range(nondet, whole, cyclic_slice));
+
+          auto replacement = compose_values(
+            cyclic_values,
+            symbol_expr_raw,
+            [&symbol_expr_raw, &whole](const verilog_rtl_slicet &fragment)
+            { return extract_range(symbol_expr_raw, whole, fragment); });
+
+          replace_symbol(identifier, replacement, slice_value);
+        }
+
+        slice_values.emplace(slice_entry.first, std::move(slice_value));
+      }
+
+      auto value = compose_values(
+        slice_values,
         symbol_expr_raw,
         [&nondet, &whole](const verilog_rtl_slicet &fragment)
         { return extract_range(nondet, whole, fragment); });
 
       auto lowered_value =
         typecast_exprt::conditional_cast(lower(std::move(value)), lowered_type);
-
-      // reads of the wire in its own definition are non-determinism
-      post_process_wire(identifier, lowered_value);
 
       exprt lhs = symbol_expr(symbol, false);
 
