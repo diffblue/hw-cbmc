@@ -411,7 +411,10 @@ exprt verilog_lowering_cast(typecast_exprt expr)
       dest_type.id() == ID_struct || dest_type.id() == ID_union ||
       dest_type.id() == ID_array)
     {
-      return from_bitvector(expr.op(), 0, dest_type);
+      // to_bitvector yields the operand unchanged unless it is a struct,
+      // union or array, and hence also covers the casts from one composite
+      // type to another.
+      return from_bitvector(to_bitvector(expr.op()), 0, dest_type);
     }
     else
     {

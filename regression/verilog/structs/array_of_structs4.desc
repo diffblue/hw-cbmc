@@ -1,0 +1,10 @@
+CORE
+array_of_structs4.sv
+--module main --bound 0
+^file .* line 11: failed to convert `unpacked array \[2\] of struct packed' to `unpacked array \[2\] of \[7:0\]'$
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+Unpacked arrays whose element types differ in the number of bits are not
+of equivalent types, and hence the assignment is rejected.
