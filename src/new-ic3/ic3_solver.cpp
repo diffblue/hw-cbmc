@@ -811,7 +811,13 @@ struct proof_obligationt
 
   bool operator>(const proof_obligationt &other) const
   {
-    return level > other.level;
+    if(level != other.level)
+      return level > other.level;
+    // Prefer deeper obligations (closer to the counterexample root)
+    if(depth != other.depth)
+      return depth < other.depth;
+    // Prefer larger cubes (more specific states, easier to block)
+    return cube.size() < other.cube.size();
   }
 };
 
@@ -892,6 +898,10 @@ ic3_resultt ic3_solvert::solve()
   {
     new_frame();
     std::size_t k = number_of_frames() - 1;
+
+    // Decay activity to keep the ordering adaptive
+    for(auto &a : lit_activity)
+      a *= 0.95f;
 
     message.progress() << "IC3: frame " << k << " (" << num_queries
                        << " queries, " << num_lifts << " lifts, "
