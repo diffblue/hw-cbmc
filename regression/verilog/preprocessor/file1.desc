@@ -1,8 +1,0 @@
-CORE
-file1.v
---preprocess
-^    "file1\.v", 4\);$
-^EXIT=0$
-^SIGNAL=0$
---
-^PREPROCESSING FAILED$
