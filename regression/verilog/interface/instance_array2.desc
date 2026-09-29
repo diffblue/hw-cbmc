@@ -1,0 +1,16 @@
+CORE
+instance_array2.sv
+--bound 1
+^\[main\.s\[1\]\.p1\] always main\.s\[1\]\.s\.a == 4'b0101: PROVED up to bound 1$
+^\[main\.s\[1\]\.p2\] always .*: PROVED up to bound 1$
+^\[main\.s\[1\]\.p3\] always .*: PROVED up to bound 1$
+^\[main\.s\[0\]\.p1\] always main\.s\[0\]\.s\.a == 4'b0101: PROVED up to bound 1$
+^\[main\.s\[0\]\.p2\] always .*: PROVED up to bound 1$
+^\[main\.s\[0\]\.p3\] always .*: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+An instance array of a module with an interface port and an array of
+interface ports, alongside a vector port that is split over the elements.

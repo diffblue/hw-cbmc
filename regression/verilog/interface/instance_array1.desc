@@ -1,17 +1,13 @@
-KNOWNBUG
+CORE
 instance_array1.sv
 --bound 1
-^\[main\.s\[0\]\.p0\] always main\.s\[0\]\.bus\.v == 5: PROVED up to bound 1$
-^\[main\.s\[1\]\.p0\] always main\.s\[1\]\.bus\.v == 5: PROVED up to bound 1$
+^\[main\.s\[0\]\.p0\] always main\.s\[0\]\.bus\.v == 4'b0101: PROVED up to bound 1$
+^\[main\.s\[1\]\.p0\] always main\.s\[1\]\.bus\.v == 4'b0101: PROVED up to bound 1$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-Instance arrays of modules with interface ports are not supported.
-expand_instance_array (src/verilog/verilog_elaborate_module_instances.cpp)
-tries to split the port connection over the elements of the array, and
-fails with "cannot split the connection over the 2 elements of the
-instance array". Per 1800-2017 23.3.3, an interface instance that is
-connected to an interface port of an instance array is connected to every
-element of the array.
+Per 1800-2017 23.3.3, an interface instance that is connected to an
+interface port of an instance array is connected to every element of the
+array.
