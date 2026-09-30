@@ -499,6 +499,30 @@ protected:
   /// inline a function call in an rvalue
   exprt expand_function_call(const function_call_exprt &, statet &);
 
+  /// Assigns the actuals of a function or task call to its input
+  /// parameters. All actuals are evaluated in the caller's bindings
+  /// before any parameter is assigned.
+  void assign_input_parameters(
+    const code_typet::parameterst &,
+    const exprt::operandst &actuals,
+    statet &);
+
+  /// The bindings of the parameters and locals of a function or task,
+  /// saved while a nested call of the same function or task is
+  /// expanded, and restored afterwards.
+  struct saved_bindingst
+  {
+    statet::value_mapt values, blocking_values, nonblocking_values;
+  };
+
+  /// save the bindings of the symbols with the given prefix
+  static saved_bindingst
+  save_bindings(const statet &, const std::string &prefix);
+
+  /// restore the bindings of the symbols with the given prefix
+  static void
+  restore_bindings(statet &, const std::string &prefix, saved_bindingst);
+
   /// resolve a hierarchical identifier to a symbol
   exprt resolve_hierarchical_identifier(const hierarchical_identifier_exprt &);
 
@@ -1302,6 +1326,118 @@ exprt verilog_rtl_buildert::resolve_hierarchical_identifier(
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::assign_input_parameters
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Assigns the actuals of a function or task call to the input
+          parameters. All actuals are evaluated before any parameter
+          is assigned: an actual may read a parameter of an enclosing
+          call of the same function, which must not yet be overwritten
+          by the arguments of this call.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::assign_input_parameters(
+  const code_typet::parameterst &parameters,
+  const exprt::operandst &actuals,
+  statet &state)
+{
+  PRECONDITION(parameters.size() == actuals.size());
+
+  // the input parameters, with the values of their actuals
+  std::vector<std::pair<symbol_exprt, exprt>> assignments;
+
+  for(std::size_t i = 0; i < parameters.size(); i++)
+  {
+    if(parameters[i].get_bool(ID_input))
+    {
+      const symbolt &parameter_symbol =
+        ns.lookup(parameters[i].get_identifier());
+      assignments.emplace_back(
+        parameter_symbol.symbol_expr(), substitute(actuals[i], state));
+    }
+  }
+
+  for(auto &assignment : assignments)
+    assign_to(assignment.first, std::move(assignment.second), state, true);
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::save_bindings
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Saves the bindings of the symbols with the given prefix,
+          i.e., the parameters and locals of a function or task.
+
+\*******************************************************************/
+
+verilog_rtl_buildert::saved_bindingst verilog_rtl_buildert::save_bindings(
+  const statet &state,
+  const std::string &prefix)
+{
+  saved_bindingst saved;
+
+  auto save = [&prefix](const statet::value_mapt &src, statet::value_mapt &dest)
+  {
+    for(auto &entry : src)
+      if(entry.first.starts_with(prefix))
+        dest.insert(entry);
+  };
+
+  save(state.values, saved.values);
+  save(state.blocking_values, saved.blocking_values);
+  save(state.nonblocking_values, saved.nonblocking_values);
+
+  return saved;
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::restore_bindings
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Restores the bindings of the symbols with the given prefix
+          to the saved ones; bindings that have no saved counterpart
+          are removed.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::restore_bindings(
+  statet &state,
+  const std::string &prefix,
+  saved_bindingst saved)
+{
+  auto restore = [&prefix](statet::value_mapt &dest, statet::value_mapt &src)
+  {
+    for(auto it = dest.begin(); it != dest.end();)
+    {
+      if(it->first.starts_with(prefix))
+        it = dest.erase(it);
+      else
+        ++it;
+    }
+
+    for(auto &entry : src)
+      dest.insert(std::move(entry));
+  };
+
+  restore(state.values, saved.values);
+  restore(state.blocking_values, saved.blocking_values);
+  restore(state.nonblocking_values, saved.nonblocking_values);
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::expand_function_call
 
   Inputs:
@@ -1358,20 +1494,15 @@ exprt verilog_rtl_buildert::expand_function_call(
   // remember the guard
   auto entry_guard = state.guard;
 
+  // The call may be nested in another call of the same function, e.g.,
+  // as an argument or in a recursive call. The bindings of the
+  // parameters and locals of that call are saved, and restored once
+  // this call has been expanded.
+  const auto prefix = id2string(symbol.name) + '.';
+  auto saved = save_bindings(state, prefix);
+
   // do assignments to input parameters
-  for(std::size_t i = 0; i < parameters.size(); i++)
-  {
-    if(parameters[i].get_bool(ID_input))
-    {
-      const symbolt &parameter_symbol =
-        ns.lookup(parameters[i].get_identifier());
-      assign_to(
-        parameter_symbol.symbol_expr(),
-        substitute(actuals[i], state),
-        state,
-        true);
-    }
-  }
+  assign_input_parameters(parameters, actuals, state);
 
   // the body
   for(auto &body_statement : symbol.value.operands())
@@ -1387,24 +1518,35 @@ exprt verilog_rtl_buildert::expand_function_call(
   // restore the guard
   state.guard = std::move(entry_guard);
 
-  // do assignments to output parameters
+  // the result is the value of the return symbol
+  auto result = typecast_exprt::conditional_cast(
+    substitute(return_symbol.symbol_expr(), state), call.type());
+
+  // the values of the output parameters
+  exprt::operandst output_values;
+  output_values.reserve(parameters.size());
+
   for(std::size_t i = 0; i < parameters.size(); i++)
   {
     if(parameters[i].get_bool(ID_output))
     {
       const symbolt &parameter_symbol =
         ns.lookup(parameters[i].get_identifier());
-      assign_to(
-        actuals[i],
-        substitute(parameter_symbol.symbol_expr(), state),
-        state,
-        true);
+      output_values.push_back(
+        substitute(parameter_symbol.symbol_expr(), state));
     }
+    else
+      output_values.push_back(nil_exprt{});
   }
 
-  // the result is the value of the return symbol
-  return typecast_exprt::conditional_cast(
-    substitute(return_symbol.symbol_expr(), state), call.type());
+  restore_bindings(state, prefix, std::move(saved));
+
+  // do assignments to output parameters
+  for(std::size_t i = 0; i < parameters.size(); i++)
+    if(parameters[i].get_bool(ID_output))
+      assign_to(actuals[i], std::move(output_values[i]), state, true);
+
+  return result;
 }
 
 /*******************************************************************\
@@ -2870,20 +3012,15 @@ void verilog_rtl_buildert::build_function_call(
   // remember the guard
   auto entry_guard = state.guard;
 
+  // The call may be nested in another call of the same function or
+  // task, e.g., in an argument. The bindings of the parameters and
+  // locals of that call are saved, and restored once this call has
+  // been expanded.
+  const auto prefix = id2string(symbol.name) + '.';
+  auto saved = save_bindings(state, prefix);
+
   // do assignments to input parameters
-  for(std::size_t i = 0; i < parameters.size(); i++)
-  {
-    if(parameters[i].get_bool(ID_input))
-    {
-      const symbolt &parameter_symbol =
-        ns.lookup(parameters[i].get_identifier());
-      assign_to(
-        parameter_symbol.symbol_expr(),
-        substitute(actuals[i], state),
-        state,
-        true);
-    }
-  }
+  assign_input_parameters(parameters, actuals, state);
 
   // the body
   for(auto &body_statement : symbol.value.operands())
@@ -2899,20 +3036,29 @@ void verilog_rtl_buildert::build_function_call(
   // restore the guard
   state.guard = std::move(entry_guard);
 
-  // do assignments to output parameters
+  // the values of the output parameters
+  exprt::operandst output_values;
+  output_values.reserve(parameters.size());
+
   for(std::size_t i = 0; i < parameters.size(); i++)
   {
     if(parameters[i].get_bool(ID_output))
     {
       const symbolt &parameter_symbol =
         ns.lookup(parameters[i].get_identifier());
-      assign_to(
-        actuals[i],
-        substitute(parameter_symbol.symbol_expr(), state),
-        state,
-        true);
+      output_values.push_back(
+        substitute(parameter_symbol.symbol_expr(), state));
     }
+    else
+      output_values.push_back(nil_exprt{});
   }
+
+  restore_bindings(state, prefix, std::move(saved));
+
+  // do assignments to output parameters
+  for(std::size_t i = 0; i < parameters.size(); i++)
+    if(parameters[i].get_bool(ID_output))
+      assign_to(actuals[i], std::move(output_values[i]), state, true);
 }
 
 /*******************************************************************\
