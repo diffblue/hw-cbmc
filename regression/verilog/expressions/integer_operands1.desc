@@ -1,0 +1,14 @@
+CORE
+integer_operands1.sv
+--bound 1
+^\[main\.p0\] always \$bits\(main\.d\) == 8: PROVED up to bound 1$
+^\[main\.p1\] always main\.A == 7: PROVED up to bound 1$
+^\[main\.p2\] always main\.w == main\.a - main\.b: PROVED up to bound 1$
+^\[main\.p3\] always main\.c == 8: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A binary operation on two operands of type integer yielded an expression of
+type integer, which was neither constant-folded nor lowered.
