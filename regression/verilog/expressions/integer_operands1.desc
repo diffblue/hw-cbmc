@@ -1,0 +1,18 @@
+CORE
+integer_operands1.sv
+--bound 1
+^\[main\.p0\] always \$bits\(main\.d\) == 8: PROVED up to bound 1$
+^\[main\.p1\] always main\.A == 7: PROVED up to bound 1$
+^\[main\.p2\] always main\.c == 8: PROVED up to bound 1$
+^\[main\.p3\] always \$bits\(\$clog2\(16\) \+ \$clog2\(8\)\) == 32: PROVED up to bound 1$
+^\[main\.p4\] always \$bits\(\$clog2\(16\) \+ main\.b\) == 32: PROVED up to bound 1$
+^\[main\.p5\] always \$clog2\(16\) \+ main\.b == main\.b \+ 4: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Operands of type integer take part in the determination of the result type
+of an operation as the 32-bit signed vector type. Two integer operands
+yielded the type integer, which was neither constant-folded nor lowered; an
+integer operand and a vector operand yielded the vector operand's type.
