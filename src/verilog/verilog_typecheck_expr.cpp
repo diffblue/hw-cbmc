@@ -3142,13 +3142,24 @@ Function: verilog_typecheck_exprt::max_type
 \*******************************************************************/
 
 typet verilog_typecheck_exprt::max_type(
-  const typet &t0,
-  const typet &t1)
+  const typet &t0_given,
+  const typet &t1_given)
 {
-  if(t0==t1) return t0;
+  // integer is a 32-bit signed integral type (1800-2017 6.11), and takes
+  // part in the determination of the result type as that vector type
+  // (11.8.2). The result of an operation on integers is hence a vector
+  // type, never 'integer'.
+  auto integer_type = verilog_lowering(verilog_integer_typet{});
+  const typet &t0 =
+    t0_given.id() == ID_verilog_integer ? integer_type : t0_given;
+  const typet &t1 =
+    t1_given.id() == ID_verilog_integer ? integer_type : t1_given;
 
-  vtypet vt0=vtypet(t0);
-  vtypet vt1=vtypet(t1);
+  if(t0 == t1)
+    return t0;
+
+  vtypet vt0 = vtypet(t0);
+  vtypet vt1 = vtypet(t1);
 
   if(vt0.is_null() || vt1.is_chandle())
     return t1;
@@ -3179,15 +3190,6 @@ typet verilog_typecheck_exprt::max_type(
 
   if(vt0.is_other() || vt1.is_other())
     return static_cast<const typet &>(get_nil_irep());
-
-  // If one of the operands is an integer, we return the
-  // other type. This may be too small! The standard says
-  // one needs 32 bits.
-
-  if(vt0.is_integer())
-    return t1;
-  else if(vt1.is_integer())
-    return t0;
 
   // If one of the operands is a real, we return the real.
   if(vt0.is_real())
