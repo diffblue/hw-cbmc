@@ -166,7 +166,28 @@ void verilog_typecheckt::typecheck_port_connection(
     }
 
     if(symbol.is_output)
+    {
       check_lhs(op, A_CONTINUOUS);
+
+      // The port drives the actual, much like a continuous assignment of
+      // the port to the actual. Vectors are converted as in such an
+      // assignment; unpacked arrays need to be equivalent (1800-2017 7.6).
+      bool port_unpacked =
+        port.type().id() == ID_array &&
+        port.type().get(ID_C_verilog_type) == ID_verilog_unpacked_array;
+      bool actual_unpacked =
+        op.type().id() == ID_array &&
+        op.type().get(ID_C_verilog_type) == ID_verilog_unpacked_array;
+
+      if(
+        (port_unpacked || actual_unpacked) &&
+        !equivalent_types(port.type(), op.type()))
+      {
+        throw errort().with_location(op.source_location())
+          << "failed to connect output port of type `" << to_string(port.type())
+          << "' to `" << to_string(op.type()) << "'";
+      }
+    }
     else
     {
       // This is an assignment to the input

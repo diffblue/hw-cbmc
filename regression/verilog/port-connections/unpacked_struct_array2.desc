@@ -1,0 +1,12 @@
+CORE
+unpacked_struct_array2.sv
+--bound 1
+^file .* line 10: failed to connect output port of type `unpacked array \[1\] of \[21:0\]' to `unpacked array \[1\] of struct packed'$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+^Invariant
+--
+An output port of an unpacked array type connected to an unpacked array
+with a different element width is an error, not an invariant violation.
