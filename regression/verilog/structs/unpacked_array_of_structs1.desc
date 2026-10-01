@@ -1,0 +1,14 @@
+CORE
+unpacked_array_of_structs1.sv
+--bound 2
+^\[main\.p0\] always main\.y\[0\] == 0: PROVED up to bound 2$
+^\[main\.p1\] always main\.y\[1\]\.a == 3: PROVED up to bound 2$
+^\[main\.p2\] always main\.y\[1\]\.b == 11'h7FF: PROVED up to bound 2$
+^\[main\.p3\] always main\.y\[1\] == \{ 3, 11'h7FF \}: PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The value of an unpacked array of packed structs is composed from the values
+of its elements, which must be flattened before they are concatenated.
