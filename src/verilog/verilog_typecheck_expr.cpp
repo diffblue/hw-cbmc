@@ -3046,10 +3046,16 @@ typet verilog_typecheck_exprt::max_type(
   const typet &t0,
   const typet &t1)
 {
-  if(t0==t1) return t0;
-
   vtypet vt0=vtypet(t0);
   vtypet vt1=vtypet(t1);
+
+  // integer is a 32-bit signed integral type (1800-2017 6.11); the result
+  // of an operation on two integers is that vector type, not 'integer'.
+  if(vt0.is_integer() && vt1.is_integer())
+    return signedbv_typet{32};
+
+  if(t0 == t1)
+    return t0;
 
   if(vt0.is_null() || vt1.is_chandle())
     return t1;
