@@ -250,6 +250,12 @@ exprt verilog_transition_relationt::compose_values(
   // concatenations take the most significant operand first
   std::reverse(fragments.begin(), fragments.end());
 
+  // The fragments may have aggregate types, e.g., the elements of an
+  // unpacked array of packed structs. The concatenation requires their
+  // bit-level representation.
+  for(auto &fragment : fragments)
+    fragment = to_bitvector(fragment);
+
   auto width_int = numeric_cast_v<std::size_t>(width);
 
   return typecast_exprt::conditional_cast(
