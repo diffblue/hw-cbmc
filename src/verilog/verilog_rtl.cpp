@@ -315,8 +315,7 @@ protected:
     if(ns.lookup(identifier, symbol))
       return;
 
-    if(
-      symbol->is_lvalue && !symbol->is_macro && symbol->type.id() != ID_integer)
+    if(symbol->is_lvalue && !symbol->is_macro)
     {
       rtl.variables.insert(identifier);
     }
