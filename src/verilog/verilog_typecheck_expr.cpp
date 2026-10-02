@@ -716,11 +716,6 @@ void verilog_typecheck_exprt::require_vector(exprt &expr)
     // Cast to signedbv{32}.
     expr = typecast_exprt{std::move(expr), signedbv_typet{32}};
   }
-  else if(expr.type().id() == ID_integer)
-  {
-    // Mathematical integer, e.g., from $clog2. Cast to signedbv{32}.
-    expr = typecast_exprt{std::move(expr), signedbv_typet{32}};
-  }
   else if(
     expr.type().id() == ID_verilog_unsignedbv ||
     expr.type().id() == ID_verilog_signedbv ||
@@ -1129,7 +1124,8 @@ Function: verilog_typecheck_exprt::left
 
 constant_exprt verilog_typecheck_exprt::left(const exprt &expr)
 {
-  return from_integer(verilog_left(expr.type()), integer_typet{});
+  return from_integer(
+    verilog_left(expr.type()), verilog_lowering(verilog_integer_typet{}));
 }
 
 /*******************************************************************\
@@ -1146,7 +1142,8 @@ Function: verilog_typecheck_exprt::right
 
 constant_exprt verilog_typecheck_exprt::right(const exprt &expr)
 {
-  return from_integer(verilog_right(expr.type()), integer_typet{});
+  return from_integer(
+    verilog_right(expr.type()), verilog_lowering(verilog_integer_typet{}));
 }
 
 /*******************************************************************\
@@ -1206,7 +1203,8 @@ constant_exprt verilog_typecheck_exprt::increment(const exprt &expr)
       return -1;
   };
 
-  return from_integer(increment(expr.type()), integer_typet{});
+  return from_integer(
+    increment(expr.type()), verilog_lowering(verilog_integer_typet{}));
 }
 
 /*******************************************************************\
@@ -1270,7 +1268,7 @@ constant_exprt verilog_typecheck_exprt::size(const exprt &expr)
   // $size = $high - $low + 1
   auto h = numeric_cast_v<mp_integer>(high(expr));
   auto l = numeric_cast_v<mp_integer>(low(expr));
-  return from_integer(h - l + 1, integer_typet{});
+  return from_integer(h - l + 1, verilog_lowering(verilog_integer_typet{}));
 }
 
 /*******************************************************************\
@@ -2597,64 +2595,10 @@ void verilog_typecheck_exprt::implicit_typecast(
 
   const typet &src_type = expr.type();
 
-  if(dest_type.id() == ID_integer)
-  {
-    if(expr.is_constant())
-    {
-      source_locationt source_location=expr.source_location();
-      mp_integer value;
+  PRECONDITION(dest_type.id() != ID_integer);
+  PRECONDITION(src_type.id() != ID_integer);
 
-      if(to_integer(to_constant_expr(expr), value))
-      {
-        throw errort() << "failed to convert integer constant";
-      }
-
-      expr = from_integer(value, dest_type);
-      expr.add_source_location()=source_location;
-      return;
-    }
-
-    if(
-      src_type.id() == ID_bool || src_type.id() == ID_unsignedbv ||
-      src_type.id() == ID_signedbv || src_type.id() == ID_integer)
-    {
-      expr = typecast_exprt{expr, dest_type};
-      return;
-    }
-  }
-
-  if(src_type.id() == ID_integer)
-  {
-    // from integer to s.th. else
-    if(dest_type.id()==ID_bool)
-    {
-      // do not use typecast here
-      // we actually only want the lowest bit
-      unsignedbv_typet tmp_type(1);
-      exprt tmp(ID_extractbit, bool_typet());
-      exprt no_expr = from_integer(0, integer_typet());
-      tmp.add_to_operands(typecast_exprt(expr, tmp_type), std::move(no_expr));
-      expr.swap(tmp);
-      return;
-    }
-    else if(dest_type.id()==ID_unsignedbv ||
-            dest_type.id()==ID_signedbv ||
-            dest_type.id()==ID_verilog_unsignedbv ||
-            dest_type.id()==ID_verilog_signedbv)
-    {
-      expr = typecast_exprt{expr, dest_type};
-      return;
-    }
-  }
-  else if(src_type.id() == ID_natural)
-  {
-    if(dest_type.id()==ID_integer)
-    {
-      expr = typecast_exprt{expr, dest_type};
-      return;
-    }
-  }
-  else if(
+  if(
     src_type.id() == ID_bool || src_type.id() == ID_unsignedbv ||
     src_type.id() == ID_signedbv || src_type.id() == ID_verilog_unsignedbv ||
     src_type.id() == ID_verilog_signedbv || src_type.id() == ID_verilog_integer)
@@ -3838,9 +3782,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     const typet &lhs_type = expr.lhs().type();
     const typet &rhs_type = expr.rhs().type();
 
-    if(
-      lhs_type.id() == ID_signedbv || lhs_type.id() == ID_verilog_signedbv ||
-      lhs_type.id() == ID_integer)
+    if(lhs_type.id() == ID_signedbv || lhs_type.id() == ID_verilog_signedbv)
     {
       expr.id(ID_ashr);
     }

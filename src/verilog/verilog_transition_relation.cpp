@@ -324,14 +324,6 @@ exprt verilog_transition_relationt::lower_system_functions(exprt expr)
   for(auto &op : expr.operands())
     op = lower_system_functions(std::move(op));
 
-  if(expr.id() == ID_typecast)
-  {
-    // We do some simplification
-    if(to_typecast_expr(expr).op().type().id() == ID_integer)
-      return simplify_expr(expr, ns);
-    return expr;
-  }
-
   if(expr.id() == ID_function_call)
   {
     auto &call = to_function_call_expr(expr);
