@@ -222,7 +222,8 @@ irep_idt verilog_typecheckt::instantiate_module(
   const irep_idt &module_base_name,
   const irep_idt &instance_identifier,
   const exprt::operandst &parameter_assignments,
-  const std::map<irep_idt, exprt> &instance_defparams)
+  const std::map<irep_idt, exprt> &instance_defparams,
+  const std::map<irep_idt, exprt> &interface_port_actuals)
 {
   // find module source symbol
   symbol_tablet::symbolst::const_iterator it =
@@ -277,6 +278,8 @@ irep_idt verilog_typecheckt::instantiate_module(
 
   verilog_typecheckt verilog_typecheck(
     standard, warn_implicit_nets, symbol_table, get_message_handler());
+
+  verilog_typecheck.port_actuals = interface_port_actuals;
 
   verilog_typecheck.typecheck_design_element(
     source_copy, *new_symbol, instance_identifier);
