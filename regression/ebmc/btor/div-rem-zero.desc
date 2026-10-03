@@ -1,0 +1,17 @@
+KNOWNBUG
+div-rem-zero.btor2
+--bound 0
+^\[bad8\] : PROVED$
+^\[bad11\] : PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+BTOR2 follows SMT-LIB total bit-vector division and remainder semantics:
+bvudiv(x, 0) is all ones and bvurem(x, 0) is x.  The default SAT
+backend leaves these result values unconstrained, so this model is
+reported REFUTED instead of PROVED.  The same model is PROVED with
+--z3.  The defect is in the SAT/bit-vector encoding and can produce a
+false counterexample; the descriptor is a KNOWNBUG until the encoding
+is made consistent with the BTOR2 semantics.
