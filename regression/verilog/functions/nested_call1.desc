@@ -1,0 +1,15 @@
+CORE
+nested_call1.sv
+--bound 2
+^\[main\.p0\] always main\.r0 == 4'b1010: PROVED up to bound 2$
+^\[main\.p1\] always main\.r1 == 4'b1100: PROVED up to bound 2$
+^\[main\.p2\] always main\.r2 == 4'b1000: PROVED up to bound 2$
+^\[main\.p3\] always \(##1 main\.q == 4'b1011\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A call of a function as an argument of another call of the same function.
+The parameters of the function are assigned when expanding the inner call,
+which must not clobber the arguments of the outer call.

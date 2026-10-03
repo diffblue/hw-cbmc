@@ -466,6 +466,13 @@ protected:
   /// inline a function call in an rvalue
   exprt expand_function_call(const function_call_exprt &, statet &);
 
+  /// assign the actuals of a function or task call to its
+  /// input parameters
+  void assign_input_parameters(
+    const code_typet::parameterst &,
+    const exprt::operandst &actuals,
+    statet &);
+
   /// resolve a hierarchical identifier to a symbol
   exprt resolve_hierarchical_identifier(const hierarchical_identifier_exprt &);
 
@@ -1216,6 +1223,52 @@ exprt verilog_rtl_buildert::resolve_hierarchical_identifier(
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::assign_input_parameters
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Assigns the actuals of a function or task call to the input
+          parameters. All actuals are evaluated before any parameter
+          is assigned: an actual may itself call the same function,
+          and expanding that call assigns the parameters as well,
+          which must not clobber the arguments of this call.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::assign_input_parameters(
+  const code_typet::parameterst &parameters,
+  const exprt::operandst &actuals,
+  statet &state)
+{
+  PRECONDITION(parameters.size() == actuals.size());
+
+  exprt::operandst values;
+  values.reserve(actuals.size());
+
+  for(std::size_t i = 0; i < parameters.size(); i++)
+  {
+    if(parameters[i].get_bool(ID_input))
+      values.push_back(substitute(actuals[i], state));
+    else
+      values.push_back(nil_exprt{});
+  }
+
+  for(std::size_t i = 0; i < parameters.size(); i++)
+  {
+    if(parameters[i].get_bool(ID_input))
+    {
+      const symbolt &parameter_symbol =
+        ns.lookup(parameters[i].get_identifier());
+      assign_to(
+        parameter_symbol.symbol_expr(), std::move(values[i]), state, true);
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::expand_function_call
 
   Inputs:
@@ -1273,19 +1326,7 @@ exprt verilog_rtl_buildert::expand_function_call(
   auto entry_guard = state.guard;
 
   // do assignments to input parameters
-  for(std::size_t i = 0; i < parameters.size(); i++)
-  {
-    if(parameters[i].get_bool(ID_input))
-    {
-      const symbolt &parameter_symbol =
-        ns.lookup(parameters[i].get_identifier());
-      assign_to(
-        parameter_symbol.symbol_expr(),
-        substitute(actuals[i], state),
-        state,
-        true);
-    }
-  }
+  assign_input_parameters(parameters, actuals, state);
 
   // the body
   for(auto &body_statement : symbol.value.operands())
@@ -2523,19 +2564,7 @@ void verilog_rtl_buildert::build_function_call(
   auto entry_guard = state.guard;
 
   // do assignments to input parameters
-  for(std::size_t i = 0; i < parameters.size(); i++)
-  {
-    if(parameters[i].get_bool(ID_input))
-    {
-      const symbolt &parameter_symbol =
-        ns.lookup(parameters[i].get_identifier());
-      assign_to(
-        parameter_symbol.symbol_expr(),
-        substitute(actuals[i], state),
-        state,
-        true);
-    }
-  }
+  assign_input_parameters(parameters, actuals, state);
 
   // the body
   for(auto &body_statement : symbol.value.operands())
