@@ -411,7 +411,17 @@ exprt verilog_lowering_cast(typecast_exprt expr)
       dest_type.id() == ID_struct || dest_type.id() == ID_union ||
       dest_type.id() == ID_array)
     {
-      return from_bitvector(expr.op(), 0, dest_type);
+      // The source may be an aggregate as well, e.g., when converting
+      // between unpacked arrays with equivalent element types
+      // (1800-2017 6.22.2, 7.6). It is flattened into a bit-vector first.
+      if(
+        src_type.id() == ID_struct || src_type.id() == ID_union ||
+        src_type.id() == ID_array)
+      {
+        return from_bitvector(to_bitvector(expr.op()), 0, dest_type);
+      }
+      else
+        return from_bitvector(expr.op(), 0, dest_type);
     }
     else
     {

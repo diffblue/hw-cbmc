@@ -115,6 +115,76 @@ void verilog_typecheck_exprt::enter_named_block(const irep_idt &name)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::equivalent_types
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Type equivalence, 1800-2017 6.22.2. Packed integral types
+          are equivalent iff they have the same width and signedness,
+          irrespective of the shape (packed struct, packed array,
+          vector). Unpacked arrays are equivalent iff they have the
+          same size and equivalent element types.
+
+\*******************************************************************/
+
+bool verilog_typecheck_exprt::equivalent_types(const typet &a, const typet &b)
+{
+  if(a == b)
+    return true;
+
+  bool a_unpacked =
+    a.id() == ID_array && a.get(ID_C_verilog_type) == ID_verilog_unpacked_array;
+  bool b_unpacked =
+    b.id() == ID_array && b.get(ID_C_verilog_type) == ID_verilog_unpacked_array;
+
+  if(a_unpacked || b_unpacked)
+  {
+    if(!a_unpacked || !b_unpacked)
+      return false;
+
+    auto &array_a = to_array_type(a);
+    auto &array_b = to_array_type(b);
+
+    return array_a.size() == array_b.size() &&
+           equivalent_types(array_a.element_type(), array_b.element_type());
+  }
+
+  // Unpacked structs and unions are equivalent only if they are the same
+  // type, which is covered above.
+  if(
+    (a.id() == ID_struct && !a.get_bool(ID_packed)) ||
+    (b.id() == ID_struct && !b.get_bool(ID_packed)) ||
+    (a.id() == ID_union && !a.get_bool(ID_packed)) ||
+    (b.id() == ID_union && !b.get_bool(ID_packed)))
+  {
+    return false;
+  }
+
+  // Packed integral types: same width and signedness. Packed structs,
+  // packed unions and packed arrays are unsigned unless declared signed,
+  // which is not tracked; they decay to unsigned vectors (struct_decay,
+  // array_decay), and are treated as unsigned here as well.
+  auto is_packed_integral = [](const typet &type)
+  {
+    return type.id() == ID_bool || type.id() == ID_unsignedbv ||
+           type.id() == ID_signedbv || type.id() == ID_verilog_unsignedbv ||
+           type.id() == ID_verilog_signedbv || type.id() == ID_struct ||
+           type.id() == ID_union || type.id() == ID_array;
+  };
+
+  if(!is_packed_integral(a) || !is_packed_integral(b))
+    return false;
+
+  auto is_signed = [](const typet &type)
+  { return type.id() == ID_signedbv || type.id() == ID_verilog_signedbv; };
+
+  return is_signed(a) == is_signed(b) && get_width(a) == get_width(b);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::assignment_conversion
 
   Inputs:
@@ -426,6 +496,15 @@ void verilog_typecheck_exprt::assignment_conversion(
     lhs_type.id() == ID_array &&
     lhs_type.get(ID_C_verilog_type) == ID_verilog_unpacked_array)
   {
+    // Unpacked arrays are assignment compatible iff they are equivalent
+    // (1800-2017 7.6, 6.22.2), e.g., an unpacked array of a packed struct
+    // and an unpacked array of a packed vector of the same width.
+    if(equivalent_types(rhs.type(), lhs_type))
+    {
+      rhs = typecast_exprt{std::move(rhs), lhs_type};
+      return;
+    }
+
     // assignment of a non-matching type to unpacked array
     throw errort().with_location(rhs.source_location())
       << "failed to convert `" << to_string(original_rhs_type) << "' to `"
