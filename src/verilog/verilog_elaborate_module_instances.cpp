@@ -10,6 +10,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/mathematical_types.h>
 #include <util/std_expr.h>
 
+#include "verilog_lowering.h"
 #include "verilog_typecheck.h"
 #include "verilog_types.h"
 
@@ -991,7 +992,8 @@ exprt verilog_typecheckt::instance_array_element_connection(
       result =
         verilog_bit_select_exprt{
           std::move(result),
-          from_integer(verilog_index, integer_typet{}),
+          from_integer(
+            verilog_index, verilog_lowering(verilog_integer_typet{})),
           array_type.element_type()}
           .with_source_location(source_location);
     }

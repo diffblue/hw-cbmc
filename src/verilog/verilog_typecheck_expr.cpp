@@ -1124,7 +1124,8 @@ Function: verilog_typecheck_exprt::left
 
 constant_exprt verilog_typecheck_exprt::left(const exprt &expr)
 {
-  return from_integer(verilog_left(expr.type()), integer_typet{});
+  return from_integer(
+    verilog_left(expr.type()), verilog_lowering(verilog_integer_typet{}));
 }
 
 /*******************************************************************\
@@ -1141,7 +1142,8 @@ Function: verilog_typecheck_exprt::right
 
 constant_exprt verilog_typecheck_exprt::right(const exprt &expr)
 {
-  return from_integer(verilog_right(expr.type()), integer_typet{});
+  return from_integer(
+    verilog_right(expr.type()), verilog_lowering(verilog_integer_typet{}));
 }
 
 /*******************************************************************\
@@ -1201,7 +1203,8 @@ constant_exprt verilog_typecheck_exprt::increment(const exprt &expr)
       return -1;
   };
 
-  return from_integer(increment(expr.type()), integer_typet{});
+  return from_integer(
+    increment(expr.type()), verilog_lowering(verilog_integer_typet{}));
 }
 
 /*******************************************************************\
@@ -1265,7 +1268,7 @@ constant_exprt verilog_typecheck_exprt::size(const exprt &expr)
   // $size = $high - $low + 1
   auto h = numeric_cast_v<mp_integer>(high(expr));
   auto l = numeric_cast_v<mp_integer>(low(expr));
-  return from_integer(h - l + 1, integer_typet{});
+  return from_integer(h - l + 1, verilog_lowering(verilog_integer_typet{}));
 }
 
 /*******************************************************************\

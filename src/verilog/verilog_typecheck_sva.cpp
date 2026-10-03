@@ -466,11 +466,19 @@ exprt verilog_typecheck_exprt::convert_other_sva(exprt expr)
     auto from_location = from_op.source_location();
 
     convert_expr(from_op);
-    implicit_typecast(from_op, integer_typet{});
     from_op = elaborate_constant_expression_check(from_op);
     from_op.add_source_location() = from_location;
 
-    auto from = numeric_cast_v<mp_integer>(to_constant_expr(from_op));
+    auto from_opt = numeric_cast<mp_integer>(to_constant_expr(from_op));
+
+    if(!from_opt.has_value())
+    {
+      throw errort().with_location(from_location)
+        << "delay must be an integer constant, but got "
+        << to_string(from_op.type());
+    }
+
+    auto from = from_opt.value();
 
     if(from < 0)
     {
@@ -479,8 +487,7 @@ exprt verilog_typecheck_exprt::convert_other_sva(exprt expr)
     }
 
     // to -- this is a constant expression, or $ for an unbounded range.
-    // Note that $ has type natural and is not an integer, and hence the
-    // conversion to an integer is done once $ has been ruled out.
+    // Note that $ has type natural and is not an integer.
     if(expr.operands()[2].is_not_nil())
     {
       auto &to_op = expr.operands()[2];
@@ -491,9 +498,16 @@ exprt verilog_typecheck_exprt::convert_other_sva(exprt expr)
 
       if(to_op.id() != ID_infinity)
       {
-        implicit_typecast(to_op, integer_typet{});
+        auto to_opt = numeric_cast<mp_integer>(to_constant_expr(to_op));
 
-        if(numeric_cast_v<mp_integer>(to_constant_expr(to_op)) < from)
+        if(!to_opt.has_value())
+        {
+          throw errort().with_location(to_location)
+            << "delay must be an integer constant, but got "
+            << to_string(to_op.type());
+        }
+
+        if(to_opt.value() < from)
         {
           throw errort().with_location(expr.source_location())
             << "range must be lower <= upper";
