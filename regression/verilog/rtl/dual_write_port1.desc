@@ -1,0 +1,15 @@
+KNOWNBUG
+dual_write_port1.sv
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+--
+^file .* line .*: `Verilog::\$root\.main\.mem' has multiple drivers$
+^CONVERSION ERROR$
+--
+verilog_rtl_buildert::commit (src/verilog/verilog_rtl.cpp) tracks, per
+identifier, the bit-slices written by every always block and rejects any
+overlap as a driver conflict. This is correct for ordinary registers, but
+a memory array with more than one write port is legitimate synthesizable
+hardware: RTL construction has no notion of a memory array with several
+write ports, and hence cannot model true dual (or multi) write-port RAMs.
