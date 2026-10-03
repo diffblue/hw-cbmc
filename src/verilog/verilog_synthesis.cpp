@@ -124,13 +124,6 @@ exprt verilog_synthesist::synth_expr_rec(exprt expr, symbol_statet symbol_state)
       UNREACHABLE;
     }
   }
-  else if(expr.id() == ID_typecast)
-  {
-    // We do some simplification
-    if(to_typecast_expr(expr).op().type().id() == ID_integer)
-      expr = simplify_expr(expr, ns);
-    return expr;
-  }
   else
     return expr; // leave as is
 
@@ -4008,7 +4001,7 @@ void verilog_synthesist::synth_assignments(transt &trans)
   {
     symbolt &symbol=symbol_table_lookup(it);
 
-    if(symbol.is_lvalue && !symbol.is_macro && symbol.type.id() != ID_integer)
+    if(symbol.is_lvalue && !symbol.is_macro)
     {
       assignmentt &assignment=assignments[symbol.name];
 
