@@ -67,6 +67,16 @@ static verilog_rtlt rtl_of(const std::string &source)
     symbol_table, "Verilog::main", verilog_standardt::SV2023, message_handler);
 }
 
+/// construct the textual RTL representation for module 'main'
+static std::string rtl_text_of(const std::string &source)
+{
+  auto symbol_table = compile(source);
+  console_message_handlert message_handler;
+  auto rtl = verilog_rtl(
+    symbol_table, "Verilog::main", verilog_standardt::SV2023, message_handler);
+  return rtl.as_string(namespacet{symbol_table});
+}
+
 SCENARIO("RTL slices")
 {
   GIVEN("two disjoint slices")
@@ -113,6 +123,45 @@ SCENARIO("RTL construction for a register")
       REQUIRE(
         to_symbol_expr(definition.value).get_identifier() ==
         "Verilog::$root.main.d");
+    }
+  }
+}
+
+SCENARIO("RTL as_string")
+{
+  GIVEN("some Verilog")
+  {
+    auto rtl_text = rtl_text_of(
+      "module main(input clk);\n"
+      "  int x;\n"
+      "  always @(posedge clk) x++;\n"
+      "endmodule\n");
+
+    THEN("RTL text is as expected")
+    {
+      REQUIRE(
+        rtl_text ==
+        "$root.main.x[31:0] register, next-state value: main.x + 1\n");
+    }
+  }
+}
+
+SCENARIO("RTL as_string with initial state")
+{
+  GIVEN("some Verilog with initial state value")
+  {
+    auto rtl_text = rtl_text_of(
+      "module main(input clk);\n"
+      "  int x = 123;\n"
+      "  always @(posedge clk) x++;\n"
+      "endmodule\n");
+
+    THEN("RTL text is as expected")
+    {
+      REQUIRE(
+        rtl_text ==
+        "$root.main.x[31:0] register, next-state value: main.x + 1\n"
+        "$root.main.x[31:0] initial value: 123\n");
     }
   }
 }
@@ -185,6 +234,27 @@ SCENARIO("RTL construction with part selects")
       REQUIRE(q_it != rtl.identifier_map.end());
       REQUIRE(q_it->second.size() == 1);
       REQUIRE(q_it->second.begin()->first == verilog_rtl_slicet{2, 2});
+    }
+  }
+}
+
+SCENARIO("RTL as_string for Verilog with part select")
+{
+  GIVEN("some Verilog with part select")
+  {
+    auto rtl_text = rtl_text_of(
+      "module main(input clk);\n"
+      "  int x;\n"
+      "  always @(posedge clk) x[14:0] = 1;\n"
+      "  always @(posedge clk) x[31:15] = 2;\n"
+      "endmodule\n");
+
+    THEN("RTL text is as expected")
+    {
+      REQUIRE(
+        rtl_text ==
+        "$root.main.x[14:0] register, next-state value: 1\n"
+        "$root.main.x[31:15] register, next-state value: 2\n");
     }
   }
 }

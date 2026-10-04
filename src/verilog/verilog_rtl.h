@@ -211,6 +211,7 @@ public:
   std::vector<verilog_rtl_propertyt> properties;
 
   void output(const namespacet &, std::ostream &) const;
+  std::string as_string(const namespacet &) const;
 };
 
 /// Construct the RTL representation of the given type-checked
