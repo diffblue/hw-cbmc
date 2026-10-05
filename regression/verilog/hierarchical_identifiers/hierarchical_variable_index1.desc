@@ -1,0 +1,26 @@
+KNOWNBUG
+hierarchical_variable_index1.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.s\.mem\[\$past\(main\.i\)\] == 171\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A procedural assignment whose lvalue is a hierarchical identifier selecting
+an array element with a non-constant index (s.mem[i] <= ...) is rejected with
+"unsupported lvalue for RTL construction: `hierarchical_identifier'" and a
+CONVERSION ERROR (EXIT=2).
+
+Writing to another module's variable through a hierarchical identifier is
+permitted per IEEE 1800-2017, 23.6 and 23.7.  The same assignment with a
+constant index (s.mem[2] <= ...) is accepted, and the equivalent non-
+hierarchical write (regression/verilog/assignments/
+assignment-to-non-constant-index1) is accepted too.
+
+Root cause: in src/verilog/verilog_rtl.cpp, verilog_rtl_buildert::lower_lhs
+has no case for ID_hierarchical_identifier, whereas decompose_lhs does (it
+calls resolve_hierarchical_identifier).  When the index is constant,
+decompose_lhs handles the lvalue; with a non-constant index decompose_lhs
+returns no value and the code falls back to lower_lhs, which hits its final
+else branch and throws "unsupported lvalue for RTL construction".
