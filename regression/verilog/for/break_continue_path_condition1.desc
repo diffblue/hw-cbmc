@@ -1,0 +1,21 @@
+CORE
+break_continue_path_condition1.sv
+--bound 2
+^\[main\.0\.2\.1\.p0\] always !main\.c: PROVED up to bound 2$
+^\[main\.0\.p1\] always main\.x == \(main\.c \? 0 : 3\): PROVED up to bound 2$
+^\[main\.0\.4\.3\.p2\] always !main\.c: PROVED up to bound 2$
+^\[main\.0\.4\.3\.p3\] always !main\.c && !main\.d: PROVED up to bound 2$
+^\[main\.0\.p4\] always main\.y == \(main\.c \|\| main\.d \? 0 : 3\): PROVED up to bound 2$
+^\[main\.0\.p5\] always main\.w == 2: PROVED up to bound 2$
+^\[main\.0\.p6\] always main\.z == \(main\.c \? 0 : 6\): PROVED up to bound 2$
+^\[main\.0\.10\.9\.p7\] always main\.0\.10\.i == 0: PROVED up to bound 2$
+^\[main\.0\.p8\] always 1: PROVED up to bound 2$
+^\[main\.0\.p9\] always main\.c: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The path condition of statements that follow a conditional break or
+continue includes the negation of the condition (1800-2017 12.8), and
+the code after a loop that is left by means of break is reachable.
