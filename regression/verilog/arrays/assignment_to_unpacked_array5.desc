@@ -1,0 +1,22 @@
+CORE
+assignment_to_unpacked_array5.sv
+--bound 0
+^\[main\.p0\] always main\.A\[10\] == 1: PROVED up to bound 0$
+^\[main\.p1\] always main\.A\[9\] == 101: PROVED up to bound 0$
+^\[main\.p2\] always main\.A\[1\] == 32'hs385: PROVED up to bound 0$
+^\[main\.p3\] always main\.C\[10\] == 1: PROVED up to bound 0$
+^\[main\.p4\] always main\.C\[9\] == 8'\(101\): PROVED up to bound 0$
+^\[main\.p5\] always main\.C\[1\] == 8'\(32'hs385\): PROVED up to bound 0$
+^\[main\.p6\] always main\.D\[1\] == 1: PROVED up to bound 0$
+^\[main\.p7\] always main\.D\[10\] == 32'hs385: PROVED up to bound 0$
+^\[main\.p8\] always main\.E\[0\]\[0\] == 0: PROVED up to bound 0$
+^\[main\.p9\] always main\.E\[1\]\[2\] == 12: PROVED up to bound 0$
+^\[main\.p10\] always main\.E\[1\]\[0\] == 10: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+1800-2017 7.6: the elements of the source are assigned to the elements
+of the target in left-to-right order, and the element values are
+converted to the element type of the target.

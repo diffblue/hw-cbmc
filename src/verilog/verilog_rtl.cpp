@@ -150,6 +150,7 @@ protected:
     const exprt &value,
     const irep_idt &instance_identifier,
     const source_locationt &);
+  static exprt port_connection_conversion(exprt src, const typet &dest_type);
   void build_interface_port_connection(
     const irep_idt &port_identifier,
     const irep_idt &bound_instance_identifier);
@@ -3348,18 +3349,6 @@ void verilog_rtl_buildert::build_port_connection(
 
   symbol_exprt port_symbol{port.identifier(), port.type()};
 
-  // Convert the rhs to the type of the lhs, as an assignment would.
-  // Note that the types need not match. Narrowing to a one-bit net must
-  // take the least-significant bit, as in assignment_conversion; a plain
-  // typecast to bool would instead compute a (!= 0) reduction.
-  auto narrowing_cast = [](exprt src, const typet &dest_type) -> exprt
-  {
-    if(dest_type.id() == ID_bool && src.type().id() != ID_bool)
-      return extractbit_exprt{std::move(src), from_integer(0, integer_typet{})};
-    else
-      return typecast_exprt::conditional_cast(src, dest_type);
-  };
-
   // Much like
   //   assign port = value for an input, and
   //   assign value = port for an output.
@@ -3370,18 +3359,87 @@ void verilog_rtl_buildert::build_port_connection(
   if(port.output())
   {
     lhs = value;
-    rhs = narrowing_cast(port_symbol, value.type());
+    rhs = port_connection_conversion(port_symbol, value.type());
   }
   else
   {
     lhs = port_symbol;
-    rhs = narrowing_cast(value, port_symbol.type());
+    rhs = port_connection_conversion(value, port_symbol.type());
   }
 
   statet state;
   record_forced(lhs, instance_identifier);
   rtl.constraints.push_back(equal_exprt{
     substitute(std::move(lhs), state), substitute(std::move(rhs), state)});
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::port_connection_conversion
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Converts the given expression to the given type, as an
+          assignment would. Note that the types need not match.
+
+\*******************************************************************/
+
+exprt verilog_rtl_buildert::port_connection_conversion(
+  exprt src,
+  const typet &dest_type)
+{
+  if(src.type() == dest_type)
+    return src;
+
+  if(
+    dest_type.id() == ID_array &&
+    dest_type.get(ID_C_verilog_type) == ID_verilog_unpacked_array)
+  {
+    // The type checker has established that the two unpacked arrays are
+    // assignment compatible (1800-2017 7.6): they have the same number of
+    // elements, and the element types can be converted. The elements are
+    // assigned in left-to-right order, i.e., the i-th element from the
+    // left of the source becomes the i-th element from the left of the
+    // destination. Both are stored starting from the left index.
+    auto &dest_array_type = to_verilog_array_type(dest_type);
+    auto &src_array_type = to_verilog_array_type(src.type());
+    auto size = src_array_type.size_int();
+    auto src_offset = src_array_type.offset();
+    DATA_INVARIANT(
+      size == dest_array_type.size_int(),
+      "unpacked arrays must have the same number of elements");
+
+    exprt::operandst elements;
+    elements.reserve(numeric_cast_v<std::size_t>(size));
+
+    for(mp_integer i = 0; i < size; ++i)
+    {
+      auto src_index = src_array_type.increasing() ? src_offset + i
+                                                   : src_offset + size - 1 - i;
+
+      exprt element = verilog_bit_select_exprt{
+        src,
+        from_integer(src_index, integer_typet{}),
+        src_array_type.element_type()};
+
+      // rec. call
+      elements.push_back(port_connection_conversion(
+        std::move(element), dest_array_type.element_type()));
+    }
+
+    return array_exprt{std::move(elements), dest_array_type};
+  }
+  else if(dest_type.id() == ID_bool && src.type().id() != ID_bool)
+  {
+    // Narrowing to a one-bit net must take the least-significant bit,
+    // as in assignment_conversion; a plain typecast to bool would
+    // instead compute a (!= 0) reduction.
+    return extractbit_exprt{std::move(src), from_integer(0, integer_typet{})};
+  }
+  else
+    return typecast_exprt{std::move(src), dest_type};
 }
 
 /*******************************************************************\
