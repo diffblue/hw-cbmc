@@ -1,0 +1,23 @@
+KNOWNBUG
+break_assertion_in_body1.sv
+--bound 2
+^\[main\.0\.2\.1\.p0\] always !main\.c: PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+An assertion that follows a conditional `break` inside a loop body is only
+reached when the break was not taken, so its path condition must include the
+negation of the break's condition (IEEE 1800-2017, 12.8). Here
+`if (c) break; p0: assert(!c);` means p0 is only reached when `!c`, so the
+assertion can never fail and must be PROVED.
+
+Observed: ebmc reports `[main.0.2.1.p0] always !main.c: REFUTED`.
+
+Root cause: in verilog_rtl_buildert (src/verilog/verilog_rtl.cpp) `break`
+pushes false_exprt onto the guard of the taken branch, but when the `if`
+condition is non-constant the two branches are combined with merge(), which
+only merges the value maps and discards the branch guards. The break's path
+condition (!c) is therefore lost for the remainder of the loop body, so p0 is
+checked without the `!c` guard and is spuriously REFUTED.

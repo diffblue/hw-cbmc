@@ -1,0 +1,24 @@
+KNOWNBUG
+break_assertion_after_loop1.sv
+--bound 2
+^\[main\.0\.p0\] always 0: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+An assertion placed after a for loop whose body contains a `break` must be
+checked normally; `break` only terminates the loop (IEEE 1800-2017, 12.8),
+it does not make the code following the loop unreachable. The loop runs
+every cycle and breaks at i==2, so `p0: assert(0)` after the loop is reached
+on every clock cycle and must be REFUTED.
+
+Observed: ebmc reports `[main.0.p0] always 0: PROVED up to bound 2`, i.e. the
+assertion is vacuously proved.
+
+Root cause: verilog_rtl_buildert::build_statement in
+src/verilog/verilog_rtl.cpp implements `break` by pushing false_exprt onto
+state.guard to kill the rest of the path. When the enclosing `if` has a
+constant condition, build_if executes the branch directly on `state`, so the
+dead (false) guard is never popped; it stays active after the loop and makes
+every later assertion in the always block vacuous.
