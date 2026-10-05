@@ -1,0 +1,18 @@
+KNOWNBUG
+repeat1.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.x == 3\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A repeat statement with an elaboration-time-constant count inside an always
+block (IEEE 1800-2017 12.7.2). The type checker accepts it
+(verilog_typecheckt::convert_repeat), but verilog_rtl_buildert::build_statement
+in src/verilog/verilog_rtl.cpp has no case for ID_repeat and aborts with
+"statement `repeat' is not supported by RTL construction" (CONVERSION ERROR).
+A constant-count repeat loop should be unrolled during RTL construction the
+same way build_for unrolls for loops; the former verilog_synthesis module did
+this in synth_repeat (removed in commit a445c7fd). The loop body runs exactly
+three times, so x must equal 3.

@@ -1,0 +1,18 @@
+KNOWNBUG
+while1.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.x == 3\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A while statement with an elaboration-time-constant loop condition inside an
+always block (IEEE 1800-2017 12.7.4). The type checker accepts it
+(verilog_typecheckt::convert_while), but verilog_rtl_buildert::build_statement
+in src/verilog/verilog_rtl.cpp has no case for ID_while and aborts with
+"statement `while' is not supported by RTL construction" (CONVERSION ERROR).
+A constant-bounded while loop should be unrolled during RTL construction the
+same way build_for unrolls for loops; the former verilog_synthesis module did
+this in synth_while (removed in commit a445c7fd). The loop body runs exactly
+three times, so x must equal 3.
