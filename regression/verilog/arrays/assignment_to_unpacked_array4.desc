@@ -1,0 +1,8 @@
+CORE
+assignment_to_unpacked_array4.sv
+
+^file .* line 18: failed to convert `unpacked array \[10\] of struct' to `unpacked array \[10\] of signed \[31:0\]'$
+^EXIT=2$
+^SIGNAL=0$
+--
+--

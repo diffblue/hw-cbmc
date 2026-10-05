@@ -1,0 +1,8 @@
+KNOWNBUG
+assignment_to_unpacked_array3.sv
+
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+This should type check.
