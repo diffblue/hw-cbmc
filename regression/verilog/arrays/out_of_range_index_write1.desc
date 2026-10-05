@@ -1,0 +1,20 @@
+KNOWNBUG
+out_of_range_index_write1.sv
+--bound 1
+^\[main\.p0\] always 1: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A write to an unpacked array element with a constant index outside the
+declared range is rejected with a hard error "array index out of range"
+/ CONVERSION ERROR (exit code 2), thrown in
+verilog_rtl_buildert::decompose_lhs (src/verilog/verilog_rtl.cpp, the
+ID_verilog_bit_select case; both the unpacked and packed array branches
+have this check).  Per IEEE 1800-2017 7.4.6, writing to an array with an
+invalid index shall perform no operation, so the assignment must be a
+silent no-op (at most a warning) and the property must be PROVED with
+EXIT=0.  For bit/part selects on vectors the same file already follows
+11.5.1 by clipping out-of-range slices in assign_to instead of erroring;
+array element writes should be handled the same way.
