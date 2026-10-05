@@ -1,0 +1,23 @@
+KNOWNBUG
+function_as_statement_return1.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.side == 3\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A function whose body contains `return <value>;` is called as a statement,
+discarding the return value (IEEE 1800-2017 13.4.1). The body's side effect
+(side = x) must still take effect, so `side` becomes 3 after the first clock
+edge. ebmc instead fails during RTL construction with
+"return with value requires a function".
+
+Root cause: verilog_rtl_buildert::build_function_call in
+src/verilog/verilog_rtl.cpp handles both tasks and functions called as a
+statement. It creates a tf_framet without setting tf_frame.return_value
+(unlike expand_function_call, which sets it to the function's return symbol).
+The ID_return case in build_statement then throws
+"return with value requires a function". A function that assigns its result
+via `f = ...` (rather than `return`) and is called as a statement works,
+confirming the missing return_value in the frame is the cause.
