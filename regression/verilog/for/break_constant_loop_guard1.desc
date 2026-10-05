@@ -1,0 +1,22 @@
+CORE
+break_constant_loop_guard1.sv
+--bound 2
+^\[main\.0\.p0\] always main\.r == 3: PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A for loop with a constant-true loop guard that is exited solely via a
+`break` must terminate during RTL construction once the break is taken
+(IEEE 1800-2017, 12.8). The loop body executes three times (i = 0,1,2) and
+breaks at i == 3, so `count` ends at 3 and `p0: assert(r == 3)` must be
+PROVED.
+
+Observed: ebmc never terminates (hangs) during RTL construction.
+
+Root cause: in verilog_rtl_buildert::build_for (src/verilog/verilog_rtl.cpp)
+`break` kills the path by pushing false_exprt onto state.guard, but build_for
+keeps unrolling as long as the (constant) loop guard is true and does not
+stop when the path is dead. With the loop guard constant `1`, build_for
+never terminates. Run test.pl with a timeout (-t 20) for this test.

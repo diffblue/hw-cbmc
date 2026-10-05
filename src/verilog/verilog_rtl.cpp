@@ -366,6 +366,23 @@ protected:
     const statet &else_state,
     statet &dest);
 
+  /// is the path condition of the given state unsatisfiable, i.e.,
+  /// has the path been terminated by break, continue or return?
+  static bool is_dead(const statet &);
+
+  /// The part of the path condition of the given state beyond the
+  /// first \p base_size conjuncts, as a single expression.
+  /// Yields 'false' if the path is dead.
+  static exprt relative_guard(const statet &, std::size_t base_size);
+
+  /// Sets the path condition of \p dest to the disjunction of the path
+  /// conditions of the given states. All given states must have path
+  /// conditions that extend \p base_guard.
+  void merge_guards(
+    const exprt::operandst &base_guard,
+    const std::vector<const statet *> &states,
+    statet &dest);
+
   /// the slice values recorded for the given identifier,
   /// or an empty map if none are recorded
   static const statet::slice_valuest &
@@ -1864,6 +1881,119 @@ void verilog_rtl_buildert::merge(
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::is_dead
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool verilog_rtl_buildert::is_dead(const statet &state)
+{
+  for(auto &conjunct : state.guard)
+    if(conjunct.is_false())
+      return true;
+
+  return false;
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::relative_guard
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_rtl_buildert::relative_guard(
+  const statet &state,
+  std::size_t base_size)
+{
+  PRECONDITION(state.guard.size() >= base_size);
+
+  if(is_dead(state))
+    return false_exprt{};
+
+  return conjunction(
+    exprt::operandst{state.guard.begin() + base_size, state.guard.end()});
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::merge_guards
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Computes the path condition at a point where the
+          given paths join, e.g., after an if statement or after
+          a loop. The paths share the path condition \p base_guard
+          at the point where they fork. The joined path condition is
+          \p base_guard conjoined with the disjunction of the
+          conditions the given paths have added since the fork.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::merge_guards(
+  const exprt::operandst &base_guard,
+  const std::vector<const statet *> &states,
+  statet &dest)
+{
+  // base_guard may alias dest.guard
+  exprt::operandst result = base_guard;
+  exprt::operandst disjuncts;
+  bool have_unconditional = false;
+
+  for(auto state : states)
+  {
+    auto relative = relative_guard(*state, base_guard.size());
+
+    if(relative.is_true())
+    {
+      // The paths that join are mutually exclusive, hence
+      // at most one of them can be unconditional.
+      DATA_INVARIANT(
+        !have_unconditional, "at most one joining path is unconditional");
+      have_unconditional = true;
+    }
+    else if(!relative.is_false()) // dead paths do not contribute
+      disjuncts.push_back(std::move(relative));
+  }
+
+  if(have_unconditional)
+  {
+    // one of the paths is unconditional
+  }
+  else if(disjuncts.empty())
+  {
+    // all paths are dead
+    result.push_back(false_exprt{});
+  }
+  else
+  {
+    // The simplifier removes complementary disjuncts, e.g.
+    // c || !c, which arise when neither branch of an if statement
+    // alters the path condition.
+    auto disjunction_simplified =
+      simplify_expr(disjunction(std::move(disjuncts)), ns);
+
+    if(!disjunction_simplified.is_true())
+      result.push_back(std::move(disjunction_simplified));
+  }
+
+  dest.guard = std::move(result);
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::build_if
 
   Inputs:
@@ -1882,8 +2012,9 @@ void verilog_rtl_buildert::build_if(
   auto cond = typecast_exprt::conditional_cast(
     substitute(if_statement.cond(), state), bool_typet{});
 
-  // Constant conditions do not branch; this keeps the path
-  // condition of break, continue and return statements alive.
+  // Constant conditions do not branch; the path condition
+  // of break, continue and return statements in the branch
+  // that is taken becomes the path condition of the if statement.
   auto cond_simplified = simplify_expr(fold_system_functions(cond), ns);
 
   if(cond_simplified.is_true())
@@ -1909,6 +2040,20 @@ void verilog_rtl_buildert::build_if(
     build_statement(if_statement.else_case(), else_state, frames);
 
   merge(cond, then_state, else_state, state);
+
+  // The path condition after the if statement is the disjunction of
+  // the path conditions of the two branches. These differ from the
+  // path condition before the if statement when a branch is
+  // terminated by break, continue or return (1800-2017 12.8), or
+  // contains a nested statement that is.
+  auto base_size = state.guard.size();
+
+  if(
+    then_state.guard.size() != base_size + 1 ||
+    else_state.guard.size() != base_size + 1)
+  {
+    merge_guards(state.guard, {&then_state, &else_state}, state);
+  }
 }
 
 /*******************************************************************\
@@ -2426,9 +2571,23 @@ void verilog_rtl_buildert::build_for(
   loop_framet loop_frame;
   framest body_frames{&loop_frame, frames.tf};
 
+  // The path condition on entry to the loop. The iterations of the
+  // loop may narrow the path condition, by means of break, continue
+  // and return statements (1800-2017 12.8).
+  const auto entry_guard = state.guard;
+
+  // the number of return statements seen before the loop
+  const std::size_t returns_before =
+    frames.tf == nullptr ? 0 : frames.tf->return_states.size();
+
   while(true)
   {
     loop_frame.continue_states.clear();
+
+    // The path is dead once the loop has been left by means of
+    // a break or return statement.
+    if(is_dead(state))
+      break;
 
     auto guard = simplify_expr(
       fold_system_functions(substitute(statement.condition(), state)), ns);
@@ -2447,10 +2606,21 @@ void verilog_rtl_buildert::build_for(
     build_statement(statement.body(), state, body_frames);
 
     // merge in edges from 'continue' statements, if any
-    for(auto &continue_state : loop_frame.continue_states)
+    if(!loop_frame.continue_states.empty())
     {
-      statet current(state);
-      merge(conjunction(continue_state.guard), continue_state, current, state);
+      std::vector<const statet *> joined_states{&state};
+
+      for(auto &continue_state : loop_frame.continue_states)
+      {
+        statet current(state);
+        merge(
+          conjunction(continue_state.guard), continue_state, current, state);
+        joined_states.push_back(&continue_state);
+      }
+
+      // The path condition after the body is the disjunction of the
+      // path conditions of the paths that reach the end of the body.
+      merge_guards(entry_guard, joined_states, state);
     }
 
     // execute the step statement
@@ -2466,6 +2636,25 @@ void verilog_rtl_buildert::build_for(
   {
     statet current(state);
     merge(conjunction(state_it->guard), *state_it, current, state);
+  }
+
+  // The path condition after the loop is the disjunction of the path
+  // conditions of the paths that leave the loop, i.e., the path on
+  // which the loop guard is false and the paths through the break
+  // statements. Unless the body contains a return statement, this is
+  // the path condition on entry to the loop.
+  if(frames.tf == nullptr || frames.tf->return_states.size() == returns_before)
+  {
+    state.guard = entry_guard;
+  }
+  else
+  {
+    std::vector<const statet *> exit_states{&state};
+
+    for(auto &break_state : break_states)
+      exit_states.push_back(&break_state);
+
+    merge_guards(entry_guard, exit_states, state);
   }
 }
 
@@ -2698,7 +2887,10 @@ void verilog_rtl_buildert::build_statement(
         << "break outside of loop";
     }
 
-    frames.loop->break_states.push_back(state);
+    // record the state for the merge after the loop,
+    // unless this statement is unreachable
+    if(!is_dead(state))
+      frames.loop->break_states.push_back(state);
 
     // the rest of the path is dead
     state.guard.push_back(false_exprt{});
@@ -2711,7 +2903,10 @@ void verilog_rtl_buildert::build_statement(
         << "continue outside of loop";
     }
 
-    frames.loop->continue_states.push_back(state);
+    // record the state for the merge at the end of the loop body,
+    // unless this statement is unreachable
+    if(!is_dead(state))
+      frames.loop->continue_states.push_back(state);
 
     // the rest of the path is dead
     state.guard.push_back(false_exprt{});
@@ -2741,7 +2936,10 @@ void verilog_rtl_buildert::build_statement(
         true);
     }
 
-    frames.tf->return_states.push_back(state);
+    // record the state for the merge at the end of the function or
+    // task, unless this statement is unreachable
+    if(!is_dead(state))
+      frames.tf->return_states.push_back(state);
 
     // the rest of the path is dead
     state.guard.push_back(false_exprt{});

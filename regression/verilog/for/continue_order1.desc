@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 continue_order1.sv
 --bound 2
 ^\[main\.p0\] always \(main\.c1 && main\.c2 \|-> \(##1 main\.x == 0\)\): PROVED up to bound 2$

@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 return_order1.sv
 --bound 2
 ^\[main\.p0\] always \(main\.c \|-> \(##1 main\.y == 1\)\): PROVED up to bound 2$
