@@ -1,0 +1,19 @@
+KNOWNBUG
+union_struct_member1.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.u\.w == 165\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Non-blocking assignment to a member (hi/lo) of a packed struct nested inside
+a packed union.  Per IEEE 1800-2017 7.2.1 the first struct member occupies
+the most-significant bits and union members overlay the same bits, so after
+u.h.hi <= 4'hA and u.h.lo <= 4'h5 the overlaid vector u.w must equal 8'hA5.
+EBMC refutes this (trace shows u.w == 8'h50): verilog_rtl_buildert::
+decompose_lhs (src/verilog/verilog_rtl.cpp) returns {} for the aggregate-
+typed member u.h, so assign_to falls back to lower_lhs, producing a
+"with"/member_designator expression on the packed union.  verilog_lowering.cpp
+has no ID_with case and never maps these to the 7.2.1 bit layout, so the
+solver uses CBMC's LSB-first struct/union flattening and hi/lo are swapped.
