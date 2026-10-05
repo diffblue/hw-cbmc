@@ -426,6 +426,16 @@ void verilog_typecheck_exprt::assignment_conversion(
     lhs_type.id() == ID_array &&
     lhs_type.get(ID_C_verilog_type) == ID_verilog_unpacked_array)
   {
+    // 1800-2017 7.6: a fixed-size unpacked array is assignment compatible
+    // with another such array if the number of elements is the same and
+    // the element types are compatible.  The elements are assigned
+    // left to right.
+    if(unpacked_array_assignment_compatible(lhs_type, rhs.type()))
+    {
+      rhs = unpacked_array_assignment_conversion(std::move(rhs), lhs_type);
+      return;
+    }
+
     // assignment of a non-matching type to unpacked array
     throw errort().with_location(rhs.source_location())
       << "failed to convert `" << to_string(original_rhs_type) << "' to `"
@@ -537,6 +547,151 @@ void verilog_typecheck_exprt::assignment_conversion(
     else
       rhs = typecast_exprt{rhs, lhs_type};
   }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::unpacked_array_assignment_compatible
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Implements the assignment compatibility of fixed-size
+          unpacked arrays, 1800-2017 7.6.
+
+\*******************************************************************/
+
+bool verilog_typecheck_exprt::unpacked_array_assignment_compatible(
+  const typet &lhs_type,
+  const typet &rhs_type)
+{
+  if(lhs_type == rhs_type)
+    return true;
+
+  auto is_unpacked_array = [](const typet &type)
+  {
+    return type.id() == ID_array &&
+           type.get(ID_C_verilog_type) == ID_verilog_unpacked_array;
+  };
+
+  if(is_unpacked_array(lhs_type) || is_unpacked_array(rhs_type))
+  {
+    // Both must be unpacked arrays.
+    if(!is_unpacked_array(lhs_type) || !is_unpacked_array(rhs_type))
+      return false;
+
+    auto &lhs_array_type = to_verilog_array_type(lhs_type);
+    auto &rhs_array_type = to_verilog_array_type(rhs_type);
+
+    // "If the target is a fixed-size array or a slice, the source array
+    // shall have the same number of elements as the target."
+    if(lhs_array_type.size_int() != rhs_array_type.size_int())
+      return false;
+
+    // The element types are compared recursively.
+    return unpacked_array_assignment_compatible(
+      lhs_array_type.element_type(), rhs_array_type.element_type());
+  }
+
+  // Unpacked structs and unions are only compatible with themselves.
+  if(
+    (lhs_type.id() == ID_struct || lhs_type.id() == ID_union) &&
+    !lhs_type.get_bool(ID_packed))
+  {
+    return false;
+  }
+
+  if(
+    (rhs_type.id() == ID_struct || rhs_type.id() == ID_union) &&
+    !rhs_type.get_bool(ID_packed))
+  {
+    return false;
+  }
+
+  // Enums only accept values of the same enum type, 1800-2017 6.19.3.
+  if(lhs_type.get(ID_C_verilog_type) == ID_verilog_enum)
+    return false;
+
+  // What remains are the integral and real types, which can be
+  // converted to each other.
+  auto is_integral_or_real = [](const typet &type)
+  {
+    if(type.id() == ID_struct || type.id() == ID_union)
+      return type.get_bool(ID_packed);
+    else if(type.id() == ID_array)
+      return type.get(ID_C_verilog_type) == ID_verilog_packed_array;
+    else
+    {
+      return type.id() == ID_bool || type.id() == ID_unsignedbv ||
+             type.id() == ID_signedbv || type.id() == ID_verilog_unsignedbv ||
+             type.id() == ID_verilog_signedbv ||
+             type.id() == ID_verilog_integer || type.id() == ID_integer ||
+             type.id() == ID_verilog_real ||
+             type.id() == ID_verilog_shortreal ||
+             type.id() == ID_verilog_realtime;
+    }
+  };
+
+  return is_integral_or_real(lhs_type) && is_integral_or_real(rhs_type);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::unpacked_array_assignment_conversion
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Converts the given expression, which has an unpacked array
+          type that is assignment compatible with the given lhs type,
+          into an expression of the lhs type.
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::unpacked_array_assignment_conversion(
+  exprt rhs,
+  const typet &lhs_type)
+{
+  PRECONDITION(unpacked_array_assignment_compatible(lhs_type, rhs.type()));
+
+  auto &lhs_array_type = to_verilog_array_type(lhs_type);
+  auto &rhs_array_type = to_verilog_array_type(rhs.type());
+  auto size = rhs_array_type.size_int();
+  auto rhs_offset = rhs_array_type.offset();
+  auto source_location = rhs.source_location(); // copy
+
+  // "Assignment shall be done by assigning each element of the source
+  // array to the corresponding element of the target array.
+  // Correspondence between elements is determined by the left-to-right
+  // order of the elements in each array."
+  // Unpacked arrays are stored starting from the left index of the
+  // declared range, so the i-th element from the left of the source
+  // becomes the i-th operand of the array expression.
+  exprt::operandst elements;
+  elements.reserve(numeric_cast_v<std::size_t>(size));
+
+  for(mp_integer i = 0; i < size; ++i)
+  {
+    auto rhs_index =
+      rhs_array_type.increasing() ? rhs_offset + i : rhs_offset + size - 1 - i;
+
+    exprt element = verilog_bit_select_exprt{
+      rhs,
+      from_integer(rhs_index, integer_typet{}),
+      rhs_array_type.element_type()};
+    element.add_source_location() = source_location;
+
+    // rec. call, to convert the element to the element type of the lhs
+    assignment_conversion(element, lhs_array_type.element_type());
+
+    elements.push_back(std::move(element));
+  }
+
+  auto result = array_exprt{std::move(elements), lhs_array_type};
+  result.add_source_location() = std::move(source_location);
+  return std::move(result);
 }
 
 /*******************************************************************\
