@@ -1,0 +1,25 @@
+KNOWNBUG
+return_order1.sv
+--bound 2
+^\[main\.p0\] always \(main\.c \|-> \(##1 main\.y == 1\)\): PROVED up to bound 2$
+^\[main\.p1\] always \(!main\.c \|-> \(##1 main\.y == 0\)\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A function with two `return` statements, an earlier conditional
+`return 4'd1` followed by an unconditional `return 4'd0`. Per IEEE
+1800-2017 section 13.4.1 `return` terminates the function immediately, so
+when the condition of the first `return` holds its value must be used and
+the later `return` must not be reached; f(1) must be 1.
+
+Observed: p0 is REFUTED because f(1) evaluates to 0.
+
+Root cause: verilog_rtl_buildert::expand_function_call and
+build_function_call in src/verilog/verilog_rtl.cpp merge the recorded
+`return_states` in forward program order, so a later `return` overrides an
+earlier one whose guard also holds. The analogous `break_states` loop in
+build_for correctly merges in reverse program order ("These come in
+program order, hence process in reverse order"); the `return_states` and
+`continue_states` loops do not.

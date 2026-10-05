@@ -1,0 +1,25 @@
+KNOWNBUG
+continue_order1.sv
+--bound 2
+^\[main\.p0\] always \(main\.c1 && main\.c2 \|-> \(##1 main\.x == 0\)\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A loop body with two conditional `continue` statements: `x = 0; if (c1)
+continue; x = 1; if (c2) continue; x = 2;`. Per IEEE 1800-2017 section
+12.8 `continue` jumps immediately to the end of the current iteration, so
+when c1 holds the first `continue` is taken, leaving x == 0, and the later
+`continue` on c2 is never reached. Hence c1 && c2 must give x == 0.
+
+Observed: p0 is REFUTED. With --show-rtl the register next-state value is
+c2 ? 1 : (c1 ? 0 : 2) instead of the correct c1 ? 0 : (c2 ? 1 : 2), so
+c1 && c2 yields x == 1.
+
+Root cause: verilog_rtl_buildert::build_for in src/verilog/verilog_rtl.cpp
+merges the recorded `continue_states` in forward program order, so a later
+`continue` overrides an earlier one whose guard also holds. The analogous
+`break_states` loop in the same function correctly merges in reverse
+program order ("These come in program order, hence process in reverse
+order").
