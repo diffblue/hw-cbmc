@@ -3935,6 +3935,25 @@ void verilog_rtlt::output(const namespacet &ns, std::ostream &out) const
 
 /*******************************************************************\
 
+Function: verilog_rtlt::as_string
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string verilog_rtlt::as_string(const namespacet &ns) const
+{
+  std::ostringstream buffer;
+  output(ns, buffer);
+  return buffer.str();
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl
 
   Inputs:
