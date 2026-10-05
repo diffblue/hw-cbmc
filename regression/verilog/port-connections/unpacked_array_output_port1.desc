@@ -1,0 +1,10 @@
+CORE
+unpacked_array_output_port1.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.x\[3\] == 100 && main\.x\[2\] == 200 && main\.x\[1\] == 32'hs12C\): PROVED up to bound 2$
+^\[main\.p1\] always \(##1 main\.y\[5\] == 100 && main\.y\[6\] == 8'\(200\) && main\.y\[7\] == 8'\(32'hs12C\)\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--

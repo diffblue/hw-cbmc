@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 array_of_structs2.sv
 --module main --bound 0
 ^\[main\.s\.p0\] main\.s\.data\[0\] == 171: PROVED up to bound 0$
