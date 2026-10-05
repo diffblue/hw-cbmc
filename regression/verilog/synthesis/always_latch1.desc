@@ -1,0 +1,28 @@
+KNOWNBUG
+always_latch1.sv
+--bound 2
+^\[main\.p0\] always \(main\.en \|-> main\.q == main\.d\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+always_latch (IEEE 1800-2017 9.2.2.3) denotes a level-sensitive latch: the
+latched variable follows its data input while the enable is active and holds
+its previous value otherwise. The design latches q = d while en is high, and
+the property observes q only while en is high, so q == d must hold and p0
+should be PROVED.
+
+Observed: EBMC rejects the construct with
+"always_latch is not supported by RTL construction" and reports a CONVERSION
+ERROR (exit code 2) instead of proving the property.
+
+Root cause: verilog_rtl_buildert::build_always in src/verilog/verilog_rtl.cpp
+has no case for ID_verilog_always_latch and throws unconditionally. This has
+never been supported (the earlier synthesis module removed in commit a445c7fd
+likewise rejected always_latch with "no synthesis support for always_latch"),
+so it is a long-standing missing feature rather than a regression; a maintainer
+may prefer to file it under FUTURE. Semantically always_latch could be built
+like always_comb (WIRE for variables assigned on all paths) but with
+unassigned paths retaining the previous value, i.e. a level-sensitive state
+element.
