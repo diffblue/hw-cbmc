@@ -1,0 +1,23 @@
+KNOWNBUG
+block_declaration_assignment1.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.y == 5\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A static variable declared inside a procedural (always) block with an
+initializer, e.g. `reg [3:0] tmp = 4'd5;`, loses its initial value. The
+property `##1 y == 5` is REFUTED although it must be PROVED: per
+IEEE 1800-2017 6.21 and 10.5 a static variable declaration assignment is
+performed once, before any initial/always procedure starts, just like a
+module-level variable with an initializer.
+
+Root cause: in src/verilog/verilog_rtl.cpp, verilog_rtl_buildert::build_statement,
+the ID_decl case only calls record_variable() for each declarator and never
+records declarator.value() into rtl.initial_values. Contrast
+build_module_item_decl, which writes the declarator value into
+rtl.initial_values for module-level variables. --show-rtl shows
+`main.y[3:0] register, next-state value: main.0.tmp` with no initial value
+for main.0.tmp.
