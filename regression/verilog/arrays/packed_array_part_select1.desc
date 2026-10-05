@@ -1,0 +1,25 @@
+KNOWNBUG
+packed_array_part_select1.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.a\[1\] == 171\): PROVED up to bound 2$
+^\[main\.p1\] always \(##1 main\.a\[0\] == 205\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A non-indexed part-select on a packed array selects a range of
+ELEMENTS, not bits (1800-2017 7.4.5/7.4.6, 11.5.1). For
+reg [1:0][7:0] a, the write a[1:0] <= 16'hABCD must set element a[1] to
+8'hAB and a[0] to 8'hCD.
+
+ebmc instead treats the packed array as a flat vector: the type checker
+(verilog_typecheck_exprt::convert_trinary_expr, the
+ID_verilog_non_indexed_part_select case in
+src/verilog/verilog_typecheck_expr.cpp) calls require_vector(src) and
+types a[1:0] as unsignedbv{msb-lsb+1} = 2 bits, interpreting the indices
+as bit indices. verilog_rtl_buildert::decompose_lhs
+(src/verilog/verilog_rtl.cpp) then writes only a 2-bit slice
+(--show-rtl shows "main.a[1:0] register, next-state value: 2'b01"), so
+both properties are wrongly REFUTED. Found while auditing
+verilog_rtl.cpp; the root cause is in the type checker.

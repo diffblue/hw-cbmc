@@ -1,0 +1,22 @@
+KNOWNBUG
+packed_array_part_select2.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.y == 16'hABCD\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Read side of the packed-array part-select bug. A non-indexed
+part-select on a packed array selects a range of ELEMENTS, not bits
+(1800-2017 7.4.5/7.4.6, 11.5.1). For reg [1:0][7:0] a = 16'hABCD, the
+read a[1:0] must yield the full 16-bit value 16'hABCD.
+
+ebmc instead treats the packed array as a flat vector: the type checker
+(verilog_typecheck_exprt::convert_trinary_expr, the
+ID_verilog_non_indexed_part_select case in
+src/verilog/verilog_typecheck_expr.cpp) calls require_vector(src) and
+types a[1:0] as a 2-bit vector, so only 2 bits are read into y and the
+property is wrongly REFUTED. The matching write-side case is
+packed_array_part_select1. Found while auditing
+src/verilog/verilog_rtl.cpp; the root cause is in the type checker.
