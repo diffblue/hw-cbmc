@@ -1,0 +1,24 @@
+KNOWNBUG
+compound-assignment-operand-width2.sv
+--bound 2
+^\[main\.p0\] always \(##1 main\.a == 0\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Compound assignment "a >>= b" with a wide shift amount (8-bit a, 16-bit b ==
+256). Per IEEE 1800-2017 11.4.1, "a >>= b" is "a = a >> (b)", and the right
+operand of a shift is self-determined (11.6.1/11.8.2), so the shift amount
+keeps its 16-bit width: 0xff >> 256 == 0, so a must become 0.
+
+EBMC wrongly REFUTES the property: it truncates b to the 8-bit type of a
+before the shift (256 % 256 == 0, i.e. a shift by 0), so a stays 0xff. The
+root cause spans two files: verilog_typecheckt::convert_assign in
+src/verilog/verilog_typecheck.cpp treats every verilog_blocking_assign_*
+compound form like a plain assignment and calls assignment_conversion(rhs,
+lhs.type()), truncating the (self-determined) shift amount to lhs's type;
+and verilog_rtl_buildert::build_compound_assign in
+src/verilog/verilog_rtl.cpp then builds the operation with the
+already-truncated operand (binary_exprt{lhs, op, rhs, rhs.type()}). Found
+while auditing src/verilog/verilog_rtl.cpp.
