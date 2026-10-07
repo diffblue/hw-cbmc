@@ -1309,11 +1309,18 @@ exprt verilog_rtl_buildert::expand_function_call(
   for(auto &body_statement : symbol.value.operands())
     build_statement(to_verilog_statement(body_statement), state, body_frames);
 
-  // merge in edges from 'return' statements, if any
-  for(auto &return_state : tf_frame.return_states)
+  // Merge in edges from 'return' statements, if any. These come
+  // in program order, hence process in reverse order so that an
+  // earlier 'return' whose guard holds takes priority over a later one.
   {
-    statet current(state);
-    merge(conjunction(return_state.guard), return_state, current, state);
+    auto &return_states = tf_frame.return_states;
+    for(auto state_it = return_states.rbegin();
+        state_it != return_states.rend();
+        ++state_it)
+    {
+      statet current(state);
+      merge(conjunction(state_it->guard), *state_it, current, state);
+    }
   }
 
   // restore the guard
@@ -2610,12 +2617,17 @@ void verilog_rtl_buildert::build_for(
     {
       std::vector<const statet *> joined_states{&state};
 
-      for(auto &continue_state : loop_frame.continue_states)
+      // These come in program order, hence process in reverse order so
+      // that an earlier 'continue' whose guard holds takes priority over
+      // a later one.
+      auto &continue_states = loop_frame.continue_states;
+      for(auto state_it = continue_states.rbegin();
+          state_it != continue_states.rend();
+          ++state_it)
       {
         statet current(state);
-        merge(
-          conjunction(continue_state.guard), continue_state, current, state);
-        joined_states.push_back(&continue_state);
+        merge(conjunction(state_it->guard), *state_it, current, state);
+        joined_states.push_back(&*state_it);
       }
 
       // The path condition after the body is the disjunction of the
@@ -2731,11 +2743,18 @@ void verilog_rtl_buildert::build_function_call(
   for(auto &body_statement : symbol.value.operands())
     build_statement(to_verilog_statement(body_statement), state, body_frames);
 
-  // merge in edges from 'return' statements, if any
-  for(auto &return_state : tf_frame.return_states)
+  // Merge in edges from 'return' statements, if any. These come
+  // in program order, hence process in reverse order so that an
+  // earlier 'return' whose guard holds takes priority over a later one.
   {
-    statet current(state);
-    merge(conjunction(return_state.guard), return_state, current, state);
+    auto &return_states = tf_frame.return_states;
+    for(auto state_it = return_states.rbegin();
+        state_it != return_states.rend();
+        ++state_it)
+    {
+      statet current(state);
+      merge(conjunction(state_it->guard), *state_it, current, state);
+    }
   }
 
   // restore the guard
