@@ -1,5 +1,5 @@
 CORE
-let_ports1.sv
+let_ports2.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
