@@ -263,6 +263,17 @@ public:
     return result;
   }
 
+  /// the normalized expressions of the properties that are neither
+  /// disabled nor in FAILURE state
+  exprt::operandst active_expressions() const
+  {
+    exprt::operandst result;
+    for(auto &p : properties)
+      if(!p.is_disabled() && !p.is_failure())
+        result.push_back(p.normalized_expr);
+    return result;
+  }
+
   /// Resets properties/assumptions in FAILURE state to
   /// ASSUMED/UNKNOWN respectively.
   void reset_failure()

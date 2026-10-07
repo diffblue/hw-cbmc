@@ -1,4 +1,5 @@
-SRC = counterexample_word_level.cpp \
+SRC = cone_of_influence.cpp \
+      counterexample_word_level.cpp \
       get_trans.cpp \
       lasso.cpp \
       obligations.cpp \

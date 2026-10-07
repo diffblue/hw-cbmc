@@ -1,0 +1,18 @@
+MODULE main
+
+VAR
+  a : boolean;
+  b : boolean;
+  y : boolean;
+
+ASSIGN
+  init(y) := FALSE;
+  next(y) := !y;
+
+-- a cycle of definitions in the initial state only;
+-- there is no initial state
+INIT a = !b
+INIT b = a
+
+-- holds vacuously, with and without --coi
+SPEC AG !y

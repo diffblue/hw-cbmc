@@ -90,11 +90,13 @@ property_checker_resultt word_level_bmc(
           throw "no properties";
 
       bool bmc_with_assumptions = cmdline.isset("bmc-with-assumptions");
+      bool cone_of_influence = cmdline.isset("coi");
 
       auto result = bmc(
         bound,
         convert_only,
         bmc_with_assumptions,
+        cone_of_influence,
         transition_system,
         properties,
         solver_factory,

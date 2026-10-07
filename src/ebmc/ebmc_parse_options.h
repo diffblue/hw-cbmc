@@ -51,6 +51,7 @@ public:
         "(random-traces)(trace-steps):(random-seed):(traces):"
         "(random-trace)(random-waveform)"
         "(bmc-with-assumptions)"
+        "(coi)"
         "(liveness-to-safety)(buechi)"
         "f:"
         "I:(incdir):D:(define):"

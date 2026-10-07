@@ -1,0 +1,13 @@
+CORE
+unrelated1.sv
+--bound 4 --coi --property main.p1 --numbered-trace
+^\[main\.p1\] always main\.c != 42: REFUTED$
+^Counterexample with 4 states:$
+^main\.a@1 = 42$
+^main\.b@2 = 42$
+^main\.c@3 = 42$
+^main\.big1@0 = \?$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring

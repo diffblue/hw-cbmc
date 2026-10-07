@@ -28,13 +28,19 @@ Author: Daniel Kroening, dkr@amazon.com
 
 // Basic 1-induction for given solver
 [[nodiscard]] property_checker_resultt one_induction_engine(
-  const cmdlinet &, // unused
+  const cmdlinet &cmdline,
   const transition_systemt &transition_system,
   const ebmc_propertiest &properties,
   const ebmc_solver_factoryt &solver,
   message_handlert &message_handler)
 {
-  return k_induction(1, transition_system, properties, solver, message_handler);
+  return k_induction(
+    1,
+    cmdline.isset("coi"),
+    transition_system,
+    properties,
+    solver,
+    message_handler);
 }
 
 // Transition property engine
@@ -61,6 +67,7 @@ Author: Daniel Kroening, dkr@amazon.com
     5,     // bound
     false, // convert_only
     cmdline.isset("bmc-with-assumptions"),
+    cmdline.isset("coi"),
     transition_system,
     properties,
     solver,

@@ -1,0 +1,19 @@
+MODULE main
+
+VAR
+  a : boolean;
+  b : boolean;
+  y : boolean;
+
+ASSIGN
+  init(y) := FALSE;
+  next(y) := !y;
+
+-- a cycle of definitions through a next-state symbol:
+-- next(a) = next(b) = !next(a); there is no transition
+TRANS next(a) = next(b)
+INVAR b = !a
+
+-- holds vacuously beyond the initial state,
+-- with and without --coi
+SPEC AG !y
