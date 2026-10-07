@@ -1,0 +1,10 @@
+CORE
+parameter_port1.sv
+--bound 1
+^\[main\.c\.p1\] always main\.c\.bus\.data == 32'hCAFEBABE: PROVED up to bound 1
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Parameterized interface passed through a module port
+(IEEE 1800-2017 25.8).
