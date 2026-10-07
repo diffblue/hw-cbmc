@@ -941,6 +941,16 @@ transt verilog_transition_relationt::convert()
   // module instances recursively
   auto rtl = verilog_rtl(symbol_table, module, standard, message_handler);
 
+  // The auxiliary wires introduced by RTL construction
+  for(auto &aux_symbol : rtl.auxiliary_symbols)
+  {
+    if(symbol_table.add(aux_symbol))
+    {
+      throw errort().with_location(aux_symbol.location)
+        << "failed to add auxiliary wire `" << aux_symbol.name << "'";
+    }
+  }
+
   // Variables that are forced to a value, e.g. by a port
   // connection, become wires.
   for(auto &identifier : rtl.forced)
