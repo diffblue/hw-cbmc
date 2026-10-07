@@ -1,4 +1,4 @@
-KNOWNBUG broken-smt-backend
+CORE
 x_literal_widening1.sv
 --bound 2
 ^\[main\.p0\] always main\.in == 0 \|\| main\.r == main\.r: PROVED up to bound 2$
@@ -8,18 +8,18 @@ x_literal_widening1.sv
 ^warning: ignoring
 ^Invariant check failed
 --
-Assigning a sized x literal (1'bx) to a wider variable aborts ebmc with
-an invariant violation in the flattening back-end:
+Assigning a sized x literal (1'bx) to a wider variable used to abort ebmc
+with an invariant violation in the flattening back-end:
 
   File: flattening/boolbv_typecast.cpp:432 function: type_conversion
   Condition: src_width >= dest_width
   Reason: cannot extend bv-typed bitvector
 
-The x literal has type bv[1], and the typecast to unsignedbv[32] that
-the front-end emits for the assignment is a widening of a bv-typed
-operand, which boolbvt::type_conversion refuses. The widening should be
-done by the Verilog lowering (padding with x, 1800-2017 11.8.3) rather
-than being left to the solver. An unsized 'bx does not trigger the
-problem. The SMT2 back-end (--z3) handles the widening, so the test
-is excluded from the SMT runs. Found in picorv32.v (decoded_imm <=
-1'bx in the default branch of the immediate decoder).
+The x literal has type verilog_unsignedbv[1], and the assignment emits a
+widening typecast to unsignedbv[32]. During Verilog lowering, the
+four-valued-to-two-valued conversion extracted the aval as a plain bv,
+so widening it to the destination width was left to the solver, which
+refuses to extend a bv-typed bitvector. The lowering now reinterprets
+the aval as the source's underlying (un)signed type, so the widening is
+a proper zero/sign extension (1800-2017 11.8.3). Found in picorv32.v
+(decoded_imm <= 1'bx in the default branch of the immediate decoder).

@@ -655,8 +655,14 @@ exprt aval_bval(const typecast_exprt &expr)
   }
   else if(dest_type.id() == ID_unsignedbv || dest_type.id() == ID_signedbv)
   {
-    // four-valued to two-valued
-    return typecast_exprt{aval(expr.op()), dest_type};
+    // Four-valued to two-valued.
+    // We use aval_underlying (not aval) so that the operand carries the
+    // signedness of the source type. This ensures that a subsequent
+    // widening is a proper zero/sign extension (1800-2017 11.8.3) rather
+    // than an extension of a plain bv, which the flattening back-end
+    // refuses ("cannot extend bv-typed bitvector").
+    return typecast_exprt::conditional_cast(
+      aval_underlying(expr.op()), dest_type);
   }
   else
     PRECONDITION(false);
