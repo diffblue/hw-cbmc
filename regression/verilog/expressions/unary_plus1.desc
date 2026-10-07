@@ -1,9 +1,11 @@
-KNOWNBUG
+CORE
 unary_plus1.sv
 
+^\[main\.assert\.1\] .*: PROVED
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-The result is wrong.
+Unary plus on a four-valued operand follows the arithmetic x-rule:
+if any operand bit is x or z, the result is x (1800-2017 11.4.3).
