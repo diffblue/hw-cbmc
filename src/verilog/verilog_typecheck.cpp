@@ -2142,14 +2142,7 @@ void verilog_typecheckt::typecheck_decl(const verilog_declt &decl)
 {
   auto decl_class = decl.get_class();
 
-  if(decl_class == ID_typedef)
-  {
-    collect_symbols(decl);
-
-    for(auto identifier : symbols_added)
-      elaborate_symbol_rec(identifier);
-  }
-  else if(decl_class == ID_function || decl_class == ID_task)
+  if(decl_class == ID_function || decl_class == ID_task)
   {
     auto &tf_decl = to_verilog_function_or_task_decl(decl);
     collect_symbols(tf_decl);
@@ -2159,7 +2152,15 @@ void verilog_typecheckt::typecheck_decl(const verilog_declt &decl)
     convert_function_or_task(tf_decl_copy);
   }
   else
-    PRECONDITION(false);
+  {
+    // Typedefs, nets, and variables (including compilation-unit scoped
+    // ones). collect_symbols creates the symbols; elaborate_symbol_rec
+    // elaborates any types/values that are still pending.
+    collect_symbols(decl);
+
+    for(auto identifier : symbols_added)
+      elaborate_symbol_rec(identifier);
+  }
 }
 
 /*******************************************************************\
