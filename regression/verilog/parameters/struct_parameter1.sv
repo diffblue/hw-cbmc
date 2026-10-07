@@ -5,4 +5,6 @@ module main;
 
   parameter Q = P.x;
 
+  initial assert(Q == 123);
+
 endmodule
