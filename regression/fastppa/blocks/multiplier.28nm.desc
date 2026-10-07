@@ -1,0 +1,7 @@
+CORE
+multiplier.sv
+--top multiplier --process 28nm
+^  Register bits:       32$
+^  Total:               695\.4 um2$
+^EXIT=0$
+^SIGNAL=0$

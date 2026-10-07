@@ -1,0 +1,7 @@
+CORE
+adder.sv
+--top adder --process 28nm
+^  Register bits:       32$
+^  Total:               131\.3 um2$
+^EXIT=0$
+^SIGNAL=0$

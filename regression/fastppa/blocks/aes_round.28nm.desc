@@ -1,0 +1,7 @@
+CORE
+aes_round.sv
+--top aes_round --process 28nm
+^  Register bits:       128$
+^  Total:               891\.6 um2$
+^EXIT=0$
+^SIGNAL=0$
