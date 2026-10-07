@@ -69,6 +69,21 @@ static bdd_transition_relationt make_input_driven_system(mini_bdd_mgrt &mgr)
   return tr;
 }
 
+/// Build a system with one Boolean state good.
+/// Transition: if good is true, the system may stay in good forever or move
+/// to !good. Once !good is reached there are no further successors.
+static bdd_transition_relationt make_good_or_deadend_system(mini_bdd_mgrt &mgr)
+{
+  auto good = mgr.Var("good");
+  auto good_next = mgr.Var("good'");
+
+  bdd_transition_relationt tr;
+  tr.variables.push_back({good, good_next});
+  tr.transition_conjuncts.push_back(good);
+
+  return tr;
+}
+
 SCENARIO("BDD model checker EX on toggle system")
 {
   mini_bdd_mgrt mgr;
@@ -194,6 +209,27 @@ SCENARIO("BDD model checker AG on toggle system")
     THEN("AG(true) is true")
     {
       REQUIRE(mc.AG(mgr.True()).is_true());
+    }
+  }
+}
+
+SCENARIO("BDD model checker AG ignores finite dead-end branches")
+{
+  mini_bdd_mgrt mgr;
+  auto tr = make_good_or_deadend_system(mgr);
+  auto good = tr.variables[0].current;
+  bdd_model_checkert mc(tr);
+
+  GIVEN("A live state that can also branch into a finite bad deadend")
+  {
+    THEN("AG(good) holds because all infinite paths stay in good")
+    {
+      REQUIRE(mc.AG(good).is_true());
+    }
+
+    THEN("AF(AG(good)) also holds")
+    {
+      REQUIRE(mc.AF(mc.AG(good)).is_true());
     }
   }
 }
