@@ -1,0 +1,21 @@
+KNOWNBUG
+array_element_part_select_lhs1.sv
+--bound 2
+^\[main\.p0\] always \(.*\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+^unsupported lvalue
+--
+A part-select of an unpacked array element as the target of a
+nonblocking assignment, e.g. mem[addr][7:0] <= wdata[7:0] (1800-2017
+7.4.6, 11.5.1), is rejected by the RTL builder:
+
+  unsupported lvalue for RTL construction: `verilog_non_indexed_part_select'
+  CONVERSION ERROR
+
+verilog_rtl_buildert::decompose_lhs (src/verilog/verilog_rtl.cpp) does
+not handle a part-select whose operand is an index expression into an
+array. This is the usual byte-enable memory write idiom, found in
+picosoc_mem (picorv32/picosoc/picosoc.v).
