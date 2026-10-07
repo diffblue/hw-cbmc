@@ -1,0 +1,25 @@
+KNOWNBUG broken-smt-backend
+x_literal_widening1.sv
+--bound 2
+^\[main\.p0\] always main\.in == 0 \|\| main\.r == main\.r: PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+^Invariant check failed
+--
+Assigning a sized x literal (1'bx) to a wider variable aborts ebmc with
+an invariant violation in the flattening back-end:
+
+  File: flattening/boolbv_typecast.cpp:432 function: type_conversion
+  Condition: src_width >= dest_width
+  Reason: cannot extend bv-typed bitvector
+
+The x literal has type bv[1], and the typecast to unsignedbv[32] that
+the front-end emits for the assignment is a widening of a bv-typed
+operand, which boolbvt::type_conversion refuses. The widening should be
+done by the Verilog lowering (padding with x, 1800-2017 11.8.3) rather
+than being left to the solver. An unsized 'bx does not trigger the
+problem. The SMT2 back-end (--z3) handles the widening, so the test
+is excluded from the SMT runs. Found in picorv32.v (decoded_imm <=
+1'bx in the default branch of the immediate decoder).
