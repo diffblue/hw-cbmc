@@ -141,6 +141,16 @@ void verilog_typecheckt::collect_symbols(
   // Is this a type or a value parameter?
   if(type.id() == ID_type)
   {
+    // A type parameter requires a type as its value. The value may have
+    // been overridden by an ordered/named parameter assignment at the
+    // instantiation (e.g. "sub #(123)"), in which case it is not a type.
+    if(declarator.value().id() != ID_type)
+    {
+      throw errort{}.with_location(declarator.source_location())
+        << "parameter port " << base_name
+        << " is a type parameter, but a value was given";
+    }
+
     // much like a typedef
     auto symbol_type =
       to_be_elaborated_typet{to_type_expr(declarator.value()).type()};
