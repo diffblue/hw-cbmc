@@ -237,6 +237,7 @@ property_checker_resultt completeness_threshold(
     numeric_cast_v<std::size_t>(bound), // bound
     false,                              // convert_only
     cmdline.isset("bmc-with-assumptions"),
+    cmdline.isset("coi"),
     transition_system,
     properties,
     solver_factory,

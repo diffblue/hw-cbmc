@@ -1,0 +1,9 @@
+CORE
+k_induction1.sv
+--k-induction --bound 1 --coi --verbosity 9
+^Cone of influence: 1 of 2 state variables, 2 of 4 constraints \(invar 0/0, init 1/2, trans 1/2\)$
+^\[main\.p0\] always main\.x\[0\] == 1 \|\| main\.x == 0: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

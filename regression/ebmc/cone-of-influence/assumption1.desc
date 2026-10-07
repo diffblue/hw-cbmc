@@ -1,0 +1,9 @@
+CORE
+assumption1.sv
+--bound 5 --coi --verbosity 9
+^Cone of influence: 4 of 4 state variables
+^\[main\.p0\] always main\.c != 4'b0101: PROVED up to bound 5$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

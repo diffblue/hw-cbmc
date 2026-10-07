@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "bmc.h"
 
 #include <solvers/prop/literal_expr.h>
+#include <trans-word-level/cone_of_influence.h>
 #include <trans-word-level/lasso.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
@@ -226,6 +227,7 @@ property_checker_resultt bmc(
   std::size_t bound,
   bool convert_only,
   bool bmc_with_assumptions,
+  bool cone_of_influence,
   const transition_systemt &transition_system,
   const ebmc_propertiest &properties_in,
   const ebmc_solver_factoryt &solver_factory,
@@ -243,6 +245,19 @@ property_checker_resultt bmc(
     return property_checker_resultt{std::move(properties)};
   }
 
+  // Reduce the transition system to the cone of influence
+  // of the properties, if asked to do so.
+  const auto trans_expr = [&]() -> transt
+  {
+    if(!cone_of_influence)
+      return transition_system.trans_expr;
+
+    auto coi_result = ::cone_of_influence(
+      transition_system.trans_expr, properties.active_expressions());
+    coi_result.report(message);
+    return std::move(coi_result.trans);
+  }();
+
   message.status() << "Generating Decision Problem" << messaget::eom;
 
   // convert the transition system
@@ -255,12 +270,7 @@ property_checker_resultt bmc(
   word_level_unwind_optionst unwind_options;
   unwind_options.add_initial_state = true;
   ::unwind(
-    transition_system.trans_expr,
-    message_handler,
-    solver,
-    no_timeframes,
-    ns,
-    unwind_options);
+    trans_expr, message_handler, solver, no_timeframes, ns, unwind_options);
 
   // convert the properties
   message.status() << "Properties" << messaget::eom;

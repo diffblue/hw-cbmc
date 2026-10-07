@@ -1,0 +1,28 @@
+MODULE main
+
+VAR
+  x : 0..7;
+  y : 0..7;
+  z : boolean;
+  unrelated : boolean;
+  w : boolean;
+
+ASSIGN
+  init(x) := 0;
+  next(x) := case x = 7 : 0; TRUE : x + 1; esac;
+
+  init(unrelated) := FALSE;
+  next(unrelated) := !unrelated;
+
+  z := x = 3;
+  w := unrelated;
+
+-- these are general constraints, and must be kept.
+-- The definitions of x are kept, too, as x has a range type.
+INVAR y != 5
+TRANS next(y) != y
+
+-- the cone of these properties is x and z; unrelated and w are dropped
+SPEC AG (x = 0 | x != 0)
+SPEC AG !(z & x != 3)
+SPEC AG x != 4

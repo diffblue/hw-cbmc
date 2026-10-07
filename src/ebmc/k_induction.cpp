@@ -11,6 +11,7 @@ Author: Daniel Kroening, daniel.kroening@inf.ethz.ch
 #include <util/string2int.h>
 
 #include <temporal-logic/temporal_logic.h>
+#include <trans-word-level/cone_of_influence.h>
 #include <trans-word-level/instantiate_word_level.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
@@ -36,11 +37,13 @@ class k_inductiont
 public:
   k_inductiont(
     std::size_t _k,
+    bool _cone_of_influence,
     const transition_systemt &_transition_system,
     ebmc_propertiest &_properties,
     const ebmc_solver_factoryt &_solver_factory,
     message_handlert &_message_handler)
     : k(_k),
+      cone_of_influence(_cone_of_influence),
       transition_system(_transition_system),
       properties(_properties),
       solver_factory(_solver_factory),
@@ -61,6 +64,7 @@ public:
 
 protected:
   const std::size_t k;
+  const bool cone_of_influence;
   const transition_systemt &transition_system;
   ebmc_propertiest &properties;
   const ebmc_solver_factoryt &solver_factory;
@@ -97,6 +101,7 @@ Function: k_induction
 
 property_checker_resultt k_induction(
   std::size_t k,
+  bool cone_of_influence,
   const transition_systemt &transition_system,
   const ebmc_propertiest &properties,
   const ebmc_solver_factoryt &solver_factory,
@@ -122,7 +127,12 @@ property_checker_resultt k_induction(
   }
 
   k_inductiont(
-    k, transition_system, properties_copy, solver_factory, message_handler)();
+    k,
+    cone_of_influence,
+    transition_system,
+    properties_copy,
+    solver_factory,
+    message_handler)();
 
   return property_checker_resultt{properties_copy};
 }
@@ -169,7 +179,12 @@ property_checker_resultt k_induction(
   auto solver_factory = ebmc_solver_factory(cmdline);
 
   return k_induction(
-    k, transition_system, properties, solver_factory, message_handler);
+    k,
+    cmdline.isset("coi"),
+    transition_system,
+    properties,
+    solver_factory,
+    message_handler);
 }
 
 /*******************************************************************\
@@ -250,6 +265,7 @@ void k_inductiont::induction_base()
     k,
     false, // convert_only
     false, // bmc_with_assumptions
+    cone_of_influence,
     transition_system,
     properties,
     solver_factory,
@@ -298,11 +314,29 @@ void k_inductiont::induction_step()
     auto solver_wrapper = solver_factory(ns, message.get_message_handler());
     auto &solver = solver_wrapper.decision_procedure();
 
+    // Reduce the transition system to the cone of influence
+    // of this property and the assumptions, if asked to do so.
+    const auto trans_expr = [&]() -> transt
+    {
+      if(!cone_of_influence)
+        return transition_system.trans_expr;
+
+      exprt::operandst seeds{p_it.normalized_expr};
+      for(auto &property : properties.properties)
+        if(property.is_assumed())
+          seeds.push_back(property.normalized_expr);
+
+      auto coi_result =
+        ::cone_of_influence(transition_system.trans_expr, seeds);
+      coi_result.report(message);
+      return std::move(coi_result.trans);
+    }();
+
     // *no* initial state
     word_level_unwind_optionst unwind_options;
     unwind_options.add_initial_state = false;
     unwind(
-      transition_system.trans_expr,
+      trans_expr,
       message.get_message_handler(),
       solver,
       no_timeframes,

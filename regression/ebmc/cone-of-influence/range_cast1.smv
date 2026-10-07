@@ -1,0 +1,24 @@
+MODULE main
+
+VAR
+  x : 0..7;
+  y : 0..5;
+  z : 0..5;
+
+ASSIGN
+  init(x) := 0;
+  next(x) := case x = 7 : 0; TRUE : x + 1; esac;
+
+  -- a narrowing cast from 0..7 to 0..5: for x = 6 or 7, the
+  -- bit-level encoding of y is outside the domain of y
+  init(y) := 0;
+  next(y) := x;
+
+INVAR z = y
+
+-- The property only depends on x. The definitions of y and z must
+-- nevertheless not be dropped: the SMT backend constrains y to its
+-- domain, so the original model has no transition from x = 6, and
+-- x = 7 is unreachable there. The verdict must be the same with and
+-- without --coi, on either backend.
+SPEC AG x != 7

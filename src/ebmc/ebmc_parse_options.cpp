@@ -521,6 +521,7 @@ void ebmc_parse_optionst::help()
     " {y--property} {uid}            \t check the property with given ID\n"
     " {y--liveness-to-safety}        \t translate liveness properties to safety properties\n"
     " {y--buechi}                    \t translate LTL/SVA properties to Buechi acceptance\n"
+    " {y--coi}                       \t reduce the model to the cone of influence of the properties (word-level BMC and k-induction)\n"
     "\n"
     "Methods:\n"
     " {y--k-induction}               \t do k-induction with k=bound\n"

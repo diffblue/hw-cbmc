@@ -1,0 +1,10 @@
+CORE
+init_cycle1.smv
+--bound 3 --coi --verbosity 9
+^Cone of influence: 1 of 1 state variables, 4 of 4 constraints
+^Cone of influence: 2 definitions are cyclic and were kept$
+^\[spec1\] AG !y: PROVED up to bound 3$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

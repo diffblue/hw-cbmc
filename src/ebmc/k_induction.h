@@ -25,8 +25,11 @@ class ebmc_propertiest;
   message_handlert &);
 
 // Basic k-induction, for given k and given solver.
+// When cone_of_influence is set, the transition system is reduced
+// to the cone of influence of the properties.
 [[nodiscard]] property_checker_resultt k_induction(
   std::size_t k,
+  bool cone_of_influence,
   const transition_systemt &,
   const ebmc_propertiest &,
   const ebmc_solver_factoryt &,

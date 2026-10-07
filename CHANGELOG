@@ -3,6 +3,8 @@
 * cbmc dependency now at 6.11.0
 * .f command files
 * version and architecture banner
+* --coi reduces the model to the cone of influence of the
+  properties, for word-level BMC and k-induction
 * SystemVerilog: bind directive, with module and instance targets
 * Netlist: module outputs are now classified as outputs rather than
   wires (visible in --show-varmap); they remain shown in

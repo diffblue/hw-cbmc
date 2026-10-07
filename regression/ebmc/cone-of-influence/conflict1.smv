@@ -1,0 +1,16 @@
+MODULE main
+
+VAR
+  x : boolean;
+  y : boolean;
+
+ASSIGN
+  init(y) := FALSE;
+  next(y) := !y;
+
+-- two conflicting definitions of x; the model has no states
+INVAR x = TRUE
+INVAR x = FALSE
+
+-- holds vacuously, with and without --coi
+SPEC AG !y

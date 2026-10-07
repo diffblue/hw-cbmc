@@ -1,0 +1,14 @@
+CORE
+range_cast1.smv
+--bound 10 --coi --verbosity 9
+^Cone of influence: 2 of 2 state variables, 5 of 5 constraints
+^EXIT=(0|10)$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The definitions of y and z have range types, and are kept, so the
+formula is the same as without --coi. The verdict differs between the
+backends: the SAT backend does not enforce the range of y, and refutes
+the property; the SMT backend does, and proves it. Both match the
+verdict obtained without --coi.
