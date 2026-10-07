@@ -544,8 +544,8 @@ exprt verilog_typecheck_exprt::flatten_named_sequence_property(
   if(!sva_flatten_stack.insert(identifier).second)
   {
     throw errort().with_location(instance.symbol().source_location())
-      << "recursive property/sequence `"
-      << instance.symbol().get_identifier() << "' is not supported";
+      << "recursive property/sequence `" << instance.symbol().get_identifier()
+      << "' is not supported";
   }
 
   // Substitute port parameters by actual arguments
