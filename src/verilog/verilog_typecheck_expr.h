@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "sva_expr.h"
 #include "verilog_typecheck_base.h"
 
+#include <set>
 #include <stack>
 
 class function_call_exprt;
@@ -69,6 +70,10 @@ protected:
 
   // full identifier of function/task
   irep_idt function_or_task_name;
+
+  // Named properties/sequences currently being flattened, used to
+  // detect recursive instantiation (1800-2017 16.12.17).
+  std::set<irep_idt> sva_flatten_stack;
 
   // module_identifier.function.block.base_name
   // including the Verilog:: prefix.
