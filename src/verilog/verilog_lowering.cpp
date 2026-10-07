@@ -763,7 +763,7 @@ exprt verilog_lowering(exprt expr)
     else
       return expr;
   }
-  else if(expr.id() == ID_unary_minus)
+  else if(expr.id() == ID_unary_minus || expr.id() == ID_unary_plus)
   {
     if(
       expr.type().id() == ID_verilog_real ||
