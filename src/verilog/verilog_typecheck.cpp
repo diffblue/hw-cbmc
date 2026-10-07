@@ -1900,6 +1900,11 @@ void verilog_typecheckt::convert_module_item(
   {
     // nested interface, 1800-2017 25.3
   }
+  else if(module_item.id() == ID_verilog_checker)
+  {
+    // A checker declared inside a module (1800-2017 17.3) is
+    // typechecked separately as its own module source.
+  }
   else
   {
     throw errort().with_location(module_item.source_location())

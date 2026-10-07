@@ -419,6 +419,12 @@ void verilog_typecheckt::interface_module_item(
   {
     // nested interface, 1800-2017 25.3
   }
+  else if(module_item.id() == ID_verilog_checker)
+  {
+    // A checker declared inside a module (1800-2017 17.3) is
+    // registered as a separate module source during collect_symbols;
+    // it yields no symbol in the containing module's interface.
+  }
   else
   {
     DATA_INVARIANT(false, "unexpected module item: " + module_item.id_string());

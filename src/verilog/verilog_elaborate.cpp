@@ -1111,6 +1111,21 @@ void verilog_typecheckt::collect_symbols(
   else if(module_item.id() == ID_verilog_constraint)
   {
   }
+  else if(module_item.id() == ID_verilog_checker)
+  {
+    // A checker declared inside a module (1800-2017 17.3). We register
+    // it as a module-source symbol, just like a top-level checker, so
+    // that it can be instantiated by name.
+    auto base_name = to_verilog_module_source(module_item).base_name();
+    auto identifier = verilog_module_symbol(base_name);
+    auto source_identifier = id2string(identifier) + "$source";
+    if(
+      symbol_table.symbols.find(source_identifier) ==
+      symbol_table.symbols.end())
+    {
+      copy_module_source(module_item, identifier, symbol_table);
+    }
+  }
   else if(module_item.id() == ID_verilog_smv_using)
   {
   }
