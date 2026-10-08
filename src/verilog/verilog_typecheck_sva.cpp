@@ -536,6 +536,18 @@ exprt verilog_typecheck_exprt::flatten_named_sequence_property(
 {
   auto &cond = instance.declaration().cond();
 
+  // Detect recursive instantiation. IEEE 1800-2017 16.12.17 permits
+  // recursive properties only under restrictions that we do not
+  // support, so reject them with a diagnostic instead of recursing
+  // until the stack overflows.
+  auto identifier = instance.symbol().get_identifier();
+  if(!sva_flatten_stack.insert(identifier).second)
+  {
+    throw errort().with_location(instance.symbol().source_location())
+      << "recursive property/sequence `" << instance.symbol().get_identifier()
+      << "' is not supported";
+  }
+
   // Substitute port parameters by actual arguments
   auto &arguments = instance.arguments();
   const auto &ports = instance.declaration().ports();
@@ -621,6 +633,8 @@ exprt verilog_typecheck_exprt::flatten_named_sequence_property(
   }
   else
     PRECONDITION(false);
+
+  sva_flatten_stack.erase(identifier);
 
   return instance;
 }

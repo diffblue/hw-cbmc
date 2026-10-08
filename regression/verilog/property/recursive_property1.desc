@@ -1,9 +1,12 @@
-KNOWNBUG
+CORE
 recursive_property1.sv
 --bound 10
-^EXIT=0$
+^file .* line 8: recursive property/sequence `.*prop_always. is not supported$
+^EXIT=2$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-The parameter list fails to parse.
+Recursive properties (1800-2017 16.12.17) are not supported. We detect
+the recursion and emit a diagnostic instead of crashing with a stack
+overflow.
