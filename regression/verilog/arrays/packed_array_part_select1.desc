@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 packed_array_part_select1.sv
 --bound 2
 ^\[main\.p0\] always \(##1 main\.a\[1\] == 171\): PROVED up to bound 2$

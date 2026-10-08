@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 packed_array_part_select2.sv
 --bound 2
 ^\[main\.p0\] always \(##1 main\.y == 16'hABCD\): PROVED up to bound 2$

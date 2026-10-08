@@ -4261,6 +4261,43 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     exprt &src = part_select.src();
     convert_expr(src);
 
+    // A non-indexed part-select applied to a packed array selects a range
+    // of ELEMENTS, not bits (1800-2017 7.4.5/7.4.6, 11.5.1). The result is
+    // a packed array over the selected sub-range of elements.
+    if(
+      src.type().id() == ID_array &&
+      src.type().get(ID_C_verilog_type) == ID_verilog_packed_array)
+    {
+      auto &array_type = to_verilog_array_type(src.type());
+
+      // In non-indexed part-select expressions, both
+      // indices must be constants (1800-2017 11.5.1).
+      mp_integer msb = convert_integer_constant_expression(part_select.msb());
+      mp_integer lsb = convert_integer_constant_expression(part_select.lsb());
+
+      if(msb < lsb)
+        std::swap(msb, lsb); // now msb>=lsb
+
+      // store these back onto the expression
+      expr.op1() = from_integer(msb, integer_typet())
+                     .with_source_location(expr.op1().source_location());
+      expr.op2() = from_integer(lsb, integer_typet())
+                     .with_source_location(expr.op2().source_location());
+
+      // The result is a packed array of the selected elements. The
+      // declared indices lsb..msb are preserved, so the offset of the
+      // result is lsb and the direction matches the source.
+      auto result_size = msb - lsb + 1;
+      expr.type() = verilog_array_typet{
+        ID_verilog_packed_array,
+        array_type.element_type(),
+        result_size,
+        lsb,
+        array_type.increasing()};
+
+      return std::move(expr);
+    }
+
     require_vector(src);
 
     mp_integer src_width = get_width(src.type());

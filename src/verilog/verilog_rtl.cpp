@@ -750,6 +750,45 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
     auto offset = mp_integer{src.type().get_int(ID_C_offset)};
     auto lower = sub_opt->slice.lower;
 
+    // A non-indexed part-select on a packed array selects a range of
+    // ELEMENTS, not bits (1800-2017 7.4.5/7.4.6, 11.5.1). Map the selected
+    // element range to a contiguous bit slice, following the same layout as
+    // the read side (to_bitvector/from_bitvector in verilog_lowering.cpp)
+    // and the single-element case above.
+    if(
+      src.type().id() == ID_array &&
+      src.type().get(ID_C_verilog_type) == ID_verilog_packed_array)
+    {
+      auto &array_type = to_verilog_array_type(src.type());
+      auto element_width = get_width(array_type.element_type());
+      auto size = array_type.size_int();
+
+      if(from - offset < 0 || to - offset >= size)
+      {
+        throw errort().with_location(lhs.source_location())
+          << "array index out of range";
+      }
+
+      mp_integer slice_lower;
+
+      if(array_type.increasing())
+      {
+        // The element with the low declared index is the most significant;
+        // the lowest internal bit corresponds to the largest element index.
+        slice_lower = lower + (size - 1 - (to - offset)) * element_width;
+      }
+      else
+      {
+        slice_lower = lower + (from - offset) * element_width;
+      }
+
+      auto slice_width = (to - from + 1) * element_width;
+
+      return lhst{
+        sub_opt->symbol,
+        verilog_rtl_slicet{slice_lower, slice_lower + slice_width - 1}};
+    }
+
     // For a decreasing range the declared index i maps to the internal bit
     // i-offset; for an increasing range it maps to (width-1)-(i-offset)
     // (1800-2017 7.4.1, 11.5.1). This must match the read side (lower()).
@@ -829,9 +868,23 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
 
     // Aggregate-typed members are assigned via with-expressions,
     // since their values cannot be reinterpreted by a typecast.
+    // Packed aggregates, however, have a well-defined contiguous bit
+    // layout (1800-2017 7.2.1), so they can be decomposed into a bit
+    // slice and need not fall back to with-expressions.
+    auto is_packed_aggregate = [](const typet &type)
+    {
+      if(type.id() == ID_struct || type.id() == ID_union)
+        return type.get_bool(ID_packed);
+      else if(type.id() == ID_array)
+        return type.get(ID_C_verilog_type) == ID_verilog_packed_array;
+      else
+        return false;
+    };
+
     if(
-      lhs.type().id() == ID_array || lhs.type().id() == ID_struct ||
-      lhs.type().id() == ID_union)
+      (lhs.type().id() == ID_array || lhs.type().id() == ID_struct ||
+       lhs.type().id() == ID_union) &&
+      !is_packed_aggregate(lhs.type()))
     {
       return {};
     }

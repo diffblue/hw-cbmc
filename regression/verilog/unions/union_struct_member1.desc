@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 union_struct_member1.sv
 --bound 2
 ^\[main\.p0\] always \(##1 main\.u\.w == 165\): PROVED up to bound 2$
