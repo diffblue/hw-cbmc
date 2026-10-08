@@ -102,6 +102,9 @@ typet make_two_valued(typet src)
       irep_idt verilog_type = src.get(ID_C_verilog_type);
       if(verilog_type != irep_idt{})
         result.set(ID_C_verilog_type, verilog_type);
+      irep_idt verilog_vector_type = src.get(ID_C_verilog_vector_type);
+      if(verilog_vector_type != irep_idt{})
+        result.set(ID_C_verilog_vector_type, verilog_vector_type);
       return result;
     }
     else
@@ -128,6 +131,9 @@ typet make_two_valued(typet src)
       irep_idt verilog_type = src.get(ID_C_verilog_type);
       if(verilog_type != irep_idt{})
         result.set(ID_C_verilog_type, verilog_type);
+      irep_idt verilog_vector_type = src.get(ID_C_verilog_vector_type);
+      if(verilog_vector_type != irep_idt{})
+        result.set(ID_C_verilog_vector_type, verilog_vector_type);
       return result;
     }
     else

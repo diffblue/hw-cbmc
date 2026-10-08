@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 typename_reg1.sv
 
 ^\[.*\] \$typename\(main\.some_bit\) == "reg": PROVED .*$
@@ -10,4 +10,4 @@ typename_reg1.sv
 --
 ^warning: ignoring
 --
-The reg is not recognised.
+

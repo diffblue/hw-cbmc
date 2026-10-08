@@ -263,6 +263,10 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     auto result =
       verilog_unsignedbv_typet{1}.with_source_location(source_location);
     result.set(ID_C_verilog_type, ID_verilog_logic);
+    // Record the "reg" keyword so that $typename can reproduce it,
+    // per IEEE 1800-2017 20.6.1.
+    if(src.id() == ID_reg)
+      result.set(ID_C_verilog_vector_type, ID_reg);
     return result;
   }
   else if(src.id() == ID_signed)
