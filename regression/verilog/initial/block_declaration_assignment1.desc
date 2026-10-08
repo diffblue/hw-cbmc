@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 block_declaration_assignment1.sv
 --bound 2
 ^\[main\.p0\] always \(##1 main\.y == 5\): PROVED up to bound 2$

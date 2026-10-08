@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 out_of_range_index1.sv
 --bound 1
 ^\[main\.assume\.1\] always main\.idx == 5: ASSUMED$
