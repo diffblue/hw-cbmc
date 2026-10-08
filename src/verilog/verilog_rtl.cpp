@@ -159,15 +159,18 @@ protected:
     const typet &port_type,
     const exprt &value);
 
-  /// The pairs of identifiers that interface port connections equate:
-  /// a member of the interface instantiated under a port, and the
-  /// corresponding member of the bound interface instance.
+  /// The pairs of identifiers that a connection equates, and that denote
+  /// the same variable: a member of the interface instantiated under a
+  /// port and the corresponding member of the bound interface instance,
+  /// or a ref port and its actual (1800-2017 23.2.2.3). A write on either
+  /// side is visible on the other, so the side without a driver of its
+  /// own must follow the driven side rather than hold its value.
   std::vector<std::pair<irep_idt, irep_idt>> interface_port_connections;
 
-  /// Marks the members equated by interface port connections that have
-  /// no driver of their own, but are equated to a driven member, as
-  /// forced. This is done once the entire module hierarchy has been
-  /// built, since the driver may be in any module.
+  /// Marks the members equated by a connection that have no driver of
+  /// their own, but are equated to a driven member, as forced. This is
+  /// done once the entire module hierarchy has been built, since the
+  /// driver may be in any module.
   void force_interface_port_connections();
 
   /// per-loop state for break and continue statements
@@ -3546,6 +3549,21 @@ void verilog_rtl_buildert::build_port_connection(
   }
 
   symbol_exprt port_symbol{port.identifier(), port.type()};
+
+  // A ref port and its actual denote the same variable (1800-2017
+  // 23.2.2.3): a write on either side is visible on the other. The two
+  // are tied by an equality constraint (below), and the side that has no
+  // driver of its own must follow the driven side rather than hold its
+  // value. We record the pair so that force_interface_port_connections()
+  // can mark the undriven side as forced once all drivers are known.
+  // Without this, an actual that is written through the ref port keeps
+  // its hold-its-value transition, which contradicts the constraint and
+  // makes the whole transition system unsatisfiable.
+  if(port.ref() && value.id() == ID_symbol)
+  {
+    interface_port_connections.emplace_back(
+      port.identifier(), to_symbol_expr(value).get_identifier());
+  }
 
   // Much like
   //   assign port = value for an input, and
