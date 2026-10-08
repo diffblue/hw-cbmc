@@ -671,8 +671,12 @@ static obligationst property_obligations_rec(
 
       for(auto &match : matches)
       {
-        // drop pending matches when not allowed
-        if(match.is_pending() && !allow_pending_matches)
+        // A pending match represents a sequence that cannot complete
+        // within the bound.  It is inconclusive and provides no evidence
+        // that the sequence matches, hence it must not refute the negated
+        // sequence (IEEE 1800-2017 16.12.9).  Such matches are therefore
+        // always dropped here, irrespective of allow_pending_matches.
+        if(match.is_pending())
           continue;
 
         // The sequence must not match.
