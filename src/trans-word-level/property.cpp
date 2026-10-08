@@ -158,6 +158,44 @@ struct bmc_lassot
   mp_integer start, end;
 };
 
+/// The timeframes visited, in path order, starting at (and including)
+/// 'current'. This is used by operators whose semantics depend on the
+/// order in which states are visited, e.g. until and release.
+///
+/// Without a lasso, this is simply current, current+1, ...,
+/// no_timeframes-1.
+///
+/// With a lasso, the path loops back from state 'end' to state 'start'
+/// (which are equal). Starting at 'current' (which lies within the loop
+/// body [start, end)), the order is current, current+1, ..., end-1,
+/// start, start+1, ..., current-1. One lap suffices to visit every
+/// distinct state of the loop; further laps only repeat states.
+/// Crucially, this never visits a state that precedes 'current' in the
+/// path, which would evaluate the operands before the start of the
+/// evaluation attempt.
+static std::vector<mp_integer> path_order_timeframes(
+  const mp_integer &current,
+  const mp_integer &no_timeframes,
+  const std::optional<bmc_lassot> &lasso)
+{
+  std::vector<mp_integer> result;
+
+  if(lasso.has_value())
+  {
+    for(mp_integer j = current; j < lasso.value().end; ++j)
+      result.push_back(j);
+    for(mp_integer j = lasso.value().start; j < current; ++j)
+      result.push_back(j);
+  }
+  else
+  {
+    for(mp_integer j = current; j < no_timeframes; ++j)
+      result.push_back(j);
+  }
+
+  return result;
+}
+
 static obligationst property_obligations_rec(
   const exprt &property_expr,
   bool allow_pending_matches,
@@ -457,20 +495,11 @@ static obligationst property_obligations_rec(
     exprt::operandst q_disjuncts;
     obligationst obligations;
 
-    mp_integer start, end;
+    // Visit the timeframes in path order starting at 'current'; the
+    // operands must not be evaluated before the start of the attempt.
+    auto timeframes = path_order_timeframes(current, no_timeframes, lasso);
 
-    if(lasso.has_value())
-    {
-      start = std::min(current, lasso.value().start);
-      end = lasso.value().end;
-    }
-    else
-    {
-      start = current;
-      end = no_timeframes;
-    }
-
-    for(mp_integer j = start; j < end; ++j)
+    for(auto j : timeframes)
     {
       auto q_rec = property_obligations_rec(
         q, allow_pending_matches, j, no_timeframes, lasso);
@@ -492,24 +521,15 @@ static obligationst property_obligations_rec(
     auto &p = R_expr.lhs();
     auto &q = R_expr.rhs();
 
-    mp_integer start, end;
-
-    if(lasso.has_value())
-    {
-      start = std::min(current, lasso.value().start);
-      end = lasso.value().end;
-    }
-    else
-    {
-      start = current;
-      end = no_timeframes;
-    }
-
     // q has to be true until (including) p is true
     exprt::operandst p_disjuncts;
     obligationst obligations;
 
-    for(mp_integer j = start; j < end; ++j)
+    // Visit the timeframes in path order starting at 'current'; the
+    // operands must not be evaluated before the start of the attempt.
+    auto timeframes = path_order_timeframes(current, no_timeframes, lasso);
+
+    for(auto j : timeframes)
     {
       auto q_rec = property_obligations_rec(
         q, allow_pending_matches, j, no_timeframes, lasso);

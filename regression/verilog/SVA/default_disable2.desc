@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 default_disable2.sv
 --bound 2
 ^\[main\.0\.p0\] always main\.rst == 0: PROVED up to bound 2$
@@ -9,15 +9,12 @@ default_disable2.sv
 --
 A 'default disable iff (expr)' (1800-2017 16.15) applies to all concurrent
 assertions in the module, including procedural concurrent assertions inside
-an always block (16.14.6). Here 'default disable iff (rst);' should disable
-'p0: assert property (rst == 0);' whenever rst holds, so p0 must be PROVED.
-ebmc instead REFUTES it: the default disable condition is not applied to
-procedural concurrent assertions. Root cause in src/verilog/verilog_rtl.cpp:
-verilog_rtl_buildert::build_property wraps module-level assert/assume/cover
-conditions in sva_disable_iff_exprt using default_disable_iff, but
-verilog_rtl_buildert::build_check (which records assert/assume/cover
-statements inside always/initial blocks) never consults default_disable_iff.
-A fix must apply the default disable only to concurrent assertions
-(ID_verilog_assert_property/assume_property/cover_property), not to immediate
-assertions (ID_verilog_immediate_*), which are unaffected by default disable
-iff.
+an always block (16.14.6). Here 'default disable iff (rst);' disables
+'p0: assert property (rst == 0);' whenever rst holds, so p0 is PROVED.
+Fixed in src/verilog/verilog_rtl.cpp: verilog_rtl_buildert::build_check
+(which records assert/assume/cover statements inside always/initial blocks)
+now applies default_disable_iff, matching build_property for module-level
+assertions. The default disable is applied only to concurrent assertions
+(ID_verilog_assert_property/assume_property/restrict_property/cover_property/
+cover_sequence), not to immediate assertions, which are unaffected by
+default disable iff.
