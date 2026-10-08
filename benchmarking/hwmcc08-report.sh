@@ -152,7 +152,7 @@ echo "HWMCC08 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
   .cards { display: flex; gap: 1rem; margin: 1.5rem 0; flex-wrap: wrap; }
   .card { border: 1px solid #ccc; border-radius: 0.5rem; padding: 0.75rem 1.25rem;
           text-align: center; min-width: 6rem; cursor: pointer;
-          user-select: none; }
+          user-select: none; font: inherit; color: inherit; background: none; }
   .card.active { border-color: CanvasText;
                  background: color-mix(in srgb, Canvas 90%, CanvasText 10%); }
   .card .n { font-size: 1.75rem; font-weight: 600; display: block; }
@@ -183,10 +183,10 @@ echo "HWMCC08 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
   ebmc <code>$EBMC_VERSION</code>
 </p>
 <div class="cards">
-  <div class="card active" data-filter="all"><span class="n">$total</span>benchmarks</div>
-  <div class="card" data-filter="ok"><span class="n">$pass</span>passed</div>
-  <div class="card" data-filter="fail"><span class="n">$fail</span>failed</div>
-  <div class="card" data-filter="skip"><span class="n">$skip</span>skipped</div>
+  <button type="button" class="card active" data-filter="all" aria-pressed="true"><span class="n">$total</span>benchmarks</button>
+  <button type="button" class="card" data-filter="ok" aria-pressed="false"><span class="n">$pass</span>passed</button>
+  <button type="button" class="card" data-filter="fail" aria-pressed="false"><span class="n">$fail</span>failed</button>
+  <button type="button" class="card" data-filter="skip" aria-pressed="false"><span class="n">$skip</span>skipped</button>
 </div>
 <table>
 <thead><tr><th>Benchmark</th><th>Expected</th><th>Bound</th><th>Observed</th><th>Result</th></tr></thead>
@@ -205,7 +205,9 @@ document.querySelectorAll('td.result').forEach(function (cell) {
   });
 });
 
-// Clicking a summary card filters the table by status; "all" shows everything.
+// Clicking a summary card filters the table by status; "all" shows
+// everything.  The active filter is mirrored in the URL fragment (e.g.
+// #fail) so a link can open the report pre-filtered.
 (function () {
   var cards = document.querySelectorAll('.card[data-filter]');
   function applyFilter(filter) {
@@ -219,13 +221,30 @@ document.querySelectorAll('td.result').forEach(function (cell) {
       row.style.display = (filter === 'all' || cls === filter) ? '' : 'none';
     });
   }
+  function selectCard(card) {
+    cards.forEach(function (c) {
+      c.classList.remove('active');
+      c.setAttribute('aria-pressed', 'false');
+    });
+    card.classList.add('active');
+    card.setAttribute('aria-pressed', 'true');
+    applyFilter(card.dataset.filter);
+  }
   cards.forEach(function (card) {
     card.addEventListener('click', function () {
-      cards.forEach(function (c) { c.classList.remove('active'); });
-      card.classList.add('active');
-      applyFilter(card.dataset.filter);
+      selectCard(card);
+      location.hash = card.dataset.filter;
     });
   });
+  // Apply the filter named in the URL fragment on load, if any is known.
+  function applyHash() {
+    var want = location.hash.replace(/^#/, '');
+    var match = null;
+    cards.forEach(function (c) { if (c.dataset.filter === want) match = c; });
+    if (match) selectCard(match);
+  }
+  window.addEventListener('hashchange', applyHash);
+  applyHash();
 })();
 </script>
 </body>
