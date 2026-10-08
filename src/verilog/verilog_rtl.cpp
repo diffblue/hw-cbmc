@@ -496,6 +496,28 @@ protected:
   /// and expand function calls
   exprt substitute(exprt, statet &);
 
+  /// The number of nodes beyond which the value of a variable
+  /// that is read back is replaced by an auxiliary wire. Reading a
+  /// value back duplicates it in the subsequent values, e.g. in the
+  /// condition and in the else-branch of a conditional assignment,
+  /// which otherwise grows the defining expressions exponentially
+  /// in the number of loop iterations.
+  static const std::size_t auxiliary_wire_threshold = 64;
+
+  /// counter for naming auxiliary wires
+  std::size_t auxiliary_counter = 0;
+
+  /// does the given expression have more than the given number of nodes?
+  static bool exceeds_size(const exprt &, std::size_t limit);
+
+  /// Replace the blocking-assignment values of the given symbol that
+  /// exceed \ref auxiliary_wire_threshold by auxiliary wires.
+  void name_large_values(const symbolt &, statet &);
+
+  /// Create an auxiliary wire with the given value, and record
+  /// its definition.
+  symbol_exprt auxiliary_wire(const symbolt &base, exprt value);
+
   /// inline a function call in an rvalue
   exprt expand_function_call(const function_call_exprt &, statet &);
 
@@ -965,6 +987,15 @@ exprt verilog_rtl_buildert::read_lhs(exprt expr, statet &state, bool blocking)
     // earlier non-blocking updates in the same block.
     const auto &value_map = blocking ? state.blocking_values : state.values;
 
+    if(blocking)
+    {
+      // Large values that are read back are named, to avoid
+      // exponential growth of the defining expressions.
+      const symbolt *symbol;
+      if(!ns.lookup(symbol_expr.get_identifier(), symbol))
+        name_large_values(*symbol, state);
+    }
+
     return composed_value(
       slice_values_of(value_map, symbol_expr.get_identifier()), symbol_expr);
   }
@@ -1143,6 +1174,146 @@ exprt verilog_rtl_buildert::slice_of(
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::exceeds_size
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Does the given expression have more than the given
+          number of nodes? The traversal stops as soon as the
+          limit is exceeded.
+
+\*******************************************************************/
+
+bool verilog_rtl_buildert::exceeds_size(const exprt &expr, std::size_t limit)
+{
+  std::size_t count = 0;
+  std::vector<const exprt *> stack{&expr};
+
+  while(!stack.empty())
+  {
+    auto &current = *stack.back();
+    stack.pop_back();
+
+    if(++count > limit)
+      return true;
+
+    for(auto &op : current.operands())
+      stack.push_back(&op);
+  }
+
+  return false;
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::auxiliary_wire
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Creates an auxiliary wire that holds the given value,
+          and records its definition in the RTL representation.
+          The symbol is added to the symbol table when the
+          transition relation is constructed.
+
+\*******************************************************************/
+
+symbol_exprt
+verilog_rtl_buildert::auxiliary_wire(const symbolt &base, exprt value)
+{
+  symbolt aux_symbol;
+
+  // find an unused name
+  do
+  {
+    auto suffix = "_aux" + std::to_string(auxiliary_counter++);
+    aux_symbol.name = id2string(base.name) + suffix;
+    aux_symbol.base_name = id2string(base.base_name) + suffix;
+  } while(symbol_table.has_symbol(aux_symbol.name) ||
+          rtl.identifier_map.find(aux_symbol.name) != rtl.identifier_map.end());
+
+  aux_symbol.pretty_name = strip_verilog_root_prefix(aux_symbol.name);
+  aux_symbol.type = value.type();
+  aux_symbol.module = base.module;
+  aux_symbol.mode = base.mode;
+  aux_symbol.location = base.location;
+  aux_symbol.is_auxiliary = true;
+
+  symbol_exprt aux_expr{aux_symbol.name, aux_symbol.type};
+
+  rtl.identifier_map[aux_symbol.name].emplace(
+    whole_slice(aux_expr),
+    verilog_rtl_definitiont{kindt::WIRE, std::move(value)});
+
+  rtl.auxiliary_symbols.push_back(std::move(aux_symbol));
+
+  return aux_expr;
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::name_large_values
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Replaces the blocking-assignment values of the given
+          symbol that exceed the size threshold by auxiliary wires.
+          The values that are read back are duplicated in the
+          subsequent values, e.g., in the condition and the
+          else-branch of a conditional assignment, and would
+          otherwise grow exponentially in the number of loop
+          iterations. The committed values are updated alongside
+          when they are the same.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::name_large_values(
+  const symbolt &symbol,
+  statet &state)
+{
+  auto blocking_it = state.blocking_values.find(symbol.name);
+
+  if(blocking_it == state.blocking_values.end())
+    return;
+
+  auto values_it = state.values.find(symbol.name);
+
+  for(auto &slice_entry : blocking_it->second)
+  {
+    exprt &value = slice_entry.second;
+
+    if(!exceeds_size(value, auxiliary_wire_threshold))
+      continue;
+
+    // only values with a known number of bits
+    if(!verilog_bits_opt(value.type()).has_value())
+      continue;
+
+    auto aux_expr = auxiliary_wire(symbol, value);
+
+    // Update the committed value, too, if it is the same.
+    if(values_it != state.values.end())
+    {
+      auto committed_it = values_it->second.find(slice_entry.first);
+      if(
+        committed_it != values_it->second.end() &&
+        committed_it->second == value)
+      {
+        committed_it->second = aux_expr;
+      }
+    }
+
+    value = std::move(aux_expr);
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::substitute
 
   Inputs:
@@ -1160,7 +1331,7 @@ exprt verilog_rtl_buildert::substitute(exprt expr, statet &state)
     auto &symbol_expr = to_symbol_expr(expr);
 
     // Elaboration-time constants, e.g. parameters, are substituted.
-    const symbolt *symbol;
+    const symbolt *symbol = nullptr;
     if(!ns.lookup(symbol_expr.get_identifier(), symbol))
     {
       if(symbol->is_macro && symbol->value.is_not_nil())
@@ -1169,6 +1340,11 @@ exprt verilog_rtl_buildert::substitute(exprt expr, statet &state)
           substitute(symbol->value, state), expr.type());
       }
     }
+
+    // Large values that are read back are named, to avoid
+    // exponential growth of the defining expressions.
+    if(symbol != nullptr)
+      name_large_values(*symbol, state);
 
     auto value_it = state.blocking_values.find(symbol_expr.get_identifier());
 

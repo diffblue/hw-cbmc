@@ -42,6 +42,9 @@
 * Fix completeness-threshold when a property's own threshold is
   below the maximum over all properties: such properties are now correctly
   proved unbounded rather than only "proved up to bound N"
+* Verilog: fix exponential blow-up when a variable is read back and
+  conditionally updated in a loop; large intermediate values are now
+  named by auxiliary wires
 
 # EBMC 6.0
 
