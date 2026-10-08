@@ -73,9 +73,26 @@ mp_integer verilog_right(const typet &type)
     return 0;
 }
 
+// The keyword used for a four-valued single-bit element type, i.e.,
+// "reg", "wire" or "logic".  This is used both for scalars and as the
+// prefix of a vector.  See IEEE 1800-2017 20.6.1.
+static std::string verilog_bitvector_keyword(const typet &type)
+{
+  const auto vector_type = type.get(ID_C_verilog_vector_type);
+  if(vector_type == ID_reg)
+    return "reg";
+  else if(vector_type == ID_wire)
+    return "wire";
+  else if(vector_type == ID_verilog_logic)
+    return "logic";
+  else
+    return "bit";
+}
+
 std::string verilog_typename(const typet &type, const namespacet &ns)
 {
   const auto verilog_type = type.get(ID_C_verilog_type);
+  const auto vector_type = type.get(ID_C_verilog_vector_type);
 
   auto left = [](const typet &type)
   { return integer2string(verilog_left(type)); };
@@ -127,14 +144,19 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
     else if(verilog_type == ID_verilog_shortint)
       return "shortint unsigned";
     else if(verilog_type == ID_verilog_logic)
-      return "logic";
+    {
+      // scalar four-valued type: reg, wire or logic
+      if(vector_type == ID_reg)
+        return "reg";
+      else if(vector_type == ID_wire)
+        return "wire";
+      else
+        return "logic";
+    }
     else
     {
       auto suffix = "[" + left(type) + ":" + right(type) + "]";
-      if(type.get(ID_C_verilog_vector_type) == ID_verilog_logic)
-        return "logic" + suffix;
-      else
-        return "bit" + suffix;
+      return verilog_bitvector_keyword(type) + suffix;
     }
   }
   else if(type.id() == ID_verilog_unsignedbv)
@@ -143,7 +165,11 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
   }
   else if(type.id() == ID_bool)
   {
-    if(verilog_type == ID_verilog_logic)
+    if(vector_type == ID_reg)
+      return "reg";
+    else if(vector_type == ID_wire)
+      return "wire";
+    else if(verilog_type == ID_verilog_logic)
       return "logic";
     else
       return "bit";
@@ -159,14 +185,19 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
     else if(verilog_type == ID_verilog_shortint)
       return "shortint";
     else if(verilog_type == ID_verilog_logic)
-      return "logic signed";
+    {
+      // scalar four-valued type: reg, wire or logic
+      if(vector_type == ID_reg)
+        return "reg signed";
+      else if(vector_type == ID_wire)
+        return "wire signed";
+      else
+        return "logic signed";
+    }
     else
     {
       auto suffix = "[" + left(type) + ":" + right(type) + "]";
-      if(type.get(ID_C_verilog_vector_type) == ID_verilog_logic)
-        return "logic signed" + suffix;
-      else
-        return "bit signed" + suffix;
+      return verilog_bitvector_keyword(type) + " signed" + suffix;
     }
   }
   else if(type.id() == ID_verilog_byte)

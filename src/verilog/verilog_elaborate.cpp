@@ -15,6 +15,23 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_typecheck.h"
 #include "verilog_types.h"
 
+/// Record the net/variable declaration kind (reg or wire) on the
+/// elaborated type, so that $typename can reproduce it per
+/// IEEE 1800-2017 20.6.1.  The kind is stored in C_verilog_vector_type,
+/// which already carries this information for packed vectors; here we
+/// also cover the scalar case.  Only four-valued bit-vector types that
+/// do not already carry the attribute are annotated.
+static void set_verilog_net_kind(typet &type, const irep_idt &kind)
+{
+  if(
+    (type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
+     type.id() == ID_bool) &&
+    type.get(ID_C_verilog_vector_type).empty())
+  {
+    type.set(ID_C_verilog_vector_type, kind);
+  }
+}
+
 void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
 {
   DATA_INVARIANT(decl.id() == ID_decl, "port declaration id");
@@ -615,6 +632,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       symbol.location = declarator.source_location();
       symbol.type =
         make_two_valued(elaborate_type(declarator.merged_type(decl.type())));
+      set_verilog_net_kind(symbol.type, ID_wire);
 
       if(symbol.base_name.empty())
       {

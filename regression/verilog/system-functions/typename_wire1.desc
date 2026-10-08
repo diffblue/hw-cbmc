@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 typename_wire1.sv
 
 ^\[.*\] \$typename\(main\.some_bit\) == "wire": PROVED .*$
@@ -10,4 +10,4 @@ typename_wire1.sv
 --
 ^warning: ignoring
 --
-The wire is not recognised.
+
