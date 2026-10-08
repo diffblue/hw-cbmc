@@ -151,7 +151,10 @@ echo "HWMCC08 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
   .meta code { font-size: 0.85rem; }
   .cards { display: flex; gap: 1rem; margin: 1.5rem 0; flex-wrap: wrap; }
   .card { border: 1px solid #ccc; border-radius: 0.5rem; padding: 0.75rem 1.25rem;
-          text-align: center; min-width: 6rem; }
+          text-align: center; min-width: 6rem; cursor: pointer;
+          user-select: none; }
+  .card.active { border-color: CanvasText;
+                 background: color-mix(in srgb, Canvas 90%, CanvasText 10%); }
   .card .n { font-size: 1.75rem; font-weight: 600; display: block; }
   table { border-collapse: collapse; width: 100%; }
   th, td { text-align: left; padding: 0.35rem 0.75rem; border-bottom: 1px solid #ddd; }
@@ -180,10 +183,10 @@ echo "HWMCC08 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
   ebmc <code>$EBMC_VERSION</code>
 </p>
 <div class="cards">
-  <div class="card"><span class="n">$total</span>benchmarks</div>
-  <div class="card"><span class="n">$pass</span>passed</div>
-  <div class="card"><span class="n">$fail</span>failed</div>
-  <div class="card"><span class="n">$skip</span>skipped</div>
+  <div class="card active" data-filter="all"><span class="n">$total</span>benchmarks</div>
+  <div class="card" data-filter="ok"><span class="n">$pass</span>passed</div>
+  <div class="card" data-filter="fail"><span class="n">$fail</span>failed</div>
+  <div class="card" data-filter="skip"><span class="n">$skip</span>skipped</div>
 </div>
 <table>
 <thead><tr><th>Benchmark</th><th>Expected</th><th>Bound</th><th>Observed</th><th>Result</th></tr></thead>
@@ -201,6 +204,29 @@ document.querySelectorAll('td.result').forEach(function (cell) {
     logRow.style.display = logRow.style.display === 'table-row' ? 'none' : 'table-row';
   });
 });
+
+// Clicking a summary card filters the table by status; "all" shows everything.
+(function () {
+  var cards = document.querySelectorAll('.card[data-filter]');
+  function applyFilter(filter) {
+    document.querySelectorAll('tbody tr').forEach(function (row) {
+      if (row.classList.contains('log-row')) {
+        // Collapse any expanded logs; they re-open on click.
+        row.style.display = 'none';
+        return;
+      }
+      var cls = row.classList[0];
+      row.style.display = (filter === 'all' || cls === filter) ? '' : 'none';
+    });
+  }
+  cards.forEach(function (card) {
+    card.addEventListener('click', function () {
+      cards.forEach(function (c) { c.classList.remove('active'); });
+      card.classList.add('active');
+      applyFilter(card.dataset.filter);
+    });
+  });
+})();
 </script>
 </body>
 </html>
