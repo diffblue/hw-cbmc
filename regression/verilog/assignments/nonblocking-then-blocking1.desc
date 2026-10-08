@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 nonblocking-then-blocking1.sv
 --bound 2
 ^\[main\.p0\] always \(##1 main\.x == 1\): PROVED up to bound 2$

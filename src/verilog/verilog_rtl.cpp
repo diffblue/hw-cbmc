@@ -96,6 +96,14 @@ protected:
     /// these are substituted into subsequent right-hand sides
     value_mapt blocking_values;
 
+    /// the slices that have been written by a nonblocking assignment.
+    /// A nonblocking assignment is scheduled in the NBA region, which
+    /// follows the active region in which blocking assignments execute
+    /// (1800-2017 4.9.3). Hence a nonblocking write is never overwritten
+    /// by a blocking write to the same bits that occurs later in program
+    /// order; the nonblocking value wins in the committed next state.
+    value_mapt nonblocking_values;
+
     /// the path condition; 'false' is pushed by break, continue
     /// and return statements to mark the rest of the path dead
     exprt::operandst guard;
@@ -221,13 +229,18 @@ protected:
   void assign_to(const exprt &lhs, exprt rhs, statet &, bool blocking);
 
   /// record the assignment of the given value to the given slice
-  /// of the given symbol, maintaining the invariants of the state
+  /// of the given symbol, maintaining the invariants of the state.
+  /// \p direct_slice indicates that \p slice is the genuine target of
+  /// the assignment (as opposed to a whole-symbol rewrite synthesized
+  /// for a non-constant index); the NBA scheduling of nonblocking
+  /// assignments is only honoured for such direct assignments.
   void record_assignment(
     const symbol_exprt &,
     const verilog_rtl_slicet &,
     exprt value,
     statet &,
-    bool blocking);
+    bool blocking,
+    bool direct_slice);
 
   /// prefixes of identifiers that are local to a function or task;
   /// these are not part of the RTL representation
@@ -1651,7 +1664,8 @@ void verilog_rtl_buildert::assign_to(
       slice = clipped;
     }
 
-    record_assignment(lhs_opt->symbol, slice, std::move(rhs), state, blocking);
+    record_assignment(
+      lhs_opt->symbol, slice, std::move(rhs), state, blocking, true);
   }
   else
   {
@@ -1664,7 +1678,8 @@ void verilog_rtl_buildert::assign_to(
       whole_slice(lowered.symbol),
       std::move(lowered.value),
       state,
-      blocking);
+      blocking,
+      false);
   }
 }
 
@@ -1685,14 +1700,92 @@ void verilog_rtl_buildert::record_assignment(
   const verilog_rtl_slicet &slice,
   exprt value,
   statet &state,
-  bool blocking)
+  bool blocking,
+  bool direct_slice)
 {
-  write_slice(state.values[symbol.get_identifier()], slice, value);
+  auto &identifier = symbol.get_identifier();
 
   if(blocking)
   {
-    write_slice(
-      state.blocking_values[symbol.get_identifier()], slice, std::move(value));
+    // A blocking assignment that directly targets a slice contributes
+    // to the committed next state only on the bits that are not (later)
+    // overwritten by a nonblocking assignment: nonblocking assignments
+    // are scheduled in the NBA region, which follows the active region
+    // in which blocking assignments execute (1800-2017 4.9.3). The
+    // value is still visible to subsequent right-hand sides via
+    // blocking_values.
+    //
+    // This NBA scheduling is only honoured for direct assignments. A
+    // whole-symbol rewrite synthesized for a non-constant index carries
+    // the old value on the bits it does not genuinely assign, so it
+    // must not mask the nonblocking-scheduled bits.
+    auto nb_it = state.nonblocking_values.find(identifier);
+
+    if(!direct_slice || nb_it == state.nonblocking_values.end())
+    {
+      write_slice(state.values[identifier], slice, value);
+    }
+    else
+    {
+      // Write only the fragments of slice that are not covered by any
+      // nonblocking assignment.
+      mp_integer pos = slice.lower;
+
+      while(pos <= slice.higher)
+      {
+        // find the next bit, at or above pos, covered by a nonblocking
+        // assignment within slice
+        mp_integer next_covered = slice.higher + 1;
+
+        for(auto &nb_entry : nb_it->second)
+        {
+          auto &nb_slice = nb_entry.first;
+          if(nb_slice.higher >= pos && nb_slice.lower <= slice.higher)
+          {
+            if(nb_slice.lower <= pos)
+            {
+              // pos itself is covered; skip past this slice
+              pos = nb_slice.higher + 1;
+              break;
+            }
+            else if(nb_slice.lower < next_covered)
+            {
+              next_covered = nb_slice.lower;
+            }
+          }
+        }
+
+        if(pos > slice.higher)
+          break;
+
+        if(next_covered > pos)
+        {
+          // [pos, next_covered - 1] is a free fragment
+          verilog_rtl_slicet fragment{pos, next_covered - 1};
+          write_slice(
+            state.values[identifier],
+            fragment,
+            extract_range(value, slice, fragment));
+          pos = next_covered;
+        }
+      }
+    }
+
+    write_slice(state.blocking_values[identifier], slice, std::move(value));
+  }
+  else
+  {
+    // A nonblocking assignment wins in the committed next state. Only
+    // direct nonblocking assignments are tracked as NBA-scheduled, so
+    // that they take precedence over a later direct blocking write to
+    // the same bits.
+    write_slice(state.values[identifier], slice, value);
+
+    if(direct_slice)
+    {
+      write_slice(
+        state.nonblocking_values[identifier], slice, std::move(value));
+    }
   }
 }
 
@@ -1877,6 +1970,16 @@ void verilog_rtl_buildert::merge(
     then_state.blocking_values,
     else_state.blocking_values,
     dest.blocking_values);
+
+  // The nonblocking_values map is only used to detect which bits have
+  // been written by a nonblocking assignment, so that a subsequent
+  // blocking write does not overwrite them in the committed next state.
+  // A bit written in either branch is conservatively considered written.
+  merge_maps(
+    cond,
+    then_state.nonblocking_values,
+    else_state.nonblocking_values,
+    dest.nonblocking_values);
 }
 
 /*******************************************************************\
@@ -2981,7 +3084,28 @@ void verilog_rtl_buildert::build_statement(
       decl_class != ID_typedef)
     {
       for(auto &declarator : decl.declarators())
-        record_variable(declarator.symbol_expr().get_identifier());
+      {
+        auto lhs = declarator.symbol_expr();
+        record_variable(lhs.get_identifier());
+
+        // A static variable declared inside a procedural block with an
+        // initializer yields an initial value, exactly like a
+        // module-level variable with an initializer. Per IEEE
+        // 1800-2017 6.21 and 10.5 the declaration assignment is
+        // performed once, before any procedure starts.
+        if(declarator.has_value())
+        {
+          // Assignments to reals are silently ignored.
+          if(lhs.type().id() == ID_verilog_realtime)
+            continue;
+
+          statet init_state;
+          write_slice(
+            rtl.initial_values[lhs.get_identifier()],
+            whole_slice(lhs),
+            substitute(declarator.value(), init_state));
+        }
+      }
     }
   }
   else if(statement.id() == ID_verilog_label_statement)

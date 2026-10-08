@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "convert_literals.h"
 #include "verilog_bits.h"
 #include "verilog_expr.h"
+#include "verilog_initializer.h"
 #include "verilog_types.h"
 
 /// Lowers
@@ -849,6 +850,115 @@ exprt verilog_lowering(exprt expr)
                 from_integer(array_size, index_type)},
               from_integer(1, index_type)},
             index};
+        }
+
+        // Per 1800-2017 7.4.6, reading from an out-of-range index of an
+        // unpacked array yields the default value of the element type (0
+        // for 2-state types, 'x for 4-state types). The internal index
+        // above is computed in the (narrow) index type and may have
+        // wrapped around, so the range check below uses the original
+        // Verilog index value, which cannot wrap.
+        //
+        // The index operand has already been lowered; for a four-valued
+        // index this is an aval/bval encoding, from which the aval part
+        // carries the numeric value.
+        auto lowered_index = bit_select.index();
+        exprt index_value = is_aval_bval(lowered_index.type())
+                              ? aval(lowered_index)
+                              : lowered_index;
+
+        auto &element_type = array_type.element_type();
+
+        // Default value of the element type: 'x for a four-valued
+        // vector, otherwise the zero/default produced by
+        // verilog_default_initializer (0 for 2-state vectors, and the
+        // componentwise default for aggregates).
+        auto element_default = [&]() -> std::optional<exprt>
+        {
+          if(
+            element_type.id() == ID_verilog_unsignedbv ||
+            element_type.id() == ID_verilog_signedbv)
+          {
+            return to_verilog_unsignedbv_type(element_type).all_x_expr();
+          }
+          else
+            return verilog_default_initializer(element_type);
+        };
+
+        // If the index is a compile-time constant, resolve the range
+        // check now: emit either the plain access or the default value.
+        // This keeps the common constant-index case free of a guard.
+        if(index_value.is_constant())
+        {
+          auto index_int =
+            numeric_cast<mp_integer>(to_constant_expr(index_value));
+          if(index_int.has_value())
+          {
+            mp_integer internal = array_type.increasing()
+                                    ? (*index_int - offset)
+                                    : (offset + array_size - 1 - *index_int);
+
+            if(internal >= 0 && internal < array_size)
+              return index_exprt{src, index, element_type};
+
+            auto default_opt = element_default();
+            if(default_opt.has_value())
+              return std::move(*default_opt);
+
+            // No well-typed default available; fall back to the plain
+            // access.
+            return index_exprt{src, index, element_type};
+          }
+        }
+
+        // Perform the range check using the original Verilog index
+        // value in a signed bit-vector type that is wide enough to hold
+        // both the index value and the array bounds without wrapping
+        // around. A fixed-width type is used (rather than unbounded
+        // integers) so that the comparison is handled by the bit-vector
+        // backend.
+        std::size_t index_width =
+          can_cast_type<bitvector_typet>(index_value.type())
+            ? to_bitvector_type(index_value.type()).get_width()
+            : 1;
+        auto bound = array_size + (offset < 0 ? -offset : offset);
+        std::size_t compare_width = std::max<std::size_t>(
+          index_width + 1,
+          numeric_cast_v<std::size_t>(address_bits(bound + 1)) + 1);
+        signedbv_typet compare_type{compare_width};
+
+        exprt wide_index = typecast_exprt{index_value, compare_type};
+
+        if(array_type.increasing())
+        {
+          if(offset != 0)
+          {
+            wide_index =
+              minus_exprt{wide_index, from_integer(offset, compare_type)};
+          }
+        }
+        else
+        {
+          wide_index = minus_exprt{
+            from_integer(offset + array_size - 1, compare_type), wide_index};
+        }
+
+        auto in_range = and_exprt{
+          binary_relation_exprt{
+            wide_index, ID_ge, from_integer(0, compare_type)},
+          binary_relation_exprt{
+            wide_index, ID_lt, from_integer(array_size, compare_type)}};
+
+        // If we cannot construct a well-typed default for the element
+        // type, fall back to the plain (unguarded) array access rather
+        // than risk an ill-typed expression.
+        auto default_value = element_default();
+        if(default_value.has_value())
+        {
+          return if_exprt{
+            in_range,
+            index_exprt{src, index, element_type},
+            std::move(*default_value)};
         }
       }
 
