@@ -2885,6 +2885,25 @@ void verilog_rtl_buildert::build_check(
 
   auto condition = substitute(statement.condition(), state);
 
+  // A 'default disable iff (expr)' (1800-2017 16.15) applies to all
+  // concurrent assertions in the module, including procedural concurrent
+  // assertions written inside an always/initial block (16.14.6). It does
+  // not apply to immediate assertions.
+  const bool is_concurrent_assertion =
+    statement.id() == ID_verilog_assert_property ||
+    statement.id() == ID_verilog_assume_property ||
+    statement.id() == ID_verilog_restrict_property ||
+    statement.id() == ID_verilog_cover_property ||
+    statement.id() == ID_verilog_cover_sequence;
+
+  if(
+    is_concurrent_assertion && default_disable_iff.has_value() &&
+    condition.id() != ID_sva_disable_iff)
+  {
+    condition =
+      sva_disable_iff_exprt{*default_disable_iff, std::move(condition)};
+  }
+
   // apply the path condition, if any
   if(!state.guard.empty())
   {
