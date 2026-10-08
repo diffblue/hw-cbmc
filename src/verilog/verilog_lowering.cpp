@@ -412,7 +412,16 @@ exprt verilog_lowering_cast(typecast_exprt expr)
       dest_type.id() == ID_struct || dest_type.id() == ID_union ||
       dest_type.id() == ID_array)
     {
-      return from_bitvector(expr.op(), 0, dest_type);
+      // from_bitvector requires a bit-vector source; a packed aggregate
+      // operand must be flattened first (1800-2017 7.2.1/7.4.1).
+      if(
+        src_type.id() == ID_struct || src_type.id() == ID_union ||
+        src_type.id() == ID_array)
+      {
+        return from_bitvector(to_bitvector(expr.op()), 0, dest_type);
+      }
+      else
+        return from_bitvector(expr.op(), 0, dest_type);
     }
     else
     {
@@ -619,6 +628,44 @@ exprt verilog_lowering(exprt expr)
   else if(expr.id() == ID_verilog_non_indexed_part_select)
   {
     auto &part_select = to_verilog_non_indexed_part_select_expr(expr);
+    auto &src = part_select.src();
+
+    // A non-indexed part-select on a packed array selects a range of
+    // ELEMENTS (1800-2017 7.4.5/7.4.6, 11.5.1); the result is itself a
+    // packed array. Lower by flattening the source to a bit vector and
+    // reconstructing the selected sub-array.
+    if(
+      src.type().id() == ID_array &&
+      src.type().get(ID_C_verilog_type) == ID_verilog_packed_array)
+    {
+      auto &src_array_type = to_verilog_array_type(src.type());
+      auto &result_array_type = to_verilog_array_type(part_select.type());
+
+      auto msb = numeric_cast_v<mp_integer>(
+        to_constant_expr(part_select.msb())); // declared index, msb>=lsb
+      auto lsb =
+        numeric_cast_v<mp_integer>(to_constant_expr(part_select.lsb()));
+
+      auto src_offset = src_array_type.offset();
+      auto src_size = src_array_type.size_int();
+      auto element_width = verilog_bits(src_array_type.element_type());
+
+      // Flatten the source packed array to a bit vector.
+      auto bv = to_bitvector(src);
+
+      // Lowest internal bit of the selected sub-array, following the
+      // element-to-bit mapping used by to_bitvector/from_bitvector and
+      // the write side (decompose_lhs in verilog_rtl.cpp).
+      mp_integer offset_in_bv;
+
+      if(src_array_type.increasing())
+        offset_in_bv = (src_size - 1 - (msb - src_offset)) * element_width;
+      else
+        offset_in_bv = (lsb - src_offset) * element_width;
+
+      return from_bitvector(bv, offset_in_bv, result_array_type);
+    }
+
     return part_select.lower();
   }
   else if(
