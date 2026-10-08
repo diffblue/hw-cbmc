@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE broken-smt-backend
 compound-assignment-operand-width2.sv
 --bound 2
 ^\[main\.p0\] always \(##1 main\.a == 0\): PROVED up to bound 2$
@@ -22,3 +22,9 @@ and verilog_rtl_buildert::build_compound_assign in
 src/verilog/verilog_rtl.cpp then builds the operation with the
 already-truncated operand (binary_exprt{lhs, op, rhs, rhs.type()}). Found
 while auditing src/verilog/verilog_rtl.cpp.
+
+Note: tagged broken-smt-backend. With the front-end fix the minisat/bit-level
+engine correctly proves this, but the SMT2 bitvector back-end evaluates the
+shift distance modulo the (narrower) left-operand width, so "a >> 256" is
+treated as "a >> 0" and the property is spuriously REFUTED. That is a separate
+back-end shift-width issue and is excluded from the --z3/--cvc5 runs.
