@@ -15,3 +15,14 @@ x) are silently accepted as two contradictory constraints, making the
 whole transition system UNSAT. Every property in the module -- even
 one entirely unrelated to x, like p0 above -- is then vacuously
 reported PROVED (EXIT=0) instead of the correct REFUTED (EXIT=10).
+
+This is not fixed by simply routing output-port drivers through the
+assign_to/commit single-driver check: unlike ordinary continuous
+assignments, EBMC deliberately allows a net to be driven by several
+*consistent* output ports (see regression/ebmc/Output-Register-Passing,
+where o1 is driven by A1.c and A2.c and the two constraints agree).
+Rejecting all multiply-driven nets breaks that legitimate pattern, while
+distinguishing contradictory from consistent drivers in general requires
+a satisfiability check rather than a syntactic one. A correct fix must
+catch the contradiction (or treat an unsatisfiable constraint set as an
+error) without rejecting consistent multiple drivers.

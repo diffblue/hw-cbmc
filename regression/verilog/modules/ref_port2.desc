@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 ref_port2.sv
 
 ^\[main\.p0\] always main\.some_var == 1: REFUTED$
@@ -7,4 +7,10 @@ ref_port2.sv
 --
 ^warning: ignoring
 --
-The assertion does not hold.
+A ref port and its actual denote the same variable (1800-2017 23.2.2.3).
+Module M increments some_ref every clock, so main.some_var is driven
+through the ref port and must not hold its value; it then follows the
+increment, and the property some_var == 1 is correctly REFUTED. Before
+the fix, main.some_var kept its hold-its-value transition, which
+contradicted the ref-port equality and made the transition system
+unsatisfiable, so the property was vacuously PROVED (EXIT=0).
