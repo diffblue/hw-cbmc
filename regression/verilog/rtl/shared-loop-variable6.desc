@@ -1,0 +1,21 @@
+KNOWNBUG
+shared-loop-variable6.sv
+--bound 0
+^file .* line \d+: `Verilog::\$root\.main\.count' has multiple drivers$
+^CONVERSION ERROR$
+^EXIT=2$
+^SIGNAL=0$
+--
+^\[main\.p0\] always main\.o == 4'b0000: REFUTED$
+--
+Correctness hole from the type-based exemption. 'count' is genuine
+two-driver STATE: it is written by two separate clocked always blocks
+and read by a third, so it is a real multiple-driver conflict that
+should be rejected with "`...count' has multiple drivers" / CONVERSION
+ERROR (the desired output in the match section above). But the exemption
+in verilog_rtl_buildert::commit suppresses the multiple-driver check for
+ALL 'integer'-typed symbols, so the conflict is currently silently
+accepted and the design elaborates (property REFUTED -- the output in
+the '--' section below, which must NOT appear once this is fixed). A
+liveness-based exemption would not mask this, since 'count' is read
+outside the writing blocks.
