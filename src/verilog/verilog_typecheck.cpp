@@ -1083,10 +1083,83 @@ void verilog_typecheckt::convert_assign(
   exprt &lhs = to_binary_expr(statement).lhs();
   exprt &rhs = to_binary_expr(statement).rhs();
 
+  // Compound assignments "a op= b" are defined as "a = a op (b)"
+  // (1800-2017 11.4.1).  The expression "a op b" must be sized by the
+  // ordinary expression-sizing rules (1800-2017 11.6.1/11.8.2): the operands
+  // and the assignment target jointly determine the width of a context-
+  // determined operation, whereas the right operand of a shift is self-
+  // determined and keeps its own width.  We therefore lower the compound
+  // assignment into the equivalent binary expression and let the regular
+  // expression type-checker do the sizing, rather than truncating the right
+  // operand to the type of the left-hand side.
+  auto compound_id = compound_operator_id(statement.id());
+
+  if(compound_id.has_value())
+  {
+    // Build "a op b" from the (not-yet-converted) operands and type-check it
+    // as an ordinary binary expression.  The left-hand side appears both as
+    // the first operand of the operation and as the assignment target.
+    binary_exprt binary{lhs, *compound_id, rhs};
+    binary.add_source_location() = statement.source_location();
+    convert_expr(binary);
+    rhs = std::move(binary);
+
+    // The compound assignment has been reduced to a plain assignment.
+    statement.id(
+      blocking ? ID_verilog_blocking_assign : ID_verilog_non_blocking_assign);
+  }
+  else
+    convert_expr(rhs);
+
   convert_expr(lhs);
-  convert_expr(rhs);
   check_lhs(lhs, blocking?A_BLOCKING:A_NON_BLOCKING);
   assignment_conversion(rhs, lhs.type());
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::compound_operator_id
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<irep_idt>
+verilog_typecheckt::compound_operator_id(const irep_idt &statement_id)
+{
+  // Maps a compound-assignment statement id to the id of the corresponding
+  // binary operator, using the source-level shift ids expected by the
+  // expression type-checker (1800-2017 11.4.1).
+  if(statement_id == ID_verilog_blocking_assign_plus)
+    return ID_plus;
+  else if(statement_id == ID_verilog_blocking_assign_minus)
+    return ID_minus;
+  else if(statement_id == ID_verilog_blocking_assign_mult)
+    return ID_mult;
+  else if(statement_id == ID_verilog_blocking_assign_div)
+    return ID_div;
+  else if(statement_id == ID_verilog_blocking_assign_mod)
+    return ID_mod;
+  else if(statement_id == ID_verilog_blocking_assign_bitand)
+    return ID_bitand;
+  else if(statement_id == ID_verilog_blocking_assign_bitor)
+    return ID_bitor;
+  else if(statement_id == ID_verilog_blocking_assign_bitxor)
+    return ID_bitxor;
+  else if(statement_id == ID_verilog_blocking_assign_lshr)
+    return ID_lshr; // >>=
+  else if(statement_id == ID_verilog_blocking_assign_lshl)
+    return ID_shl; // <<=
+  else if(statement_id == ID_verilog_blocking_assign_ashr)
+    return ID_shr; // >>>=
+  else if(statement_id == ID_verilog_blocking_assign_ashl)
+    return ID_shl; // <<<=
+  else
+    return {};
 }
 
 /*******************************************************************\
