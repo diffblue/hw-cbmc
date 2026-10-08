@@ -4,7 +4,7 @@ verilog3.sv
 ^MODULE main$
 ^VAR some_array : array 0\.\.31 of unsigned word\[8\];$
 ^TRANS next\(some_array\) = some_array$
-^LTLSPEC G some_array\[resize\(unsigned\(0sd32_0\), 5\)\] = 0ud8_123$
+^LTLSPEC G some_array\[0ud5_0\] = 0ud8_123$
 ^EXIT=0$
 ^SIGNAL=0$
 --

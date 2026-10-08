@@ -869,7 +869,17 @@ exprt verilog_lowering(exprt expr)
       // Lower to array index expression
       auto &array_type = to_verilog_array_type(src.type());
       auto index_type = array_type.index_type();
+
+      // A constant index is converted here; it may have a type that is
+      // not lowered otherwise, e.g., integer, when generated internally.
       exprt index = typecast_exprt{bit_select.index(), index_type};
+      if(bit_select.index().is_constant())
+      {
+        auto index_int =
+          numeric_cast<mp_integer>(to_constant_expr(bit_select.index()));
+        if(index_int.has_value())
+          index = from_integer(*index_int, index_type);
+      }
 
       if(array_type.is_unpacked())
       {
