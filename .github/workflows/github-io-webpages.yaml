@@ -30,6 +30,9 @@ jobs:
   run-benchmarks:
     name: Generate benchmark reports
     runs-on: ubuntu-24.04
+    # Backstop: the benchmark scripts bound their own runtime, but cap the
+    # whole job so a runaway can never consume the full default budget.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
         with:
