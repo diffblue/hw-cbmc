@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 replication1.sv
 --smv-word-level
 ^MODULE main$
@@ -9,4 +9,3 @@ replication1.sv
 ^SIGNAL=0$
 --
 --
-Replication operator ({N{x}}) produces norep output instead of concatenation.
