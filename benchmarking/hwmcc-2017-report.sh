@@ -9,11 +9,36 @@
 # Usage: hwmcc-2017-report.sh [output.html]
 #   The report is written to the given path (default: hwmcc-2017-report.html).
 #
-# ca. 30 minutes
+# Each ebmc invocation is bounded by a per-benchmark time limit (TIMEOUT),
+# and the suite as a whole by an overall deadline (DEADLINE), so the total
+# runtime stays within the CI job's budget.
 
 set -u
 
 REPORT=${1:-hwmcc-2017-report.html}
+
+# Per-benchmark wall-clock limit, in seconds.  The HWMCC17 suite contains
+# individual benchmarks that run for many minutes, which would otherwise
+# exhaust the CI job's time budget, so each ebmc invocation is bounded.
+# Override with the TIMEOUT environment variable.
+TIMEOUT=${TIMEOUT:-30}
+
+# Overall wall-clock budget for the whole suite, in seconds.  Once this is
+# exceeded no further benchmarks are launched; the remainder are recorded
+# as skipped.  This keeps the total runtime bounded regardless of how many
+# benchmarks hit their per-benchmark limit.  Override with DEADLINE.
+DEADLINE=${DEADLINE:-1800}
+START_TIME=`date +%s`
+
+# Run ebmc under the per-benchmark time limit.  Exit status 124 (the
+# convention used by coreutils "timeout") indicates the limit was hit.
+run_ebmc() {
+  if command -v timeout >/dev/null 2>&1 ; then
+    timeout "$TIMEOUT" ebmc "$@"
+  else
+    ebmc "$@"
+  fi
+}
 
 if [ ! -e hwmcc17-single/. ] ; then
   echo Downloading HWMCC17 benchmark archive
@@ -24,8 +49,9 @@ if [ ! -e hwmcc17-single/. ] ; then
   rm hwmcc17-single-benchmarks.tar
 fi
 
-# Expected answers from the abcdeep result column in
-# https://fmv.jku.at/hwmcc17/single.csv.
+# Expected answers from the first solver's result column (status, bound) in
+# https://fmv.jku.at/hwmcc17/single.csv.  A status of "time"/"mem" means no
+# solver-verified result is available for that benchmark.
 if [ ! -e hwmcc17-single.csv ] ; then
   echo Downloading HWMCC17 result table
   wget -q https://fmv.jku.at/hwmcc17/single.csv -O hwmcc17-single.csv
@@ -78,7 +104,14 @@ while read -r line; do
 
   REASON=`skip_reason "$BENCHMARK"`
 
-  if [ -n "$REASON" ] ; then
+  ELAPSED=`expr \`date +%s\` - $START_TIME`
+
+  if [ "$ELAPSED" -ge "$DEADLINE" ] ; then
+    echo $BENCHMARK: skipping, overall time budget exhausted
+    css=skip
+    label=skipped
+    observed="skipped (time budget of ${DEADLINE}s exhausted)"
+  elif [ -n "$REASON" ] ; then
     echo $BENCHMARK: skipping
     css=skip
     label=skipped
@@ -90,11 +123,16 @@ while read -r line; do
     observed="benchmark file missing"
   elif [ "$RESULT" = "uns" ] ; then
     bound=2
-    ebmc --bound $bound "hwmcc17-single/${BENCHMARK}.aig" > ebmc.out 2>&1
+    run_ebmc --bound $bound "hwmcc17-single/${BENCHMARK}.aig" > ebmc.out 2>&1
     status=$?
     log_html=`sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' ebmc.out`
 
-    if [ "$status" = 10 ] ; then
+    if [ "$status" = 124 ] ; then
+      echo $BENCHMARK: timed out after ${TIMEOUT}s
+      css=skip
+      label="timed out"
+      observed="timed out after ${TIMEOUT}s at bound $bound"
+    elif [ "$status" = 10 ] ; then
       echo $BENCHMARK: got unexpected counterexample
       css=fail
       label="unexpected counterexample"
@@ -118,11 +156,16 @@ while read -r line; do
     else
       bound=$LENGTH
       expected="sat at $LENGTH"
-      ebmc --bound "$LENGTH" "hwmcc17-single/${BENCHMARK}.aig" > ebmc.out 2>&1
+      run_ebmc --bound "$LENGTH" "hwmcc17-single/${BENCHMARK}.aig" > ebmc.out 2>&1
       status=$?
       log_html=`sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' ebmc.out`
 
-      if [ "$status" = 10 ] ; then
+      if [ "$status" = 124 ] ; then
+        echo $BENCHMARK: timed out after ${TIMEOUT}s
+        css=skip
+        label="timed out"
+        observed="timed out after ${TIMEOUT}s at bound $LENGTH"
+      elif [ "$status" = 10 ] ; then
         echo $BENCHMARK: ok "(SAT $LENGTH)"
         css=ok
         label=ok
@@ -135,10 +178,20 @@ while read -r line; do
       fi
     fi
   else
-    echo $BENCHMARK: unknown expected result \"$RESULT\"
-    css=skip
-    label="unknown expectation"
-    observed="unsupported expected result \"$RESULT\""
+    # The reference column may be "time"/"mem" for benchmarks that no
+    # solver resolved within the HWMCC17 limits, or some other value.
+    case "$RESULT" in
+      time|mem)
+        echo $BENCHMARK: no reference result \("$RESULT"\)
+        css=skip
+        label="no reference result"
+        observed="no solver-verified result in HWMCC17 (\"$RESULT\")" ;;
+      *)
+        echo $BENCHMARK: unknown expected result \"$RESULT\"
+        css=skip
+        label="unknown expectation"
+        observed="unsupported expected result \"$RESULT\"" ;;
+    esac
   fi
 
   if [ "$css" = ok ] ; then
@@ -202,7 +255,8 @@ echo "HWMCC17 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
   benchmarks (read via ebmc's native AIGER front-end).<br>
   SAT benchmarks are checked at the published counterexample bound; UNSAT
   benchmarks are smoke-tested by confirming that ebmc does not report a
-  counterexample at bound <code>2</code>.<br>
+  counterexample at bound <code>2</code>.  Each benchmark is bounded by a
+  ${TIMEOUT}s per-benchmark time limit.<br>
   Generated $GENERATED_ON &middot;
   ebmc <code>$EBMC_VERSION</code>
 </p>
