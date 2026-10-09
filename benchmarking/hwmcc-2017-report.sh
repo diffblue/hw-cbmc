@@ -1,30 +1,37 @@
 #!/bin/sh
 
-# This runs ebmc in BMC mode on the HWMCC08 benchmarks and emits an HTML
-# report summarising the result of each benchmark.
+# This runs ebmc in BMC mode on the HWMCC17 single-safety benchmarks and
+# emits an HTML report summarising the result of each benchmark.
 #
-# Usage: hwmcc08-report.sh [output.html]
-#   The report is written to the given path (default: hwmcc08-report.html).
+# The benchmarks are read directly through ebmc's native AIGER front-end,
+# so no external conversion tools are required.
+#
+# Usage: hwmcc-2017-report.sh [output.html]
+#   The report is written to the given path (default: hwmcc-2017-report.html).
+#
+# ca. 30 minutes
 
 set -u
 
-REPORT=${1:-hwmcc08-report.html}
+REPORT=${1:-hwmcc-2017-report.html}
 
-if [ ! -e hwmcc08/. ] ; then
-  echo Downloading HWMCC08 benchmark archive
-  wget -q http://fmv.jku.at/hwmcc/hwmcc08public.tar.bz2
-  tar xjf hwmcc08public.tar.bz2
-  rm hwmcc08public.tar.bz2
+if [ ! -e hwmcc17-single/. ] ; then
+  echo Downloading HWMCC17 benchmark archive
+  wget -q https://fmv.jku.at/hwmcc17/hwmcc17-single-benchmarks.tar.xz
+  xz -d hwmcc17-single-benchmarks.tar.xz
+  mkdir hwmcc17-single
+  (cd hwmcc17-single ; tar xf ../hwmcc17-single-benchmarks.tar)
+  rm hwmcc17-single-benchmarks.tar
 fi
 
-# Expected answers from the abc result column in
-# https://fmv.jku.at/hwmcc08/hwmcc08results.csv.
-if [ ! -e hwmcc08results.csv ] ; then
-  echo Downloading HWMCC08 result table
-  wget -q https://fmv.jku.at/hwmcc08/hwmcc08results.csv
+# Expected answers from the abcdeep result column in
+# https://fmv.jku.at/hwmcc17/single.csv.
+if [ ! -e hwmcc17-single.csv ] ; then
+  echo Downloading HWMCC17 result table
+  wget -q https://fmv.jku.at/hwmcc17/single.csv -O hwmcc17-single.csv
 fi
 
-echo Running ebmc on the HWMCC08 benchmarks
+echo Running ebmc on the HWMCC17 benchmarks
 
 EBMC_VERSION=`ebmc --version 2>/dev/null || echo unknown`
 GENERATED_ON=`date -u '+%Y-%m-%d %H:%M:%S UTC'`
@@ -37,18 +44,27 @@ skip=0
 ROWS=`mktemp`
 trap 'rm -f "$ROWS" ebmc.out' EXIT
 
+# Return a non-empty string if the benchmark should be skipped, giving the
+# reason, otherwise the empty string.
+skip_reason() {
+  case "$1" in
+    6s320rb1|intel036)
+      echo "too slow" ;;
+    *)
+      echo "" ;;
+  esac
+}
+
 # Note the use of a brace group, not a subshell: the counters below must
 # survive the loop.
 {
-# Ignore the three-line CSV header.
-read -r line
-read -r line
+# Ignore the one-line CSV header.
 read -r line
 
 while read -r line; do
-  BENCHMARK=`echo "$line" | cut -d ',' -f 1 | tr -d '"'`
-  LENGTH=`echo "$line" | cut -d ',' -f 2 | tr -d '"'`
-  RESULT=`echo "$line" | cut -d ',' -f 3 | tr -d '"'`
+  BENCHMARK=`echo "$line" | cut -d ';' -f 1`
+  RESULT=`echo "$line" | cut -d ';' -f 3`
+  LENGTH=`echo "$line" | cut -d ';' -f 4`
 
   [ -n "$BENCHMARK" ] || continue
 
@@ -60,14 +76,21 @@ while read -r line; do
   observed="not run"
   log_html=
 
-  if [ ! -e "hwmcc08/${BENCHMARK}.aig" ] ; then
+  REASON=`skip_reason "$BENCHMARK"`
+
+  if [ -n "$REASON" ] ; then
+    echo $BENCHMARK: skipping
+    css=skip
+    label=skipped
+    observed="skipped ($REASON)"
+  elif [ ! -e "hwmcc17-single/${BENCHMARK}.aig" ] ; then
     echo benchmark $BENCHMARK not found
     css=fail
     label=missing
     observed="benchmark file missing"
   elif [ "$RESULT" = "uns" ] ; then
     bound=2
-    ebmc --bound $bound "hwmcc08/${BENCHMARK}.aig" > ebmc.out 2>&1
+    ebmc --bound $bound "hwmcc17-single/${BENCHMARK}.aig" > ebmc.out 2>&1
     status=$?
     log_html=`sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' ebmc.out`
 
@@ -87,7 +110,7 @@ while read -r line; do
       fi
     fi
   elif [ "$RESULT" = "sat" ] ; then
-    if [ "$LENGTH" = "*" ] ; then
+    if [ "$LENGTH" = "\"*\"" ] || [ "$LENGTH" = "*" ] || [ -z "$LENGTH" ] ; then
       echo $BENCHMARK: no counterexample length
       css=skip
       label="no reference bound"
@@ -95,7 +118,7 @@ while read -r line; do
     else
       bound=$LENGTH
       expected="sat at $LENGTH"
-      ebmc --bound "$LENGTH" "hwmcc08/${BENCHMARK}.aig" > ebmc.out 2>&1
+      ebmc --bound "$LENGTH" "hwmcc17-single/${BENCHMARK}.aig" > ebmc.out 2>&1
       status=$?
       log_html=`sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' ebmc.out`
 
@@ -129,10 +152,10 @@ while read -r line; do
   printf '<tr class="%s"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class="result" data-log="log-%s">%s</td></tr>\n<tr class="log-row" id="log-%s"><td colspan="5"><pre>%s</pre></td></tr>\n' \
     "$css" "$BENCHMARK" "$expected" "$bound" "$observed" "$total" "$label" "$total" "${log_html:-no log captured}" >> "$ROWS"
 done
-} < hwmcc08results.csv
+} < hwmcc17-single.csv
 
 echo
-echo "HWMCC08 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
+echo "HWMCC17 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
 
 {
   cat <<HTML_HEAD
@@ -141,7 +164,7 @@ echo "HWMCC08 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EBMC on HWMCC08</title>
+<title>EBMC on HWMCC17</title>
 <style>
   :root { color-scheme: light dark; }
   body { font-family: -apple-system, system-ui, sans-serif; margin: 2rem auto;
@@ -171,11 +194,12 @@ echo "HWMCC08 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
 </style>
 </head>
 <body>
-<h1>EBMC on HWMCC08</h1>
+<h1>EBMC on HWMCC17</h1>
 <p class="meta">
   Results of running <a href="https://github.com/diffblue/hw-cbmc">ebmc</a>
   in bounded mode over the
-  <a href="https://fmv.jku.at/hwmcc08/">HWMCC08</a> AIG benchmarks.<br>
+  <a href="https://fmv.jku.at/hwmcc17/">HWMCC17</a> single-safety AIGER
+  benchmarks (read via ebmc's native AIGER front-end).<br>
   SAT benchmarks are checked at the published counterexample bound; UNSAT
   benchmarks are smoke-tested by confirming that ebmc does not report a
   counterexample at bound <code>2</code>.<br>
