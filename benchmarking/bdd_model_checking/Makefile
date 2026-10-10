@@ -8,6 +8,8 @@ SRC = benchmark.cpp
 INCLUDES = -I ../../src -I $(CPROVER_DIR)/src
 CXXFLAGS += -D'LOCAL_IREP_IDS=<hw_cbmc_irep_ids.h>'
 
+CLEANFILES = benchmark$(EXEEXT)
+
 OBJ += ../../src/ebmc/bdd_model_checker$(OBJEXT) \
        $(CPROVER_DIR)/src/solvers/solvers$(LIBEXT) \
        $(CPROVER_DIR)/src/util/util$(LIBEXT) \
@@ -21,5 +23,3 @@ benchmark$(EXEEXT): $(OBJ)
 run: benchmark$(EXEEXT)
 	./benchmark$(EXEEXT)
 
-clean:
-	$(RM) benchmark$(EXEEXT) *.o *.d
