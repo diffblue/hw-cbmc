@@ -159,27 +159,19 @@ protected:
     const irep_idt &instance_identifier,
     const source_locationt &);
   static exprt port_connection_conversion(exprt src, const typet &dest_type);
-  void build_interface_port_connection(
-    const irep_idt &port_identifier,
-    const irep_idt &bound_instance_identifier);
-  void build_interface_port_array_connection(
-    const irep_idt &port_identifier,
-    const typet &port_type,
-    const exprt &value);
 
   /// The pairs of identifiers that a connection equates, and that denote
-  /// the same variable: a member of the interface instantiated under a
-  /// port and the corresponding member of the bound interface instance,
-  /// or a ref port and its actual (1800-2017 23.2.2.3). A write on either
-  /// side is visible on the other, so the side without a driver of its
-  /// own must follow the driven side rather than hold its value.
-  std::vector<std::pair<irep_idt, irep_idt>> interface_port_connections;
+  /// the same variable: a ref port and its actual (1800-2017 23.2.2.3).
+  /// A write on either side is visible on the other, so the side without
+  /// a driver of its own must follow the driven side rather than hold its
+  /// value.
+  std::vector<std::pair<irep_idt, irep_idt>> port_connections;
 
-  /// Marks the members equated by a connection that have no driver of
-  /// their own, but are equated to a driven member, as forced. This is
+  /// Marks the identifiers equated by a connection that have no driver of
+  /// their own, but are equated to a driven identifier, as forced. This is
   /// done once the entire module hierarchy has been built, since the
   /// driver may be in any module.
-  void force_interface_port_connections();
+  void force_port_connections();
 
   /// per-loop state for break and continue statements
   class loop_framet
@@ -725,6 +717,17 @@ verilog_rtl_buildert::decompose(const exprt &lhs, const index_functiont &index)
   if(lhs.id() == ID_symbol)
   {
     auto &symbol_expr = to_symbol_expr(lhs);
+
+    // An alias of another variable or net, e.g., a member of an
+    // interface port, denotes that variable or net.
+    const symbolt *symbol;
+    if(
+      !ns.lookup(symbol_expr.get_identifier(), symbol) && symbol->is_macro &&
+      symbol->value.id() == ID_symbol)
+    {
+      return decompose(symbol->value, index);
+    }
+
     return lhst{symbol_expr, whole_slice(symbol_expr)};
   }
   else if(lhs.id() == ID_verilog_bit_select)
@@ -3880,83 +3883,24 @@ void verilog_rtl_buildert::build_module_item_decl(
 
 /*******************************************************************\
 
-Function: verilog_rtl_buildert::build_interface_port_connection
+Function: verilog_rtl_buildert::force_port_connections
 
   Inputs:
 
  Outputs:
 
- Purpose: Connects the members of an interface port to the members
-          of the bound interface instance.
-
-\*******************************************************************/
-
-void verilog_rtl_buildert::build_interface_port_connection(
-  const irep_idt &port_identifier,
-  const irep_idt &bound_instance_identifier)
-{
-  auto port_prefix = id2string(port_identifier) + ".";
-  auto bound_prefix = id2string(bound_instance_identifier) + ".";
-
-  for(auto &entry : symbol_table.symbols)
-  {
-    auto id = id2string(entry.first);
-    if(
-      id.size() > port_prefix.size() &&
-      id.substr(0, port_prefix.size()) == port_prefix &&
-      id.find('.', port_prefix.size()) == std::string::npos)
-    {
-      auto member_name = id.substr(port_prefix.size());
-      auto bound_id = bound_prefix + member_name;
-
-      const symbolt *bound_symbol;
-      if(ns.lookup(bound_id, bound_symbol))
-        continue;
-
-      if(bound_symbol->type.id() == ID_verilog_module_instance)
-        continue;
-
-      // The interface under the port is instantiated with the parameters
-      // of the bound instance, and hence the types are expected to match.
-      if(entry.second.type != bound_symbol->type)
-      {
-        throw errort().with_location(entry.second.location)
-          << "interface port `" << entry.second.display_name()
-          << "' is bound to `" << bound_symbol->display_name()
-          << "', which has a different type";
-      }
-
-      symbol_exprt port_member{entry.first, entry.second.type};
-      symbol_exprt bound_member{bound_id, bound_symbol->type};
-
-      interface_port_connections.emplace_back(entry.first, bound_id);
-
-      rtl.constraints.push_back(
-        equal_exprt{std::move(port_member), std::move(bound_member)});
-    }
-  }
-}
-
-/*******************************************************************\
-
-Function: verilog_rtl_buildert::force_interface_port_connections
-
-  Inputs:
-
- Outputs:
-
- Purpose: The members equated by an interface port connection are
-          the same variable. A member that is not assigned in the
+ Purpose: The identifiers equated by a ref port connection are the
+          same variable. A variable that is not assigned in the
           module hierarchy holds its value, unless it is equated
-          to a member that is assigned, forced, or is a net; it is
+          to one that is assigned, forced, or is a net; it is
           then driven by the connection, and is marked as forced,
           so that it becomes a wire. The connections may be
-          chained, e.g., when a module passes on an interface port
-          to a submodule, which requires a fixed point.
+          chained, e.g., when a module passes on a ref port to a
+          submodule, which requires a fixed point.
 
 \*******************************************************************/
 
-void verilog_rtl_buildert::force_interface_port_connections()
+void verilog_rtl_buildert::force_port_connections()
 {
   // the members that are driven by way of a connection
   std::set<irep_idt> driven;
@@ -3986,7 +3930,7 @@ void verilog_rtl_buildert::force_interface_port_connections()
   {
     progress = false;
 
-    for(auto &connection : interface_port_connections)
+    for(auto &connection : port_connections)
     {
       bool first_driven = is_driven(connection.first);
       bool second_driven = is_driven(connection.second);
@@ -4013,97 +3957,6 @@ void verilog_rtl_buildert::force_interface_port_connections()
 
 /*******************************************************************\
 
-Function: verilog_rtl_buildert::build_interface_port_array_connection
-
-  Inputs:
-
- Outputs:
-
- Purpose: Connects the elements of an array of interface ports,
-          1800-2017 25.4, to the given interface instances.
-
-\*******************************************************************/
-
-void verilog_rtl_buildert::build_interface_port_array_connection(
-  const irep_idt &port_identifier,
-  const typet &port_type,
-  const exprt &value)
-{
-  auto &array_type = to_verilog_array_type(port_type);
-  auto size = array_type.size_int();
-  auto offset = array_type.offset();
-  auto &element_type = array_type.element_type();
-
-  // The actual may be another array of interfaces, given by its name. The
-  // elements are then connected pairwise, in the order of the two ranges.
-  if(value.id() == ID_symbol)
-  {
-    auto &actual_type = to_verilog_array_type(value.type());
-    auto actual_offset = actual_type.offset();
-    auto &actual_identifier = to_symbol_expr(value).get_identifier();
-
-    for(mp_integer i = 0; i < size; ++i)
-    {
-      auto index = array_type.increasing() ? offset + i : offset + size - 1 - i;
-      auto actual_index = actual_type.increasing()
-                            ? actual_offset + i
-                            : actual_offset + size - 1 - i;
-
-      auto element_identifier =
-        id2string(port_identifier) + '[' + integer2string(index) + ']';
-      auto actual_element_identifier =
-        id2string(actual_identifier) + '[' + integer2string(actual_index) + ']';
-
-      if(is_interface_array_type(element_type))
-      {
-        // recursive call, for further dimensions
-        build_interface_port_array_connection(
-          element_identifier,
-          element_type,
-          symbol_exprt{actual_element_identifier, actual_type.element_type()});
-      }
-      else
-      {
-        build_interface_port_connection(
-          element_identifier, actual_element_identifier);
-      }
-    }
-
-    return;
-  }
-
-  // The type checker has established that there is one operand per element.
-  DATA_INVARIANT(
-    value.operands().size() == size,
-    "one interface instance per array element");
-
-  for(mp_integer i = 0; i < size; ++i)
-  {
-    // The operands are stored starting from the left index of the range,
-    // as are the element symbols.
-    auto index = array_type.increasing() ? offset + i : offset + size - 1 - i;
-
-    auto element_identifier =
-      id2string(port_identifier) + '[' + integer2string(index) + ']';
-
-    auto &element = value.operands()[numeric_cast_v<std::size_t>(i)];
-
-    if(is_interface_array_type(element_type))
-    {
-      // recursive call, for further dimensions
-      build_interface_port_array_connection(
-        element_identifier, element_type, element);
-    }
-    else if(element.id() == ID_symbol)
-    {
-      build_interface_port_connection(
-        element_identifier, to_symbol_expr(element).get_identifier());
-    }
-  }
-}
-
-/*******************************************************************\
-
 Function: verilog_rtl_buildert::build_port_connection
 
   Inputs:
@@ -4120,26 +3973,13 @@ void verilog_rtl_buildert::build_port_connection(
   const irep_idt &instance_identifier,
   const source_locationt &source_location)
 {
-  // Interface ports connect the members of the port's interface
-  // to the members of the bound interface instance.
-  if(port.type().id() == ID_verilog_module_instance)
+  // Interface ports, and arrays thereof, are references to the bound
+  // interface instances; the type checker has made the members of the
+  // port's interface aliases of the members of the bound instance.
+  if(
+    port.type().id() == ID_verilog_module_instance ||
+    is_interface_array_type(port.type()))
   {
-    if(value.id() == ID_symbol)
-    {
-      build_interface_port_connection(
-        port.identifier(), to_symbol_expr(value).get_identifier());
-    }
-    return;
-  }
-
-  // An array of interface ports, 1800-2017 25.4: connect one interface
-  // instance per array element. The type checker has ensured that the
-  // value is an assignment pattern with one interface instance per
-  // element of the port, or the name of another array of interfaces.
-  if(is_interface_array_type(port.type()))
-  {
-    build_interface_port_array_connection(
-      port.identifier(), port.type(), value);
     return;
   }
 
@@ -4149,14 +3989,14 @@ void verilog_rtl_buildert::build_port_connection(
   // 23.2.2.3): a write on either side is visible on the other. The two
   // are tied by an equality constraint (below), and the side that has no
   // driver of its own must follow the driven side rather than hold its
-  // value. We record the pair so that force_interface_port_connections()
+  // value. We record the pair so that force_port_connections()
   // can mark the undriven side as forced once all drivers are known.
   // Without this, an actual that is written through the ref port keeps
   // its hold-its-value transition, which contradicts the constraint and
   // makes the whole transition system unsatisfiable.
   if(port.ref() && value.id() == ID_symbol)
   {
-    interface_port_connections.emplace_back(
+    port_connections.emplace_back(
       port.identifier(), to_symbol_expr(value).get_identifier());
   }
 
@@ -4726,7 +4566,7 @@ verilog_rtlt verilog_rtl_buildert::build()
   build_module(module_symbol);
 
   // now that all drivers are known
-  force_interface_port_connections();
+  force_port_connections();
   mark_self_dependent_wires();
 
   return std::move(rtl);
