@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <solvers/bdd/miniBDD/miniBDD.h>
 
 #include <functional>
+#include <unordered_set>
 #include <vector>
 
 /// Represents a transition relation for BDD-based model checking.
@@ -41,6 +42,7 @@ public:
 
   // CTL operators
   mini_bddt EX(mini_bddt);
+  mini_bddt EX_monolithic(mini_bddt);
   mini_bddt EF(mini_bddt);
   mini_bddt EG(mini_bddt);
   mini_bddt EU(mini_bddt, mini_bddt);
@@ -60,6 +62,9 @@ protected:
   mini_bddt current_to_next(const mini_bddt &) const;
   mini_bddt project_inputs(const mini_bddt &) const;
   mini_bddt project_next(const mini_bddt &) const;
+  mini_bddt conjoin_and_quantify(
+    const std::vector<mini_bddt> &conjuncts,
+    const std::unordered_set<unsigned> &quantified_vars) const;
   mini_bddt fixedpoint(std::function<mini_bddt(mini_bddt)>, mini_bddt);
 };
 
