@@ -48,14 +48,24 @@ static std::size_t bdd_node_count(const mini_bddt &bdd)
   return bdd_node_count(bdd, visited);
 }
 
-static void bdd_support(const mini_bddt &bdd, std::set<unsigned> &vars)
+static void bdd_support(
+  const mini_bddt &bdd,
+  std::set<unsigned> &visited,
+  std::set<unsigned> &vars)
 {
   if(bdd.is_constant())
     return;
-  if(!vars.insert(bdd.var()).second)
+  if(!visited.insert(bdd.node_number()).second)
     return;
-  bdd_support(bdd.low(), vars);
-  bdd_support(bdd.high(), vars);
+  vars.insert(bdd.var());
+  bdd_support(bdd.low(), visited, vars);
+  bdd_support(bdd.high(), visited, vars);
+}
+
+static void bdd_support(const mini_bddt &bdd, std::set<unsigned> &vars)
+{
+  std::set<unsigned> visited;
+  bdd_support(bdd, visited, vars);
 }
 
 /// Build N register bits with separated variable ordering.

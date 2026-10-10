@@ -8,7 +8,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "bdd_model_checker.h"
 
-#include <set>
+#include <util/invariant.h>
+
+#include <unordered_map>
+#include <unordered_set>
 
 bdd_model_checkert::bdd_model_checkert(
   const bdd_transition_relationt &_transition_relation)
@@ -48,63 +51,71 @@ mini_bddt bdd_model_checkert::project_inputs(const mini_bddt &bdd) const
 }
 
 /// Collect the set of BDD variable indices appearing in a BDD.
-static void support(const mini_bddt &bdd, std::set<unsigned> &vars)
+/// The visited set must be keyed on node numbers, not variable indices:
+/// two distinct nodes may carry the same variable but have different
+/// subgraphs, and skipping one of them would under-approximate the support.
+static void support(
+  const mini_bddt &bdd,
+  std::unordered_set<unsigned> &visited,
+  std::unordered_set<unsigned> &vars)
 {
   if(bdd.is_constant())
     return;
-  if(!vars.insert(bdd.var()).second)
+  if(!visited.insert(bdd.node_number()).second)
     return; // already visited
-  support(bdd.low(), vars);
-  support(bdd.high(), vars);
+  vars.insert(bdd.var());
+  support(bdd.low(), visited, vars);
+  support(bdd.high(), visited, vars);
+}
+
+static std::unordered_set<unsigned> support(const mini_bddt &bdd)
+{
+  std::unordered_set<unsigned> visited, vars;
+  support(bdd, visited, vars);
+  return vars;
 }
 
 /// Early variable quantification as described in
 /// Burch, Clarke, McMillan, Dill, Hwang:
 /// "Symbolic Model Checking for Sequential Circuit Verification" (1992).
-/// Instead of building the monolithic conjunction of all transition
-/// conjuncts and then quantifying out next-state variables, we
-/// interleave conjunction and quantification: after conjoining each
-/// partition, we immediately quantify out next-state variables that
-/// do not appear in any remaining partition.
-mini_bddt bdd_model_checkert::project_next_early(
-  const std::vector<mini_bddt> &conjuncts) const
+/// Computes ∃ quantified_vars. (conjuncts[0] & ... & conjuncts[n-1]).
+/// Instead of building the monolithic conjunction and then quantifying,
+/// we interleave conjunction and quantification: a variable is
+/// quantified out immediately after the last conjunct that mentions it
+/// has been conjoined. This can reduce intermediate BDD sizes from
+/// exponential to polynomial.
+mini_bddt bdd_model_checkert::conjoin_and_quantify(
+  const std::vector<mini_bddt> &conjuncts,
+  const std::unordered_set<unsigned> &quantified_vars) const
 {
-  // Collect the set of next-state variable indices.
-  std::set<unsigned> next_vars;
-  for(const auto &v : transition_relation.variables)
-    next_vars.insert(v.next.var());
+  PRECONDITION(!conjuncts.empty());
 
-  // Compute the support of each conjunct.
-  std::vector<std::set<unsigned>> conjunct_supports(conjuncts.size());
-  for(std::size_t i = 0; i < conjuncts.size(); i++)
-    support(conjuncts[i], conjunct_supports[i]);
+  // For each conjunct, the quantified variables whose last occurrence
+  // is in that conjunct. Variables that occur in no conjunct need not
+  // be quantified at all.
+  std::vector<std::vector<unsigned>> quantify_after(conjuncts.size());
+
+  {
+    std::unordered_map<unsigned, std::size_t> last_use;
+
+    for(std::size_t i = 0; i < conjuncts.size(); i++)
+      for(auto var : support(conjuncts[i]))
+        if(quantified_vars.find(var) != quantified_vars.end())
+          last_use[var] = i; // later conjuncts overwrite earlier ones
+
+    for(const auto &[var, i] : last_use)
+      quantify_after[i].push_back(var);
+  }
 
   mini_bddt result = conjuncts.front();
 
-  for(std::size_t i = 1; i < conjuncts.size(); i++)
+  for(std::size_t i = 0; i < conjuncts.size(); i++)
   {
-    result = result & conjuncts[i];
+    if(i != 0)
+      result = result & conjuncts[i];
 
-    // Quantify out next-state variables that don't appear in any
-    // remaining conjunct, and keep only those that are still needed.
-    std::set<unsigned> remaining_next_vars;
-    for(auto var : next_vars)
-    {
-      bool needed_later = false;
-      for(std::size_t j = i + 1; j < conjuncts.size(); j++)
-      {
-        if(conjunct_supports[j].count(var))
-        {
-          needed_later = true;
-          break;
-        }
-      }
-      if(needed_later)
-        remaining_next_vars.insert(var);
-      else
-        result = exists(result, var);
-    }
-    next_vars = std::move(remaining_next_vars);
+    for(auto var : quantify_after[i])
+      result = exists(result, var);
   }
 
   return result;
@@ -146,7 +157,18 @@ mini_bddt bdd_model_checkert::EX(mini_bddt f)
   for(const auto &c : transition_relation.constraint_conjuncts)
     conjuncts.push_back(c);
 
-  return project_inputs(project_next_early(conjuncts));
+  // The result is over current-state variables only: all next-state
+  // variables and the current-state copies of the inputs are
+  // existentially quantified.
+  std::unordered_set<unsigned> quantified_vars;
+  for(const auto &v : transition_relation.variables)
+  {
+    quantified_vars.insert(v.next.var());
+    if(v.is_input)
+      quantified_vars.insert(v.current.var());
+  }
+
+  return conjoin_and_quantify(conjuncts, quantified_vars);
 }
 
 mini_bddt bdd_model_checkert::EX_monolithic(mini_bddt f)
