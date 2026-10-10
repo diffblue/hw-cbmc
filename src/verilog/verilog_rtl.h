@@ -90,6 +90,14 @@ public:
   /// state; for wires, the value of the slice in the *current* state.
   exprt value;
 
+  /// For wires, the slices of the same identifier whose reads in
+  /// \ref value close a combinational cycle back to this slice, i.e.,
+  /// the slices that are in a dependency cycle with this one. Includes
+  /// the slice itself when \ref value reads it directly. Empty iff the
+  /// slice does not depend on itself. Reads of other slices of the
+  /// same identifier are well-founded, and are not listed.
+  std::vector<verilog_rtl_slicet> cyclic_slices;
+
   verilog_rtl_definitiont(kindt _kind, exprt _value)
     : kind(_kind), value(std::move(_value))
   {
