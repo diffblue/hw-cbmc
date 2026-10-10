@@ -1,17 +1,18 @@
-KNOWNBUG
-rtl-construction-clocked-blocks1.sv
+CORE
+shared-loop-variable1.sv
 --bound 0
-^EXIT=0$
+^\[main\.p0\] always main\.a == main\.din: REFUTED$
+^EXIT=10$
 ^SIGNAL=0$
 --
 ^file .* line \d+: `Verilog::\$root\.main\.i' has multiple drivers$
 ^CONVERSION ERROR$
 --
-verilog_rtl_buildert::commit (src/verilog/verilog_rtl.cpp) tracks writes
-to every symbol assigned in an always block, including elaboration-only
-'integer' loop counters, and rejects a counter shared by two blocks as a
-driver conflict. verilog_synthesist::assignment_rec in
-verilog_synthesis.cpp has an analogous bug, already fixed by exempting
-'integer'-typed symbols (PR #2049, "don't treat 'integer' loop counters
-as driver conflicts"); the same
-exemption is still missing from the verilog_rtl.cpp builder used here.
+A module-level 'integer' loop counter shared by two clocked always
+blocks must not be reported as a driver conflict during RTL
+construction. verilog_rtl_buildert::commit (src/verilog/verilog_rtl.cpp)
+used to track writes to every symbol assigned in an always block,
+including elaboration-only 'integer' loop counters, and rejected a
+counter shared by two blocks as a spurious driver conflict. The same
+exemption that verilog_synthesist::assignment_rec applies (PR #2049) is
+now also applied in the verilog_rtl.cpp builder used here.

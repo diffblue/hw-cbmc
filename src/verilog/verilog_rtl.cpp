@@ -3240,18 +3240,35 @@ void verilog_rtl_buildert::commit(
     if(is_cycle_local(identifier))
       continue;
 
+    // Variables declared with the Verilog 'integer' type are idiomatically
+    // used as loop counters and combinational scratch. They are effectively
+    // a fresh temporary in each always/initial block, so the same counter
+    // may legitimately be assigned by more than one block (e.g. a shared
+    // 'for' loop index). Exempt them from the multiple-driver check, which
+    // would otherwise flag the reuse as a spurious driver conflict. The
+    // driver is still recorded, so a singly-driven 'integer' net (e.g.
+    // 'wire integer') keeps its definition. This mirrors verilog_synthesist,
+    // which excludes 'integer'-typed symbols from its driver-conflict
+    // tracking.
+    const symbolt *symbol_ptr;
+    bool is_integer = !ns.lookup(identifier, symbol_ptr) &&
+                      symbol_ptr->type.get(ID_C_verilog_type) == ID_integer;
+
     auto &slice_map = rtl.identifier_map[identifier];
 
     for(auto &slice_entry : value_entry.second)
     {
       auto &slice = slice_entry.first;
 
-      for(auto &existing : slice_map)
+      if(!is_integer)
       {
-        if(existing.first.overlaps(slice))
+        for(auto &existing : slice_map)
         {
-          throw errort().with_location(source_location)
-            << "`" << identifier << "' has multiple drivers";
+          if(existing.first.overlaps(slice))
+          {
+            throw errort().with_location(source_location)
+              << "`" << identifier << "' has multiple drivers";
+          }
         }
       }
 

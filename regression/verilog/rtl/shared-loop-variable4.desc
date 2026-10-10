@@ -1,0 +1,21 @@
+KNOWNBUG
+shared-loop-variable4.sv
+--bound 0
+^\[main\.p0\] always main\.a == main\.b: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^file .* line \d+: `Verilog::\$root\.main\.i' has multiple drivers$
+^CONVERSION ERROR$
+--
+The shared-loop-counter driver-conflict exemption in
+verilog_rtl_buildert::commit (src/verilog/verilog_rtl.cpp) keys on the
+declared type (ID_C_verilog_type == ID_integer). A loop index declared
+'int' (as here), 'reg [N-1:0]' or 'logic [N-1:0]' is therefore NOT
+exempted, so this benign shared counter is still reported as a spurious
+driver conflict (the '--' section below is the current, buggy output).
+Desired behaviour is PROVED, matching the 'integer' case in
+shared-loop-variable2.sv. The principled fix is to exempt based on
+liveness (index dead outside the loop) rather than on the type; see
+Icarus Verilog bug #1000 and Yosys issue #295, both of which
+discriminate on usage, not type.
