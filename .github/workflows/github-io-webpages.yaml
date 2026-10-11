@@ -2,7 +2,8 @@ name: github-io-webpages
 
 # Runs ebmc over the LogikBench, HWMCC08 and HWMCC17 benchmark suites and
 # publishes a small benchmark index plus per-suite HTML reports to GitHub
-# Pages.
+# Pages.  Each benchmark suite runs as its own job; the publishing job
+# collates the per-suite results once all benchmarking jobs finish.
 
 on:
   # Refresh the published report whenever main changes.
@@ -26,9 +27,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Build ebmc and generate the benchmark reports for GitHub Pages.
-  run-benchmarks:
-    name: Generate benchmark reports
+  # Run the LogikBench suite and upload its report as an artifact.
+  logikbench:
+    name: Run LogikBench benchmarks
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -70,12 +71,149 @@ jobs:
           key: ${{ runner.os }}-24.04-make-gcc-logikbench-${{ github.sha }}
       - name: Try the ebmc binary
         run: ./src/ebmc/ebmc --version
-      - name: Run ebmc on the benchmark suites
+      - name: Run ebmc on the LogikBench suite
         run: |
-          mkdir -p _site/logikbench _site/hwmcc-2008 _site/hwmcc-2017
+          mkdir -p _site/logikbench
           PATH=$PATH:$PWD/src/ebmc benchmarking/logikbench.sh _site/logikbench/index.html
+      - name: Upload the LogikBench report
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-logikbench
+          path: _site/logikbench
+          retention-days: 1
+
+  # Run the HWMCC 2008 suite and upload its report as an artifact.
+  hwmcc-2008:
+    name: Run HWMCC 2008 benchmarks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get remove --purge man-db
+          packages_to_install="flex bison libxml2-utils ccache wget"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
+      - name: Prepare ccache
+        uses: actions/cache/restore@v6
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-24.04-make-gcc-hwmcc-2008-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-24.04-make-gcc-hwmcc-2008
+            ${{ runner.os }}-24.04-make-gcc
+      - name: ccache environment
+        run: |
+          echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
+      - name: Zero ccache stats and limit in size
+        run: ccache -z --max-size=500M
+      - name: Get cadical and minisat
+        run: make -C lib/cbmc/src cadical-download minisat2-download
+      - name: Build ebmc with make
+        run: make -C src ebmc.dir -j4 CXX="ccache g++" MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
+      - name: Save ccache
+        uses: actions/cache/save@v6
+        if: always()
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-24.04-make-gcc-hwmcc-2008-${{ github.sha }}
+      - name: Try the ebmc binary
+        run: ./src/ebmc/ebmc --version
+      - name: Run ebmc on the HWMCC 2008 suite
+        run: |
+          mkdir -p _site/hwmcc-2008
           PATH=$PATH:$PWD/src/ebmc benchmarking/hwmcc-2008-report.sh _site/hwmcc-2008/index.html
+      - name: Upload the HWMCC 2008 report
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-hwmcc-2008
+          path: _site/hwmcc-2008
+          retention-days: 1
+
+  # Run the HWMCC 2017 suite and upload its report as an artifact.
+  hwmcc-2017:
+    name: Run HWMCC 2017 benchmarks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get remove --purge man-db
+          packages_to_install="flex bison libxml2-utils ccache wget"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
+      - name: Prepare ccache
+        uses: actions/cache/restore@v6
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-24.04-make-gcc-hwmcc-2017-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-24.04-make-gcc-hwmcc-2017
+            ${{ runner.os }}-24.04-make-gcc
+      - name: ccache environment
+        run: |
+          echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
+      - name: Zero ccache stats and limit in size
+        run: ccache -z --max-size=500M
+      - name: Get cadical and minisat
+        run: make -C lib/cbmc/src cadical-download minisat2-download
+      - name: Build ebmc with make
+        run: make -C src ebmc.dir -j4 CXX="ccache g++" MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
+      - name: Save ccache
+        uses: actions/cache/save@v6
+        if: always()
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-24.04-make-gcc-hwmcc-2017-${{ github.sha }}
+      - name: Try the ebmc binary
+        run: ./src/ebmc/ebmc --version
+      - name: Run ebmc on the HWMCC 2017 suite
+        run: |
+          mkdir -p _site/hwmcc-2017
           PATH=$PATH:$PWD/src/ebmc benchmarking/hwmcc-2017-report.sh _site/hwmcc-2017/index.html
+      - name: Upload the HWMCC 2017 report
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-hwmcc-2017
+          path: _site/hwmcc-2017
+          retention-days: 1
+
+  # Collate the per-suite reports and upload them as a single Pages artifact.
+  collate:
+    name: Collate benchmark reports
+    needs: [ logikbench, hwmcc-2008, hwmcc-2017 ]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download the LogikBench report
+        uses: actions/download-artifact@v4
+        with:
+          name: report-logikbench
+          path: _site/logikbench
+      - name: Download the HWMCC 2008 report
+        uses: actions/download-artifact@v4
+        with:
+          name: report-hwmcc-2008
+          path: _site/hwmcc-2008
+      - name: Download the HWMCC 2017 report
+        uses: actions/download-artifact@v4
+        with:
+          name: report-hwmcc-2017
+          path: _site/hwmcc-2017
       - name: Generate the benchmark landing page
         run: cp benchmarking/index.html _site/index.html
       - name: Upload the report as a Pages artifact
@@ -87,7 +225,7 @@ jobs:
   # not configured.
   deploy:
     name: Publish report to GitHub Pages
-    needs: run-benchmarks
+    needs: collate
     if: github.event_name != 'pull_request' && github.repository == 'diffblue/hw-cbmc'
     runs-on: ubuntu-slim
     environment:
