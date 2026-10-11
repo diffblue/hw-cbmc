@@ -32,11 +32,21 @@ START_TIME=`date +%s`
 
 # Run ebmc under the per-benchmark time limit.  Exit status 124 (the
 # convention used by coreutils "timeout") indicates the limit was hit.
+#
+# Where "timeout" is unavailable, fall back to a CPU-time limit via
+# "ulimit -t", set in a subshell so the parent is unaffected.  Exceeding
+# the limit delivers SIGXCPU (exit 152) and, if the process lingers,
+# SIGKILL (exit 137); both are mapped to 124 so callers see one status.
 run_ebmc() {
   if command -v timeout >/dev/null 2>&1 ; then
     timeout "$TIMEOUT" ebmc "$@"
   else
-    ebmc "$@"
+    (ulimit -t "$TIMEOUT" && exec ebmc "$@")
+    rc=$?
+    case "$rc" in
+      152|137) return 124 ;;
+      *) return "$rc" ;;
+    esac
   fi
 }
 
