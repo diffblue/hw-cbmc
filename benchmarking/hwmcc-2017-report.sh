@@ -76,6 +76,7 @@ total=0
 pass=0
 fail=0
 skip=0
+timeout_count=0
 
 ROWS=`mktemp`
 trap 'rm -f "$ROWS" ebmc.out' EXIT
@@ -139,7 +140,7 @@ while read -r line; do
 
     if [ "$status" = 124 ] ; then
       echo $BENCHMARK: timed out after ${TIMEOUT}s
-      css=skip
+      css=timeout
       label="timed out"
       observed="timed out after ${TIMEOUT}s at bound $bound"
     elif [ "$status" = 10 ] ; then
@@ -172,7 +173,7 @@ while read -r line; do
 
       if [ "$status" = 124 ] ; then
         echo $BENCHMARK: timed out after ${TIMEOUT}s
-        css=skip
+        css=timeout
         label="timed out"
         observed="timed out after ${TIMEOUT}s at bound $LENGTH"
       elif [ "$status" = 10 ] ; then
@@ -208,6 +209,8 @@ while read -r line; do
     pass=`expr $pass + 1`
   elif [ "$css" = fail ] ; then
     fail=`expr $fail + 1`
+  elif [ "$css" = timeout ] ; then
+    timeout_count=`expr $timeout_count + 1`
   else
     skip=`expr $skip + 1`
   fi
@@ -218,7 +221,7 @@ done
 } < hwmcc17-single.csv
 
 echo
-echo "HWMCC17 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
+echo "HWMCC17 summary: $pass/$total checks passed ($fail failed, $timeout_count timed out, $skip skipped)"
 
 {
   cat <<HTML_HEAD
@@ -248,6 +251,7 @@ echo "HWMCC17 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
   tr.ok td:last-child { color: #1a7f37; }
   tr.fail td:last-child { color: #cf222e; }
   tr.skip td:last-child { color: #9a6700; }
+  tr.timeout td:last-child { color: #8250df; }
   td.result { cursor: pointer; text-decoration: underline dotted; }
   tr.log-row { display: none; }
   tr.log-row pre { white-space: pre-wrap; word-break: break-all; margin: 0;
@@ -274,6 +278,7 @@ echo "HWMCC17 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
   <button type="button" class="card active" data-filter="all" aria-pressed="true"><span class="n">$total</span>benchmarks</button>
   <button type="button" class="card" data-filter="ok" aria-pressed="false"><span class="n">$pass</span>passed</button>
   <button type="button" class="card" data-filter="fail" aria-pressed="false"><span class="n">$fail</span>failed</button>
+  <button type="button" class="card" data-filter="timeout" aria-pressed="false"><span class="n">$timeout_count</span>timed out</button>
   <button type="button" class="card" data-filter="skip" aria-pressed="false"><span class="n">$skip</span>skipped</button>
 </div>
 <table>

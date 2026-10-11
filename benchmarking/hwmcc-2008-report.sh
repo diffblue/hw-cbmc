@@ -5,10 +5,46 @@
 #
 # Usage: hwmcc-2008-report.sh [output.html]
 #   The report is written to the given path (default: hwmcc-2008-report.html).
+#
+# Each ebmc invocation is bounded by a per-benchmark time limit (TIMEOUT),
+# and the suite as a whole by an overall deadline (DEADLINE), so the total
+# runtime stays within the CI job's budget.
 
 set -u
 
 REPORT=${1:-hwmcc-2008-report.html}
+
+# Per-benchmark wall-clock limit, in seconds.  A single hard benchmark
+# would otherwise exhaust the CI job's time budget, so each ebmc invocation
+# is bounded.  Override with the TIMEOUT environment variable.
+TIMEOUT=${TIMEOUT:-30}
+
+# Overall wall-clock budget for the whole suite, in seconds.  Once this is
+# exceeded no further benchmarks are launched; the remainder are recorded
+# as skipped.  This keeps the total runtime bounded regardless of how many
+# benchmarks hit their per-benchmark limit.  Override with DEADLINE.
+DEADLINE=${DEADLINE:-1800}
+START_TIME=`date +%s`
+
+# Run ebmc under the per-benchmark time limit.  Exit status 124 (the
+# convention used by coreutils "timeout") indicates the limit was hit.
+#
+# Where "timeout" is unavailable, fall back to a CPU-time limit via
+# "ulimit -t", set in a subshell so the parent is unaffected.  Exceeding
+# the limit delivers SIGXCPU (exit 152) and, if the process lingers,
+# SIGKILL (exit 137); both are mapped to 124 so callers see one status.
+run_ebmc() {
+  if command -v timeout >/dev/null 2>&1 ; then
+    timeout "$TIMEOUT" ebmc "$@"
+  else
+    (ulimit -t "$TIMEOUT" && exec ebmc "$@")
+    rc=$?
+    case "$rc" in
+      152|137) return 124 ;;
+      *) return "$rc" ;;
+    esac
+  fi
+}
 
 if [ ! -e hwmcc08/. ] ; then
   echo Downloading HWMCC08 benchmark archive
@@ -33,6 +69,7 @@ total=0
 pass=0
 fail=0
 skip=0
+timeout_count=0
 
 ROWS=`mktemp`
 trap 'rm -f "$ROWS" ebmc.out' EXIT
@@ -60,18 +97,30 @@ while read -r line; do
   observed="not run"
   log_html=
 
-  if [ ! -e "hwmcc08/${BENCHMARK}.aig" ] ; then
+  ELAPSED=`expr \`date +%s\` - $START_TIME`
+
+  if [ "$ELAPSED" -ge "$DEADLINE" ] ; then
+    echo $BENCHMARK: skipping, overall time budget exhausted
+    css=skip
+    label=skipped
+    observed="skipped (time budget of ${DEADLINE}s exhausted)"
+  elif [ ! -e "hwmcc08/${BENCHMARK}.aig" ] ; then
     echo benchmark $BENCHMARK not found
     css=fail
     label=missing
     observed="benchmark file missing"
   elif [ "$RESULT" = "uns" ] ; then
     bound=2
-    ebmc --bound $bound "hwmcc08/${BENCHMARK}.aig" > ebmc.out 2>&1
+    run_ebmc --bound $bound "hwmcc08/${BENCHMARK}.aig" > ebmc.out 2>&1
     status=$?
     log_html=`sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' ebmc.out`
 
-    if [ "$status" = 10 ] ; then
+    if [ "$status" = 124 ] ; then
+      echo $BENCHMARK: timed out after ${TIMEOUT}s
+      css=timeout
+      label="timed out"
+      observed="timed out after ${TIMEOUT}s at bound $bound"
+    elif [ "$status" = 10 ] ; then
       echo $BENCHMARK: got unexpected counterexample
       css=fail
       label="unexpected counterexample"
@@ -95,11 +144,16 @@ while read -r line; do
     else
       bound=$LENGTH
       expected="sat at $LENGTH"
-      ebmc --bound "$LENGTH" "hwmcc08/${BENCHMARK}.aig" > ebmc.out 2>&1
+      run_ebmc --bound "$LENGTH" "hwmcc08/${BENCHMARK}.aig" > ebmc.out 2>&1
       status=$?
       log_html=`sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' ebmc.out`
 
-      if [ "$status" = 10 ] ; then
+      if [ "$status" = 124 ] ; then
+        echo $BENCHMARK: timed out after ${TIMEOUT}s
+        css=timeout
+        label="timed out"
+        observed="timed out after ${TIMEOUT}s at bound $LENGTH"
+      elif [ "$status" = 10 ] ; then
         echo $BENCHMARK: ok "(SAT $LENGTH)"
         css=ok
         label=ok
@@ -122,6 +176,8 @@ while read -r line; do
     pass=`expr $pass + 1`
   elif [ "$css" = fail ] ; then
     fail=`expr $fail + 1`
+  elif [ "$css" = timeout ] ; then
+    timeout_count=`expr $timeout_count + 1`
   else
     skip=`expr $skip + 1`
   fi
@@ -132,7 +188,7 @@ done
 } < hwmcc08results.csv
 
 echo
-echo "HWMCC08 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
+echo "HWMCC08 summary: $pass/$total checks passed ($fail failed, $timeout_count timed out, $skip skipped)"
 
 {
   cat <<HTML_HEAD
@@ -162,6 +218,7 @@ echo "HWMCC08 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
   tr.ok td:last-child { color: #1a7f37; }
   tr.fail td:last-child { color: #cf222e; }
   tr.skip td:last-child { color: #9a6700; }
+  tr.timeout td:last-child { color: #8250df; }
   td.result { cursor: pointer; text-decoration: underline dotted; }
   tr.log-row { display: none; }
   tr.log-row pre { white-space: pre-wrap; word-break: break-all; margin: 0;
@@ -178,7 +235,8 @@ echo "HWMCC08 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
   <a href="https://fmv.jku.at/hwmcc08/">HWMCC08</a> AIG benchmarks.<br>
   SAT benchmarks are checked at the published counterexample bound; UNSAT
   benchmarks are smoke-tested by confirming that ebmc does not report a
-  counterexample at bound <code>2</code>.<br>
+  counterexample at bound <code>2</code>.  Each benchmark is bounded by a
+  ${TIMEOUT}s per-benchmark time limit.<br>
   Generated $GENERATED_ON &middot;
   ebmc <code>$EBMC_VERSION</code>
 </p>
@@ -186,6 +244,7 @@ echo "HWMCC08 summary: $pass/$total checks passed ($fail failed, $skip skipped)"
   <button type="button" class="card active" data-filter="all" aria-pressed="true"><span class="n">$total</span>benchmarks</button>
   <button type="button" class="card" data-filter="ok" aria-pressed="false"><span class="n">$pass</span>passed</button>
   <button type="button" class="card" data-filter="fail" aria-pressed="false"><span class="n">$fail</span>failed</button>
+  <button type="button" class="card" data-filter="timeout" aria-pressed="false"><span class="n">$timeout_count</span>timed out</button>
   <button type="button" class="card" data-filter="skip" aria-pressed="false"><span class="n">$skip</span>skipped</button>
 </div>
 <table>
