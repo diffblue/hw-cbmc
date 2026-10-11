@@ -25,6 +25,7 @@
   assigning it
 * Verilog: implicit nets in port connections are visible to
   elaboration-time constants
+* --bdd: early variable quantification in the image computation
 
 # EBMC 6.1
 
