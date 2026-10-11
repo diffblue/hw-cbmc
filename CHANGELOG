@@ -36,6 +36,7 @@
 * Verilog: non-constant indexed part-selects as assignment targets
 * Verilog: procedural assignments to array elements with non-constant
   index via hierarchical identifiers
+* --bdd: early variable quantification in the image computation
 
 # EBMC 6.1
 
