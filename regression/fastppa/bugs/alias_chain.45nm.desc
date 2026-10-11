@@ -1,0 +1,7 @@
+CORE
+alias_chain.sv
+--top alias_chain --process 45nm
+^  Register bits:       64$
+^  Total:               596\.5 um2$
+^EXIT=0$
+^SIGNAL=0$

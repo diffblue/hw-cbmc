@@ -1,0 +1,7 @@
+CORE
+riscv_pipe.sv
+--top riscv_pipe --process 45nm
+^  Register bits:       1436$
+^  Total:               18052\.2 um2$
+^EXIT=0$
+^SIGNAL=0$

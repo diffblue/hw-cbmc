@@ -1,0 +1,19 @@
+The Synopsys PrimeTime report files in this directory
+(Rocket.qor.rpt, Rocket.total_area.rpt, Rocket.report_power.rpt,
+Rocket.report_power_hier.rpt) and the derived extract
+(Rocket.hier_cell_area.txt) are redistributed from the RTL-Timer
+project:
+
+  https://github.com/hkust-zhiyao/RTL-Timer
+  commit 206ff4078368c251d2fafaffcc648282c68316f1
+  directory report_example/rpt_data/net/Rocket_TinyRocket_route_TYP_SAIF_SDF/
+
+RTL-Timer is distributed under the BSD 3-Clause License,
+Copyright (c) 2024, Wenji Fang. The full license text is available at
+the URL above (file LICENSE at the same commit).
+
+The report files are unmodified byte-for-byte copies of the upstream
+files; SHA256SUMS in this directory records their checksums, and
+fetch_reports.sh re-downloads them from the pinned commit and verifies
+the checksums, so the copies can be audited against upstream at any
+time.

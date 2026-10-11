@@ -1,0 +1,13 @@
+KNOWNBUG
+shared_comparator_bug.sv
+--top shared_comparator_bug --process 45nm
+// lt/eq/gt all compare the same operand pair (a,b). Real synthesis
+// (confirmed via Yosys+ABC on the equivalent cmp_*.sv calibration
+// benchmarks) derives all three from one shared subtraction, costing
+// ~1x a single comparator, not 3x. Currently each is costed
+// independently (Operators: 3, Comb. area: 364.8 um2). See
+// src/fastppa/DOCKER_VALIDATION.md "Known limitation found but not fixed".
+^  Operators:           1$
+^  Comb. area:          121\.6 um2$
+^EXIT=0$
+^SIGNAL=0$

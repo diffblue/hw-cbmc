@@ -1,0 +1,7 @@
+CORE
+adder.sv
+--top adder --process 45nm --clock-freq 1e9 --toggle-rate 0.1
+^  Register bits:       32$
+^  Total:               336\.6 um2$
+^EXIT=0$
+^SIGNAL=0$
