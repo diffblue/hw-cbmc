@@ -1652,9 +1652,11 @@ void verilog_typecheckt::convert_repeat(
       << "repeat expected to have two operands";
   }
 
+  // Per IEEE 1800-2017 12.7.2 the repeat count is an expression giving
+  // the number of iterations, not a condition; it must not be coerced
+  // to a boolean (unlike the condition of a while loop).
   exprt &condition=statement.condition();
   convert_expr(condition);
-  make_boolean(condition);
 
   convert_statement(statement.body());
 }

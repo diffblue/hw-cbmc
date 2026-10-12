@@ -214,6 +214,8 @@ protected:
   void
   build_case(const verilog_case_statement_baset &, statet &, const framest &);
   void build_for(const verilog_fort &, statet &, const framest &);
+  void build_while(const verilog_whilet &, statet &, const framest &);
+  void build_repeat(const verilog_repeatt &, statet &, const framest &);
   void build_function_call(
     const verilog_function_callt &,
     statet &,
@@ -2960,6 +2962,204 @@ void verilog_rtl_buildert::build_for(
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::build_while
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Unrolls a while loop (1800-2017 12.7.4). The loop guard
+          must evaluate to a constant in every iteration.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::build_while(
+  const verilog_whilet &statement,
+  statet &state,
+  const framest &frames)
+{
+  // the frame for the break and continue statements of this loop
+  loop_framet loop_frame;
+  framest body_frames{&loop_frame, frames.tf};
+
+  // The path condition on entry to the loop. The iterations of the
+  // loop may narrow the path condition, by means of break, continue
+  // and return statements (1800-2017 12.8).
+  const auto entry_guard = state.guard;
+
+  // the number of return statements seen before the loop
+  const std::size_t returns_before =
+    frames.tf == nullptr ? 0 : frames.tf->return_states.size();
+
+  while(true)
+  {
+    loop_frame.continue_states.clear();
+
+    // The path is dead once the loop has been left by means of
+    // a break or return statement.
+    if(is_dead(state))
+      break;
+
+    auto guard = simplify_expr(
+      fold_system_functions(substitute(statement.condition(), state)), ns);
+
+    if(guard.is_false())
+      break;
+
+    if(!guard.is_true())
+    {
+      throw errort().with_location(statement.condition().source_location())
+        << "RTL construction failed to evaluate loop guard: `"
+        << to_string(statement.condition()) << '\'';
+    }
+
+    // execute the body
+    build_statement(statement.body(), state, body_frames);
+
+    // merge in edges from 'continue' statements, if any
+    if(!loop_frame.continue_states.empty())
+    {
+      std::vector<const statet *> joined_states{&state};
+
+      for(auto &continue_state : loop_frame.continue_states)
+      {
+        statet current(state);
+        merge(
+          conjunction(continue_state.guard), continue_state, current, state);
+        joined_states.push_back(&continue_state);
+      }
+
+      merge_guards(entry_guard, joined_states, state);
+    }
+  }
+
+  // Merge in edges from 'break' statements, if any. These come
+  // in program order, hence process in reverse order.
+  auto &break_states = loop_frame.break_states;
+
+  for(auto state_it = break_states.rbegin(); state_it != break_states.rend();
+      ++state_it)
+  {
+    statet current(state);
+    merge(conjunction(state_it->guard), *state_it, current, state);
+  }
+
+  // The path condition after the loop; see build_for.
+  if(frames.tf == nullptr || frames.tf->return_states.size() == returns_before)
+  {
+    state.guard = entry_guard;
+  }
+  else
+  {
+    std::vector<const statet *> exit_states{&state};
+
+    for(auto &break_state : break_states)
+      exit_states.push_back(&break_state);
+
+    merge_guards(entry_guard, exit_states, state);
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::build_repeat
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Unrolls a repeat loop (1800-2017 12.7.2). The repeat count
+          must be an elaboration-time constant; the body is executed
+          that many times.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::build_repeat(
+  const verilog_repeatt &statement,
+  statet &state,
+  const framest &frames)
+{
+  // The repeat count is evaluated once, before the loop (1800-2017
+  // 12.7.2), and must be an elaboration-time constant.
+  auto count_opt = constant_index(statement.condition(), state);
+
+  if(!count_opt.has_value())
+  {
+    throw errort().with_location(statement.condition().source_location())
+      << "RTL construction failed to evaluate repeat count: `"
+      << to_string(statement.condition()) << '\'';
+  }
+
+  // A negative or zero count executes the body zero times.
+  auto count = *count_opt;
+
+  // the frame for the break and continue statements of this loop
+  loop_framet loop_frame;
+  framest body_frames{&loop_frame, frames.tf};
+
+  const auto entry_guard = state.guard;
+
+  const std::size_t returns_before =
+    frames.tf == nullptr ? 0 : frames.tf->return_states.size();
+
+  for(mp_integer i = 0; i < count; ++i)
+  {
+    loop_frame.continue_states.clear();
+
+    // The path is dead once the loop has been left by means of
+    // a break or return statement.
+    if(is_dead(state))
+      break;
+
+    // execute the body
+    build_statement(statement.body(), state, body_frames);
+
+    // merge in edges from 'continue' statements, if any
+    if(!loop_frame.continue_states.empty())
+    {
+      std::vector<const statet *> joined_states{&state};
+
+      for(auto &continue_state : loop_frame.continue_states)
+      {
+        statet current(state);
+        merge(
+          conjunction(continue_state.guard), continue_state, current, state);
+        joined_states.push_back(&continue_state);
+      }
+
+      merge_guards(entry_guard, joined_states, state);
+    }
+  }
+
+  // Merge in edges from 'break' statements, if any. These come
+  // in program order, hence process in reverse order.
+  auto &break_states = loop_frame.break_states;
+
+  for(auto state_it = break_states.rbegin(); state_it != break_states.rend();
+      ++state_it)
+  {
+    statet current(state);
+    merge(conjunction(state_it->guard), *state_it, current, state);
+  }
+
+  // The path condition after the loop; see build_for.
+  if(frames.tf == nullptr || frames.tf->return_states.size() == returns_before)
+  {
+    state.guard = entry_guard;
+  }
+  else
+  {
+    std::vector<const statet *> exit_states{&state};
+
+    for(auto &break_state : break_states)
+      exit_states.push_back(&break_state);
+
+    merge_guards(entry_guard, exit_states, state);
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::build_function_call
 
   Inputs:
@@ -3201,6 +3401,14 @@ void verilog_rtl_buildert::build_statement(
   else if(statement.id() == ID_for)
   {
     build_for(to_verilog_for(statement), state, frames);
+  }
+  else if(statement.id() == ID_while)
+  {
+    build_while(to_verilog_while(statement), state, frames);
+  }
+  else if(statement.id() == ID_repeat)
+  {
+    build_repeat(to_verilog_repeat(statement), state, frames);
   }
   else if(statement.id() == ID_break)
   {
