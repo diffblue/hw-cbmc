@@ -4041,6 +4041,18 @@ named_port_connection:
                 { init($$, ID_verilog_named_port_connection);
                   mto($$, $2);
                   mto($$, $4); }
+        | '.' any_identifier
+                // 1800-2017 A.4.1.1 / 23.3.2.3: the implicit named port
+                // connection ".name" is shorthand for ".name(name)", i.e. a
+                // connection to a same-named identifier in the local scope.
+                { init($$, ID_verilog_named_port_connection);
+                  // The value is a copy of the port identifier, which is a
+                  // verilog_identifier with ID_base_name set (see
+                  // any_identifier).
+                  exprt value = stack_expr($2);
+                  value.id(ID_verilog_identifier);
+                  mto($$, $2);
+                  stack_expr($$).add_to_operands(std::move(value)); }
         | ".*" { init($$, ID_verilog_wildcard_port_connection); }
         ;
 

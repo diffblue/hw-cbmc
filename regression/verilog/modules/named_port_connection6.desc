@@ -1,13 +1,9 @@
-KNOWNBUG
+CORE
 named_port_connection6.sv
 --bound 0
+^\[main\.u_sub\.assert\.1\] .*: PROVED up to bound 0$
 ^EXIT=0$
 ^SIGNAL=0$
 --
-^file .* line .*: syntax error, .*$
+^warning: ignoring
 --
-named_port_connection in parser.y only accepts
-'.' any_identifier '(' expression_opt ')', so the implicit named port
-connection shorthand ".clk_i" (1800-2017 A.4.1.1, equivalent to
-".clk_i(clk_i)") is rejected as a syntax error rather than accepted as
-an ordinary named connection to a same-named identifier.
