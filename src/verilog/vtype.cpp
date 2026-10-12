@@ -73,6 +73,13 @@ vtypet::vtypet(const typet &type)
     vtype = REAL;
     width = 32;
   }
+  else if(type.id() == ID_floatbv)
+  {
+    // A real type that has already been lowered to an IEEE 754
+    // floating-point type.
+    vtype = REAL;
+    width = to_floatbv_type(type).get_width();
+  }
   else if(type.id() == ID_verilog_chandle)
   {
     vtype = CHANDLE;
