@@ -766,6 +766,22 @@ exprt verilog_lowering(exprt expr)
     else
       return expr; // leave as is
   }
+  else if(expr.id() == ID_and || expr.id() == ID_or)
+  {
+    // Logical && and ||.
+    // Four-valued only if the type is four-valued; otherwise the
+    // operands are boolean and the expression is left as is.
+    if(is_four_valued(expr.type()))
+    {
+      PRECONDITION(expr.operands().size() == 2);
+      if(expr.id() == ID_and)
+        return aval_bval_logical_and(to_and_expr(expr));
+      else
+        return aval_bval_logical_or(to_or_expr(expr));
+    }
+    else
+      return expr; // leave as is
+  }
   else if(expr.id() == ID_verilog_iff)
   {
     auto &iff = to_verilog_iff_expr(expr);

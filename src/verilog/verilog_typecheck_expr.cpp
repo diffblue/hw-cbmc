@@ -3793,13 +3793,32 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     return convert_replication_expr(to_replication_expr(expr));
   else if(expr.id() == ID_and || expr.id() == ID_or)
   {
+    // 1800-2017 11.4.7 Logical operators.
+    // These yield 'x' when the result is not determined by a
+    // controlling operand but at least one operand contains x or z.
     Forall_operands(it, expr)
-    {
       convert_expr(*it);
-      make_boolean(*it);
+
+    // Four-valued if any operand is four-valued.
+    bool any_four_valued = false;
+    for(auto &op : expr.operands())
+    {
+      if(
+        op.type().id() == ID_verilog_signedbv ||
+        op.type().id() == ID_verilog_unsignedbv)
+        any_four_valued = true;
     }
 
-    expr.type()=bool_typet();
+    if(any_four_valued)
+    {
+      expr.type() = verilog_unsignedbv_typet{1};
+    }
+    else
+    {
+      Forall_operands(it, expr)
+        make_boolean(*it);
+      expr.type() = bool_typet();
+    }
 
     return std::move(expr);
   }

@@ -47,6 +47,10 @@ exprt aval_bval(const verilog_logical_inequality_exprt &);
 
 /// lowering for !
 exprt aval_bval(const not_exprt &);
+/// lowering for && (logical and)
+exprt aval_bval_logical_and(const and_exprt &);
+/// lowering for || (logical or)
+exprt aval_bval_logical_or(const or_exprt &);
 /// lowering for ~
 exprt aval_bval(const bitnot_exprt &);
 /// lowering for &
