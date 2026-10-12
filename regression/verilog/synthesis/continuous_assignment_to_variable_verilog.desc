@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 continuous_assignment_to_variable_verilog.v
 
-^EXIT=0$
+^file .* line 6: continuous assignment to variable main\.some_reg is not allowed in Verilog; the target must be a net$
+^CONVERSION ERROR$
+^EXIT=2$
 ^SIGNAL=0$
 --
---
-This should error.

@@ -2,6 +2,8 @@
 
 * netlist conversion no longer overflows the stack on long chains of
   combinational definitions, e.g., deep AIGs
+* Verilog: continuous assignments to variables are rejected in Verilog
+  (they remain allowed in SystemVerilog)
 
 # EBMC 6.2
 
