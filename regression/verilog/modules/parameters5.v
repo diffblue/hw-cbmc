@@ -16,6 +16,6 @@ module main;
 
   always assert p0: my_instance.p0==10;
   always assert p1: my_instance.p1==1;
-  always assert p2: my_instance.p2==20;
+  always assert p2: my_instance.p2==2;
 
 endmodule
