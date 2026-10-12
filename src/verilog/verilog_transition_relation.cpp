@@ -644,6 +644,74 @@ void verilog_transition_relationt::convert_definitions(
     }
     else
     {
+      // A wire is defined only on the bits that have a driver. Bits
+      // without a driver (an entirely undriven net, or the undriven
+      // bits of a partially driven net) are left unconstrained, so they
+      // are free in every timeframe, rather than being tied to a single
+      // time-invariant nondet value (see hw-cbmc issue #2251). This
+      // matches the behaviour of a fully undriven net, which has no
+      // invariant at all.
+      //
+      // Emit one equality per driven slice over the corresponding bits
+      // of the wire, when the lowered type is a bit-vector and the
+      // driven slices do not cover the whole symbol. Otherwise fall back
+      // to a single whole-symbol equality (undriven bits then take a
+      // nondet default), which is required for aggregate-typed wires
+      // whose bit-level slicing is not a plain extractbits.
+      auto bits_opt = verilog_bits_opt(symbol.type);
+
+      // Do the driven slices leave any bit of the symbol undriven?
+      mp_integer driven_bits = 0;
+      for(auto &slice_entry : slice_map)
+        driven_bits += slice_entry.first.width();
+      bool fully_driven = bits_opt.has_value() && driven_bits == whole.width();
+
+      bool bitvector_lowered = lowered_type.id() == ID_unsignedbv ||
+                               lowered_type.id() == ID_signedbv ||
+                               lowered_type.id() == ID_bool;
+
+      if(bits_opt.has_value() && !fully_driven && bitvector_lowered)
+      {
+        exprt lhs_symbol = symbol_expr(symbol, false);
+
+        for(auto &slice_entry : slice_map)
+        {
+          auto &slice = slice_entry.first;
+
+          auto driven_value = typecast_exprt::conditional_cast(
+            lower(slice_entry.second.value),
+            unsignedbv_typet{numeric_cast_v<std::size_t>(slice.width())});
+
+          // reads of the wire in its own definition are non-determinism
+          post_process_wire(identifier, driven_value);
+
+          exprt lhs_slice;
+          if(slice.width() == 1 && lowered_type.id() == ID_bool)
+          {
+            lhs_slice = lhs_symbol;
+          }
+          else if(slice.width() == 1)
+          {
+            lhs_slice = extractbit_exprt{
+              lhs_symbol, from_integer(slice.lower, integer_typet{})};
+          }
+          else
+          {
+            lhs_slice = extractbits_exprt{
+              lhs_symbol,
+              from_integer(slice.lower, integer_typet{}),
+              unsignedbv_typet{numeric_cast_v<std::size_t>(slice.width())}};
+          }
+
+          trans.invar().add_to_operands(equal_exprt{
+            typecast_exprt::conditional_cast(
+              std::move(lhs_slice), driven_value.type()),
+            std::move(driven_value)});
+        }
+
+        continue;
+      }
+
       // Slices that are not assigned are unconstrained.
       exprt nondet = symbol_expr_raw;
       nondet.id(ID_nondet_symbol);

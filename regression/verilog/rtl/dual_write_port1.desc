@@ -1,6 +1,7 @@
 CORE
 dual_write_port1.sv
 --bound 0
-^EXIT=0$
+^no properties$
+^EXIT=10$
 ^SIGNAL=0$
 --
