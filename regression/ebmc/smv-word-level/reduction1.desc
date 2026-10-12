@@ -1,16 +1,15 @@
-KNOWNBUG
+CORE
 reduction1.sv
 --smv-word-level
 ^MODULE main$
 ^INVAR a = 0uh8_A5$
-^INVAR r_and = \(\)$
-^INVAR r_or = \(\)$
-^INVAR r_xor = \(\)$
-^INVAR r_nand = \(\)$
-^INVAR r_nor = \(\)$
-^INVAR r_xnor = \(\)$
+^INVAR r_and = \(a = 0ud8_255\)$
+^INVAR r_or = \(a != 0ud8_0\)$
+^INVAR r_xor = \(bool\(a\[0:0\]\) xor bool\(a\[1:1\]\) xor bool\(a\[2:2\]\) xor bool\(a\[3:3\]\) xor bool\(a\[4:4\]\) xor bool\(a\[5:5\]\) xor bool\(a\[6:6\]\) xor bool\(a\[7:7\]\)\)$
+^INVAR r_nand = \(a != 0ud8_255\)$
+^INVAR r_nor = \(a = 0ud8_0\)$
+^INVAR r_xnor = !\(bool\(a\[0:0\]\) xor bool\(a\[1:1\]\) xor bool\(a\[2:2\]\) xor bool\(a\[3:3\]\) xor bool\(a\[4:4\]\) xor bool\(a\[5:5\]\) xor bool\(a\[6:6\]\) xor bool\(a\[7:7\]\)\)$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-Reduction operators (&, |, ^) produce norep output instead of proper SMV.
