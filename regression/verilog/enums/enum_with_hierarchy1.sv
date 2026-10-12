@@ -13,6 +13,6 @@ module main;
   sub #(2) sub2();
 
   p1: assert final (sub1.E0 == 0 && sub1.E1 == 1 && sub1.E2 == 2);
-  p2: assert final (sub2.E0 == 0 && sub2.E2 == 2 && sub2.E2 == 4);
+  p2: assert final (sub2.E0 == 0 && sub2.E1 == 2 && sub2.E2 == 4);
 
 endmodule
