@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/mathematical_types.h>
 #include <util/prefix.h>
 
+#include "aval_bval_encoding.h"
 #include "verilog_bind.h"
 #include "verilog_typecheck.h"
 #include "verilog_types.h"
@@ -1370,28 +1371,117 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
       // First elaborate the value, possibly recursively.
       convert_expr(symbol.value);
 
+      // When there is no explicit type, a parameter takes the type of its
+      // final value (1800-2017 6.20.2). We record this Verilog type before
+      // the value is lowered; it is used when the value is four-valued and
+      // contains x/z (see below).
+      auto value_type = symbol.value.type();
+
       if(!is_let)
         symbol.value = elaborate_constant_expression_check(symbol.value);
 
-      symbol.type = symbol.value.type();
+      // A parameter is a constant and may legitimately hold x/z values
+      // (1800-2017 6.20.2). When the lowered value actually contains x/z,
+      // we give the parameter the four-valued Verilog type (so that $bits
+      // is well-defined and the x/z are retained) rather than the internal
+      // aval/bval encoding produced by lowering. Otherwise the parameter
+      // takes the type of its lowered value, as before.
+      if(
+        symbol.value.id() == ID_constant && is_aval_bval(symbol.value.type()) &&
+        aval_bval_has_xz(to_constant_expr(symbol.value)))
+      {
+        symbol.type = value_type; // four-valued Verilog type
+      }
+      else
+      {
+        symbol.type = symbol.value.type();
+      }
     }
     else
     {
       // No, elaborate the type.
-      auto elaborated_type = make_two_valued(
-        elaborate_type(to_type_with_subtype(symbol.type).subtype()));
-      symbol.type = elaborated_type;
+      auto elaborated_type =
+        elaborate_type(to_type_with_subtype(symbol.type).subtype());
 
       // Now elaborate the value, possibly recursively, if any.
       if(symbol.value.is_not_nil())
       {
         convert_expr(symbol.value);
 
-        // Convert to the given type. These are assignment contexts.
-        assignment_conversion(symbol.value, symbol.type);
+        if(symbol.is_macro)
+        {
+          // A parameter is a constant and may legitimately hold x/z
+          // values (1800-2017 6.20.2). We first convert the value in a
+          // four-valued assignment context so that any x/z are retained,
+          // then decide the parameter type based on whether the value
+          // actually contains x/z.
+          auto four_valued_type = make_four_valued(elaborated_type);
+          auto two_valued_type = make_two_valued(elaborated_type);
 
-        if(!is_let)
-          symbol.value = elaborate_constant_expression_check(symbol.value);
+          // The four-valued handling only applies to packed integral
+          // parameter types that have a distinct four-valued form. In
+          // particular, it must not be applied to enumeration constants
+          // (whose base type is two-valued "bit" and whose value is
+          // checked for constness as given, 1800-2017 6.19).
+          bool four_state_capable =
+            four_valued_type != two_valued_type &&
+            elaborated_type.get(ID_C_verilog_type) != ID_verilog_enum;
+
+          if(four_state_capable)
+          {
+            assignment_conversion(symbol.value, four_valued_type);
+
+            auto lowered =
+              is_let ? symbol.value
+                     : elaborate_constant_expression_check(exprt{symbol.value});
+
+            bool has_xz = lowered.id() == ID_constant &&
+                          is_aval_bval(lowered.type()) &&
+                          aval_bval_has_xz(to_constant_expr(lowered));
+
+            if(has_xz)
+            {
+              symbol.type = four_valued_type;
+              symbol.value = lowered;
+            }
+            else
+            {
+              // No x/z: use the two-valued type and value, as is
+              // expected for ordinary parameter values.
+              symbol.type = two_valued_type;
+              assignment_conversion(symbol.value, two_valued_type);
+              if(!is_let)
+                symbol.value =
+                  elaborate_constant_expression_check(symbol.value);
+            }
+          }
+          else
+          {
+            // Not four-state capable (e.g. an enumeration constant):
+            // behave exactly as for an ordinary two-valued symbol.
+            symbol.type = two_valued_type;
+            assignment_conversion(symbol.value, symbol.type);
+            if(!is_let)
+              symbol.value = elaborate_constant_expression_check(symbol.value);
+          }
+        }
+        else
+        {
+          // Non-parameter symbols are modelled with a two-valued type.
+          symbol.type = make_two_valued(elaborated_type);
+
+          // Convert to the given type. These are assignment contexts.
+          assignment_conversion(symbol.value, symbol.type);
+
+          if(!is_let)
+            symbol.value = elaborate_constant_expression_check(symbol.value);
+        }
+      }
+      else
+      {
+        // No value.
+        symbol.type =
+          symbol.is_macro ? elaborated_type : make_two_valued(elaborated_type);
       }
     }
   }

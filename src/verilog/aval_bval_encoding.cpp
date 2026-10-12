@@ -110,6 +110,17 @@ constant_exprt lower_to_aval_bval(const constant_exprt &src)
   return constant_exprt{make_bvrep(width * 2, bv_f), new_type};
 }
 
+bool aval_bval_has_xz(const constant_exprt &src)
+{
+  PRECONDITION(is_aval_bval(src.type()));
+  auto width = aval_bval_width(src.type());
+  // The bval occupies the upper 'width' bits; a non-zero bval bit marks
+  // an x or z. See the encoding table above.
+  auto value = bvrep2integer(src.get_value(), width * 2, false);
+  auto bval = value >> width;
+  return bval != 0;
+}
+
 exprt aval(const exprt &src)
 {
   if(is_aval_bval(src.type()))

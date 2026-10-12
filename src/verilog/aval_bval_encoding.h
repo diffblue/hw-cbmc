@@ -34,6 +34,9 @@ typet aval_bval_underlying(const typet &);
 bv_typet lower_to_aval_bval(const typet &);
 constant_exprt lower_to_aval_bval(const constant_exprt &);
 
+/// true iff the lowered aval/bval constant contains an x or z bit
+bool aval_bval_has_xz(const constant_exprt &);
+
 // extract a/b vectors
 exprt aval(const exprt &);
 exprt bval(const exprt &);

@@ -157,3 +157,48 @@ typet make_two_valued(typet src)
   else
     return src;
 }
+
+typet make_four_valued(typet src)
+{
+  // The inverse of make_two_valued: turn a two-valued type into its
+  // four-valued (x/z-capable) counterpart. Used for parameters whose
+  // (constant) value contains x/z, which must be retained (1800-2017
+  // 6.20.2); state variables continue to use the two-valued modelling.
+  if(src.id() == ID_bool)
+  {
+    auto result = verilog_unsignedbv_typet{1};
+    result.add_source_location() = src.source_location();
+    irep_idt verilog_type = src.get(ID_C_verilog_type);
+    if(!verilog_type.empty())
+      result.set(ID_C_verilog_type, verilog_type);
+    irep_idt verilog_vector_type = src.get(ID_C_verilog_vector_type);
+    if(!verilog_vector_type.empty())
+      result.set(ID_C_verilog_vector_type, verilog_vector_type);
+    return std::move(result);
+  }
+  else if(src.id() == ID_unsignedbv)
+  {
+    // replace id, preserve width/offset/markers and location
+    src.id(ID_verilog_unsignedbv);
+    return src;
+  }
+  else if(src.id() == ID_signedbv)
+  {
+    src.id(ID_verilog_signedbv);
+    return src;
+  }
+  else if(src.id() == ID_array)
+  {
+    auto &array_type = to_array_type(src);
+    array_type.element_type() = make_four_valued(array_type.element_type());
+    return src;
+  }
+  else if(src.id() == ID_struct)
+  {
+    for(auto &component : to_struct_type(src).components())
+      component.type() = make_four_valued(component.type());
+    return src;
+  }
+  else
+    return src;
+}

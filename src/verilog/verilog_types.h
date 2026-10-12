@@ -1078,4 +1078,8 @@ bool is_interface_array_type(const typet &);
 /// replaces all four-valued types by their corresponding two-valued type
 typet make_two_valued(typet);
 
+/// the inverse of make_two_valued: restores the four-valued (x/z-capable)
+/// type for the corresponding two-valued bit-vector type
+typet make_four_valued(typet);
+
 #endif
