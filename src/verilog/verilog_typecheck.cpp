@@ -568,6 +568,14 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
 #endif
   }
 
+  // The return variable (and any local variables) start out with their
+  // default value, i.e., 0 (IEEE 1800-2017 13.4.3). We initialise the
+  // return variable here so that a function body that reads its own,
+  // not-yet-assigned return value sees a constant.
+  irep_idt return_identifier = id2string(function_symbol.name) + "." +
+                               id2string(function_symbol.base_name);
+  vars[return_identifier] = from_integer(0, code_type.return_type());
+
   // interpret it
   for(auto &statement : function_body.statements())
     verilog_interpreter(statement);
@@ -576,9 +584,7 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
 
   // get return value
 
-  exprt return_value=var_value(
-    id2string(function_symbol.name)+"."+
-    id2string(function_symbol.base_name));
+  exprt return_value = var_value(return_identifier);
 
   return return_value;
 }
