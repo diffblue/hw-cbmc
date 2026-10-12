@@ -428,6 +428,19 @@ exprt verilog_synthesist::expand_function_call(
       auto what = synth_expr(call.arguments()[0], symbol_state); // rec. call
       return has_xz(what);
     }
+    else if(base_name == "$countbits")
+    {
+      // 1800-2017 20.9: count bits of the first argument that match any
+      // of the control bits (the remaining arguments).
+      DATA_INVARIANT(
+        call.arguments().size() >= 2,
+        "$countbits must have at least two arguments");
+      auto value = synth_expr(call.arguments()[0], symbol_state);
+      exprt::operandst controls;
+      for(std::size_t i = 1; i < call.arguments().size(); i++)
+        controls.push_back(synth_expr(call.arguments()[i], symbol_state));
+      return aval_bval_countbits(value, controls, call.type());
+    }
     else if(base_name == "$value$plusargs")
     {
       // IEEE 1800-2017 section 21.6

@@ -412,6 +412,20 @@ exprt verilog_transition_relationt::lower_system_functions(exprt expr)
         call.arguments().size() == 1, "$isunknown must have one argument");
       return has_xz(call.arguments()[0]);
     }
+    else if(base_name == "$countbits")
+    {
+      // 1800-2017 20.9: count bits of the first argument that match any
+      // of the control bits (the remaining arguments). The arguments
+      // have already been lowered to the aval/bval encoding.
+      DATA_INVARIANT(
+        call.arguments().size() >= 2,
+        "$countbits must have at least two arguments");
+      auto result_type = verilog_lowering(call.type());
+      auto &value = call.arguments()[0];
+      exprt::operandst controls{
+        call.arguments().begin() + 1, call.arguments().end()};
+      return aval_bval_countbits(value, controls, result_type);
+    }
     else if(base_name == "$value$plusargs" || base_name == "$test$plusargs")
     {
       // IEEE 1800-2017 section 21.6

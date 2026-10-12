@@ -97,4 +97,11 @@ exprt default_aval_bval_lowering(const exprt &);
 /// If any operand has x/z, or the divisor is zero, the result is 'x'.
 exprt aval_bval_div_mod(const binary_exprt &);
 
+/// lowering for $countbits: count bits of 'value' matching any control
+/// bit. Only the LSB of each control is used. See IEEE 1800-2017 20.9.
+exprt aval_bval_countbits(
+  const exprt &value,
+  const exprt::operandst &controls,
+  const typet &result_type);
+
 #endif

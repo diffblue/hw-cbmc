@@ -10,6 +10,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
+#include <util/bitvector_types.h>
 #include <util/mathematical_types.h>
 #include <util/simplify_expr.h>
 
@@ -28,9 +29,13 @@ countones(const constant_exprt &expr, const namespacet &ns)
 
   if(is_four_valued(operand.type()))
   {
-    // encode into aval/bval, then count known 1 bits (aval & ~bval)
+    // encode into aval/bval, then count known 1 bits (aval & ~bval).
+    // popcount needs an unsigned bit-vector (not a plain bv) to fold.
     auto encoded = lower_to_aval_bval(to_constant_expr(operand));
-    operand = bitand_exprt{aval(encoded), bitnot_exprt{bval(encoded)}};
+    auto width = aval_bval_width(encoded.type());
+    operand = typecast_exprt{
+      bitand_exprt{aval(encoded), bitnot_exprt{bval(encoded)}},
+      unsignedbv_typet{width}};
   }
 
   // lower to popcount and try simplifier

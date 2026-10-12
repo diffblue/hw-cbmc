@@ -290,6 +290,73 @@ exprt make_x(const typet &type)
   return lower_to_aval_bval(constant_exprt{std::string(width, 'x'), type});
 }
 
+exprt aval_bval_countbits(
+  const exprt &value,
+  const exprt::operandst &controls,
+  const typet &result_type)
+{
+  // 1800-2017 20.9: $countbits counts the number of bits of 'value'
+  // that match any of the control bits. Each control bit denotes a
+  // single four-valued value (0, 1, x or z); if a control expression is
+  // wider than one bit, only its least significant bit is used.
+  //
+  // Encoding (see top of file): a four-valued bit is (bval, aval).
+  // A value bit matches a control bit iff their aval bits are equal and
+  // their bval bits are equal. We compute, for each control, a bit mask
+  // over all bit positions of 'value', then take the bit-wise OR of all
+  // such masks and count the set bits with popcount.
+  PRECONDITION(!controls.empty());
+
+  // aval/bval bit vectors of 'value', both of width n.
+  auto value_aval = aval(value);
+  auto value_bval = bval(value);
+  auto width = to_bv_type(value_aval.type()).get_width();
+  const bv_typet vector_type{width};
+
+  // Broadcast a single bit to the full width of 'value':
+  //   bit ? all-ones : all-zeros
+  auto replicate = [&vector_type](const exprt &bit) -> exprt
+  {
+    auto bit_boolean = typecast_exprt::conditional_cast(bit, bool_typet{});
+    return if_exprt{
+      bit_boolean, vector_type.all_ones_expr(), vector_type.all_zeros_expr()};
+  };
+
+  exprt::operandst match_masks;
+
+  for(const auto &control : controls)
+  {
+    // least significant aval/bval bit of the control
+    auto control_aval = aval(control);
+    auto control_bval = bval(control);
+    auto control_aval_lsb =
+      extractbit_exprt{control_aval, natural_typet{}.zero_expr()};
+    auto control_bval_lsb =
+      extractbit_exprt{control_bval, natural_typet{}.zero_expr()};
+
+    auto control_aval_vector = replicate(control_aval_lsb);
+    auto control_bval_vector = replicate(control_bval_lsb);
+
+    // Bits where the aval agrees, and bits where the bval agrees.
+    auto aval_match =
+      bitnot_exprt{bitxor_exprt{value_aval, control_aval_vector}};
+    auto bval_match =
+      bitnot_exprt{bitxor_exprt{value_bval, control_bval_vector}};
+
+    match_masks.push_back(bitand_exprt{aval_match, bval_match});
+  }
+
+  exprt any_match = match_masks.front();
+  for(std::size_t i = 1; i < match_masks.size(); i++)
+    any_match = bitor_exprt{any_match, match_masks[i]};
+
+  // popcount requires a signed/unsigned bit-vector operand (not a plain
+  // bv) for constant folding; cast accordingly.
+  auto any_match_unsigned = typecast_exprt{any_match, unsignedbv_typet{width}};
+
+  return popcount_exprt{any_match_unsigned, result_type};
+}
+
 exprt aval_bval(const verilog_logical_equality_exprt &expr)
 {
   auto &type = expr.type();
@@ -422,9 +489,7 @@ exprt aval_bval_logical_and(const and_exprt &expr)
   auto either_false = or_exprt{lhs_false, rhs_false};
 
   return if_exprt{
-    either_false,
-    zero,
-    if_exprt{and_exprt{lhs_one, rhs_one}, one, x}};
+    either_false, zero, if_exprt{and_exprt{lhs_one, rhs_one}, one, x}};
 }
 
 exprt aval_bval_logical_or(const or_exprt &expr)
