@@ -21,6 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ebmc/ebmc_error.h>
 
+#include "aval_bval_encoding.h"
 #include "expr2verilog.h"
 #include "sva_expr.h"
 #include "verilog_bits.h"
@@ -389,7 +390,18 @@ exprt verilog_transition_relationt::lower_system_functions(exprt expr)
       DATA_INVARIANT(
         call.arguments().size() == 1, "$countones must have one argument");
       auto result_type = verilog_lowering(call.type());
-      return popcount_exprt{call.arguments()[0], result_type};
+      auto &op = call.arguments()[0];
+
+      // For four-valued operands, only known 1 bits count; x/z bits do
+      // not (IEEE 1800-2017 20.9). The operand has already been lowered
+      // to the aval/bval encoding at this point.
+      if(is_aval_bval(op))
+      {
+        auto known_ones = bitand_exprt{aval(op), bitnot_exprt{bval(op)}};
+        return popcount_exprt{known_ones, result_type};
+      }
+      else
+        return popcount_exprt{op, result_type};
     }
     else if(base_name == "$value$plusargs" || base_name == "$test$plusargs")
     {

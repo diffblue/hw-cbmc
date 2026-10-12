@@ -1315,9 +1315,20 @@ Function: verilog_typecheck_exprt::countones
 
 constant_exprt verilog_typecheck_exprt::countones(const constant_exprt &expr)
 {
+  // Count the number of 1 bits. For four-valued operands, x/z bits
+  // do not count as ones (IEEE 1800-2017 20.9).
+  exprt operand = expr;
+
+  if(is_four_valued(operand.type()))
+  {
+    // encode into aval/bval, then count known 1 bits (aval & ~bval)
+    auto encoded = lower_to_aval_bval(to_constant_expr(operand));
+    operand = bitand_exprt{aval(encoded), bitnot_exprt{bval(encoded)}};
+  }
+
   // lower to popcount and try simplifier
   auto simplified =
-    simplify_expr(popcount_exprt{expr, verilog_int_typet{}.lower()}, ns);
+    simplify_expr(popcount_exprt{operand, verilog_int_typet{}.lower()}, ns);
 
   if(!simplified.is_constant())
   {
