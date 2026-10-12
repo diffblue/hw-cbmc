@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr.h>
 #include <util/invariant.h>
 #include <util/mp_arith.h>
+#include <util/symbol.h>
 
 #include "verilog_standard.h"
 
@@ -206,6 +207,13 @@ public:
   /// Boolean constraints that hold in every state,
   /// e.g. from primitive gates
   std::vector<exprt> constraints;
+
+  /// Auxiliary wires introduced during RTL construction. These name
+  /// large intermediate values of variables that are read back within
+  /// the same always construct, which prevents the defining expressions
+  /// from growing exponentially. Their definitions are in
+  /// \ref identifier_map; the symbols are not yet in the symbol table.
+  std::vector<symbolt> auxiliary_symbols;
 
   /// the properties, in the order in which they appear in the module
   std::vector<verilog_rtl_propertyt> properties;
