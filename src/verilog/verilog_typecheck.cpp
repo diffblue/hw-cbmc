@@ -751,7 +751,16 @@ void verilog_typecheckt::check_lhs(
     case A_CONTINUOUS:
       if(symbol.is_lvalue)
       {
-        // Continuous assignments can drive variables.
+        // The left-hand side is a variable. Continuous assignments to
+        // variables are only permitted in SystemVerilog (1800-2017 10.3.2).
+        // In Verilog (1364-2005 6.1), continuous assignment targets must be
+        // nets.
+        if(standard < verilog_standardt::SV2005)
+        {
+          throw errort().with_location(lhs.source_location())
+            << "continuous assignment to variable " << symbol.display_name()
+            << " is not allowed in Verilog; the target must be a net";
+        }
       }
       else if(symbol.is_input && !symbol.is_output)
       {
@@ -800,6 +809,16 @@ void verilog_typecheckt::check_lhs(
     case A_CONTINUOUS:
       if(symbol.is_lvalue)
       {
+        // The left-hand side is a variable. Continuous assignments to
+        // variables are only permitted in SystemVerilog (1800-2017 10.3.2).
+        // In Verilog (1364-2005 6.1), continuous assignment targets must be
+        // nets.
+        if(standard < verilog_standardt::SV2005)
+        {
+          throw errort().with_location(lhs.source_location())
+            << "continuous assignment to variable " << symbol.display_name()
+            << " is not allowed in Verilog; the target must be a net";
+        }
       }
       else if(symbol.is_input && !symbol.is_output)
       {
