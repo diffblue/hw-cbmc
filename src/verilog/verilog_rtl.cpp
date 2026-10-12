@@ -3207,6 +3207,22 @@ void verilog_rtl_buildert::build_function_call(
 
   // the frame for the return statements of this call
   tf_framet tf_frame;
+
+  // A function may be called as a statement, discarding its return
+  // value (1800-2017 13.4.1). The body may still contain
+  // `return <value>;', whose value is assigned to the symbol with the
+  // function's name, as in expand_function_call; it is simply not read
+  // back here. Tasks and void functions have no such return symbol.
+  {
+    const symbolt *return_symbol;
+    if(!ns.lookup(
+         id2string(symbol.name) + "." + id2string(symbol.base_name),
+         return_symbol))
+    {
+      tf_frame.return_value = return_symbol->symbol_expr();
+    }
+  }
+
   framest body_frames{frames.loop, &tf_frame};
 
   // remember the guard
