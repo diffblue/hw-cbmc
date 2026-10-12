@@ -714,12 +714,10 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
                           ? *index_opt - offset
                           : (offset + size - 1) - *index_opt;
 
-        if(internal < 0 || internal >= size)
-        {
-          throw errort().with_location(lhs.source_location())
-            << "array index out of range";
-        }
-
+        // Per 1800-2017 7.4.6, writing to an array with an invalid index
+        // shall perform no operation. The out-of-range element maps to a
+        // bit slice that lies entirely outside the symbol; assign_to
+        // clips it to nothing (11.5.1), making the write a silent no-op.
         lower = sub_opt->slice.lower + internal * element_width;
       }
       else
@@ -732,12 +730,10 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
         // the least significant.
         auto element = *index_opt - offset;
 
-        if(element < 0 || element >= size)
-        {
-          throw errort().with_location(lhs.source_location())
-            << "array index out of range";
-        }
-
+        // Per 1800-2017 7.4.6, writing to an array with an invalid index
+        // shall perform no operation. The out-of-range element maps to a
+        // bit slice that lies entirely outside the symbol; assign_to
+        // clips it to nothing (11.5.1), making the write a silent no-op.
         auto internal =
           array_type.increasing() ? (size - 1 - element) : element;
 
