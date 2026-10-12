@@ -21,6 +21,8 @@
 * Verilog: specparam declarations in specify blocks
 * SystemVerilog: anonymous enums as struct members
 * Verilog: function redeclaration error reports the original declaration
+* Verilog: functions may read their return variable before
+  assigning it
 
 # EBMC 6.1
 
