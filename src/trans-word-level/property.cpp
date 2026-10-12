@@ -890,6 +890,83 @@ static obligationst property_obligations_rec(
     // Should have been turned into sva_implict_weak or sva_implict_strong in the type checker.
     PRECONDITION(false);
   }
+  else if(
+    property_expr.id() == ID_sva_accept_on ||
+    property_expr.id() == ID_sva_sync_accept_on ||
+    property_expr.id() == ID_sva_reject_on ||
+    property_expr.id() == ID_sva_sync_reject_on)
+  {
+    // 1800-2017 16.12.11: the abort condition is checked at every cycle
+    // until the evaluation of the operand property completes, not only in
+    // the first cycle.
+    //
+    // accept_on (c) p : if c becomes true at any cycle during the
+    //   evaluation of p (and before p has definitively failed), the
+    //   attempt is accepted (evaluates to true).  Each obligation of p at
+    //   timeframe t is discharged if c holds at any timeframe between the
+    //   start of the attempt and t.
+    //
+    // reject_on (c) p : if c becomes true at any cycle during the
+    //   evaluation of p, the attempt is rejected (evaluates to false).
+    //   The operand property p must hold, and c must be false throughout
+    //   the entire evaluation window.
+    auto &abort_expr = to_sva_abort_expr(property_expr);
+
+    const bool accept = property_expr.id() == ID_sva_accept_on ||
+                        property_expr.id() == ID_sva_sync_accept_on;
+
+    auto p_obligations = property_obligations_rec(
+      abort_expr.property(),
+      allow_pending_matches,
+      current,
+      no_timeframes,
+      lasso);
+
+    if(accept)
+    {
+      // Discharge each obligation of p at timeframe t if the abort
+      // condition holds at some timeframe in [current, t].
+      obligationst result;
+
+      for(auto &obligation : p_obligations.map)
+      {
+        const auto t = obligation.first;
+
+        exprt::operandst condition_disjuncts;
+        for(mp_integer j = current; j <= t; ++j)
+        {
+          condition_disjuncts.push_back(instantiate_state_predicate(
+            abort_expr.condition(), j, no_timeframes));
+        }
+
+        auto abort_so_far = disjunction(condition_disjuncts);
+
+        for(auto &cond : obligation.second)
+          result.add(t, or_exprt{abort_so_far, cond});
+      }
+
+      return result;
+    }
+    else
+    {
+      // reject_on: p must hold, and the abort condition must be false at
+      // every timeframe of the evaluation window.
+      auto window_end = p_obligations.conjunction().first;
+
+      obligationst result = p_obligations;
+
+      exprt::operandst condition_absent;
+      for(mp_integer j = current; j <= window_end; ++j)
+      {
+        condition_absent.push_back(not_exprt{instantiate_state_predicate(
+          abort_expr.condition(), j, no_timeframes)});
+      }
+
+      result.add(window_end, conjunction(condition_absent));
+
+      return result;
+    }
+  }
   else
   {
     return obligationst{
