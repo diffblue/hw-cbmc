@@ -534,6 +534,12 @@ protected:
 
   void commit(const statet &, kindt, const source_locationt &);
 
+  /// Commit the assignments of an always_latch process. The assigned
+  /// values are recorded as current-state constraints `symbol == value'
+  /// rather than as wire or register definitions; the variable holds
+  /// its value otherwise (1800-2017 9.2.2.3). See build_always.
+  void commit_latch(const statet &, const source_locationt &);
+
   /// The width of the entire identifier as a slice. Types without
   /// a fixed number of bits, e.g. chandles, are treated as a single
   /// slice; they are always assigned as a whole.
@@ -3650,6 +3656,50 @@ void verilog_rtl_buildert::commit(
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::commit_latch
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::commit_latch(
+  const statet &state,
+  const source_locationt &source_location)
+{
+  for(auto &value_entry : state.values)
+  {
+    auto &identifier = value_entry.first;
+
+    // function and task locals are not part of the RTL representation
+    if(is_cycle_local(identifier))
+      continue;
+
+    const symbolt &symbol = ns.lookup(identifier);
+    const symbol_exprt symbol_expr{identifier, symbol.type};
+
+    for(auto &slice_entry : value_entry.second)
+    {
+      auto &slice = slice_entry.first;
+      auto &value = slice_entry.second;
+
+      // The current value of the slice must equal the latched value
+      // `enable ? data : slice'. While the enable is active this forces
+      // the slice to the data input (transparent latch); otherwise it is
+      // vacuously true, and the hold-its-value next-state equation added
+      // for the declared variable retains the value.
+      auto lhs = slice_of(symbol_expr, slice);
+      auto rhs = typecast_exprt::conditional_cast(value, lhs.type());
+      rtl.constraints.push_back(equal_exprt{std::move(lhs), std::move(rhs)});
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::build_always
 
   Inputs:
@@ -3664,12 +3714,7 @@ void verilog_rtl_buildert::build_always(const verilog_always_baset &always)
 {
   const verilog_statementt *body = &always.statement();
   bool clocked = false;
-
-  if(always.id() == ID_verilog_always_latch)
-  {
-    throw errort().with_location(always.source_location())
-      << "always_latch is not supported by RTL construction";
-  }
+  const bool is_latch = always.id() == ID_verilog_always_latch;
 
   if(body->id() == ID_event_guard)
   {
@@ -3709,10 +3754,35 @@ void verilog_rtl_buildert::build_always(const verilog_always_baset &always)
 
   property_context = old_context;
 
-  commit(
-    state,
-    clocked ? kindt::STATE_HOLDING : kindt::WIRE,
-    always.source_location());
+  if(is_latch)
+  {
+    // always_latch (1800-2017 9.2.2.3) denotes a level-sensitive,
+    // transparent latch: the latched variable follows its data input
+    // while the enable is active, and holds its previous value
+    // otherwise. The merge in build_if already composes the
+    // hold-its-value expression for paths on which the variable is not
+    // assigned, e.g. `if(en) q = d;' yields the value `en ? d : q',
+    // where `q' is the variable's own current value.
+    //
+    // A transparent latch is neither a plain combinational wire (the
+    // self-reference `q' would become non-determinism) nor a clocked
+    // register (that would delay q by a cycle and break transparency).
+    // We therefore model it as a current-state constraint
+    //   q == (en ? d : q)
+    // which forces q == d while the enable is active and is vacuously
+    // true otherwise. The variable is left out of identifier_map, so
+    // the declared-variable mechanism (see convert_initial_values) adds
+    // the hold-its-value next-state equation q' = q, giving q the
+    // latched value once the enable goes inactive.
+    commit_latch(state, always.source_location());
+  }
+  else
+  {
+    commit(
+      state,
+      clocked ? kindt::STATE_HOLDING : kindt::WIRE,
+      always.source_location());
+  }
 }
 
 /*******************************************************************\
