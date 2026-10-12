@@ -25,6 +25,8 @@
   assigning it
 * Verilog: implicit nets in port connections are visible to
   elaboration-time constants
+* Verilog: improved error message when a type is given as a value
+  parameter
 
 # EBMC 6.1
 
