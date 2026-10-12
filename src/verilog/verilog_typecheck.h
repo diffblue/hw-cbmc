@@ -79,6 +79,8 @@ public:
   // typedefs, functions, tasks, parameters
   void typecheck_decl(const verilog_declt &);
   void typecheck_parameter_decl(const verilog_module_itemt &);
+  void
+  typecheck_property_declaration(const class verilog_property_declarationt &);
   void typecheck_class(const verilog_classt &);
 
 protected:

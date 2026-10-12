@@ -110,6 +110,30 @@ void verilog_elaborate_compilation_unit(
           throw ebmc_errort{};
       }
     }
+    else if(item.id() == ID_verilog_property_declaration)
+    {
+      // compilation-unit scoped property declaration (1800-2017 3.12.1)
+      try
+      {
+        verilog_typecheckt verilog_typecheck(
+          parse_tree.standard,
+          warn_implicit_nets,
+          symbol_table,
+          message_handler);
+        verilog_typecheck.typecheck_property_declaration(
+          to_verilog_property_declaration(static_cast<const exprt &>(item)));
+      }
+      catch(const typecheckt::errort &error)
+      {
+        if(!error.what().empty())
+        {
+          throw ebmc_errort{}.with_location(error.source_location())
+            << error.what();
+        }
+        else
+          throw ebmc_errort{};
+      }
+    }
     else if(item.id() == ID_verilog_bind_directive)
     {
       // IEEE 1800-2017 23.11; registered here, and applied
