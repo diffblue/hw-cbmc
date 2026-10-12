@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 enum_with_hierarchy1.sv
 
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-Asserted values are wrong.
