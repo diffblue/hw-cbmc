@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 constant_function_state1.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ constant_function_state1.sv
 --
 ^warning: ignoring
 --
-Constant localparam evaluation should accept this function call.

@@ -11,4 +11,7 @@ module main;
   // logval is an elaboration-time constant
   localparam VAL = logval(16);
 
+  // the uninitialised return variable defaults to 0, so VAL == 1
+  initial assert(VAL == 1);
+
 endmodule
