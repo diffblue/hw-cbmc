@@ -403,6 +403,15 @@ exprt verilog_transition_relationt::lower_system_functions(exprt expr)
       else
         return popcount_exprt{op, result_type};
     }
+    else if(base_name == "$isunknown")
+    {
+      // 1800-2017 20.9: returns 1 if any bit of the expression is x or z,
+      // and 0 otherwise. The operand has already been lowered to the
+      // aval/bval encoding at this point; has_xz tests the bval bits.
+      DATA_INVARIANT(
+        call.arguments().size() == 1, "$isunknown must have one argument");
+      return has_xz(call.arguments()[0]);
+    }
     else if(base_name == "$value$plusargs" || base_name == "$test$plusargs")
     {
       // IEEE 1800-2017 section 21.6

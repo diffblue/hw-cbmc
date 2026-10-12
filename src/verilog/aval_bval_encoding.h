@@ -38,6 +38,10 @@ constant_exprt lower_to_aval_bval(const constant_exprt &);
 exprt aval(const exprt &);
 exprt bval(const exprt &);
 
+/// Return true iff 'expr' contains an x or z bit, i.e. a nonzero bval.
+/// For a two-valued operand the result is 'false'.
+exprt has_xz(const exprt &);
+
 exprt aval_bval_conversion(const exprt &, const typet &);
 
 exprt aval_bval_concatenation(const exprt::operandst &, const typet &);

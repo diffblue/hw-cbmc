@@ -418,6 +418,16 @@ exprt verilog_synthesist::expand_function_call(
       else
         return popcount_exprt{what, call.type()};
     }
+    else if(base_name == "$isunknown")
+    {
+      // 1800-2017 20.9: returns 1 if any bit of the expression is x or z,
+      // and 0 otherwise. The operand has already been lowered to the
+      // aval/bval encoding by synth_expr; has_xz tests the bval bits.
+      DATA_INVARIANT(
+        call.arguments().size() == 1, "$isunknown must have one argument");
+      auto what = synth_expr(call.arguments()[0], symbol_state); // rec. call
+      return has_xz(what);
+    }
     else if(base_name == "$value$plusargs")
     {
       // IEEE 1800-2017 section 21.6
