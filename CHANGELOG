@@ -1,5 +1,9 @@
 # EBMC 6.2
 
+* Verilog: implicit nets for undeclared identifiers used as members of a
+  concatenation on the LHS of a continuous assignment, including nested
+  concatenations
+
 # EBMC 6.1
 
 * cbmc dependency now at 6.11.0

@@ -26,6 +26,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_types.h"
 
 #include <cassert>
+#include <functional>
 #include <map>
 #include <set>
 
@@ -929,6 +930,32 @@ void verilog_typecheckt::convert_continuous_assign(
     {
       lhs = convert_verilog_identifier(
         to_verilog_identifier_expr(lhs), unsignedbv_typet{1});
+    }
+    else if(lhs.id() == ID_concatenation)
+    {
+      // The implicit net rule also applies to undeclared identifiers that
+      // appear as members of a concatenation on the LHS, e.g.
+      //   assign {carry, sum} = a + b;   // carry is undeclared
+      // Concatenations may be nested, e.g. {{carry}, sum}, so we descend
+      // recursively. Declare each undeclared bare-identifier member as a
+      // scalar net of the default net type, then convert the concatenation
+      // as usual.
+      std::function<void(exprt &)> declare_implicit_nets =
+        [&](exprt &concatenation)
+      {
+        for(auto &op : concatenation.operands())
+        {
+          if(op.id() == ID_verilog_identifier)
+            op = convert_verilog_identifier(
+              to_verilog_identifier_expr(op), unsignedbv_typet{1});
+          else if(op.id() == ID_concatenation)
+            declare_implicit_nets(op);
+        }
+      };
+
+      declare_implicit_nets(lhs);
+
+      convert_expr(lhs);
     }
     else
       convert_expr(lhs);

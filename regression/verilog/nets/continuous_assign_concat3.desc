@@ -1,0 +1,9 @@
+CORE
+continuous_assign_concat3.sv
+--module main --bound 1
+^\[main\.assert\.1\] always .*: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^.*unknown identifier carry.*$
+^warning: ignoring
