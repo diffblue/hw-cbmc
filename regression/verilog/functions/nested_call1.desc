@@ -1,0 +1,20 @@
+CORE
+nested_call1.sv
+--bound 2
+^\[main\.p0\] always main\.r0 == 4'b1010: PROVED up to bound 2$
+^\[main\.p1\] always main\.r1 == 4'b1100: PROVED up to bound 2$
+^\[main\.p2\] always main\.r2 == 4'b1000: PROVED up to bound 2$
+^\[main\.p3\] always \(##1 main\.q == 4'b1011\): PROVED up to bound 2$
+^\[main\.p4\] always main\.r3 == 4'b0011: PROVED up to bound 2$
+^\[main\.p5\] always \(##1 main\.s1 == 4'b1000\): PROVED up to bound 2$
+^\[main\.p6\] always \(##1 main\.s2 == 4'b0110\): PROVED up to bound 2$
+^\[main\.p7\] always \(##1 main\.s3 == 4'b0101\): PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Calls of a function nested in calls of the same function, as arguments and
+recursively, and functions and tasks called as statements. The bindings of
+the parameters of an enclosing call must survive the expansion of the
+nested call.
