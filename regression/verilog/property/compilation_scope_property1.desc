@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 compilation_scope_property1.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ compilation_scope_property1.sv
 --
 ^warning: ignoring
 --
-This does not type check.

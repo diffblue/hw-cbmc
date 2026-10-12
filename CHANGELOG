@@ -27,6 +27,7 @@
   elaboration-time constants
 * Verilog: improved error message when a type is given as a value
   parameter
+* SystemVerilog: property declarations in compilation-unit scope
 
 # EBMC 6.1
 
