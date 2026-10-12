@@ -166,7 +166,8 @@ verilog_ebmc_languaget::parse_treest verilog_ebmc_languaget::parse()
   return parse_trees;
 }
 
-void verilog_ebmc_languaget::typecheck_module(
+/// elaborates a given module
+void verilog_ebmc_languaget::elaborate_module(
   modulet &module,
   symbol_tablet &symbol_table)
 {
@@ -206,7 +207,9 @@ void verilog_ebmc_languaget::typecheck_module(
   // representation when the $root module is converted.
 }
 
-void verilog_ebmc_languaget::typecheck(
+/// elaborate the entire module hierarchy,
+/// top-down, starting from the given top-level modules
+void verilog_ebmc_languaget::elaborate_module_hierarchy(
   const parse_treest &parse_trees,
   const std::vector<irep_idt> &top_level_modules,
   symbol_tablet &symbol_table)
@@ -249,28 +252,22 @@ void verilog_ebmc_languaget::typecheck(
     CHECK_RETURN(!add_result_instance);
   }
 
-  // now type check the top-level modules
+  // now elaborate the top-level modules
   for(auto &top_level_module : top_level_modules)
   {
     auto m_it = module_map.find(verilog_module_symbol(top_level_module));
     CHECK_RETURN(m_it != module_map.end());
 
-    typecheck_module(m_it->second, symbol_table);
+    elaborate_module(m_it->second, symbol_table);
   }
 }
 
 /// Create a $root module instance containing the given top-level modules,
-/// and synthesize it so that the top-level module is expanded into $root.
-/// Returns the transition system.
-transition_systemt verilog_ebmc_languaget::create_root_module(
+/// and adds it to the given symbol table.
+void verilog_ebmc_languaget::create_root_module(
   const std::vector<irep_idt> &top_level_modules,
-  verilog_standardt standard,
-  symbol_tablet &&symbol_table)
+  symbol_tablet &symbol_table)
 {
-  // set up the transition system
-  transition_systemt transition_system;
-  transition_system.symbol_table = std::move(symbol_table);
-
   auto root_identifier = verilog_module_symbol(verilog_root_module_name());
   verilog_module_exprt::module_itemst root_items;
 
@@ -309,15 +306,26 @@ transition_systemt verilog_ebmc_languaget::create_root_module(
   for(auto top_level_module : top_level_modules)
   {
     auto module_identifier = verilog_module_symbol(top_level_module);
-    auto &top_symbol =
-      transition_system.symbol_table.lookup_ref(module_identifier);
+    auto &top_symbol = symbol_table.lookup_ref(module_identifier);
     for(auto &top_port : to_module_type(top_symbol.type).ports())
       root_ports.push_back(top_port);
   }
 
-  auto add_result_root = transition_system.symbol_table.add(root_symbol);
+  auto add_result_root = symbol_table.add(root_symbol);
   CHECK_RETURN(!add_result_root);
+}
 
+/// Create the transition system from the $root module instance.
+/// Returns the transition system.
+transition_systemt verilog_ebmc_languaget::create_transition_system(
+  verilog_standardt standard,
+  symbol_tablet &&symbol_table)
+{
+  auto root_identifier = verilog_module_symbol(verilog_root_module_name());
+
+  // set up the transition system
+  transition_systemt transition_system;
+  transition_system.symbol_table = std::move(symbol_table);
   transition_system.main_symbol =
     transition_system.symbol_table.lookup(root_identifier);
 
@@ -381,6 +389,10 @@ show_modules(const verilog_ebmc_languaget::parse_treest &parse_trees)
   return result;
 }
 
+/// This elaborates compilation-unit items, creates a fresh
+/// symbol table, and adds all items into the symbol table.
+/// Elaboration of modules is deferred.
+/// Returns the symbol table.
 symbol_tablet verilog_ebmc_languaget::elaborate_compilation_units(
   const parse_treest &parse_trees)
 {
@@ -651,12 +663,12 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
     ::top_level_modules(parse_trees, cmdline, library_count);
 
   //
-  // type checking
+  // elaborate the module hierarchy
   //
 
   message.status() << "Converting" << messaget::eom;
 
-  typecheck(parse_trees, top_level_modules, symbol_table);
+  elaborate_module_hierarchy(parse_trees, top_level_modules, symbol_table);
 
   // check that the bind directives with an instance target
   // have been applied
@@ -666,26 +678,26 @@ std::optional<transition_systemt> verilog_ebmc_languaget::transition_system()
   if(cmdline.isset("show-rtl"))
     return {};
 
-  // Create the $root module instance and synthesize it
-  auto transition_system = create_root_module(
-    top_level_modules, parse_trees.front().standard, std::move(symbol_table));
+  // Create the $root module instance
+  create_root_module(top_level_modules, symbol_table);
 
   if(cmdline.isset("show-symbol-table"))
   {
-    std::cout << transition_system.symbol_table;
+    std::cout << symbol_table;
     return {};
   }
 
   if(cmdline.isset("show-module-hierarchy"))
   {
-    DATA_INVARIANT(
-      transition_system.main_symbol != nullptr, "must have main_symbol");
-    show_module_hierarchy(
-      transition_system.symbol_table,
-      *transition_system.main_symbol,
-      std::cout);
+    auto root_identifier = verilog_module_symbol(verilog_root_module_name());
+    auto &root_symbol = symbol_table.lookup_ref(root_identifier);
+    show_module_hierarchy(symbol_table, root_symbol, std::cout);
     return {};
   }
+
+  // generate the transition system from $root
+  auto transition_system = create_transition_system(
+    parse_trees.front().standard, std::move(symbol_table));
 
   // --reset given?
   if(cmdline.isset("reset"))

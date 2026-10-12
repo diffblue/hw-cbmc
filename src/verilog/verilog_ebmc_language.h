@@ -66,17 +66,19 @@ protected:
 
   symbol_tablet elaborate_compilation_units(const parse_treest &);
 
-  void typecheck(
+  void elaborate_module_hierarchy(
     const parse_treest &,
     const std::vector<irep_idt> &top_level_modules,
     symbol_tablet &);
 
-  void typecheck_module(modulet &, symbol_tablet &);
+  void elaborate_module(modulet &, symbol_tablet &);
 
-  transition_systemt create_root_module(
+  void create_root_module(
     const std::vector<irep_idt> &top_level_modules,
-    verilog_standardt,
-    symbol_tablet &&);
+    symbol_tablet &);
+
+  transition_systemt
+  create_transition_system(verilog_standardt, symbol_tablet &&);
 
   void create_reset_logic(const std::string &, transition_systemt &);
 };
