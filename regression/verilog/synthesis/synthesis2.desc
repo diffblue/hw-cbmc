@@ -1,8 +1,9 @@
-KNOWNBUG
+CORE
 synthesis2.v
 --module main --bound 10
 ^EXIT=0$
 ^SIGNAL=0$
-^UNSAT: No bug found within bound$
+^\[main\.property\.p0\] always main\.var0\[0\] == 0: PROVED up to bound 10$
+^\[main\.property\.p1\] always main\.var1\[0\] == 0: PROVED up to bound 10$
 --
 ^warning: ignoring

@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
 #include <util/expr_util.h>
+#include <util/find_symbols.h>
 #include <util/mathematical_types.h>
 #include <util/namespace.h>
 #include <util/simplify_expr.h>
@@ -3716,6 +3717,14 @@ void verilog_rtl_buildert::build_always(const verilog_always_baset &always)
   bool clocked = false;
   const bool is_latch = always.id() == ID_verilog_always_latch;
 
+  // An explicit, level-sensitive sensitivity list, e.g. the old-style
+  // `always @(a, b)', infers a latch for any variable that is not
+  // assigned on every control path (1800-2017 9.2.2.3). An implicit
+  // list (`always @(*)', always_comb) describes purely combinational
+  // logic; an incomplete assignment there is a combinational loop, not
+  // a latch, so no latch is inferred for those.
+  bool infer_latch = false;
+
   if(body->id() == ID_event_guard)
   {
     auto &event_guard = to_verilog_event_guard(*body);
@@ -3730,6 +3739,22 @@ void verilog_rtl_buildert::build_always(const verilog_always_baset &always)
         if(op.id() == ID_posedge || op.id() == ID_negedge)
           clocked = true;
     }
+
+    // An explicit, named sensitivity list (not `@(*)') infers latches.
+    // The type checker may wrap the event expression in a typecast, so
+    // the star event is detected by inspecting the whole guard.
+    auto contains_star = [](const exprt &e)
+    {
+      if(e.id() == ID_verilog_star_event)
+        return true;
+      for(auto &op : e.operands())
+        if(op.id() == ID_verilog_star_event)
+          return true;
+      return false;
+    };
+
+    if(!clocked && always.id() == ID_verilog_always && !contains_star(guard))
+      infer_latch = true;
 
     body = &event_guard.body();
   }
@@ -3776,12 +3801,51 @@ void verilog_rtl_buildert::build_always(const verilog_always_baset &always)
     // latched value once the enable goes inactive.
     commit_latch(state, always.source_location());
   }
-  else
+  else if(clocked || !infer_latch)
   {
     commit(
       state,
       clocked ? kindt::STATE_HOLDING : kindt::WIRE,
       always.source_location());
+  }
+  else
+  {
+    // A level-sensitive always block with an explicit named sensitivity
+    // list (e.g. old-style `always @(signal)') infers a latch for any
+    // variable that is not assigned on every path: the hold-its-value
+    // branch introduced by the merge in build_if makes the committed
+    // value reference the variable's own current value (1800-2017
+    // 9.2.2.3, latch inference). Such slices are committed as a
+    // transparent latch, like always_latch; the remaining,
+    // fully-driven slices are plain combinational wires.
+    statet wire_state, latch_state;
+
+    for(auto &value_entry : state.values)
+    {
+      auto &identifier = value_entry.first;
+
+      for(auto &slice_entry : value_entry.second)
+      {
+        // Does the value hold the slice's own value on some path?
+        if(has_symbol_expr(slice_entry.second, identifier, false))
+        {
+          write_slice(
+            latch_state.values[identifier],
+            slice_entry.first,
+            slice_entry.second);
+        }
+        else
+        {
+          write_slice(
+            wire_state.values[identifier],
+            slice_entry.first,
+            slice_entry.second);
+        }
+      }
+    }
+
+    commit(wire_state, kindt::WIRE, always.source_location());
+    commit_latch(latch_state, always.source_location());
   }
 }
 
