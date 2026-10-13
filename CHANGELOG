@@ -3,6 +3,10 @@
 * Verilog: implicit nets for undeclared identifiers used as members of a
   concatenation on the LHS of a continuous assignment, including nested
   concatenations
+* SystemVerilog: local function declarations take precedence over
+  wildcard imports
+* SystemVerilog: struct member names may coincide with imported type names
+* SystemVerilog: initializers of imported package variables
 
 # EBMC 6.1
 
