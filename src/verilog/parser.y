@@ -5327,8 +5327,27 @@ list_of_arguments:
                 { init($$); }
         | expression
                 { init($$); mto($$, $1); }
+        | named_argument
+                { init($$); mto($$, $1); }
         | list_of_arguments ',' expression
                 { $$=$1;    mto($$, $3); }
+        | list_of_arguments ',' named_argument
+                { $$=$1;    mto($$, $3); }
+        ;
+
+// 1800-2017 13.5.4: a named argument ".name(expr)" in a subroutine call.
+// Ordered arguments must precede named ones; this is enforced in the type
+// checker, where named arguments are bound to the corresponding formal.
+named_argument:
+          '.' any_identifier '(' expression_opt ')'
+                // We reuse ID_verilog_named_port_connection as the marker
+                // for a named argument ".name(expr)"; both carry a name and
+                // a value. The type checker reorders these into positional
+                // order (see resolve_arguments).
+                { init($$, ID_verilog_named_port_connection);
+                  stack_expr($$).set(
+                    ID_base_name, stack_expr($2).get(ID_base_name));
+                  mto($$, $4); }
         ;
 
 system_tf_call:

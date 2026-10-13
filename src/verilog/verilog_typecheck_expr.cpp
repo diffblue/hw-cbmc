@@ -1053,6 +1053,113 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::resolve_arguments
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Reorder a list of ordered and named arguments into positional
+          order, as per 1800-2017 13.5.4.
+
+\*******************************************************************/
+
+void verilog_typecheck_exprt::resolve_arguments(
+  exprt::operandst &arguments,
+  const code_typet::parameterst &parameters,
+  const source_locationt &source_location)
+{
+  // Any named arguments present?
+  bool have_named = false;
+  for(auto &argument : arguments)
+    if(argument.id() == ID_verilog_named_port_connection)
+      have_named = true;
+
+  if(!have_named)
+    return; // all positional, nothing to do
+
+  // 1800-2017 13.5.4: ordered arguments, if any, come first and bind to
+  // the leading formals; named arguments follow and bind by name.
+  exprt::operandst resolved;
+  resolved.resize(parameters.size());
+  std::vector<bool> assigned(parameters.size(), false);
+
+  std::size_t next_positional = 0;
+  bool seen_named = false;
+
+  for(auto &argument : arguments)
+  {
+    if(argument.id() == ID_verilog_named_port_connection)
+    {
+      seen_named = true;
+
+      const irep_idt &base_name = argument.get(ID_base_name);
+
+      // find the formal with this base name
+      std::optional<std::size_t> index;
+      for(std::size_t i = 0; i < parameters.size(); i++)
+        if(parameters[i].get_base_name() == base_name)
+        {
+          index = i;
+          break;
+        }
+
+      if(!index.has_value())
+      {
+        throw errort().with_location(argument.source_location())
+          << "no formal argument named `" << base_name << "'";
+      }
+
+      if(assigned[*index])
+      {
+        throw errort().with_location(argument.source_location())
+          << "formal argument `" << base_name << "' assigned twice";
+      }
+
+      // the value is the sole operand of the named-argument node
+      if(argument.operands().size() != 1)
+      {
+        throw errort().with_location(argument.source_location())
+          << "malformed named argument";
+      }
+
+      resolved[*index] = to_unary_expr(argument).op();
+      assigned[*index] = true;
+    }
+    else
+    {
+      // ordered argument
+      if(seen_named)
+      {
+        throw errort().with_location(argument.source_location())
+          << "ordered arguments must precede named arguments";
+      }
+
+      if(next_positional >= parameters.size())
+      {
+        throw errort().with_location(source_location) << "too many arguments";
+      }
+
+      resolved[next_positional] = argument;
+      assigned[next_positional] = true;
+      next_positional++;
+    }
+  }
+
+  // Every formal must have been given a value: we do not support default
+  // argument values.
+  for(std::size_t i = 0; i < parameters.size(); i++)
+    if(!assigned[i])
+    {
+      throw errort().with_location(source_location)
+        << "no argument for formal `" << parameters[i].get_base_name() << "'";
+    }
+
+  arguments = std::move(resolved);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_expr_function_call
 
   Inputs:
@@ -1176,10 +1283,6 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
     return flatten_named_sequence_property(instance);
   }
 
-  // convert the arguments for regular function calls
-  Forall_expr(it, arguments)
-    convert_expr(*it);
-
   if(symbol->type.id()!=ID_code)
   {
     throw errort().with_location(f_op.source_location())
@@ -1187,6 +1290,14 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
   }
 
   const code_typet &code_type=to_code_type(symbol->type);
+
+  // Reorder ordered and named arguments (1800-2017 13.5.4) into
+  // positional order before they are converted.
+  resolve_arguments(arguments, code_type.parameters(), expr.source_location());
+
+  // convert the arguments for regular function calls
+  Forall_expr(it, arguments)
+    convert_expr(*it);
 
   f_op = symbol->symbol_expr().with_source_location(f_op);
   expr.type()=code_type.return_type();

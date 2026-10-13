@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/mp_arith.h>
 #include <util/namespace.h>
 #include <util/std_expr.h>
+#include <util/std_types.h>
 
 #include "sva_expr.h"
 #include "verilog_typecheck_base.h"
@@ -214,6 +215,12 @@ protected:
   [[nodiscard]] exprt convert_trinary_expr(ternary_exprt);
   [[nodiscard]] exprt convert_expr_concatenation(concatenation_exprt);
   [[nodiscard]] exprt convert_expr_function_call(function_call_exprt);
+  // Reorder a list of ordered and named arguments (1800-2017 13.5.4) into
+  // positional order, matching the names to the given formal parameters.
+  void resolve_arguments(
+    exprt::operandst &arguments,
+    const code_typet::parameterst &parameters,
+    const source_locationt &);
   [[nodiscard]] exprt convert_system_function(function_call_exprt);
   [[nodiscard]] exprt convert_bit_select_expr(verilog_bit_select_exprt);
   [[nodiscard]] exprt convert_interface_array_element(verilog_bit_select_exprt);

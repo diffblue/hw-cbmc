@@ -1,9 +1,11 @@
-KNOWNBUG
+CORE
 named_parameter_assignment1.sv
 --module main
+^\[main\.assert\.2\] main\.my_greater\(2, 1\): PROVED .*$
+^\[main\.assert\.3\] main\.my_greater\(2, 1\): PROVED .*$
+^\[main\.assert\.5\] !main\.my_greater\(1, 2\): PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This does not parse.
