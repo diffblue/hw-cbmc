@@ -412,6 +412,10 @@ void verilog_typecheckt::interface_module_item(
   else if(module_item.id() == ID_verilog_specparam_decl)
   {
   }
+  else if(module_item.id() == ID_specify)
+  {
+    // 1800-2017 A.7.1: specify block; contributes no module interface.
+  }
   else if(module_item.id() == ID_verilog_modport_declaration)
   {
   }

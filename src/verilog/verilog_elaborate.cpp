@@ -1243,6 +1243,15 @@ void verilog_typecheckt::collect_symbols(
   else if(module_item.id() == ID_verilog_specparam_decl)
   {
   }
+  else if(module_item.id() == ID_specify)
+  {
+    // 1800-2017 A.7.1: a specify block. We only model the
+    // specparam_declaration items it contains; collect them as if they
+    // were module-level specparams.
+    for(auto &item : module_item.operands())
+      if(item.id() == ID_verilog_specparam_decl)
+        collect_symbols(static_cast<const verilog_module_itemt &>(item));
+  }
   else if(module_item.id() == ID_verilog_interface)
   {
     // a nested interface, 1800 2017 25.3

@@ -1336,6 +1336,7 @@ non_port_module_item:
         | module_or_generate_item
         | attribute_instance_brace specparam_declaration
                 { add_attributes($2, $1); $$=$2; }
+        | specify_block
         | program_declaration
         | module_declaration
         | interface_declaration
@@ -5132,19 +5133,29 @@ cycle_delay:
 // A.7.1 Specify block declaration
 
 specify_block: TOK_SPECIFY specify_item_brace TOK_ENDSPECIFY
-                { init($$, ID_specify); }
+                // 1800-2017 A.7.1. The specify block is retained as an
+                // ID_specify node; its specparam_declaration items (the only
+                // items we currently model) are kept as operands so they are
+                // elaborated like module-level specparams.
+                { init($$, ID_specify); swapop($$, $2); }
         ;
 
 specify_item_brace:
           /* Optional */
+                { init($$); }
         | specify_item_brace specify_item
+                { $$ = $1;
+                  // Discard items that carry no declaration, e.g. timing
+                  // checks, which are represented as nil.
+                  if(stack_expr($2).is_not_nil())
+                    mto($$, $2); }
         ;
 
 specify_item: specparam_declaration
       //              | pulsestyle_declaration
       //              | showcancelled_declaration
-      //  path_declaration
-          system_timing_check
+      //              | path_declaration
+        | system_timing_check
         ;
 
 // System Verilog standard 1800-2017
@@ -5207,6 +5218,9 @@ specparam_assignment:
         ;
 
 system_timing_check: timing_3 ';'
+                // Timing checks are not modelled; yield nil so the enclosing
+                // specify block discards them.
+                { make_nil($$); }
         ;
 
 timing_3:
