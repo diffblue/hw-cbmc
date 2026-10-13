@@ -586,6 +586,15 @@ int yyverilogerror(const char *error)
 %nonassoc LT_TOK_ELSE
 %nonassoc TOK_ELSE
 
+// IEEE 1800-2017 8.25: a class_type may be followed by an optional
+// parameter value assignment, e.g. "stack #(16)". In a net declaration
+// a '#' following a data_type could instead start a delay (delay3). We
+// resolve this in favour of the parameter value assignment (shift) by
+// giving '#' higher precedence than the parameterless class_type
+// reduction (CLASS_TYPE_NO_PARAMS).
+%nonassoc CLASS_TYPE_NO_PARAMS
+%nonassoc '#'
+
 %%
 
 /* Starting point */
@@ -2116,7 +2125,18 @@ integer_atom_type:
         | TOK_TIME { init($$, ID_verilog_time); }
         ;
 
-class_type: class_identifier
+class_type:
+          class_identifier %prec CLASS_TYPE_NO_PARAMS
+          // IEEE 1800-2017 8.25: an optional parameter value assignment
+          // may follow the class identifier, e.g. stack #(16).
+        | class_identifier parameter_value_assignment
+                { $$ = $1;
+                  addswap($$, ID_parameter_assignments, $2); }
+        ;
+
+parameter_value_assignment:
+          '#' '(' list_of_parameter_assignments_opt ')'
+                { $$ = $3; }
         ;
 
 struct_union_member_brace:
@@ -3849,8 +3869,7 @@ interface_instance_item:
 parameter_value_assignment_opt:
           /* Optional */
                 { make_nil($$); }
-        | '#' '(' list_of_parameter_assignments_opt ')'
-                { $$ = $3; }
+        | parameter_value_assignment
         ;
 
 list_of_parameter_assignments_opt:

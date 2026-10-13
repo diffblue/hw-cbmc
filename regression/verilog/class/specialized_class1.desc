@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 specialized_class1.sv
 --show-parse
 ^Class: stack$
@@ -6,5 +6,3 @@ specialized_class1.sv
 ^SIGNAL=0$
 --
 --
-The grammar does not yet support parameter value assignments on
-class types, e.g. stack #(16).
