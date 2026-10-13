@@ -3,6 +3,7 @@
 * Verilog: implicit nets for undeclared identifiers used as members of a
   concatenation on the LHS of a continuous assignment, including nested
   concatenations
+* --bdd: early variable quantification in the image computation
 
 # EBMC 6.1
 
