@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 member_vs_import1.sv
 --bound 0
-^EXIT=0$
+^EXIT=10$
 ^SIGNAL=0$
 --
 --
-This does not parse.
