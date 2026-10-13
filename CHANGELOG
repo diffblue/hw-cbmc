@@ -11,6 +11,8 @@
 * Verilog: parameters retain x/z values
 * SVA: accept_on, reject_on and disable iff check the condition in
   every cycle of the evaluation
+* SystemVerilog: parameter value assignments on class types
+* SystemVerilog: out-of-block method declarations
 
 # EBMC 6.1
 
