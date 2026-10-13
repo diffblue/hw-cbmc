@@ -3,6 +3,11 @@
 * Verilog: implicit nets for undeclared identifiers used as members of a
   concatenation on the LHS of a continuous assignment, including nested
   concatenations
+* Verilog: while and repeat loops with constant bounds in procedural blocks
+* SystemVerilog: always_latch
+* Verilog: latch inference for level-sensitive always blocks with
+  incomplete assignments
+* SystemVerilog: functions with return statements called as statements
 
 # EBMC 6.1
 
