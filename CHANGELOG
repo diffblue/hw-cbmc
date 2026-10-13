@@ -3,6 +3,9 @@
 * Verilog: implicit nets for undeclared identifiers used as members of a
   concatenation on the LHS of a continuous assignment, including nested
   concatenations
+* Verilog: continuous assignments to variables are rejected in Verilog
+  (they remain allowed in SystemVerilog)
+* Verilog: variables connected to inout ports are rejected
 
 # EBMC 6.1
 
