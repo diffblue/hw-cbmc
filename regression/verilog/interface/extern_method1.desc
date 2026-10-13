@@ -1,0 +1,9 @@
+CORE
+extern_method1.sv
+--bound 1
+^\[main\.p1\] always main\.cif\.enable == 1: PROVED up to bound 1
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Extern method prototype in interface (IEEE 1800-2017 25.4.4).
