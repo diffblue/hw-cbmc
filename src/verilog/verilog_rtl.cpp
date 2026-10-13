@@ -145,6 +145,7 @@ protected:
   void build_initial(const verilog_initialt &);
   void build_continuous_assign(const verilog_continuous_assignt &);
   void build_module_item_decl(const verilog_declt &);
+  void build_package_import(const verilog_module_itemt &);
   void build_property(const verilog_assert_assume_cover_module_itemt &);
   void build_instances(const verilog_instt &);
   void build_gate_instances(const verilog_inst_builtint &);
@@ -3653,6 +3654,83 @@ void verilog_rtl_buildert::build_module_item_decl(
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::build_package_import
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Applies the initializer of an explicitly imported package
+          variable.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::build_package_import(
+  const verilog_module_itemt &module_item)
+{
+  // An explicit import of a package variable that has an initializer
+  // (e.g. "int my_var = 1;" in the package) must initialize the
+  // variable, exactly like a module-level variable declaration with an
+  // initializer (IEEE 1800-2017 6.18, 26.3). Packages are not built as
+  // transition systems of their own, so the initializer is applied here,
+  // in the importing module.
+  for(auto &item : module_item.operands())
+  {
+    const irep_idt base_name = item.get(ID_base_name);
+    const irep_idt package = item.get(ID_verilog_package);
+
+    // Wildcard imports ("import pkg::*;") do not name a specific item;
+    // the variables they make visible are initialized when referenced
+    // via their package declaration elsewhere.
+    if(base_name.empty() || base_name == "*" || package.empty())
+      continue;
+
+    const irep_idt symbol_identifier =
+      verilog_package_identifier(package, base_name);
+
+    // The imported item must be an lvalue variable.
+    const symbolt *var_symbol;
+    if(ns.lookup(symbol_identifier, var_symbol))
+      continue;
+    if(!var_symbol->is_lvalue)
+      continue;
+
+    // Locate the package to obtain the declarator's initializer.
+    const symbolt *package_symbol;
+    if(ns.lookup(verilog_package_identifier(package), package_symbol))
+      continue;
+
+    const auto &package_module = to_verilog_module_expr(package_symbol->value);
+
+    for(auto &package_item : package_module.module_items())
+    {
+      if(package_item.id() != ID_decl)
+        continue;
+
+      for(auto &declarator : to_verilog_decl(package_item).declarators())
+      {
+        if(declarator.identifier() != symbol_identifier)
+          continue;
+
+        if(!declarator.has_value())
+          continue;
+
+        auto lhs = declarator.symbol_expr();
+        record_variable(lhs.get_identifier());
+
+        // Like a module-level variable with an initializer.
+        statet state;
+        write_slice(
+          rtl.initial_values[lhs.get_identifier()],
+          whole_slice(lhs),
+          substitute(declarator.value(), state));
+      }
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::build_interface_port_connection
 
   Inputs:
@@ -4461,6 +4539,10 @@ void verilog_rtl_buildert::build_module_item(
       build_module_item(block_item);
 
     default_disable_iff = std::move(old_default_disable_iff);
+  }
+  else if(module_item.id() == ID_verilog_package_import)
+  {
+    build_package_import(module_item);
   }
   else
   {
