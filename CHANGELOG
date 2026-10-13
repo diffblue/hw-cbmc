@@ -21,6 +21,11 @@
 * Verilog: specparam declarations in specify blocks
 * SystemVerilog: anonymous enums as struct members
 * Verilog: function redeclaration error reports the original declaration
+* Verilog: part-selects and indexed part-selects of array elements with
+  non-constant index as assignment targets
+* Verilog: non-constant indexed part-selects as assignment targets
+* Verilog: procedural assignments to array elements with non-constant
+  index via hierarchical identifiers
 
 # EBMC 6.1
 
