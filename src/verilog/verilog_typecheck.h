@@ -114,6 +114,7 @@ protected:
   void collect_symbols(const typet &);
   void collect_symbols(const verilog_module_sourcet &);
   void collect_symbols(const verilog_module_itemt &);
+  void collect_implicit_nets(const module_itemst &);
   void collect_symbols(const verilog_declt &);
   void collect_symbols(const verilog_function_or_task_declt &);
   void collect_symbols(const verilog_classt &);

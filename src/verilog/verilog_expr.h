@@ -1181,6 +1181,18 @@ protected:
   using exprt::operands;
 };
 
+inline const verilog_inst_baset &to_verilog_inst_baset(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_inst || expr.id() == ID_inst_builtin);
+  return static_cast<const verilog_inst_baset &>(expr);
+}
+
+inline verilog_inst_baset &to_verilog_inst_baset(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_inst || expr.id() == ID_inst_builtin);
+  return static_cast<verilog_inst_baset &>(expr);
+}
+
 inline const verilog_inst_baset::named_port_connectiont &
 to_verilog_named_port_connection(const exprt &expr)
 {
