@@ -166,6 +166,11 @@ void verilog_typecheckt::typecheck_port_connection(
       convert_expr(op);
     }
 
+    // 1800-2017 6.5: "Variables cannot be connected to either side of an
+    // inout port." The actual connected to an inout port must be a net.
+    if(port.direction() == ID_inout)
+      check_inout_connection(op, port);
+
     if(symbol.is_output)
     {
       check_lhs(op, A_CONTINUOUS);
@@ -873,6 +878,80 @@ void verilog_typecheckt::check_lhs(
   {
     throw errort() << "typechecking: failed to get identifier on LHS "
                    << lhs.pretty();
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::check_inout_connection
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::check_inout_connection(
+  const exprt &op,
+  const module_typet::portt &port)
+{
+  // IEEE 1800-2017 6.5: "Variables cannot be connected to either side of
+  // an inout port." Descend through the connection expression to the
+  // referenced net(s)/variable(s); a variable (reg/logic/var) is an lvalue,
+  // whereas a net is not.
+  if(op.id() == ID_index)
+  {
+    check_inout_connection(to_index_expr(op).array(), port);
+  }
+  else if(op.id() == ID_extractbit)
+  {
+    check_inout_connection(to_extractbit_expr(op).src(), port);
+  }
+  else if(op.id() == ID_verilog_bit_select)
+  {
+    check_inout_connection(to_verilog_bit_select_expr(op).src(), port);
+  }
+  else if(op.id() == ID_verilog_non_indexed_part_select)
+  {
+    check_inout_connection(
+      to_verilog_non_indexed_part_select_expr(op).src(), port);
+  }
+  else if(
+    op.id() == ID_verilog_indexed_part_select_plus ||
+    op.id() == ID_verilog_indexed_part_select_minus)
+  {
+    check_inout_connection(
+      to_verilog_indexed_part_select_plus_or_minus_expr(op).src(), port);
+  }
+  else if(op.id() == ID_concatenation)
+  {
+    for(auto &operand : op.operands())
+      check_inout_connection(operand, port);
+  }
+  else if(op.id() == ID_symbol)
+  {
+    const symbolt &symbol = ns.lookup(to_symbol_expr(op));
+
+    if(symbol.is_lvalue)
+    {
+      throw errort().with_location(op.source_location())
+        << "variable " << symbol.display_name()
+        << " cannot be connected to inout port `" << port.base_name() << '\'';
+    }
+  }
+  else if(op.id() == ID_hierarchical_identifier)
+  {
+    const symbolt &symbol =
+      ns.lookup(to_hierarchical_identifier_expr(op).identifier());
+
+    if(symbol.is_lvalue)
+    {
+      throw errort().with_location(op.source_location())
+        << "variable " << symbol.display_name()
+        << " cannot be connected to inout port `" << port.base_name() << '\'';
+    }
   }
 }
 

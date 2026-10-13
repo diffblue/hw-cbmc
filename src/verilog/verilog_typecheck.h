@@ -287,6 +287,9 @@ protected:
   void
   typecheck_interface_array_port_connection(exprt &op, const typet &port_type);
 
+  // 1800-2017 6.5: variables cannot be connected to an inout port.
+  void check_inout_connection(const exprt &op, const module_typet::portt &port);
+
   bool replace_symbols(const replace_mapt &what, exprt &dest);
   void replace_symbols(const std::string &target, exprt &dest);
 
