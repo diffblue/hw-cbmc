@@ -639,6 +639,34 @@ bool verilog_typecheck_exprt::unpacked_array_assignment_compatible(
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::unpacked_array_equality_operands
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: True iff both operands are unpacked arrays that may be
+          compared with == / != / === / !== (1800-2017 7.6, 11.4.5),
+          i.e. they are assignment compatible unpacked arrays.
+
+\*******************************************************************/
+
+bool verilog_typecheck_exprt::unpacked_array_equality_operands(
+  const typet &lhs_type,
+  const typet &rhs_type)
+{
+  auto is_unpacked_array = [](const typet &type)
+  {
+    return type.id() == ID_array &&
+           type.get(ID_C_verilog_type) == ID_verilog_unpacked_array;
+  };
+
+  return is_unpacked_array(lhs_type) && is_unpacked_array(rhs_type) &&
+         unpacked_array_assignment_compatible(lhs_type, rhs_type);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::unpacked_array_assignment_conversion
 
   Inputs:
@@ -4086,7 +4114,19 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // There is no need to decay structs, unions, arrays if
     // the types are equal.
     if(expr.lhs().type() != expr.rhs().type())
-      tc_binary_expr(expr);
+    {
+      // Two unpacked arrays of equivalent type can be compared
+      // (1800-2017 7.6, 11.4.5). Their declared index ranges may differ;
+      // align the right-hand side to the left-hand side element-by-element
+      // in left-to-right order, which also makes the types equal.
+      if(unpacked_array_equality_operands(expr.lhs().type(), expr.rhs().type()))
+      {
+        expr.rhs() = unpacked_array_assignment_conversion(
+          std::move(expr.rhs()), expr.lhs().type());
+      }
+      else
+        tc_binary_expr(expr);
+    }
 
     return std::move(expr);
   }
@@ -4101,7 +4141,19 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // There is no need to decay structs, unions, arrays if
     // the types are equal.
     if(expr.lhs().type() != expr.rhs().type())
-      tc_binary_expr(expr);
+    {
+      // Two unpacked arrays of equivalent type can be compared
+      // (1800-2017 7.6, 11.4.5). Their declared index ranges may differ;
+      // align the right-hand side to the left-hand side element-by-element
+      // in left-to-right order, which also makes the types equal.
+      if(unpacked_array_equality_operands(expr.lhs().type(), expr.rhs().type()))
+      {
+        expr.rhs() = unpacked_array_assignment_conversion(
+          std::move(expr.rhs()), expr.lhs().type());
+      }
+      else
+        tc_binary_expr(expr);
+    }
 
     // This returns 'x' if either of the operands contains x or z.
     if(

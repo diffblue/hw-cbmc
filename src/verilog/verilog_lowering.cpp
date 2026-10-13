@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/c_types.h>
+#include <util/expr_util.h>
 #include <util/floatbv_expr.h>
 #include <util/ieee_float.h>
 #include <util/std_expr.h>
@@ -794,6 +795,51 @@ exprt verilog_lowering(exprt expr)
   else if(expr.id() == ID_verilog_wildcard_inequality)
   {
     return aval_bval(to_verilog_wildcard_inequality_expr(expr));
+  }
+  else if(expr.id() == ID_equal || expr.id() == ID_notequal)
+  {
+    // Equality of two unpacked arrays (1800-2017 7.6, 11.4.5). The
+    // operands are already lowered; some backends do not reliably compare
+    // array values that are built from element expressions (e.g. array
+    // slices), so expand the comparison element-wise into a conjunction of
+    // element equalities, which is backend-agnostic.
+    auto &binary_expr = to_binary_expr(expr);
+    auto &lhs_type = binary_expr.lhs().type();
+
+    if(
+      lhs_type.id() == ID_array &&
+      lhs_type.get(ID_C_verilog_type) == ID_verilog_unpacked_array &&
+      binary_expr.rhs().type() == lhs_type)
+    {
+      auto &array_type = to_verilog_array_type(lhs_type);
+      auto size = array_type.size_int();
+      auto index_type = array_type.index_type();
+      auto &element_type = array_type.element_type();
+
+      exprt::operandst conjuncts;
+      conjuncts.reserve(numeric_cast_v<std::size_t>(size));
+
+      for(mp_integer i = 0; i < size; ++i)
+      {
+        auto index = from_integer(i, index_type);
+        index_exprt lhs_element{binary_expr.lhs(), index, element_type};
+        index_exprt rhs_element{binary_expr.rhs(), index, element_type};
+
+        // The element comparison is lowered recursively, so that nested
+        // arrays and four-valued element types are handled correctly.
+        conjuncts.push_back(verilog_lowering(
+          equal_exprt{std::move(lhs_element), std::move(rhs_element)}));
+      }
+
+      exprt result = conjunction(conjuncts);
+
+      if(expr.id() == ID_notequal)
+        result = not_exprt{std::move(result)};
+
+      return result;
+    }
+
+    return expr; // leave as is
   }
   else if(expr.id() == ID_not)
   {
