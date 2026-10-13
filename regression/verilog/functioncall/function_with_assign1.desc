@@ -1,9 +1,9 @@
-KNOWNBUG
+CORE
 function_with_assign1.sv
 
+^\[main\.assert\.1\] .*some_function\(\) == 123: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This does not parse.

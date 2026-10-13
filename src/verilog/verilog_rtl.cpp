@@ -3278,8 +3278,24 @@ void verilog_rtl_buildert::build_statement(
   }
   else if(statement.id() == ID_procedural_continuous_assign)
   {
-    throw errort().with_location(statement.source_location())
-      << "synthesis of procedural continuous assignment not supported";
+    // 1800-2017 10.6.1: the procedural continuous assignment "assign
+    // lhs = rhs;" is deprecated. Inside a function or task body it is
+    // evaluated once, so we may approximate it by a blocking assignment.
+    // In a module-level procedural block its continuous semantics (and the
+    // matching 'deassign') are not supported, so we keep the error there.
+    if(frames.tf == nullptr)
+    {
+      throw errort().with_location(statement.source_location())
+        << "synthesis of procedural continuous assignment not supported";
+    }
+
+    for(auto &assignment : statement.operands())
+    {
+      auto &equal = to_binary_expr(assignment);
+      verilog_blocking_assignt blocking_assign{equal.lhs(), equal.rhs()};
+      blocking_assign.add_source_location() = assignment.source_location();
+      build_assign(blocking_assign, state, true);
+    }
   }
   else if(statement.id() == ID_verilog_expect_property)
   {
