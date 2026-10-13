@@ -855,6 +855,10 @@ void verilog_typecheckt::collect_symbols(
     return_symbol.base_name = symbol.base_name;
     return_symbol.value = nil_exprt();
     return_symbol.type = to_code_type(symbol.type).return_type();
+    // The return value is implicitly declared by the function itself
+    // (1800-2017 13.4.1); point there for diagnostics such as a conflicting
+    // redeclaration inside the function body.
+    return_symbol.location = symbol.location;
 
     return_symbol.name =
       id2string(symbol.name) + "." + id2string(symbol.base_name);
