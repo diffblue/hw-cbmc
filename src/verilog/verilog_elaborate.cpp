@@ -1040,6 +1040,93 @@ void verilog_typecheckt::collect_symbols(const verilog_statementt &statement)
     DATA_INVARIANT(false, "unexpected statement: " + statement.id_string());
 }
 
+void verilog_typecheckt::collect_implicit_nets(
+  const module_itemst &module_items)
+{
+  // IEEE 1800-2017 6.10 allows implicit declarations of nets when an
+  // otherwise undeclared identifier is used in the port connection list
+  // of a module instance. The type of such an implicit net is not the
+  // type of the port, but an "implicit scalar net of default net type".
+  // We declare these nets right after symbol collection, before the
+  // elaboration-time constants are evaluated, so that a subsequent
+  // "parameter Q = $bits(x)" can see the implicit net x.
+
+  // First, gather the names of all module/interface/primitive instances
+  // declared at this level. A port connection naming such an instance
+  // (e.g. an interface instance passed to a module port) is not an
+  // implicit net.
+  auto instances_of =
+    [](const verilog_module_itemt &module_item) -> const verilog_inst_baset &
+  {
+    return static_cast<const verilog_inst_baset &>(
+      static_cast<const exprt &>(module_item));
+  };
+
+  std::set<irep_idt> instance_names;
+  for(auto &module_item : module_items)
+  {
+    if(module_item.id() == ID_inst || module_item.id() == ID_inst_builtin)
+    {
+      for(auto &instance : instances_of(module_item).instances())
+        instance_names.insert(instance.base_name());
+    }
+  }
+
+  auto collect = [this, &instance_names](const exprt &connection)
+  {
+    if(connection.id() != ID_verilog_identifier)
+      return;
+
+    auto base_name = to_verilog_identifier_expr(connection).base_name();
+
+    // A reference to an instance is not an implicit net.
+    if(instance_names.find(base_name) != instance_names.end())
+      return;
+
+    auto full_identifier = hierarchical_identifier(base_name);
+
+    // Only create the net if the identifier is not declared already.
+    if(symbol_table.symbols.find(full_identifier) != symbol_table.symbols.end())
+      return;
+
+    symbolt symbol;
+    symbol.mode = mode;
+    symbol.module = verilog_root_module_identifier();
+    symbol.value = nil_exprt();
+    symbol.base_name = base_name;
+    symbol.name = full_identifier;
+    symbol.type = bool_typet{};
+    symbol.pretty_name = strip_verilog_root_prefix(full_identifier);
+    symbol.location = connection.source_location();
+
+    symbol_table.add(symbol);
+    symbols_added.push_back(symbol.name);
+
+    if(warn_implicit_nets)
+    {
+      warning().source_location = connection.source_location();
+      warning() << "implicit wire " << symbol.display_name() << eom;
+    }
+  };
+
+  for(auto &module_item : module_items)
+  {
+    if(module_item.id() != ID_inst && module_item.id() != ID_inst_builtin)
+      continue;
+
+    for(auto &instance : instances_of(module_item).instances())
+    {
+      for(auto &connection : instance.connections())
+      {
+        if(connection.id() == ID_verilog_named_port_connection)
+          collect(to_verilog_named_port_connection(connection).value());
+        else
+          collect(connection);
+      }
+    }
+  }
+}
+
 void verilog_typecheckt::collect_symbols(
   const verilog_module_itemt &module_item)
 {
@@ -1095,7 +1182,11 @@ void verilog_typecheckt::collect_symbols(
   }
   else if(module_item.id() == ID_inst)
   {
-    // these symbols are currently created in verilog_interfaces
+    // Module instance symbols are created in verilog_interfaces. Any
+    // implicit nets (IEEE 1800-2017 6.10) used in the port connection
+    // list are created separately, after the symbol-collection pass
+    // (see collect_implicit_nets), so that we can tell them apart from
+    // references to other instances declared in the same module.
   }
   else if(module_item.id() == ID_inst_builtin)
   {
@@ -1219,6 +1310,12 @@ verilog_typecheckt::elaborate_level(const module_itemst &module_items)
   // Gather the symbols in the given module items.
   for(auto &module_item : module_items)
     collect_symbols(module_item);
+
+  // Declare any implicit nets (IEEE 1800-2017 6.10) used in module
+  // instance port connections. This must happen after symbol collection
+  // (so we do not shadow explicitly declared symbols) but before the
+  // elaboration-time constants below are evaluated.
+  collect_implicit_nets(module_items);
 
   // Now elaborate the symbols we found.
   // This refers to "elaboration-time constants" as defined
