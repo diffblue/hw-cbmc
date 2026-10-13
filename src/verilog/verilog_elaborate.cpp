@@ -601,6 +601,13 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
           make_two_valued(elaborate_type(declarator.merged_type(decl.type())));
         symbol.name = hierarchical_identifier(symbol.base_name);
         symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+        symbol.location = declarator.source_location();
+
+        // Record the direction on the symbol as well, so that a subsequent
+        // data declaration of the same name is recognised as a type
+        // redeclaration of the port (1800-2017 13.3).
+        symbol.is_input = input;
+        symbol.is_output = output;
 
         if(input || output)
         {
@@ -755,6 +762,30 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
           }
 
           osymbol.is_lvalue = true;
+        }
+        else if(
+          !function_or_task_name.empty() &&
+          (osymbol.is_input || osymbol.is_output))
+        {
+          // 1800-2017 13.3 / A.2.6: an old-style task or function port may
+          // be declared with a direction (e.g. "input value;") and then
+          // given a type by a subsequent data declaration (e.g.
+          // "integer value;"). The data declaration redeclares the type of
+          // the port rather than introducing a new variable.
+          osymbol.type = symbol.type;
+
+          // Keep the enclosing subroutine's signature in sync.
+          symbolt &function_or_task_symbol =
+            symbol_table.get_writeable_ref(function_or_task_name);
+          for(auto &parameter :
+              to_code_type(function_or_task_symbol.type).parameters())
+          {
+            if(parameter.get_identifier() == osymbol.name)
+            {
+              parameter.type() = symbol.type;
+              break;
+            }
+          }
         }
         else
         {

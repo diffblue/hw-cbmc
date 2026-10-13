@@ -1,9 +1,9 @@
-KNOWNBUG
+CORE
 function_ports2.sv
 --module main
+^\[main\.assert\.1\] main\.incme\(10\) == 11: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This fails to type check.
