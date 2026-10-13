@@ -3,6 +3,11 @@
 * Verilog: implicit nets for undeclared identifiers used as members of a
   concatenation on the LHS of a continuous assignment, including nested
   concatenations
+* SystemVerilog: $countbits
+* Verilog: $countones ignores x/z bits
+* SystemVerilog: $isunknown on non-constant operands
+* SystemVerilog: $typename for time
+* Verilog: four-valued semantics for && and ||
 
 # EBMC 6.1
 
