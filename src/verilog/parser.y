@@ -2098,6 +2098,7 @@ enum_name_declaration_list:
         ;
 
 class_scope: class_type TOK_COLONCOLON
+                { $$ = $1; }
         ;
 
 class_scope_opt:
@@ -2825,6 +2826,52 @@ function_body_declaration:
                   addswap($$, ID_ports, $5);
                   addswap($$, ID_verilog_declarations, $8);
                   addswap($$, ID_body, $9);
+                  pop_scope();
+                }
+          // IEEE 1800-2017 8.24: out-of-block method declaration. The
+          // function identifier is prefixed with a class scope
+          // ("class_type ::"). An explicit return type is required here;
+          // this avoids the ambiguity with a class_type used as an
+          // implicit return type.
+        | data_type_or_void
+          class_scope
+          function_identifier
+                { push_scope(stack_expr($3).get(ID_base_name), ".", verilog_scopet::FUNCTION); }
+          ';'
+          tf_item_declaration_brace
+          function_statement_or_null_brace
+          TOK_ENDFUNCTION end_identifier_opt
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_function);
+                  addswap($$, ID_type, $1);
+                  add_as_subtype(stack_type($1), stack_type($1));
+                  stack_expr($3).add("verilog_class_scope").swap(stack_expr($2));
+                  mto($$, $3); // declarator
+                  stack_expr($$).add_source_location() =
+                    stack_expr($$).operands().back().source_location();
+                  addswap($$, ID_verilog_declarations, $6);
+                  addswap($$, ID_body, $7);
+                  pop_scope();
+                }
+        | data_type_or_void
+          class_scope
+          function_identifier
+                { push_scope(stack_expr($3).get(ID_base_name), ".", verilog_scopet::FUNCTION); }
+          '(' tf_port_list_opt ')' ';'
+          block_item_declaration_brace
+          function_statement_or_null_brace
+          TOK_ENDFUNCTION end_identifier_opt
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_function);
+                  addswap($$, ID_type, $1);
+                  add_as_subtype(stack_type($1), stack_type($1));
+                  stack_expr($3).add("verilog_class_scope").swap(stack_expr($2));
+                  mto($$, $3); // declarator
+                  stack_expr($$).add_source_location() =
+                    stack_expr($$).operands().back().source_location();
+                  addswap($$, ID_ports, $6);
+                  addswap($$, ID_verilog_declarations, $9);
+                  addswap($$, ID_body, $10);
                   pop_scope();
                 }
         ;

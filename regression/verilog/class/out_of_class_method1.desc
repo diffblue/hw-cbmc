@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 out_of_class_method1.sv
 --show-parse
 ^Class: myClass$
@@ -6,5 +6,3 @@ out_of_class_method1.sv
 ^SIGNAL=0$
 --
 --
-The grammar does not yet support out-of-class method definitions
-using the class scope resolution operator.
