@@ -1,9 +1,10 @@
-KNOWNBUG
+CORE
 task_ref1.sv
 
+^\[main\.some_task\.assert\.1\] .*: PROVED .*$
+^\[main\.0\.assert\.3\] main\.x == 32'hs1C8: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring
 --
-This does not parse.

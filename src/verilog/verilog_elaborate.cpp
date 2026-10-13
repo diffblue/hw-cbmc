@@ -430,7 +430,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
   else if(
     decl_class == ID_input || decl_class == ID_output ||
     decl_class == ID_output_register || decl_class == ID_inout ||
-    decl_class == ID_verilog_no_direction)
+    decl_class == ID_verilog_ref || decl_class == ID_verilog_no_direction)
   {
     // If these are inputs/outputs of a function/task, then
     // adjust the function/task signature.
@@ -556,6 +556,15 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
       }
       else if(decl_class == ID_inout)
       {
+        input = true;
+        output = true;
+      }
+      else if(decl_class == ID_verilog_ref)
+      {
+        // 1800-2017 13.5.2: a ref argument aliases the actual. We
+        // approximate this by copying the actual in on entry and copying
+        // the (possibly modified) value back out on return, i.e. we treat
+        // ref like inout.
         input = true;
         output = true;
       }

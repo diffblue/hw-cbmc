@@ -2548,6 +2548,23 @@ inout_declaration:
                   swapop($$, $3); }
         ;
 
+// 1800-2017 A.2.1.2 / 13.5.2: a ref port declaration inside a task or
+// function body. The identifier is treated as a variable that aliases the
+// actual argument; see verilog_elaborate.cpp, where ref is handled like
+// inout (copy in on entry, copy out on return).
+ref_declaration:
+          TOK_REF net_port_type list_of_port_identifiers
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_verilog_ref);
+                  addswap($$, ID_type, $2);
+                  swapop($$, $3); }
+        | TOK_REF variable_port_type list_of_variable_identifiers
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_verilog_ref);
+                  addswap($$, ID_type, $2);
+                  swapop($$, $3); }
+        ;
+
 signing_opt:
           /* Optional */
                 { make_nil($$); }
@@ -2890,6 +2907,8 @@ tf_item_declaration:
         | attribute_instance_brace output_declaration ';'
                 { add_attributes($2, $1); $$ = $2; }
         | attribute_instance_brace inout_declaration ';'
+                { add_attributes($2, $1); $$ = $2; }
+        | attribute_instance_brace ref_declaration ';'
                 { add_attributes($2, $1); $$ = $2; }
         ;
 
