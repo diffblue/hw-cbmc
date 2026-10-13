@@ -3,6 +3,12 @@
 * Verilog: implicit nets for undeclared identifiers used as members of a
   concatenation on the LHS of a continuous assignment, including nested
   concatenations
+* Verilog: loop variables shared between always blocks are exempt from
+  the multiple-driver check based on usage rather than declared type
+* Verilog: memory arrays with multiple write ports
+* Verilog: undriven bits of partially driven nets are free in every
+  timeframe
+* Verilog: output ports connected to part-selects of nets are drivers
 
 # EBMC 6.1
 
