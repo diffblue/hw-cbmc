@@ -377,6 +377,23 @@ void verilog_typecheckt::collect_symbols(const typet &type)
       add_symbol(std::move(enum_type_symbol));
     }
   }
+  else if(type.id() == ID_struct || type.id() == ID_union)
+  {
+    // 1800-2017 6.19.3: an anonymous enum declared as a struct or union
+    // member does not create a scope; its enum constants go into the
+    // enclosing scope. Recurse into the members to collect them.
+    for(auto &member : type.find(ID_declaration_list).get_sub())
+    {
+      const auto &member_decl = static_cast<const exprt &>(member);
+      if(member_decl.id() == ID_decl)
+        collect_symbols(static_cast<const typet &>(member_decl.find(ID_type)));
+    }
+  }
+  else if(type.id() == ID_verilog_packed_array)
+  {
+    // Recurse into the element type, which may be a struct/union/enum.
+    collect_symbols(to_type_with_subtype(type).subtype());
+  }
 }
 
 /// Returns true iff the given (pre-elaboration) type is a
