@@ -1,0 +1,23 @@
+KNOWNBUG
+scalar-bit-select1.sv
+--bound 1
+^file .* line [0-9]+: expected a vector type, but got .*$
+^EXIT=2$
+^SIGNAL=0$
+--
+^\[main\.p0\]
+--
+1800-2017 11.5.1 "Vector bit-select and part-select addressing":
+
+  "A bit-select or part-select of a scalar, or of a real variable or
+   real parameter, shall be illegal."
+
+A scalar is a single-bit net or variable declared with no packed
+dimension (e.g. "reg s;", "wire w;", "bit b;", "logic l;").  A
+bit-select such as s[0] of such a scalar is illegal and must be
+rejected during type-checking.
+
+EBMC instead treats a scalar as if it were a 1-bit vector and accepts
+s[0], reporting the property PROVED with EXIT=0.  The type-checker
+already rejects a bit-select of a real with "expected a vector type,
+but got real"; a scalar should be rejected the same way.
