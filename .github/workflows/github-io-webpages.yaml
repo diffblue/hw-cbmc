@@ -79,7 +79,7 @@ jobs:
           mkdir -p _site/logikbench
           PATH=$PATH:$PWD/src/ebmc benchmarking/logikbench.sh _site/logikbench/index.html
       - name: Upload the LogikBench report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: report-logikbench
           path: _site/logikbench
@@ -134,7 +134,7 @@ jobs:
           mkdir -p _site/hwmcc-2008
           PATH=$PATH:$PWD/src/ebmc benchmarking/hwmcc-2008-report.sh _site/hwmcc-2008/index.html
       - name: Upload the HWMCC 2008 report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: report-hwmcc-2008
           path: _site/hwmcc-2008
@@ -189,7 +189,7 @@ jobs:
           mkdir -p _site/hwmcc-2017
           PATH=$PATH:$PWD/src/ebmc benchmarking/hwmcc-2017-report.sh _site/hwmcc-2017/index.html
       - name: Upload the HWMCC 2017 report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: report-hwmcc-2017
           path: _site/hwmcc-2017
