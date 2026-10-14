@@ -28,6 +28,7 @@ concurrency:
 
 jobs:
   # Run the LogikBench suite and upload its report as an artifact.
+  # This job takes approximately 18 minutes.
   logikbench:
     name: Run LogikBench benchmarks
     runs-on: ubuntu-24.04
@@ -86,6 +87,7 @@ jobs:
           retention-days: 1
 
   # Run the HWMCC 2008 suite and upload its report as an artifact.
+  # This job takes approximately 15 minutes.
   hwmcc-2008:
     name: Run HWMCC 2008 benchmarks
     runs-on: ubuntu-24.04
@@ -141,6 +143,7 @@ jobs:
           retention-days: 1
 
   # Run the HWMCC 2017 suite and upload its report as an artifact.
+  # This job takes approximately 22 minutes.
   hwmcc-2017:
     name: Run HWMCC 2017 benchmarks
     runs-on: ubuntu-24.04
@@ -196,6 +199,7 @@ jobs:
           retention-days: 1
 
   # Collate the per-suite reports and upload them as a single Pages artifact.
+  # This job takes less than 1 minute.
   collate:
     name: Collate benchmark reports
     needs: [ logikbench, hwmcc-2008, hwmcc-2017 ]
@@ -226,6 +230,7 @@ jobs:
 
   # Publish the report to GitHub Pages.  Skipped on forks, where Pages is
   # not configured.
+  # This job takes less than 1 minute.
   deploy:
     name: Publish report to GitHub Pages
     needs: collate
