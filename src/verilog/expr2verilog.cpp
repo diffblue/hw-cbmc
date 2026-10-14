@@ -2269,9 +2269,10 @@ std::string expr2verilogt::convert(const typet &type)
     return "bool";
   else if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
   {
-    unsigned width=to_bitvector_type(type).get_width();
-    bool increasing = type.get_bool(ID_C_increasing);
-    unsigned offset=atoi(type.get(ID_C_offset).c_str());
+    auto &verilog_vector_type = to_verilog_vector_type(type);
+    auto width = verilog_vector_type.get_width();
+    bool increasing = verilog_vector_type.increasing();
+    auto offset = verilog_vector_type.offset();
 
     if(width!=0)
     {

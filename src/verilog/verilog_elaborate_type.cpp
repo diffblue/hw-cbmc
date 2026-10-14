@@ -151,13 +151,13 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
   {
     // we have a bit-vector type, not an array
 
-    bitvector_typet dest(
+    verilog_vector_typet dest(
       subtype.id() == ID_signed ? ID_signedbv : ID_unsignedbv);
 
     dest.add_source_location() = source_location;
     dest.set_width(width.to_ulong());
-    dest.set(ID_C_increasing, range.increasing());
-    dest.set(ID_C_offset, integer2string(offset));
+    dest.increasing(range.increasing());
+    dest.offset(offset);
 
     irep_idt element_type;
 

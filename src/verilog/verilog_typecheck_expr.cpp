@@ -3521,7 +3521,7 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(
     require_vector(expr.src());
 
     auto width = get_width(src.type());
-    auto offset = src.type().get_int(ID_C_offset);
+    auto offset = to_verilog_vector_type(src.type()).offset();
 
     auto index_opt = is_constant_integer_post_convert(index);
 
@@ -4254,7 +4254,7 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     require_vector(src);
 
     mp_integer src_width = get_width(src.type());
-    mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
+    mp_integer src_offset = to_verilog_vector_type(src.type()).offset();
 
     // In non-indexed part-select expressions, both
     // indices must be constants (1800-2017 11.5.1).
@@ -4290,7 +4290,7 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     require_vector(src);
 
     mp_integer src_width = get_width(src.type());
-    mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
+    mp_integer src_offset = to_verilog_vector_type(src.type()).offset();
 
     // The index need not be a constant.
     exprt &index = part_select.index();

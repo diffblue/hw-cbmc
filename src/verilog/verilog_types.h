@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_types.h>
 #include <util/ieee_float.h>
 #include <util/std_types.h>
+#include <util/string2int.h>
 
 /// Used during elaboration only,
 /// to signal that a symbol is yet to be elaborated.
@@ -60,15 +61,85 @@ public:
   }
 };
 
-class verilog_signedbv_typet:public bitvector_typet
+/// base class for the various vector types (1800 2017 7.4.1)
+/// that Verilog offers; this is the inner-most dimension
+/// of a packed array
+class verilog_vector_typet : public bitvector_typet
 {
 public:
-  inline verilog_signedbv_typet():bitvector_typet(ID_verilog_signedbv)
+  explicit verilog_vector_typet(irep_idt id) : bitvector_typet(id)
+  {
+  }
+
+  explicit verilog_vector_typet(irep_idt id, std::size_t width)
+    : bitvector_typet(id, width)
+  {
+  }
+
+  // vector indices may start from an offset, e.g. [8:1]
+  std::size_t offset() const
+  {
+    auto &offset_string = get_string(ID_C_offset);
+    if(offset_string.empty())
+      return 0;
+    else
+      return safe_string2size_t(offset_string);
+  }
+
+  void offset(std::size_t offset)
+  {
+    set(ID_C_offset, offset);
+  }
+
+  void offset(const mp_integer &offset)
+  {
+    set(ID_C_offset, integer2string(offset));
+  }
+
+  // vector indices may be increasing [7:0] or decreasing [0:7]
+  bool increasing() const
+  {
+    return get_bool(ID_C_increasing);
+  }
+
+  void increasing(bool increasing)
+  {
+    set(ID_C_increasing, increasing);
+  }
+};
+
+/*! \brief Cast a generic typet to a \ref verilog_vector_typet
+ *
+ * This is an unchecked conversion. \a type must be known to be \ref
+ * verilog_vector_typet.
+ *
+ * \param type Source type
+ * \return Object of type \ref verilog_vector_typet
+ *
+ * \ingroup gr_std_types
+*/
+inline const verilog_vector_typet &to_verilog_vector_type(const typet &type)
+{
+  return static_cast<const verilog_vector_typet &>(type);
+}
+
+/*! \copydoc to_verilog_vector_type(const typet &)
+ * \ingroup gr_std_types
+*/
+inline verilog_vector_typet &to_verilog_vector_type(typet &type)
+{
+  return static_cast<verilog_vector_typet &>(type);
+}
+
+class verilog_signedbv_typet : public verilog_vector_typet
+{
+public:
+  inline verilog_signedbv_typet() : verilog_vector_typet(ID_verilog_signedbv)
   {
   }
 
   explicit inline verilog_signedbv_typet(std::size_t width)
-    : bitvector_typet(ID_verilog_signedbv, width)
+    : verilog_vector_typet(ID_verilog_signedbv, width)
   {
   }
 };
@@ -98,15 +169,16 @@ inline verilog_signedbv_typet &to_verilog_signedbv_type(typet &type)
   return static_cast<verilog_signedbv_typet &>(type);
 }
 
-class verilog_unsignedbv_typet:public bitvector_typet
+class verilog_unsignedbv_typet : public verilog_vector_typet
 {
 public:
-  inline verilog_unsignedbv_typet():bitvector_typet(ID_verilog_unsignedbv)
+  inline verilog_unsignedbv_typet()
+    : verilog_vector_typet(ID_verilog_unsignedbv)
   {
   }
 
   explicit inline verilog_unsignedbv_typet(std::size_t width)
-    : bitvector_typet(ID_verilog_unsignedbv, width)
+    : verilog_vector_typet(ID_verilog_unsignedbv, width)
   {
   }
 

@@ -749,7 +749,7 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
     }
     else
     {
-      auto offset = mp_integer{src.type().get_int(ID_C_offset)};
+      auto offset = to_verilog_vector_type(src.type()).offset();
 
       // The internal bit position within the source, following the same
       // mapping as the read side (verilog_lowering.cpp): for an increasing
@@ -1078,7 +1078,7 @@ verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
     {
       // A bit-select on a vector.
       auto width = verilog_bits(src.type());
-      auto offset = src.type().get_int(ID_C_offset);
+      auto offset = to_verilog_vector_type(src.type()).offset();
 
       if(offset != 0)
         index = minus_exprt{index, from_integer(offset, index.type())};

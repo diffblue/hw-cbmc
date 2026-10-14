@@ -1025,7 +1025,7 @@ exprt verilog_lowering(exprt expr)
     {
       // Lower to extractbit
       auto width = verilog_bits(src.type());
-      auto offset = src.type().get_int(ID_C_offset);
+      auto offset = to_verilog_vector_type(src.type()).offset();
 
       auto index = bit_select.index();
 

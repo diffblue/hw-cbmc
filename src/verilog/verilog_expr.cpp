@@ -197,8 +197,9 @@ static exprt lower(const verilog_non_indexed_part_select_exprt &part_select)
   auto op2 = numeric_cast_v<mp_integer>(to_constant_expr(part_select.lsb()));
 
   mp_integer src_width = get_width(src.type());
-  mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
-  bool increasing = src.type().get_bool(ID_C_increasing);
+  auto &src_vector_type = to_verilog_vector_type(src.type());
+  auto src_offset = src_vector_type.offset();
+  bool increasing = src_vector_type.increasing();
 
   // op1/op2 are the declared indices, normalised so that op1>=op2.
   //
@@ -291,8 +292,9 @@ lower(const verilog_indexed_part_select_plus_or_minus_exprt &part_select)
   const exprt &src = part_select.src();
 
   mp_integer src_width = get_width(src.type());
-  mp_integer src_offset = string2integer(src.type().get_string(ID_C_offset));
-  bool increasing = src.type().get_bool(ID_C_increasing);
+  auto &src_vector_type = to_verilog_vector_type(src.type());
+  auto src_offset = src_vector_type.offset();
+  bool increasing = src_vector_type.increasing();
 
   // The width of the indexed part select must be an
   // elaboration-time constant.
