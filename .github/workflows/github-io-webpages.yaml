@@ -203,17 +203,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Download the LogikBench report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: report-logikbench
           path: _site/logikbench
       - name: Download the HWMCC 2008 report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: report-hwmcc-2008
           path: _site/hwmcc-2008
       - name: Download the HWMCC 2017 report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: report-hwmcc-2017
           path: _site/hwmcc-2017
