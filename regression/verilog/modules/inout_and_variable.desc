@@ -1,9 +1,8 @@
-KNOWNBUG
+CORE
 inout_and_variable.v
 
-^file .* line 4: symbol `some_var' is declared both as input and as register$
+^file .* line 10: variable main\.my_var cannot be connected to inout port `some_port'$
 ^EXIT=2$
 ^SIGNAL=0$
 --
 --
-The use of a variable with an inout port should be rejected.
