@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 parameters5.v
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ parameters5.v
 --
 ^warning: ignoring
 --
-The parameter definitions in the assertions are not expanded.

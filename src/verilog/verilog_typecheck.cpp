@@ -2290,6 +2290,33 @@ void verilog_typecheckt::typecheck_parameter_decl(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::typecheck_property_declaration
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Elaborate a property declared at compilation-unit ($unit)
+          scope (1800-2017 3.12.1), so that it can be instantiated
+          from modules just like a $unit-scoped function or task.
+
+\*******************************************************************/
+
+void verilog_typecheckt::typecheck_property_declaration(
+  const verilog_property_declarationt &declaration)
+{
+  // collect_symbols creates the named-property symbol (and its port
+  // symbols) in the current -- here, compilation-unit -- scope.
+  collect_symbols(declaration);
+
+  // convert_property_declaration pre-resolves the identifiers in the
+  // property body and stores the declaration as the symbol value.
+  auto declaration_copy = declaration;
+  convert_property_declaration(declaration_copy);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::typecheck_class
 
   Inputs:

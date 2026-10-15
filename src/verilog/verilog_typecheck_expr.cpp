@@ -2279,12 +2279,17 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
     // only add a typecast for now
     return typecast_exprt{std::move(expr), std::move(result.type())};
   }
-  else if(expr.type().id()==ID_unsignedbv ||
-          expr.type().id()==ID_signedbv ||
-          expr.type().id()==ID_verilog_signedbv ||
-          expr.type().id()==ID_verilog_unsignedbv)
+  else if(
+    expr.type().id() == ID_unsignedbv || expr.type().id() == ID_signedbv ||
+    expr.type().id() == ID_verilog_signedbv ||
+    expr.type().id() == ID_verilog_unsignedbv ||
+    expr.type().id() == ID_verilog_real ||
+    expr.type().id() == ID_verilog_shortreal ||
+    expr.type().id() == ID_verilog_realtime || expr.type().id() == ID_floatbv)
   {
-    // done already
+    // Already converted (e.g. a constant that has been elaborated once and
+    // is elaborated again). Re-parsing the value, which now holds the
+    // encoded bit pattern rather than the source literal, would corrupt it.
     return std::move(expr);
   }
 
@@ -2487,13 +2492,40 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression_check(exprt expr)
 {
   source_locationt source_location = expr.find_source_location();
 
+  // Remember whether a type was given where a value is expected (e.g. a
+  // type passed as a value parameter override). The type has at this point
+  // been lowered to a bit-vector type, which does not print nicely; recover
+  // the original Verilog type name from the #verilog_type attribute, which
+  // the lowered type preserves, so the error message reads e.g. `int'.
+  // An assignment conversion may have wrapped the type in typecasts.
+  std::optional<std::string> given_type;
+  {
+    const exprt *given = &expr;
+    while(given->id() == ID_typecast)
+      given = &to_typecast_expr(*given).op();
+
+    if(given->id() == ID_type)
+    {
+      const std::string verilog_type =
+        id2string(given->type().get(ID_C_verilog_type));
+
+      if(has_prefix(verilog_type, "verilog_"))
+        given_type = verilog_type.substr(std::string{"verilog_"}.size());
+      else
+        given_type = to_string(given->type());
+    }
+  }
+
   exprt tmp = elaborate_constant_expression(std::move(expr));
 
   // $ counts as a constant
   if(!tmp.is_constant() && tmp.id() != ID_infinity)
   {
+    std::string tmp_string =
+      given_type.has_value() ? *given_type : to_string(tmp);
+
     throw errort().with_location(source_location)
-      << "expected constant expression, but got `" << to_string(tmp) << '\'';
+      << "expected constant expression, but got `" << tmp_string << '\'';
   }
 
   return tmp;

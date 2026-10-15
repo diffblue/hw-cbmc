@@ -377,7 +377,7 @@ exprt verilog_lowering_cast(typecast_exprt expr)
   if(
     dest_type.id() == ID_verilog_real ||
     dest_type.id() == ID_verilog_shortreal ||
-    dest_type.id() == ID_verilog_realtime)
+    dest_type.id() == ID_verilog_realtime || dest_type.id() == ID_floatbv)
   {
     // The standard does not say how to round double precision
     // to single precision floating-point.  It does not say how

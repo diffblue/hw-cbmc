@@ -3,6 +3,10 @@
 * Verilog: implicit nets for undeclared identifiers used as members of a
   concatenation on the LHS of a continuous assignment, including nested
   concatenations
+* Verilog: untyped parameters overridden with a real value become real
+* SystemVerilog: property declarations in compilation-unit scope
+* Verilog: improved error message when a type is given as a value
+  parameter
 
 # EBMC 6.1
 
