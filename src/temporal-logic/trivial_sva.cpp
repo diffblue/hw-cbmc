@@ -22,6 +22,20 @@ static std::optional<exprt> is_state_predicate(const exprt &expr)
     return {};
 }
 
+// A property operand that completes within the first cycle, i.e., that
+// does not contain any temporal operator.  Returns its Boolean form, if
+// applicable.  This recognizes both sva_boolean wrappers and plain
+// Boolean expressions.
+static std::optional<exprt> is_first_cycle_property(const exprt &expr)
+{
+  if(expr.id() == ID_sva_boolean)
+    return to_sva_boolean_expr(expr).op();
+  else if(expr.type().id() == ID_bool && !has_temporal_operator(expr))
+    return expr;
+  else
+    return {};
+}
+
 exprt trivial_sva(exprt expr)
 {
   // pre-traversal
@@ -127,14 +141,27 @@ exprt trivial_sva(exprt expr)
   }
   else if(expr.id() == ID_sva_accept_on || expr.id() == ID_sva_sync_accept_on)
   {
+    // The abort condition is checked at every cycle until the evaluation
+    // of the operand property completes (1800-2017 16.12.11).  This is
+    // only equivalent to "c ∨ p" when p is a state predicate, i.e., it
+    // completes within the first cycle.  Otherwise the abort is kept and
+    // handled by the back-ends.
     auto &sva_abort_expr = to_sva_abort_expr(expr);
-    expr = or_exprt{sva_abort_expr.condition(), sva_abort_expr.property()};
+    auto property = is_first_cycle_property(sva_abort_expr.property());
+    if(property.has_value())
+      expr = or_exprt{sva_abort_expr.condition(), *property};
   }
   else if(expr.id() == ID_sva_reject_on || expr.id() == ID_sva_sync_reject_on)
   {
+    // The abort condition is checked at every cycle until the evaluation
+    // of the operand property completes (1800-2017 16.12.11).  This is
+    // only equivalent to "¬c ∧ p" when p is a state predicate, i.e., it
+    // completes within the first cycle.  Otherwise the abort is kept and
+    // handled by the back-ends.
     auto &sva_abort_expr = to_sva_abort_expr(expr);
-    expr = and_exprt{
-      not_exprt{sva_abort_expr.condition()}, sva_abort_expr.property()};
+    auto property = is_first_cycle_property(sva_abort_expr.property());
+    if(property.has_value())
+      expr = and_exprt{not_exprt{sva_abort_expr.condition()}, *property};
   }
   else if(expr.id() == ID_sva_case)
   {

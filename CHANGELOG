@@ -9,6 +9,8 @@
 * SystemVerilog: $typename for time
 * Verilog: four-valued semantics for && and ||
 * Verilog: parameters retain x/z values
+* SVA: accept_on, reject_on and disable iff check the condition in
+  every cycle of the evaluation
 
 # EBMC 6.1
 

@@ -126,8 +126,15 @@ void rewrite_disable_iff(exprt &expr, bool cover)
         }
         else // assertion
         {
-          // a sva_disable_iff b --> a ∨ b
-          node = or_exprt{disable_iff.lhs(), disable_iff.rhs()};
+          // The disable condition disables the attempt if it becomes true
+          // at any cycle during the evaluation of the operand property
+          // (1800-2017 16.12).  A disabled attempt evaluates to true,
+          // which is exactly the semantics of "accept_on".  We rewrite to
+          // accept_on; trivial_sva then simplifies it to "a ∨ b" when b
+          // completes within the first cycle, and the back-ends handle the
+          // general case.
+          node = sva_abort_exprt{
+            ID_sva_accept_on, disable_iff.lhs(), disable_iff.rhs()};
         }
       }
       else if(node.id() == ID_sva_sequence_disable_iff)
