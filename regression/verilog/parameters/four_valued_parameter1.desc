@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 four_valued_parameter1.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ four_valued_parameter1.sv
 --
 ^warning: ignoring
 --
-This does not typecheck

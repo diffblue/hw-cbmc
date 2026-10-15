@@ -8,6 +8,7 @@
 * SystemVerilog: $isunknown on non-constant operands
 * SystemVerilog: $typename for time
 * Verilog: four-valued semantics for && and ||
+* Verilog: parameters retain x/z values
 
 # EBMC 6.1
 

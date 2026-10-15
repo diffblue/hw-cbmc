@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 four_valued_parameter2.sv
 
 ^EXIT=0$
@@ -6,4 +6,3 @@ four_valued_parameter2.sv
 --
 ^warning: ignoring
 --
-This gives the wrong answer.
