@@ -1,0 +1,18 @@
+KNOWNBUG
+negative-part-select-width2.sv
+--bound 1
+^file .* line 9: width of indexed part select must be positive$
+^EXIT=2$
+^SIGNAL=0$
+--
+^\[main\.p0\]
+--
+1800-2017 11.5.1: the width expr2 of an indexed part-select
+"expr1 +: expr2" / "expr1 -: expr2" shall be a *positive* constant
+expression.  Zero is not positive, so v[3 +: 0] (and v[3 -: 0]) is
+illegal.
+
+EBMC rejects a negative width ("width of indexed part select must be
+positive", EXIT=2) but does NOT reject a zero width: it builds a
+zero-width part-select and goes on to solve the property (REFUTED,
+EXIT=10).  A zero width should be rejected exactly like a negative one.
