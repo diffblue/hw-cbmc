@@ -1,0 +1,14 @@
+CORE
+unpacked_array_element_width1.sv
+--bound 2
+^\[main\.c\.p_in\] always main\.c\.i\[0\] == 22'h3FF: PROVED up to bound 2$
+^\[main\.p0\] always \(##1 main\.x\[0\] == 21'h1FFFFF\): PROVED up to bound 2$
+^\[main\.p1\] always main\.z\[0\] == 22'h3FF: PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Unpacked arrays with element types of different widths are assignment
+compatible; the elements are truncated or extended, in assignments and in
+input and output port connections.

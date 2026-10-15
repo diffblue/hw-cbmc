@@ -1,0 +1,17 @@
+CORE
+unpacked_array_copy_read1.sv
+--bound 1
+^\[main\.p0\] always main\.o == 4'b0001 << main\.rp: PROVED up to bound 1$
+^\[main\.p1\] always main\.pend_next\[2\] == 4'b0100: PROVED up to bound 1$
+^\[main\.p2\] always \(main\.rp != 2'b11 \|-> main\.o2 == 4'b1001 \+ main\.rp\): PROVED up to bound 1$
+^\[main\.p3\] always main\.pop\[0\] == 1'b0: PROVED up to bound 1$
+^\[main\.p4\] always main\.pop\[1\] == main\.rp == 2'b11: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A whole-array copy of an unpacked array in an always_comb, followed by a
+read of an element of the copy in the same block. The read of the copy
+failed an invariant in the lowering (extract() on an array-typed source)
+before the lowering flattened aggregate sources.
