@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
 #include <util/expr_util.h>
+#include <util/find_symbols.h>
 #include <util/mathematical_types.h>
 #include <util/namespace.h>
 #include <util/simplify_expr.h>
@@ -214,6 +215,8 @@ protected:
   void
   build_case(const verilog_case_statement_baset &, statet &, const framest &);
   void build_for(const verilog_fort &, statet &, const framest &);
+  void build_while(const verilog_whilet &, statet &, const framest &);
+  void build_repeat(const verilog_repeatt &, statet &, const framest &);
   void build_function_call(
     const verilog_function_callt &,
     statet &,
@@ -531,6 +534,12 @@ protected:
   exprt composed_value(const statet::slice_valuest &, const symbol_exprt &);
 
   void commit(const statet &, kindt, const source_locationt &);
+
+  /// Commit the assignments of an always_latch process. The assigned
+  /// values are recorded as current-state constraints `symbol == value'
+  /// rather than as wire or register definitions; the variable holds
+  /// its value otherwise (1800-2017 9.2.2.3). See build_always.
+  void commit_latch(const statet &, const source_locationt &);
 
   /// The width of the entire identifier as a slice. Types without
   /// a fixed number of bits, e.g. chandles, are treated as a single
@@ -2960,6 +2969,204 @@ void verilog_rtl_buildert::build_for(
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::build_while
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Unrolls a while loop (1800-2017 12.7.4). The loop guard
+          must evaluate to a constant in every iteration.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::build_while(
+  const verilog_whilet &statement,
+  statet &state,
+  const framest &frames)
+{
+  // the frame for the break and continue statements of this loop
+  loop_framet loop_frame;
+  framest body_frames{&loop_frame, frames.tf};
+
+  // The path condition on entry to the loop. The iterations of the
+  // loop may narrow the path condition, by means of break, continue
+  // and return statements (1800-2017 12.8).
+  const auto entry_guard = state.guard;
+
+  // the number of return statements seen before the loop
+  const std::size_t returns_before =
+    frames.tf == nullptr ? 0 : frames.tf->return_states.size();
+
+  while(true)
+  {
+    loop_frame.continue_states.clear();
+
+    // The path is dead once the loop has been left by means of
+    // a break or return statement.
+    if(is_dead(state))
+      break;
+
+    auto guard = simplify_expr(
+      fold_system_functions(substitute(statement.condition(), state)), ns);
+
+    if(guard.is_false())
+      break;
+
+    if(!guard.is_true())
+    {
+      throw errort().with_location(statement.condition().source_location())
+        << "RTL construction failed to evaluate loop guard: `"
+        << to_string(statement.condition()) << '\'';
+    }
+
+    // execute the body
+    build_statement(statement.body(), state, body_frames);
+
+    // merge in edges from 'continue' statements, if any
+    if(!loop_frame.continue_states.empty())
+    {
+      std::vector<const statet *> joined_states{&state};
+
+      for(auto &continue_state : loop_frame.continue_states)
+      {
+        statet current(state);
+        merge(
+          conjunction(continue_state.guard), continue_state, current, state);
+        joined_states.push_back(&continue_state);
+      }
+
+      merge_guards(entry_guard, joined_states, state);
+    }
+  }
+
+  // Merge in edges from 'break' statements, if any. These come
+  // in program order, hence process in reverse order.
+  auto &break_states = loop_frame.break_states;
+
+  for(auto state_it = break_states.rbegin(); state_it != break_states.rend();
+      ++state_it)
+  {
+    statet current(state);
+    merge(conjunction(state_it->guard), *state_it, current, state);
+  }
+
+  // The path condition after the loop; see build_for.
+  if(frames.tf == nullptr || frames.tf->return_states.size() == returns_before)
+  {
+    state.guard = entry_guard;
+  }
+  else
+  {
+    std::vector<const statet *> exit_states{&state};
+
+    for(auto &break_state : break_states)
+      exit_states.push_back(&break_state);
+
+    merge_guards(entry_guard, exit_states, state);
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::build_repeat
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Unrolls a repeat loop (1800-2017 12.7.2). The repeat count
+          must be an elaboration-time constant; the body is executed
+          that many times.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::build_repeat(
+  const verilog_repeatt &statement,
+  statet &state,
+  const framest &frames)
+{
+  // The repeat count is evaluated once, before the loop (1800-2017
+  // 12.7.2), and must be an elaboration-time constant.
+  auto count_opt = constant_index(statement.condition(), state);
+
+  if(!count_opt.has_value())
+  {
+    throw errort().with_location(statement.condition().source_location())
+      << "RTL construction failed to evaluate repeat count: `"
+      << to_string(statement.condition()) << '\'';
+  }
+
+  // A negative or zero count executes the body zero times.
+  auto count = *count_opt;
+
+  // the frame for the break and continue statements of this loop
+  loop_framet loop_frame;
+  framest body_frames{&loop_frame, frames.tf};
+
+  const auto entry_guard = state.guard;
+
+  const std::size_t returns_before =
+    frames.tf == nullptr ? 0 : frames.tf->return_states.size();
+
+  for(mp_integer i = 0; i < count; ++i)
+  {
+    loop_frame.continue_states.clear();
+
+    // The path is dead once the loop has been left by means of
+    // a break or return statement.
+    if(is_dead(state))
+      break;
+
+    // execute the body
+    build_statement(statement.body(), state, body_frames);
+
+    // merge in edges from 'continue' statements, if any
+    if(!loop_frame.continue_states.empty())
+    {
+      std::vector<const statet *> joined_states{&state};
+
+      for(auto &continue_state : loop_frame.continue_states)
+      {
+        statet current(state);
+        merge(
+          conjunction(continue_state.guard), continue_state, current, state);
+        joined_states.push_back(&continue_state);
+      }
+
+      merge_guards(entry_guard, joined_states, state);
+    }
+  }
+
+  // Merge in edges from 'break' statements, if any. These come
+  // in program order, hence process in reverse order.
+  auto &break_states = loop_frame.break_states;
+
+  for(auto state_it = break_states.rbegin(); state_it != break_states.rend();
+      ++state_it)
+  {
+    statet current(state);
+    merge(conjunction(state_it->guard), *state_it, current, state);
+  }
+
+  // The path condition after the loop; see build_for.
+  if(frames.tf == nullptr || frames.tf->return_states.size() == returns_before)
+  {
+    state.guard = entry_guard;
+  }
+  else
+  {
+    std::vector<const statet *> exit_states{&state};
+
+    for(auto &break_state : break_states)
+      exit_states.push_back(&break_state);
+
+    merge_guards(entry_guard, exit_states, state);
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::build_function_call
 
   Inputs:
@@ -3007,6 +3214,22 @@ void verilog_rtl_buildert::build_function_call(
 
   // the frame for the return statements of this call
   tf_framet tf_frame;
+
+  // A function may be called as a statement, discarding its return
+  // value (1800-2017 13.4.1). The body may still contain
+  // `return <value>;', whose value is assigned to the symbol with the
+  // function's name, as in expand_function_call; it is simply not read
+  // back here. Tasks and void functions have no such return symbol.
+  {
+    const symbolt *return_symbol;
+    if(!ns.lookup(
+         id2string(symbol.name) + "." + id2string(symbol.base_name),
+         return_symbol))
+    {
+      tf_frame.return_value = return_symbol->symbol_expr();
+    }
+  }
+
   framest body_frames{frames.loop, &tf_frame};
 
   // remember the guard
@@ -3201,6 +3424,14 @@ void verilog_rtl_buildert::build_statement(
   else if(statement.id() == ID_for)
   {
     build_for(to_verilog_for(statement), state, frames);
+  }
+  else if(statement.id() == ID_while)
+  {
+    build_while(to_verilog_while(statement), state, frames);
+  }
+  else if(statement.id() == ID_repeat)
+  {
+    build_repeat(to_verilog_repeat(statement), state, frames);
   }
   else if(statement.id() == ID_break)
   {
@@ -3426,6 +3657,50 @@ void verilog_rtl_buildert::commit(
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::commit_latch
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::commit_latch(
+  const statet &state,
+  const source_locationt &source_location)
+{
+  for(auto &value_entry : state.values)
+  {
+    auto &identifier = value_entry.first;
+
+    // function and task locals are not part of the RTL representation
+    if(is_cycle_local(identifier))
+      continue;
+
+    const symbolt &symbol = ns.lookup(identifier);
+    const symbol_exprt symbol_expr{identifier, symbol.type};
+
+    for(auto &slice_entry : value_entry.second)
+    {
+      auto &slice = slice_entry.first;
+      auto &value = slice_entry.second;
+
+      // The current value of the slice must equal the latched value
+      // `enable ? data : slice'. While the enable is active this forces
+      // the slice to the data input (transparent latch); otherwise it is
+      // vacuously true, and the hold-its-value next-state equation added
+      // for the declared variable retains the value.
+      auto lhs = slice_of(symbol_expr, slice);
+      auto rhs = typecast_exprt::conditional_cast(value, lhs.type());
+      rtl.constraints.push_back(equal_exprt{std::move(lhs), std::move(rhs)});
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::build_always
 
   Inputs:
@@ -3440,12 +3715,15 @@ void verilog_rtl_buildert::build_always(const verilog_always_baset &always)
 {
   const verilog_statementt *body = &always.statement();
   bool clocked = false;
+  const bool is_latch = always.id() == ID_verilog_always_latch;
 
-  if(always.id() == ID_verilog_always_latch)
-  {
-    throw errort().with_location(always.source_location())
-      << "always_latch is not supported by RTL construction";
-  }
+  // An explicit, level-sensitive sensitivity list, e.g. the old-style
+  // `always @(a, b)', infers a latch for any variable that is not
+  // assigned on every control path (1800-2017 9.2.2.3). An implicit
+  // list (`always @(*)', always_comb) describes purely combinational
+  // logic; an incomplete assignment there is a combinational loop, not
+  // a latch, so no latch is inferred for those.
+  bool infer_latch = false;
 
   if(body->id() == ID_event_guard)
   {
@@ -3461,6 +3739,22 @@ void verilog_rtl_buildert::build_always(const verilog_always_baset &always)
         if(op.id() == ID_posedge || op.id() == ID_negedge)
           clocked = true;
     }
+
+    // An explicit, named sensitivity list (not `@(*)') infers latches.
+    // The type checker may wrap the event expression in a typecast, so
+    // the star event is detected by inspecting the whole guard.
+    auto contains_star = [](const exprt &e)
+    {
+      if(e.id() == ID_verilog_star_event)
+        return true;
+      for(auto &op : e.operands())
+        if(op.id() == ID_verilog_star_event)
+          return true;
+      return false;
+    };
+
+    if(!clocked && always.id() == ID_verilog_always && !contains_star(guard))
+      infer_latch = true;
 
     body = &event_guard.body();
   }
@@ -3485,10 +3779,74 @@ void verilog_rtl_buildert::build_always(const verilog_always_baset &always)
 
   property_context = old_context;
 
-  commit(
-    state,
-    clocked ? kindt::STATE_HOLDING : kindt::WIRE,
-    always.source_location());
+  if(is_latch)
+  {
+    // always_latch (1800-2017 9.2.2.3) denotes a level-sensitive,
+    // transparent latch: the latched variable follows its data input
+    // while the enable is active, and holds its previous value
+    // otherwise. The merge in build_if already composes the
+    // hold-its-value expression for paths on which the variable is not
+    // assigned, e.g. `if(en) q = d;' yields the value `en ? d : q',
+    // where `q' is the variable's own current value.
+    //
+    // A transparent latch is neither a plain combinational wire (the
+    // self-reference `q' would become non-determinism) nor a clocked
+    // register (that would delay q by a cycle and break transparency).
+    // We therefore model it as a current-state constraint
+    //   q == (en ? d : q)
+    // which forces q == d while the enable is active and is vacuously
+    // true otherwise. The variable is left out of identifier_map, so
+    // the declared-variable mechanism (see convert_initial_values) adds
+    // the hold-its-value next-state equation q' = q, giving q the
+    // latched value once the enable goes inactive.
+    commit_latch(state, always.source_location());
+  }
+  else if(clocked || !infer_latch)
+  {
+    commit(
+      state,
+      clocked ? kindt::STATE_HOLDING : kindt::WIRE,
+      always.source_location());
+  }
+  else
+  {
+    // A level-sensitive always block with an explicit named sensitivity
+    // list (e.g. old-style `always @(signal)') infers a latch for any
+    // variable that is not assigned on every path: the hold-its-value
+    // branch introduced by the merge in build_if makes the committed
+    // value reference the variable's own current value (1800-2017
+    // 9.2.2.3, latch inference). Such slices are committed as a
+    // transparent latch, like always_latch; the remaining,
+    // fully-driven slices are plain combinational wires.
+    statet wire_state, latch_state;
+
+    for(auto &value_entry : state.values)
+    {
+      auto &identifier = value_entry.first;
+
+      for(auto &slice_entry : value_entry.second)
+      {
+        // Does the value hold the slice's own value on some path?
+        if(has_symbol_expr(slice_entry.second, identifier, false))
+        {
+          write_slice(
+            latch_state.values[identifier],
+            slice_entry.first,
+            slice_entry.second);
+        }
+        else
+        {
+          write_slice(
+            wire_state.values[identifier],
+            slice_entry.first,
+            slice_entry.second);
+        }
+      }
+    }
+
+    commit(wire_state, kindt::WIRE, always.source_location());
+    commit_latch(latch_state, always.source_location());
+  }
 }
 
 /*******************************************************************\
