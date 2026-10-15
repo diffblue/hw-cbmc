@@ -25,8 +25,9 @@ mp_integer verilog_left(const typet &type)
     type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
     type.id() == ID_bool)
   {
-    auto offset = type.get_int(ID_C_offset);
-    if(type.get_bool(ID_C_increasing))
+    auto &vector_type = to_verilog_vector_type(type);
+    auto offset = vector_type.offset();
+    if(vector_type.increasing())
       return offset;
     else
       return offset + verilog_bits(type) - 1;
@@ -54,8 +55,9 @@ mp_integer verilog_right(const typet &type)
     type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
     type.id() == ID_bool)
   {
-    auto offset = type.get_int(ID_C_offset);
-    if(type.get_bool(ID_C_increasing))
+    auto &vector_type = to_verilog_vector_type(type);
+    auto offset = vector_type.offset();
+    if(vector_type.increasing())
       return offset + verilog_bits(type) - 1;
     else
       return offset;
