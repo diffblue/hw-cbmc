@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 package_var2.sv
 
+^\[main\.assert\.1\] my_pkg::my_var == 1: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 --
-The identifier my_var is not initialized.

@@ -2597,20 +2597,20 @@ net_decl_assignment:
 // This is a copy of "variable_decl_assignment", but the identifiers
 // aren't added to the scope.
 struct_variable_decl_assignment:
-          variable_identifier variable_dimension_brace
+          declarator_name variable_dimension_brace
                 {
                   $$ = $1;
                   stack_expr($$).id(ID_declarator);
                   addswap($$, ID_type, $2);
                 }
-        | variable_identifier variable_dimension_brace '=' expression
+        | declarator_name variable_dimension_brace '=' expression
                 {
                   $$ = $1;
                   stack_expr($$).id(ID_declarator);
                   addswap($$, ID_type, $2);
                   addswap($$, ID_value, $4);
                 }
-        | variable_identifier variable_dimension_brace '=' class_new
+        | declarator_name variable_dimension_brace '=' class_new
                 {
                   $$ = $1;
                   stack_expr($$).id(ID_declarator);
@@ -2765,7 +2765,15 @@ function_body_declaration:
           function_data_type_or_implicit
           function_identifier
                 { // functions go into the current scope, say module or $unit
-                  push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::FUNCTION); }
+                  push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::FUNCTION);
+                  // IEEE 1800-2017 13.4.1: the function name denotes an
+                  // implicit variable (the return value) that is local to
+                  // the function. Register it in the function scope so that
+                  // references inside the body resolve to this local
+                  // variable, masking any identifier made potentially
+                  // visible by a wildcard import in an enclosing scope
+                  // (IEEE 1800-2017 26.3).
+                  PARSER.scopes.add_identifier(stack_expr($2).get(ID_base_name), verilog_scopet::VAR); }
           ';'
           tf_item_declaration_brace
           function_statement_or_null_brace
@@ -2787,7 +2795,15 @@ function_body_declaration:
         | function_data_type_or_implicit
           function_identifier
                 { // functions go into the current scope, say module or $unit
-                  push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::FUNCTION); }
+                  push_scope(stack_expr($2).get(ID_base_name), ".", verilog_scopet::FUNCTION);
+                  // IEEE 1800-2017 13.4.1: the function name denotes an
+                  // implicit variable (the return value) that is local to
+                  // the function. Register it in the function scope so that
+                  // references inside the body resolve to this local
+                  // variable, masking any identifier made potentially
+                  // visible by a wildcard import in an enclosing scope
+                  // (IEEE 1800-2017 26.3).
+                  PARSER.scopes.add_identifier(stack_expr($2).get(ID_base_name), verilog_scopet::VAR); }
           '(' tf_port_list_opt ')' ';'
           block_item_declaration_brace
           function_statement_or_null_brace
@@ -5613,6 +5629,20 @@ any_identifier:
         ;
 
 non_type_identifier: TOK_NON_TYPE_IDENTIFIER
+        ;
+
+// A declaration may use, as the name being declared, an identifier that
+// is classified by the scanner as a type identifier because it names a
+// type (or is made potentially visible by a wildcard import) in an
+// enclosing scope. Per IEEE 1800-2017 23.9 (and 6.18, 26.3), a
+// declaration in an inner scope introduces a new name that masks any
+// outer declaration of the same identifier. When the data type has
+// already been parsed, the following identifier must be the declarator
+// name regardless of its scanner classification. Both token shapes
+// carry ID_base_name, so no normalization is required.
+declarator_name:
+          TOK_NON_TYPE_IDENTIFIER
+        | TOK_TYPE_IDENTIFIER
         ;
 
 block_identifier: non_type_identifier;
