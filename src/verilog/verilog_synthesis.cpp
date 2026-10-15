@@ -406,7 +406,40 @@ exprt verilog_synthesist::expand_function_call(
       DATA_INVARIANT(
         call.arguments().size() == 1, "$countones must have one argument");
       auto what = synth_expr(call.arguments()[0], symbol_state); // rec. call
-      return popcount_exprt{what, call.type()};
+
+      // For four-valued operands, only known 1 bits count; x/z bits do
+      // not (IEEE 1800-2017 20.9). The operand has already been lowered
+      // to the aval/bval encoding by synth_expr.
+      if(is_aval_bval(what))
+      {
+        auto known_ones = bitand_exprt{aval(what), bitnot_exprt{bval(what)}};
+        return popcount_exprt{known_ones, call.type()};
+      }
+      else
+        return popcount_exprt{what, call.type()};
+    }
+    else if(base_name == "$isunknown")
+    {
+      // 1800-2017 20.9: returns 1 if any bit of the expression is x or z,
+      // and 0 otherwise. The operand has already been lowered to the
+      // aval/bval encoding by synth_expr; has_xz tests the bval bits.
+      DATA_INVARIANT(
+        call.arguments().size() == 1, "$isunknown must have one argument");
+      auto what = synth_expr(call.arguments()[0], symbol_state); // rec. call
+      return has_xz(what);
+    }
+    else if(base_name == "$countbits")
+    {
+      // 1800-2017 20.9: count bits of the first argument that match any
+      // of the control bits (the remaining arguments).
+      DATA_INVARIANT(
+        call.arguments().size() >= 2,
+        "$countbits must have at least two arguments");
+      auto value = synth_expr(call.arguments()[0], symbol_state);
+      exprt::operandst controls;
+      for(std::size_t i = 1; i < call.arguments().size(); i++)
+        controls.push_back(synth_expr(call.arguments()[i], symbol_state));
+      return aval_bval_countbits(value, controls, call.type());
     }
     else if(base_name == "$value$plusargs")
     {

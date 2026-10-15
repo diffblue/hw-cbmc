@@ -1315,14 +1315,76 @@ Function: verilog_typecheck_exprt::countones
 
 constant_exprt verilog_typecheck_exprt::countones(const constant_exprt &expr)
 {
+  // Count the number of 1 bits. For four-valued operands, x/z bits
+  // do not count as ones (IEEE 1800-2017 20.9).
+  exprt operand = expr;
+
+  if(is_four_valued(operand.type()))
+  {
+    // encode into aval/bval, then count known 1 bits (aval & ~bval).
+    // popcount needs an unsigned bit-vector (not a plain bv) to fold.
+    auto encoded = lower_to_aval_bval(to_constant_expr(operand));
+    auto width = aval_bval_width(encoded.type());
+    operand = typecast_exprt{
+      bitand_exprt{aval(encoded), bitnot_exprt{bval(encoded)}},
+      unsignedbv_typet{width}};
+  }
+
   // lower to popcount and try simplifier
   auto simplified =
-    simplify_expr(popcount_exprt{expr, verilog_int_typet{}.lower()}, ns);
+    simplify_expr(popcount_exprt{operand, verilog_int_typet{}.lower()}, ns);
 
   if(!simplified.is_constant())
   {
     throw errort{}.with_location(expr.source_location())
       << "failed to simplify constant $countones";
+  }
+  else
+    return to_constant_expr(simplified);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::countbits
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+constant_exprt verilog_typecheck_exprt::countbits(
+  const constant_exprt &value,
+  const exprt::operandst &controls)
+{
+  // 1800-2017 20.9: count the bits of 'value' that match any of the
+  // given control bits. The aval/bval encoding yields a word-level
+  // expression that we hand to the simplifier.
+  auto encode = [](const exprt &e) -> exprt
+  {
+    if(is_four_valued(e.type()))
+      return lower_to_aval_bval(to_constant_expr(e));
+    else
+      return e;
+  };
+
+  auto value_encoded = encode(value);
+
+  exprt::operandst controls_encoded;
+  for(const auto &control : controls)
+    controls_encoded.push_back(encode(control));
+
+  auto expr = aval_bval_countbits(
+    value_encoded, controls_encoded, verilog_int_typet{}.lower());
+
+  auto simplified = simplify_expr(expr, ns);
+
+  if(!simplified.is_constant())
+  {
+    throw errort{}.with_location(value.source_location())
+      << "failed to simplify constant $countbits";
   }
   else
     return to_constant_expr(simplified);
@@ -1588,6 +1650,22 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
     {
       throw errort().with_location(expr.source_location())
         << "$countones takes one argument";
+    }
+
+    // The return type is 'int'
+    expr.type() = verilog_int_typet{}.lower();
+
+    return std::move(expr);
+  }
+  else if(base_name == "$countbits") // SystemVerilog
+  {
+    // 1800-2017 20.9: $countbits(expression, control_bit, ...)
+    // Counts the number of bits of 'expression' that match any of the
+    // control bits. At least one control bit must be given.
+    if(arguments.size() < 2)
+    {
+      throw errort().with_location(expr.source_location())
+        << "$countbits takes at least two arguments";
     }
 
     // The return type is 'int'
@@ -2595,6 +2673,26 @@ exprt verilog_typecheck_exprt::elaborate_constant_system_function_call(
       return std::move(expr); // give up
 
     return countones(to_constant_expr(op));
+  }
+  else if(base_name == "$countbits")
+  {
+    DATA_INVARIANT(
+      arguments.size() >= 2, "$countbits has at least two arguments");
+
+    auto value = elaborate_constant_expression(arguments[0]);
+    if(!value.is_constant())
+      return std::move(expr); // give up
+
+    exprt::operandst controls;
+    for(std::size_t i = 1; i < arguments.size(); i++)
+    {
+      auto control = elaborate_constant_expression(arguments[i]);
+      if(!control.is_constant())
+        return std::move(expr); // give up
+      controls.push_back(control);
+    }
+
+    return countbits(to_constant_expr(value), controls);
   }
   else if(base_name == "$clog2")
   {
@@ -3793,13 +3891,32 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     return convert_replication_expr(to_replication_expr(expr));
   else if(expr.id() == ID_and || expr.id() == ID_or)
   {
+    // 1800-2017 11.4.7 Logical operators.
+    // These yield 'x' when the result is not determined by a
+    // controlling operand but at least one operand contains x or z.
     Forall_operands(it, expr)
-    {
       convert_expr(*it);
-      make_boolean(*it);
+
+    // Four-valued if any operand is four-valued.
+    bool any_four_valued = false;
+    for(auto &op : expr.operands())
+    {
+      if(
+        op.type().id() == ID_verilog_signedbv ||
+        op.type().id() == ID_verilog_unsignedbv)
+        any_four_valued = true;
     }
 
-    expr.type()=bool_typet();
+    if(any_four_valued)
+    {
+      expr.type() = verilog_unsignedbv_typet{1};
+    }
+    else
+    {
+      Forall_operands(it, expr)
+        make_boolean(*it);
+      expr.type() = bool_typet();
+    }
 
     return std::move(expr);
   }

@@ -38,6 +38,10 @@ constant_exprt lower_to_aval_bval(const constant_exprt &);
 exprt aval(const exprt &);
 exprt bval(const exprt &);
 
+/// Return true iff 'expr' contains an x or z bit, i.e. a nonzero bval.
+/// For a two-valued operand the result is 'false'.
+exprt has_xz(const exprt &);
+
 exprt aval_bval_conversion(const exprt &, const typet &);
 
 exprt aval_bval_concatenation(const exprt::operandst &, const typet &);
@@ -47,6 +51,10 @@ exprt aval_bval(const verilog_logical_inequality_exprt &);
 
 /// lowering for !
 exprt aval_bval(const not_exprt &);
+/// lowering for && (logical and)
+exprt aval_bval_logical_and(const and_exprt &);
+/// lowering for || (logical or)
+exprt aval_bval_logical_or(const or_exprt &);
 /// lowering for ~
 exprt aval_bval(const bitnot_exprt &);
 /// lowering for &
@@ -88,5 +96,12 @@ exprt default_aval_bval_lowering(const exprt &);
 /// lowering for / and %
 /// If any operand has x/z, or the divisor is zero, the result is 'x'.
 exprt aval_bval_div_mod(const binary_exprt &);
+
+/// lowering for $countbits: count bits of 'value' matching any control
+/// bit. Only the LSB of each control is used. See IEEE 1800-2017 20.9.
+exprt aval_bval_countbits(
+  const exprt &value,
+  const exprt::operandst &controls,
+  const typet &result_type);
 
 #endif

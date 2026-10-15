@@ -290,6 +290,73 @@ exprt make_x(const typet &type)
   return lower_to_aval_bval(constant_exprt{std::string(width, 'x'), type});
 }
 
+exprt aval_bval_countbits(
+  const exprt &value,
+  const exprt::operandst &controls,
+  const typet &result_type)
+{
+  // 1800-2017 20.9: $countbits counts the number of bits of 'value'
+  // that match any of the control bits. Each control bit denotes a
+  // single four-valued value (0, 1, x or z); if a control expression is
+  // wider than one bit, only its least significant bit is used.
+  //
+  // Encoding (see top of file): a four-valued bit is (bval, aval).
+  // A value bit matches a control bit iff their aval bits are equal and
+  // their bval bits are equal. We compute, for each control, a bit mask
+  // over all bit positions of 'value', then take the bit-wise OR of all
+  // such masks and count the set bits with popcount.
+  PRECONDITION(!controls.empty());
+
+  // aval/bval bit vectors of 'value', both of width n.
+  auto value_aval = aval(value);
+  auto value_bval = bval(value);
+  auto width = to_bv_type(value_aval.type()).get_width();
+  const bv_typet vector_type{width};
+
+  // Broadcast a single bit to the full width of 'value':
+  //   bit ? all-ones : all-zeros
+  auto replicate = [&vector_type](const exprt &bit) -> exprt
+  {
+    auto bit_boolean = typecast_exprt::conditional_cast(bit, bool_typet{});
+    return if_exprt{
+      bit_boolean, vector_type.all_ones_expr(), vector_type.all_zeros_expr()};
+  };
+
+  exprt::operandst match_masks;
+
+  for(const auto &control : controls)
+  {
+    // least significant aval/bval bit of the control
+    auto control_aval = aval(control);
+    auto control_bval = bval(control);
+    auto control_aval_lsb =
+      extractbit_exprt{control_aval, natural_typet{}.zero_expr()};
+    auto control_bval_lsb =
+      extractbit_exprt{control_bval, natural_typet{}.zero_expr()};
+
+    auto control_aval_vector = replicate(control_aval_lsb);
+    auto control_bval_vector = replicate(control_bval_lsb);
+
+    // Bits where the aval agrees, and bits where the bval agrees.
+    auto aval_match =
+      bitnot_exprt{bitxor_exprt{value_aval, control_aval_vector}};
+    auto bval_match =
+      bitnot_exprt{bitxor_exprt{value_bval, control_bval_vector}};
+
+    match_masks.push_back(bitand_exprt{aval_match, bval_match});
+  }
+
+  exprt any_match = match_masks.front();
+  for(std::size_t i = 1; i < match_masks.size(); i++)
+    any_match = bitor_exprt{any_match, match_masks[i]};
+
+  // popcount requires a signed/unsigned bit-vector operand (not a plain
+  // bv) for constant folding; cast accordingly.
+  auto any_match_unsigned = typecast_exprt{any_match, unsignedbv_typet{width}};
+
+  return popcount_exprt{any_match_unsigned, result_type};
+}
+
 exprt aval_bval(const verilog_logical_equality_exprt &expr)
 {
   auto &type = expr.type();
@@ -361,6 +428,96 @@ exprt aval_bval(const not_exprt &expr)
     not_exprt{extractbit_exprt{expr.op(), natural_typet{}.zero_expr()}};
   auto x = make_x(type);
   return if_exprt{has_xz, x, aval_bval_conversion(not_expr, x.type())};
+}
+
+// Reduce a (possibly four-valued) operand to its logical truth value.
+//   is_true:  the operand has at least one known 1 bit
+//   is_false: the operand has no 1 bit and no x/z bit
+// A four-valued operand that is neither is 'x'.
+// See IEEE 1800-2017 11.4.7 and Table 11-18/11-19.
+static exprt logical_has_one(const exprt &op)
+{
+  if(is_aval_bval(op))
+  {
+    auto width = aval_bval_width(op);
+    auto known_ones = bitand_exprt{aval(op), bitnot_exprt{bval(op)}};
+    return notequal_exprt{known_ones, bv_typet{width}.all_zeros_expr()};
+  }
+  else if(op.type().id() == ID_bool)
+  {
+    return op;
+  }
+  else
+  {
+    auto width = to_bitvector_type(op.type()).get_width();
+    return notequal_exprt{
+      typecast_exprt::conditional_cast(op, bv_typet{width}),
+      bv_typet{width}.all_zeros_expr()};
+  }
+}
+
+static exprt logical_has_xz(const exprt &op)
+{
+  if(is_aval_bval(op))
+    return ::has_xz(op);
+  else
+    return false_exprt{};
+}
+
+exprt aval_bval_logical_and(const and_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(expr.operands().size() == 2);
+
+  // 1800-2017 11.4.7, Table 11-18:
+  //   0 if either operand is logically false
+  //   1 if both operands are logically true
+  //   x otherwise
+  auto lhs_one = logical_has_one(expr.op0());
+  auto rhs_one = logical_has_one(expr.op1());
+
+  auto one = aval_bval_conversion(true_exprt{}, lower_to_aval_bval(type));
+  auto zero = aval_bval_conversion(false_exprt{}, lower_to_aval_bval(type));
+  auto x = make_x(type);
+
+  // false if either operand is a known false, i.e. no 1 bit and no x/z
+  auto lhs_false =
+    and_exprt{not_exprt{lhs_one}, not_exprt{logical_has_xz(expr.op0())}};
+  auto rhs_false =
+    and_exprt{not_exprt{rhs_one}, not_exprt{logical_has_xz(expr.op1())}};
+  auto either_false = or_exprt{lhs_false, rhs_false};
+
+  return if_exprt{
+    either_false, zero, if_exprt{and_exprt{lhs_one, rhs_one}, one, x}};
+}
+
+exprt aval_bval_logical_or(const or_exprt &expr)
+{
+  auto &type = expr.type();
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(expr.operands().size() == 2);
+
+  // 1800-2017 11.4.7, Table 11-19:
+  //   1 if either operand is logically true
+  //   0 if both operands are logically false
+  //   x otherwise
+  auto lhs_one = logical_has_one(expr.op0());
+  auto rhs_one = logical_has_one(expr.op1());
+
+  auto one = aval_bval_conversion(true_exprt{}, lower_to_aval_bval(type));
+  auto zero = aval_bval_conversion(false_exprt{}, lower_to_aval_bval(type));
+  auto x = make_x(type);
+
+  // false if operand has no 1 bit and no x/z
+  auto lhs_false =
+    and_exprt{not_exprt{lhs_one}, not_exprt{logical_has_xz(expr.op0())}};
+  auto rhs_false =
+    and_exprt{not_exprt{rhs_one}, not_exprt{logical_has_xz(expr.op1())}};
+  auto both_false = and_exprt{lhs_false, rhs_false};
+
+  return if_exprt{
+    or_exprt{lhs_one, rhs_one}, one, if_exprt{both_false, zero, x}};
 }
 
 exprt aval_bval_reduction(const unary_exprt &expr)

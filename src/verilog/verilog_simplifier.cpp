@@ -10,20 +10,37 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
+#include <util/bitvector_types.h>
 #include <util/mathematical_types.h>
 #include <util/simplify_expr.h>
 
 #include <ebmc/ebmc_error.h>
 
+#include "aval_bval_encoding.h"
 #include "verilog_expr.h"
 #include "verilog_types.h"
 
 static constant_exprt
 countones(const constant_exprt &expr, const namespacet &ns)
 {
+  // Count the number of 1 bits. For four-valued operands, x/z bits
+  // do not count as ones (IEEE 1800-2017 20.9).
+  exprt operand = expr;
+
+  if(is_four_valued(operand.type()))
+  {
+    // encode into aval/bval, then count known 1 bits (aval & ~bval).
+    // popcount needs an unsigned bit-vector (not a plain bv) to fold.
+    auto encoded = lower_to_aval_bval(to_constant_expr(operand));
+    auto width = aval_bval_width(encoded.type());
+    operand = typecast_exprt{
+      bitand_exprt{aval(encoded), bitnot_exprt{bval(encoded)}},
+      unsignedbv_typet{width}};
+  }
+
   // lower to popcount and try simplifier
   auto simplified =
-    simplify_expr(popcount_exprt{expr, verilog_int_typet{}.lower()}, ns);
+    simplify_expr(popcount_exprt{operand, verilog_int_typet{}.lower()}, ns);
 
   if(!simplified.is_constant())
   {

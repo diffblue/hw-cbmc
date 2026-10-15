@@ -145,6 +145,12 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
       return "longint unsigned";
     else if(verilog_type == ID_verilog_shortint)
       return "shortint unsigned";
+    else if(verilog_type == ID_verilog_time)
+    {
+      // 'time' is a 64-bit unsigned integral type.
+      // Per 1800-2017 20.6.1, $typename(time) yields "time".
+      return "time";
+    }
     else if(verilog_type == ID_verilog_logic)
     {
       // scalar four-valued type: reg, wire or logic
@@ -163,7 +169,12 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
   }
   else if(type.id() == ID_verilog_unsignedbv)
   {
-    return "logic[" + left(type) + ":" + right(type) + "]";
+    // 'time' is a four-valued, 64-bit unsigned integral type.
+    // Per 1800-2017 20.6.1, $typename(time) yields "time".
+    if(verilog_type == ID_verilog_time)
+      return "time";
+    else
+      return "logic[" + left(type) + ":" + right(type) + "]";
   }
   else if(type.id() == ID_bool)
   {

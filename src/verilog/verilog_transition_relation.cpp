@@ -21,6 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ebmc/ebmc_error.h>
 
+#include "aval_bval_encoding.h"
 #include "expr2verilog.h"
 #include "sva_expr.h"
 #include "verilog_bits.h"
@@ -389,7 +390,41 @@ exprt verilog_transition_relationt::lower_system_functions(exprt expr)
       DATA_INVARIANT(
         call.arguments().size() == 1, "$countones must have one argument");
       auto result_type = verilog_lowering(call.type());
-      return popcount_exprt{call.arguments()[0], result_type};
+      auto &op = call.arguments()[0];
+
+      // For four-valued operands, only known 1 bits count; x/z bits do
+      // not (IEEE 1800-2017 20.9). The operand has already been lowered
+      // to the aval/bval encoding at this point.
+      if(is_aval_bval(op))
+      {
+        auto known_ones = bitand_exprt{aval(op), bitnot_exprt{bval(op)}};
+        return popcount_exprt{known_ones, result_type};
+      }
+      else
+        return popcount_exprt{op, result_type};
+    }
+    else if(base_name == "$isunknown")
+    {
+      // 1800-2017 20.9: returns 1 if any bit of the expression is x or z,
+      // and 0 otherwise. The operand has already been lowered to the
+      // aval/bval encoding at this point; has_xz tests the bval bits.
+      DATA_INVARIANT(
+        call.arguments().size() == 1, "$isunknown must have one argument");
+      return has_xz(call.arguments()[0]);
+    }
+    else if(base_name == "$countbits")
+    {
+      // 1800-2017 20.9: count bits of the first argument that match any
+      // of the control bits (the remaining arguments). The arguments
+      // have already been lowered to the aval/bval encoding.
+      DATA_INVARIANT(
+        call.arguments().size() >= 2,
+        "$countbits must have at least two arguments");
+      auto result_type = verilog_lowering(call.type());
+      auto &value = call.arguments()[0];
+      exprt::operandst controls{
+        call.arguments().begin() + 1, call.arguments().end()};
+      return aval_bval_countbits(value, controls, result_type);
     }
     else if(base_name == "$value$plusargs" || base_name == "$test$plusargs")
     {
