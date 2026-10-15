@@ -1,0 +1,13 @@
+CORE
+negative-range-bit-select2.sv
+
+^file .* line 11: assignment to enum requires enum of the same type, but got \[7:-8\]$
+^EXIT=2$
+^SIGNAL=0$
+--
+4294967288
+18446744073709551608
+--
+1800-2017 11.5.1: it is legal for the range bounds of a vector to be
+negative.  This checks that a vector type with a negative lower bound is
+printed with its declared range.

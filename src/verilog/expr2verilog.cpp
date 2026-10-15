@@ -2286,15 +2286,15 @@ std::string expr2verilogt::convert(const typet &type)
 
       if(increasing)
       {
-        dest+=std::to_string(offset);
+        dest += integer2string(offset);
         dest += ":";
-        dest += std::to_string(offset + width - 1);
+        dest += integer2string(offset + width - 1);
       }
       else
       {
-        dest+=std::to_string(offset+width-1);
+        dest += integer2string(offset + width - 1);
         dest += ":";
-        dest += std::to_string(offset);
+        dest += integer2string(offset);
       }
 
       dest+="]";

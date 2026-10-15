@@ -4556,7 +4556,7 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     mp_integer width = convert_integer_constant_expression(part_select.width());
 
     // The width must be positive. 1800-2017 11.5.1
-    if(width < 0)
+    if(width <= 0)
     {
       throw errort().with_location(part_select.width().source_location())
         << "width of indexed part select must be positive";
