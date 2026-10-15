@@ -1,0 +1,13 @@
+CORE
+negative-part-select-width1.sv
+--bound 1
+^file .* line 8: width of indexed part select must be positive$
+^EXIT=2$
+^SIGNAL=0$
+--
+^\[main\.p0\]
+--
+1800-2017 11.5.1: the width expr2 of an indexed part-select
+"expr1 +: expr2" / "expr1 -: expr2" shall be a positive constant
+expression.  A negative width is illegal; EBMC correctly rejects it
+during type-checking.

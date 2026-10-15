@@ -20,6 +20,7 @@
 * Verilog: type redeclaration of function/task ports
 * Verilog: specparam declarations in specify blocks
 * SystemVerilog: anonymous enums as struct members
+* SystemVerilog: property declarations in compilation-unit scope
 * Verilog: function redeclaration error reports the original declaration
 * Verilog: functions may read their return variable before
   assigning it
@@ -27,7 +28,9 @@
   elaboration-time constants
 * Verilog: improved error message when a type is given as a value
   parameter
-* SystemVerilog: property declarations in compilation-unit scope
+* Verilog: indexed part-selects with a constant base that extends beyond
+  the upper bound of the vector no longer crash; a zero width is rejected
+* Verilog: vectors with a negative range bound, e.g. [7:-8]
 
 # EBMC 6.1
 

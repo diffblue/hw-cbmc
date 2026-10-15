@@ -174,22 +174,69 @@ void verilog_udpt::show(std::ostream &out) const
   out << '\n';
 }
 
+static mp_integer part_select_src_width(const typet &t)
+{
+  if(t.id() == ID_bool)
+    return 1;
+
+  if(
+    t.id() == ID_unsignedbv || t.id() == ID_signedbv ||
+    t.id() == ID_verilog_signedbv || t.id() == ID_verilog_unsignedbv)
+  {
+    return to_bitvector_type(t).get_width();
+  }
+
+  PRECONDITION(false);
+}
+
+/// Extract the internal bits [bottom, bottom+width-1] from \p src, where
+/// \p width is the width of \p type. Bits outside the range of \p src are
+/// padded (1800-2017 11.5.1: out-of-bounds bit-select is x for 4-state and
+/// 0 for 2-state values).
+static exprt part_select_extract(
+  exprt src,
+  mp_integer bottom,
+  const typet &type,
+  const source_locationt &source_location)
+{
+  auto get_width = part_select_src_width;
+
+  mp_integer top = bottom + get_width(type) - 1;
+
+  if(bottom < 0)
+  {
+    // Pad below (at the LSB internal end); this shifts the internal bit
+    // positions up, so bottom/top are adjusted accordingly.
+    auto padding_width = -bottom;
+    auto padding = from_integer(
+      0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
+    auto new_type = unsignedbv_typet{
+      numeric_cast_v<std::size_t>(get_width(src.type()) + padding_width)};
+    src = concatenation_exprt(std::move(src), padding, new_type);
+    bottom += padding_width;
+    top += padding_width;
+  }
+
+  if(top >= get_width(src.type()))
+  {
+    // Pad above (at the MSB internal end); this does not change the
+    // internal bit positions.
+    auto padding_width = top - get_width(src.type()) + 1;
+    auto padding = from_integer(
+      0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
+    auto new_type = unsignedbv_typet{
+      numeric_cast_v<std::size_t>(get_width(src.type()) + padding_width)};
+    src = concatenation_exprt(padding, std::move(src), new_type);
+  }
+
+  return extractbits_exprt{
+    std::move(src), from_integer(bottom, integer_typet{}), type}
+    .with_source_location(source_location);
+}
+
 static exprt lower(const verilog_non_indexed_part_select_exprt &part_select)
 {
-  auto get_width = [](const typet &t) -> mp_integer
-  {
-    if(t.id() == ID_bool)
-      return 1;
-
-    if(
-      t.id() == ID_unsignedbv || t.id() == ID_signedbv ||
-      t.id() == ID_verilog_signedbv || t.id() == ID_verilog_unsignedbv)
-    {
-      return to_bitvector_type(t).get_width();
-    }
-
-    PRECONDITION(false);
-  };
+  auto get_width = part_select_src_width;
 
   auto &src = part_select.src();
 
@@ -204,62 +251,22 @@ static exprt lower(const verilog_non_indexed_part_select_exprt &part_select)
   // op1/op2 are the declared indices, normalised so that op1>=op2.
   //
   // We map the declared range op2..op1 to a contiguous range of internal
-  // (extractbits) bits [bottom, top]. For a decreasing range [msb:lsb]
+  // (extractbits) bits starting at bottom. For a decreasing range [msb:lsb]
   // (msb>=lsb) the declared index i maps to internal bit i-offset. For an
   // increasing range [lsb:msb] (lsb<=msb) the declared index offset is the
   // most significant bit, so index i maps to internal bit
   // (width-1)-(i-offset) (1800-2017 7.4.1, 11.5.1). Hence for an increasing
   // range the numerically larger declared index op1 maps to the lowest
   // internal bit.
-  mp_integer bottom, top;
+  mp_integer bottom;
 
   if(increasing)
-  {
     bottom = (src_width - 1) - (op1 - src_offset);
-    top = (src_width - 1) - (op2 - src_offset);
-  }
   else
-  {
     bottom = op2 - src_offset;
-    top = op1 - src_offset;
-  }
 
-  // 1800-2017 sec 11.5.1: out-of-bounds bit-select is
-  // x for 4-state and 0 for 2-state values. We
-  // achieve that by padding the operand from either end,
-  // or both.
-  exprt src_padded = src;
-
-  if(bottom < 0)
-  {
-    // Pad below (at the LSB internal end); this shifts the internal bit
-    // positions up, so bottom/top are adjusted accordingly.
-    auto padding_width = -bottom;
-    auto padding = from_integer(
-      0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
-    auto new_type = unsignedbv_typet{numeric_cast_v<std::size_t>(
-      get_width(src_padded.type()) + padding_width)};
-    src_padded = concatenation_exprt(src_padded, padding, new_type);
-    bottom += padding_width;
-    top += padding_width;
-  }
-
-  if(top >= get_width(src_padded.type()))
-  {
-    // Pad above (at the MSB internal end); this does not change the
-    // internal bit positions.
-    auto padding_width = top - get_width(src_padded.type()) + 1;
-    auto padding = from_integer(
-      0, unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)});
-    auto new_type = unsignedbv_typet{numeric_cast_v<std::size_t>(
-      get_width(src_padded.type()) + padding_width)};
-    src_padded = concatenation_exprt(padding, src_padded, new_type);
-  }
-
-  // Construct the extractbits expression
-  return extractbits_exprt{
-    src_padded, from_integer(bottom, integer_typet()), part_select.type()}
-    .with_source_location(part_select.source_location());
+  return part_select_extract(
+    src, bottom, part_select.type(), part_select.source_location());
 }
 
 exprt verilog_non_indexed_part_select_exprt::lower() const
@@ -270,20 +277,7 @@ exprt verilog_non_indexed_part_select_exprt::lower() const
 static exprt
 lower(const verilog_indexed_part_select_plus_or_minus_exprt &part_select)
 {
-  auto get_width = [](const typet &t) -> mp_integer
-  {
-    if(t.id() == ID_bool)
-      return 1;
-
-    if(
-      t.id() == ID_unsignedbv || t.id() == ID_signedbv ||
-      t.id() == ID_verilog_signedbv || t.id() == ID_verilog_unsignedbv)
-    {
-      return to_bitvector_type(t).get_width();
-    }
-
-    PRECONDITION(false);
-  };
+  auto get_width = part_select_src_width;
 
   PRECONDITION(
     part_select.id() == ID_verilog_indexed_part_select_plus ||
@@ -333,9 +327,10 @@ lower(const verilog_indexed_part_select_plus_or_minus_exprt &part_select)
         bottom = index_int - src_offset - width + 1;
     }
 
-    return extractbits_exprt{
-      std::move(src), from_integer(bottom, integer_typet{}), part_select.type()}
-      .with_source_location(part_select);
+    // Construct the extractbits expression; bits outside the range of
+    // src are padded.
+    return part_select_extract(
+      src, bottom, part_select.type(), part_select.source_location());
   }
   else
   {

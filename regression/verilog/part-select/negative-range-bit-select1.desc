@@ -1,0 +1,16 @@
+CORE
+negative-range-bit-select1.sv
+--bound 1
+^\[main\.p0\] always main\.v\[-8\] == 1'b1: PROVED up to bound 1$
+^\[main\.p1\] always main\.v\[-7\] == 1'b0: PROVED up to bound 1$
+^\[main\.p2\] always main\.v\[7\] == 1'b0: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+1800-2017 11.5.1 permits negative vector range bounds:
+"It shall be legal for the ranges of a vector to be a negative number."
+A vector declared as [7:-8] has indices -8..7; a bit-select with a
+negative (in-range) index such as v[-8] is legal and selects the
+corresponding bit (here the least-significant bit).

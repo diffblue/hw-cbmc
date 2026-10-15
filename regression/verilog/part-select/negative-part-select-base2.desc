@@ -1,0 +1,15 @@
+CORE
+negative-part-select-base2.sv
+--bound 1
+^\[main\.p0\] always main\.v\[7\+:2\] !== 2'b11: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^Invariant check failed
+^Reason: index_as_int
+--
+1800-2017 11.5.1: when the selected range of an indexed part-select
+falls partly or wholly outside the vector bounds, the out-of-range bits
+read as x (4-state) rather than causing an error.  v[7 +: 2] selects
+in-range bit 7 (1) and out-of-range bit 8 (x), so the result is not
+2'b11 and the property should be PROVED with EXIT=0.

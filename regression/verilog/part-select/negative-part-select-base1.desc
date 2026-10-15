@@ -1,0 +1,14 @@
+CORE
+negative-part-select-base1.sv
+--bound 1
+^\[main\.p0\] always main\.v\[-1\+:2\] !== 2'b11: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+1800-2017 11.5.1: the base of an indexed part-select may evaluate to a
+negative value.  Bits of the selected range that fall outside the
+vector bounds read as x (4-state); this is not an error.  v[-1 +: 2]
+selects out-of-range bit -1 (x) and in-range bit 0 (1), so the result
+is not 2'b11.  EBMC handles this case correctly.

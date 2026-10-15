@@ -11,8 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/bitvector_types.h>
 #include <util/ieee_float.h>
+#include <util/mp_arith.h>
 #include <util/std_types.h>
-#include <util/string2int.h>
 
 /// Used during elaboration only,
 /// to signal that a symbol is yet to be elaborated.
@@ -76,19 +76,15 @@ public:
   {
   }
 
-  // vector indices may start from an offset, e.g. [8:1]
-  std::size_t offset() const
+  // vector indices may start from an offset, e.g. [8:1];
+  // the offset may be negative, e.g. [7:-8] (1800-2017 11.5.1)
+  mp_integer offset() const
   {
     auto &offset_string = get_string(ID_C_offset);
     if(offset_string.empty())
       return 0;
     else
-      return safe_string2size_t(offset_string);
-  }
-
-  void offset(std::size_t offset)
-  {
-    set(ID_C_offset, offset);
+      return string2integer(offset_string);
   }
 
   void offset(const mp_integer &offset)
