@@ -377,6 +377,23 @@ void verilog_typecheckt::collect_symbols(const typet &type)
       add_symbol(std::move(enum_type_symbol));
     }
   }
+  else if(type.id() == ID_struct || type.id() == ID_union)
+  {
+    // 1800-2017 6.19.3: an anonymous enum declared as a struct or union
+    // member does not create a scope; its enum constants go into the
+    // enclosing scope. Recurse into the members to collect them.
+    for(auto &member : type.find(ID_declaration_list).get_sub())
+    {
+      const auto &member_decl = static_cast<const exprt &>(member);
+      if(member_decl.id() == ID_decl)
+        collect_symbols(static_cast<const typet &>(member_decl.find(ID_type)));
+    }
+  }
+  else if(type.id() == ID_verilog_packed_array)
+  {
+    // Recurse into the element type, which may be a struct/union/enum.
+    collect_symbols(to_type_with_subtype(type).subtype());
+  }
 }
 
 /// Returns true iff the given (pre-elaboration) type is a
@@ -430,7 +447,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
   else if(
     decl_class == ID_input || decl_class == ID_output ||
     decl_class == ID_output_register || decl_class == ID_inout ||
-    decl_class == ID_verilog_no_direction)
+    decl_class == ID_verilog_ref || decl_class == ID_verilog_no_direction)
   {
     // If these are inputs/outputs of a function/task, then
     // adjust the function/task signature.
@@ -559,6 +576,15 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
         input = true;
         output = true;
       }
+      else if(decl_class == ID_verilog_ref)
+      {
+        // 1800-2017 13.5.2: a ref argument aliases the actual. We
+        // approximate this by copying the actual in on entry and copying
+        // the (possibly modified) value back out on return, i.e. we treat
+        // ref like inout.
+        input = true;
+        output = true;
+      }
       else if(decl_class == ID_verilog_no_direction)
       {
         // Otherwise, use the direction of the previous port.
@@ -592,6 +618,13 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
           make_two_valued(elaborate_type(declarator.merged_type(decl.type())));
         symbol.name = hierarchical_identifier(symbol.base_name);
         symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+        symbol.location = declarator.source_location();
+
+        // Record the direction on the symbol as well, so that a subsequent
+        // data declaration of the same name is recognised as a type
+        // redeclaration of the port (1800-2017 13.3).
+        symbol.is_input = input;
+        symbol.is_output = output;
 
         if(input || output)
         {
@@ -747,6 +780,30 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
           osymbol.is_lvalue = true;
         }
+        else if(
+          !function_or_task_name.empty() &&
+          (osymbol.is_input || osymbol.is_output))
+        {
+          // 1800-2017 13.3 / A.2.6: an old-style task or function port may
+          // be declared with a direction (e.g. "input value;") and then
+          // given a type by a subsequent data declaration (e.g.
+          // "integer value;"). The data declaration redeclares the type of
+          // the port rather than introducing a new variable.
+          osymbol.type = symbol.type;
+
+          // Keep the enclosing subroutine's signature in sync.
+          symbolt &function_or_task_symbol =
+            symbol_table.get_writeable_ref(function_or_task_name);
+          for(auto &parameter :
+              to_code_type(function_or_task_symbol.type).parameters())
+          {
+            if(parameter.get_identifier() == osymbol.name)
+            {
+              parameter.type() = symbol.type;
+              break;
+            }
+          }
+        }
         else
         {
           throw errort().with_location(decl.source_location())
@@ -815,6 +872,10 @@ void verilog_typecheckt::collect_symbols(
     return_symbol.base_name = symbol.base_name;
     return_symbol.value = nil_exprt();
     return_symbol.type = to_code_type(symbol.type).return_type();
+    // The return value is implicitly declared by the function itself
+    // (1800-2017 13.4.1); point there for diagnostics such as a conflicting
+    // redeclaration inside the function body.
+    return_symbol.location = symbol.location;
 
     return_symbol.name =
       id2string(symbol.name) + "." + id2string(symbol.base_name);
@@ -1202,6 +1263,15 @@ void verilog_typecheckt::collect_symbols(
   }
   else if(module_item.id() == ID_verilog_specparam_decl)
   {
+  }
+  else if(module_item.id() == ID_specify)
+  {
+    // 1800-2017 A.7.1: a specify block. We only model the
+    // specparam_declaration items it contains; collect them as if they
+    // were module-level specparams.
+    for(auto &item : module_item.operands())
+      if(item.id() == ID_verilog_specparam_decl)
+        collect_symbols(static_cast<const verilog_module_itemt &>(item));
   }
   else if(module_item.id() == ID_verilog_interface)
   {

@@ -7,9 +7,17 @@ module sub(input clk_i, input rst_ni, output q_o);
 
   assign q_o = clk_i & rst_ni;
 
+  // Checks that the implicitly connected ports carry the values of the
+  // same-named identifiers in the instantiating module's scope.
+  initial assert (clk_i == 1 && rst_ni == 1);
+
 endmodule
 
-module main(input clk_i, input rst_ni, output q_o);
+module main;
+
+  wire clk_i = 1;
+  wire rst_ni = 1;
+  wire q_o;
 
   sub u_sub(.clk_i, .rst_ni, .q_o);
 

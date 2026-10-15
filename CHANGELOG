@@ -13,6 +13,14 @@
   every cycle of the evaluation
 * SystemVerilog: parameter value assignments on class types
 * SystemVerilog: out-of-block method declarations
+* SystemVerilog: implicit named port connections (.name)
+* SystemVerilog: ref arguments declared in task/function bodies
+* Verilog: procedural continuous assignments in function and task bodies
+* SystemVerilog: named arguments in subroutine calls
+* Verilog: type redeclaration of function/task ports
+* Verilog: specparam declarations in specify blocks
+* SystemVerilog: anonymous enums as struct members
+* Verilog: function redeclaration error reports the original declaration
 
 # EBMC 6.1
 

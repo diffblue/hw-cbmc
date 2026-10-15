@@ -1336,6 +1336,7 @@ non_port_module_item:
         | module_or_generate_item
         | attribute_instance_brace specparam_declaration
                 { add_attributes($2, $1); $$=$2; }
+        | specify_block
         | program_declaration
         | module_declaration
         | interface_declaration
@@ -2548,6 +2549,23 @@ inout_declaration:
                   swapop($$, $3); }
         ;
 
+// 1800-2017 A.2.1.2 / 13.5.2: a ref port declaration inside a task or
+// function body. The identifier is treated as a variable that aliases the
+// actual argument; see verilog_elaborate.cpp, where ref is handled like
+// inout (copy in on entry, copy out on return).
+ref_declaration:
+          TOK_REF net_port_type list_of_port_identifiers
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_verilog_ref);
+                  addswap($$, ID_type, $2);
+                  swapop($$, $3); }
+        | TOK_REF variable_port_type list_of_variable_identifiers
+                { init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_verilog_ref);
+                  addswap($$, ID_type, $2);
+                  swapop($$, $3); }
+        ;
+
 signing_opt:
           /* Optional */
                 { make_nil($$); }
@@ -2890,6 +2908,8 @@ tf_item_declaration:
         | attribute_instance_brace output_declaration ';'
                 { add_attributes($2, $1); $$ = $2; }
         | attribute_instance_brace inout_declaration ';'
+                { add_attributes($2, $1); $$ = $2; }
+        | attribute_instance_brace ref_declaration ';'
                 { add_attributes($2, $1); $$ = $2; }
         ;
 
@@ -4041,6 +4061,18 @@ named_port_connection:
                 { init($$, ID_verilog_named_port_connection);
                   mto($$, $2);
                   mto($$, $4); }
+        | '.' any_identifier
+                // 1800-2017 A.4.1.1 / 23.3.2.3: the implicit named port
+                // connection ".name" is shorthand for ".name(name)", i.e. a
+                // connection to a same-named identifier in the local scope.
+                { init($$, ID_verilog_named_port_connection);
+                  // The value is a copy of the port identifier, which is a
+                  // verilog_identifier with ID_base_name set (see
+                  // any_identifier).
+                  exprt value = stack_expr($2);
+                  value.id(ID_verilog_identifier);
+                  mto($$, $2);
+                  stack_expr($$).add_to_operands(std::move(value)); }
         | ".*" { init($$, ID_verilog_wildcard_port_connection); }
         ;
 
@@ -5101,19 +5133,29 @@ cycle_delay:
 // A.7.1 Specify block declaration
 
 specify_block: TOK_SPECIFY specify_item_brace TOK_ENDSPECIFY
-                { init($$, ID_specify); }
+                // 1800-2017 A.7.1. The specify block is retained as an
+                // ID_specify node; its specparam_declaration items (the only
+                // items we currently model) are kept as operands so they are
+                // elaborated like module-level specparams.
+                { init($$, ID_specify); swapop($$, $2); }
         ;
 
 specify_item_brace:
           /* Optional */
+                { init($$); }
         | specify_item_brace specify_item
+                { $$ = $1;
+                  // Discard items that carry no declaration, e.g. timing
+                  // checks, which are represented as nil.
+                  if(stack_expr($2).is_not_nil())
+                    mto($$, $2); }
         ;
 
 specify_item: specparam_declaration
       //              | pulsestyle_declaration
       //              | showcancelled_declaration
-      //  path_declaration
-          system_timing_check
+      //              | path_declaration
+        | system_timing_check
         ;
 
 // System Verilog standard 1800-2017
@@ -5176,6 +5218,9 @@ specparam_assignment:
         ;
 
 system_timing_check: timing_3 ';'
+                // Timing checks are not modelled; yield nil so the enclosing
+                // specify block discards them.
+                { make_nil($$); }
         ;
 
 timing_3:
@@ -5296,8 +5341,27 @@ list_of_arguments:
                 { init($$); }
         | expression
                 { init($$); mto($$, $1); }
+        | named_argument
+                { init($$); mto($$, $1); }
         | list_of_arguments ',' expression
                 { $$=$1;    mto($$, $3); }
+        | list_of_arguments ',' named_argument
+                { $$=$1;    mto($$, $3); }
+        ;
+
+// 1800-2017 13.5.4: a named argument ".name(expr)" in a subroutine call.
+// Ordered arguments must precede named ones; this is enforced in the type
+// checker, where named arguments are bound to the corresponding formal.
+named_argument:
+          '.' any_identifier '(' expression_opt ')'
+                // We reuse ID_verilog_named_port_connection as the marker
+                // for a named argument ".name(expr)"; both carry a name and
+                // a value. The type checker reorders these into positional
+                // order (see resolve_arguments).
+                { init($$, ID_verilog_named_port_connection);
+                  stack_expr($$).set(
+                    ID_base_name, stack_expr($2).get(ID_base_name));
+                  mto($$, $4); }
         ;
 
 system_tf_call:
