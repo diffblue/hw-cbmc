@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/c_types.h>
+#include <util/expr_util.h>
 #include <util/floatbv_expr.h>
 #include <util/ieee_float.h>
 #include <util/std_expr.h>
@@ -437,6 +438,61 @@ exprt verilog_lowering_cast(typecast_exprt expr)
   return std::move(expr);
 }
 
+/// Lower a slice (part-select) of an unpacked array to a fresh array built
+/// from element accesses into the source (1800-2017 7.4.3, 7.4.6). The
+/// declared indices lsb..msb (with msb>=lsb) select the elements; the
+/// result follows the declared range direction of the source, i.e. the
+/// element order of the slice matches that of the source. The source is
+/// already lowered to an array type.
+static exprt lower_unpacked_array_slice(
+  const exprt &src,
+  const verilog_array_typet &src_array_type,
+  const mp_integer &lsb,
+  const mp_integer &msb,
+  const typet &result_type)
+{
+  auto src_offset = src_array_type.offset();
+  auto src_size = src_array_type.size_int();
+  auto &element_type = src_array_type.element_type();
+  auto index_type = src_array_type.index_type();
+  auto slice_size = msb - lsb + 1;
+
+  // The result array type. Using the Verilog array type of the slice (as
+  // produced by the type checker) ensures that the result has the same
+  // type as other values of the same declared unpacked array type after
+  // lowering, so that e.g. an equality comparison type-checks downstream.
+  // The generic lowering pass does not rewrite an array_exprt's type, so
+  // the type must be set here exactly as the comparison counterpart.
+  typet result_array_type = result_type;
+
+  // Internal element index of a declared index v in the source: elements
+  // are stored starting from the left index of the declared range.
+  auto src_internal = [&](const mp_integer &v)
+  {
+    return src_array_type.increasing() ? (v - src_offset)
+                                       : (src_offset + src_size - 1 - v);
+  };
+
+  // The result array stores its elements starting from its own left index.
+  // Element j (j=0..slice_size-1) of the result corresponds to the Verilog
+  // index lsb+j (increasing) or msb-j (decreasing); both source and result
+  // share the same direction.
+  exprt::operandst elements;
+  elements.reserve(numeric_cast_v<std::size_t>(slice_size));
+
+  for(mp_integer j = 0; j < slice_size; ++j)
+  {
+    auto v = src_array_type.increasing() ? (lsb + j) : (msb - j);
+    auto internal = src_internal(v);
+    elements.push_back(
+      index_exprt{src, from_integer(internal, index_type), element_type});
+  }
+
+  array_exprt result{std::move(elements), to_array_type(result_array_type)};
+
+  return std::move(result);
+}
+
 exprt verilog_lowering(exprt expr)
 {
   // lowered already
@@ -666,6 +722,25 @@ exprt verilog_lowering(exprt expr)
       return from_bitvector(bv, offset_in_bv, result_array_type);
     }
 
+    // A non-indexed part-select on an unpacked array selects a range of
+    // ELEMENTS (1800-2017 7.4.3); the result is itself an unpacked array.
+    // Build a fresh array from element accesses into the source, following
+    // the declared range direction.
+    if(
+      src.type().id() == ID_array &&
+      src.type().get(ID_C_verilog_type) == ID_verilog_unpacked_array)
+    {
+      auto &src_array_type = to_verilog_array_type(src.type());
+
+      auto msb = numeric_cast_v<mp_integer>(
+        to_constant_expr(part_select.msb())); // declared index, msb>=lsb
+      auto lsb =
+        numeric_cast_v<mp_integer>(to_constant_expr(part_select.lsb()));
+
+      return lower_unpacked_array_slice(
+        src, src_array_type, lsb, msb, part_select.type());
+    }
+
     return part_select.lower();
   }
   else if(
@@ -673,6 +748,26 @@ exprt verilog_lowering(exprt expr)
     expr.id() == ID_verilog_indexed_part_select_minus)
   {
     auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(expr);
+    auto &src = part_select.src();
+
+    // An indexed part-select on an unpacked array selects a range of
+    // ELEMENTS (1800-2017 7.4.6); the result is itself an unpacked array.
+    if(
+      src.type().id() == ID_array &&
+      src.type().get(ID_C_verilog_type) == ID_verilog_unpacked_array)
+    {
+      auto &src_array_type = to_verilog_array_type(src.type());
+
+      // The type checker has rewritten index and width to constants and
+      // computed the result type with declared offset lsb.
+      auto &result_array_type = to_verilog_array_type(part_select.type());
+      auto lsb = result_array_type.offset();
+      auto msb = lsb + result_array_type.size_int() - 1;
+
+      return lower_unpacked_array_slice(
+        src, src_array_type, lsb, msb, part_select.type());
+    }
+
     return part_select.lower();
   }
   else if(expr.id() == ID_verilog_case_equality)
@@ -700,6 +795,51 @@ exprt verilog_lowering(exprt expr)
   else if(expr.id() == ID_verilog_wildcard_inequality)
   {
     return aval_bval(to_verilog_wildcard_inequality_expr(expr));
+  }
+  else if(expr.id() == ID_equal || expr.id() == ID_notequal)
+  {
+    // Equality of two unpacked arrays (1800-2017 7.6, 11.4.5). The
+    // operands are already lowered; some backends do not reliably compare
+    // array values that are built from element expressions (e.g. array
+    // slices), so expand the comparison element-wise into a conjunction of
+    // element equalities, which is backend-agnostic.
+    auto &binary_expr = to_binary_expr(expr);
+    auto &lhs_type = binary_expr.lhs().type();
+
+    if(
+      lhs_type.id() == ID_array &&
+      lhs_type.get(ID_C_verilog_type) == ID_verilog_unpacked_array &&
+      binary_expr.rhs().type() == lhs_type)
+    {
+      auto &array_type = to_verilog_array_type(lhs_type);
+      auto size = array_type.size_int();
+      auto index_type = array_type.index_type();
+      auto &element_type = array_type.element_type();
+
+      exprt::operandst conjuncts;
+      conjuncts.reserve(numeric_cast_v<std::size_t>(size));
+
+      for(mp_integer i = 0; i < size; ++i)
+      {
+        auto index = from_integer(i, index_type);
+        index_exprt lhs_element{binary_expr.lhs(), index, element_type};
+        index_exprt rhs_element{binary_expr.rhs(), index, element_type};
+
+        // The element comparison is lowered recursively, so that nested
+        // arrays and four-valued element types are handled correctly.
+        conjuncts.push_back(verilog_lowering(
+          equal_exprt{std::move(lhs_element), std::move(rhs_element)}));
+      }
+
+      exprt result = conjunction(conjuncts);
+
+      if(expr.id() == ID_notequal)
+        result = not_exprt{std::move(result)};
+
+      return result;
+    }
+
+    return expr; // leave as is
   }
   else if(expr.id() == ID_not)
   {

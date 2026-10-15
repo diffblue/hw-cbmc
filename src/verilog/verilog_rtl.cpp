@@ -770,6 +770,18 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
     auto &part_select = to_verilog_non_indexed_part_select_expr(lhs);
     auto &src = part_select.src();
 
+    // A non-indexed part-select on an unpacked array selects a range of
+    // ELEMENTS (1800-2017 7.4.3). An unpacked array is not stored as a
+    // contiguous bit slice of its symbol, so it cannot be decomposed into
+    // a bit slice; defer to lower_lhs, which rewrites the slice write into
+    // element-wise with-expressions.
+    if(
+      src.type().id() == ID_array &&
+      src.type().get(ID_C_verilog_type) == ID_verilog_unpacked_array)
+    {
+      return {};
+    }
+
     auto from_opt = constant_index(part_select.lsb(), state);
     auto to_opt = constant_index(part_select.msb(), state);
 
@@ -853,6 +865,16 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
   {
     auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(lhs);
     auto &src = part_select.src();
+
+    // An indexed part-select on an unpacked array selects a range of
+    // ELEMENTS (1800-2017 7.4.6); defer to lower_lhs, as for the
+    // non-indexed case above.
+    if(
+      src.type().id() == ID_array &&
+      src.type().get(ID_C_verilog_type) == ID_verilog_unpacked_array)
+    {
+      return {};
+    }
 
     auto index_opt = constant_index(part_select.index(), state);
     auto width_opt = constant_index(part_select.width(), state);
@@ -1089,6 +1111,94 @@ verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
 
     with_exprt new_value{
       std::move(old_value), std::move(index), std::move(rhs)};
+
+    // recursive call
+    return lower_lhs(src, std::move(new_value), state, blocking);
+  }
+  else if(
+    lhs.id() == ID_verilog_non_indexed_part_select ||
+    lhs.id() == ID_verilog_indexed_part_select_plus ||
+    lhs.id() == ID_verilog_indexed_part_select_minus)
+  {
+    // A part-select (slice) write on an unpacked array assigns a range of
+    // ELEMENTS (1800-2017 7.4.3, 7.4.6). Turn
+    //   a[lsb:msb] = e
+    // into element-wise with-expressions
+    //   a = a WITH [i0:=e[0]] WITH [i1:=e[1]] ...
+    // The source array is not stored as a contiguous bit slice, so it
+    // cannot be handled by decompose_lhs; this case is reached only for
+    // slice writes of unpacked arrays.
+    auto &src = to_multi_ary_expr(lhs).op0();
+
+    auto &array_type = to_verilog_array_type(src.type());
+    auto index_type = array_type.index_type();
+    auto array_size = array_type.size_int();
+    auto offset = array_type.offset();
+
+    // Determine the declared index range lsb..msb (msb>=lsb) of the slice.
+    mp_integer lsb, msb;
+
+    if(lhs.id() == ID_verilog_non_indexed_part_select)
+    {
+      auto &part_select = to_verilog_non_indexed_part_select_expr(lhs);
+      lsb = numeric_cast_v<mp_integer>(to_constant_expr(part_select.lsb()));
+      msb = numeric_cast_v<mp_integer>(to_constant_expr(part_select.msb()));
+      if(lsb > msb)
+        std::swap(lsb, msb);
+    }
+    else
+    {
+      auto &part_select =
+        to_verilog_indexed_part_select_plus_or_minus_expr(lhs);
+      auto base =
+        numeric_cast_v<mp_integer>(to_constant_expr(part_select.index()));
+      auto width =
+        numeric_cast_v<mp_integer>(to_constant_expr(part_select.width()));
+
+      if(lhs.id() == ID_verilog_indexed_part_select_plus)
+      {
+        lsb = base;
+        msb = base + width - 1;
+      }
+      else // ID_verilog_indexed_part_select_minus
+      {
+        lsb = base - width + 1;
+        msb = base;
+      }
+    }
+
+    auto slice_size = msb - lsb + 1;
+
+    auto old_value = read_lhs(src, state, blocking);
+
+    // Map a declared index v to the internal element index: elements are
+    // stored starting from the left index of the declared range.
+    auto internal_of = [&](const mp_integer &v)
+    {
+      return array_type.increasing() ? (v - offset)
+                                     : (offset + array_size - 1 - v);
+    };
+
+    // Element j of the right-hand side (an unpacked array) corresponds to
+    // the slice's j-th element in left-to-right order; both are stored
+    // starting from the left index.
+    auto &element_type = array_type.element_type();
+
+    exprt new_value = std::move(old_value);
+
+    for(mp_integer j = 0; j < slice_size; ++j)
+    {
+      auto v = array_type.increasing() ? (lsb + j) : (msb - j);
+      auto internal = internal_of(v);
+
+      exprt rhs_element =
+        index_exprt{rhs, from_integer(j, index_type), element_type};
+
+      new_value = with_exprt{
+        std::move(new_value),
+        from_integer(internal, index_type),
+        std::move(rhs_element)};
+    }
 
     // recursive call
     return lower_lhs(src, std::move(new_value), state, blocking);

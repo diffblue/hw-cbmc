@@ -85,6 +85,9 @@ protected:
   static bool unpacked_array_assignment_compatible(
     const typet &lhs_type,
     const typet &rhs_type);
+  static bool unpacked_array_equality_operands(
+    const typet &lhs_type,
+    const typet &rhs_type);
   [[nodiscard]] exprt
   unpacked_array_assignment_conversion(exprt rhs, const typet &lhs_type);
   void downwards_type_propagation(exprt &, const typet &);

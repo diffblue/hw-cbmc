@@ -638,6 +638,34 @@ bool verilog_typecheck_exprt::unpacked_array_assignment_compatible(
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::unpacked_array_equality_operands
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: True iff both operands are unpacked arrays that may be
+          compared with == / != / === / !== (1800-2017 7.6, 11.4.5),
+          i.e. they are assignment compatible unpacked arrays.
+
+\*******************************************************************/
+
+bool verilog_typecheck_exprt::unpacked_array_equality_operands(
+  const typet &lhs_type,
+  const typet &rhs_type)
+{
+  auto is_unpacked_array = [](const typet &type)
+  {
+    return type.id() == ID_array &&
+           type.get(ID_C_verilog_type) == ID_verilog_unpacked_array;
+  };
+
+  return is_unpacked_array(lhs_type) && is_unpacked_array(rhs_type) &&
+         unpacked_array_assignment_compatible(lhs_type, rhs_type);
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::unpacked_array_assignment_conversion
 
   Inputs:
@@ -3835,7 +3863,19 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // There is no need to decay structs, unions, arrays if
     // the types are equal.
     if(expr.lhs().type() != expr.rhs().type())
-      tc_binary_expr(expr);
+    {
+      // Two unpacked arrays of equivalent type can be compared
+      // (1800-2017 7.6, 11.4.5). Their declared index ranges may differ;
+      // align the right-hand side to the left-hand side element-by-element
+      // in left-to-right order, which also makes the types equal.
+      if(unpacked_array_equality_operands(expr.lhs().type(), expr.rhs().type()))
+      {
+        expr.rhs() = unpacked_array_assignment_conversion(
+          std::move(expr.rhs()), expr.lhs().type());
+      }
+      else
+        tc_binary_expr(expr);
+    }
 
     return std::move(expr);
   }
@@ -3850,7 +3890,19 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // There is no need to decay structs, unions, arrays if
     // the types are equal.
     if(expr.lhs().type() != expr.rhs().type())
-      tc_binary_expr(expr);
+    {
+      // Two unpacked arrays of equivalent type can be compared
+      // (1800-2017 7.6, 11.4.5). Their declared index ranges may differ;
+      // align the right-hand side to the left-hand side element-by-element
+      // in left-to-right order, which also makes the types equal.
+      if(unpacked_array_equality_operands(expr.lhs().type(), expr.rhs().type()))
+      {
+        expr.rhs() = unpacked_array_assignment_conversion(
+          std::move(expr.rhs()), expr.lhs().type());
+      }
+      else
+        tc_binary_expr(expr);
+    }
 
     // This returns 'x' if either of the operands contains x or z.
     if(
@@ -4214,12 +4266,11 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     exprt &src = part_select.src();
     convert_expr(src);
 
-    // A non-indexed part-select applied to a packed array selects a range
-    // of ELEMENTS, not bits (1800-2017 7.4.5/7.4.6, 11.5.1). The result is
-    // a packed array over the selected sub-range of elements.
-    if(
-      src.type().id() == ID_array &&
-      src.type().get(ID_C_verilog_type) == ID_verilog_packed_array)
+    // A non-indexed part-select applied to an array selects a range of
+    // ELEMENTS, not bits (1800-2017 7.4.5/7.4.6, 7.4.3, 11.5.1). This
+    // applies to both packed and unpacked arrays; the result is an array
+    // of the same kind over the selected sub-range of elements.
+    if(src.type().id() == ID_array)
     {
       auto &array_type = to_verilog_array_type(src.type());
 
@@ -4231,18 +4282,29 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
       if(msb < lsb)
         std::swap(msb, lsb); // now msb>=lsb
 
+      // The selected range must be within the declared bounds of the
+      // array (1800-2017 7.4.3, 11.5.1).
+      auto array_offset = array_type.offset();
+      auto array_size = array_type.size_int();
+
+      if(lsb < array_offset || msb >= array_offset + array_size)
+      {
+        throw errort().with_location(expr.source_location())
+          << "part-select is out of range";
+      }
+
       // store these back onto the expression
       expr.op1() = from_integer(msb, integer_typet())
                      .with_source_location(expr.op1().source_location());
       expr.op2() = from_integer(lsb, integer_typet())
                      .with_source_location(expr.op2().source_location());
 
-      // The result is a packed array of the selected elements. The
-      // declared indices lsb..msb are preserved, so the offset of the
-      // result is lsb and the direction matches the source.
+      // The result is an array of the selected elements. The declared
+      // indices lsb..msb are preserved, so the offset of the result is
+      // lsb and the direction matches the source.
       auto result_size = msb - lsb + 1;
       expr.type() = verilog_array_typet{
-        ID_verilog_packed_array,
+        array_type.get(ID_C_verilog_type),
         array_type.element_type(),
         result_size,
         lsb,
@@ -4286,6 +4348,73 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(expr);
     exprt &src = part_select.src();
     convert_expr(src);
+
+    // An indexed part-select applied to an array selects a range of
+    // ELEMENTS, not bits (1800-2017 7.4.6, 11.5.1). This applies to both
+    // packed and unpacked arrays; the result is an array of the same kind
+    // over the selected sub-range of elements.
+    if(src.type().id() == ID_array)
+    {
+      auto &array_type = to_verilog_array_type(src.type());
+
+      // The base index of an array part-select must be an
+      // elaboration-time constant, so that the declared range of the
+      // result is known.
+      mp_integer base =
+        convert_integer_constant_expression(part_select.index());
+
+      // The width must be an elaboration-time constant (1800-2017 11.5.1).
+      mp_integer width =
+        convert_integer_constant_expression(part_select.width());
+
+      // The width must be positive. 1800-2017 11.5.1
+      if(width < 0)
+      {
+        throw errort().with_location(part_select.width().source_location())
+          << "width of indexed part select must be positive";
+      }
+
+      // array[base +: width] selects base .. base+width-1, and
+      // array[base -: width] selects base-width+1 .. base.
+      mp_integer lsb, msb;
+
+      if(expr.id() == ID_verilog_indexed_part_select_plus)
+      {
+        lsb = base;
+        msb = base + width - 1;
+      }
+      else // ID_verilog_indexed_part_select_minus
+      {
+        lsb = base - width + 1;
+        msb = base;
+      }
+
+      // The selected range must be within the declared bounds of the
+      // array (1800-2017 7.4.6, 11.5.1).
+      auto array_offset = array_type.offset();
+      auto array_size = array_type.size_int();
+
+      if(lsb < array_offset || msb >= array_offset + array_size)
+      {
+        throw errort().with_location(expr.source_location())
+          << "part-select is out of range";
+      }
+
+      part_select.index() = from_integer(base, integer_typet());
+      part_select.width() = from_integer(width, integer_typet());
+
+      // The result is an array of the selected elements. The declared
+      // indices lsb..msb are preserved, so the offset of the result is
+      // lsb and the direction matches the source.
+      expr.type() = verilog_array_typet{
+        array_type.get(ID_C_verilog_type),
+        array_type.element_type(),
+        width,
+        lsb,
+        array_type.increasing()};
+
+      return std::move(expr);
+    }
 
     require_vector(src);
 
