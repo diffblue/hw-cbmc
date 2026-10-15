@@ -714,12 +714,10 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
                           ? *index_opt - offset
                           : (offset + size - 1) - *index_opt;
 
-        if(internal < 0 || internal >= size)
-        {
-          throw errort().with_location(lhs.source_location())
-            << "array index out of range";
-        }
-
+        // Per 1800-2017 7.4.6, writing to an array with an invalid index
+        // shall perform no operation. The out-of-range element maps to a
+        // bit slice that lies entirely outside the symbol; assign_to
+        // clips it to nothing (11.5.1), making the write a silent no-op.
         lower = sub_opt->slice.lower + internal * element_width;
       }
       else
@@ -732,12 +730,10 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
         // the least significant.
         auto element = *index_opt - offset;
 
-        if(element < 0 || element >= size)
-        {
-          throw errort().with_location(lhs.source_location())
-            << "array index out of range";
-        }
-
+        // Per 1800-2017 7.4.6, writing to an array with an invalid index
+        // shall perform no operation. The out-of-range element maps to a
+        // bit slice that lies entirely outside the symbol; assign_to
+        // clips it to nothing (11.5.1), making the write a silent no-op.
         auto internal =
           array_type.increasing() ? (size - 1 - element) : element;
 
@@ -993,6 +989,16 @@ exprt verilog_rtl_buildert::read_lhs(exprt expr, statet &state, bool blocking)
       slice_values_of(value_map, symbol_expr.get_identifier()), symbol_expr);
   }
 
+  if(expr.id() == ID_hierarchical_identifier)
+  {
+    // Resolve to the symbol the hierarchical identifier denotes
+    // (1800-2017 23.6, 23.7), then read that symbol.
+    return read_lhs(
+      resolve_hierarchical_identifier(to_hierarchical_identifier_expr(expr)),
+      state,
+      blocking);
+  }
+
   // an lvalue-shaped expression: the first operand is the base
   auto &operands = expr.operands();
 
@@ -1092,6 +1098,161 @@ verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
 
     // recursive call
     return lower_lhs(src, std::move(new_value), state, blocking);
+  }
+  else if(
+    lhs.id() == ID_verilog_non_indexed_part_select ||
+    lhs.id() == ID_verilog_indexed_part_select_plus ||
+    lhs.id() == ID_verilog_indexed_part_select_minus)
+  {
+    // A part-select on a vector whose base is not a constant slice,
+    // e.g. the byte-enabled write mem[addr][7:0] <= e with a
+    // non-constant array index, or t[i*2 +: 2] = e with a non-constant
+    // index (1800-2017 7.4.5, 7.4.6, 11.5.1). The constant-index case is
+    // handled by decompose_lhs; here the position within the base is
+    // reduced to a read-modify-write of the whole base:
+    //   base[sel] = e  becomes
+    //   base = (base & ~(mask << lsb)) | ((e & mask) << lsb)
+    // where lsb is the lowest internal bit of the selection, mask is a
+    // width-bit all-ones value, and the operations are performed on the
+    // bit-level representation of the base. This mirrors the read side
+    // (verilog_non_indexed_part_select_exprt::lower and
+    // verilog_indexed_part_select_plus_or_minus_exprt::lower in
+    // verilog_expr.cpp).
+    auto &src = to_multi_ary_expr(lhs).op0();
+
+    // Part-selects of packed-array element ranges are not handled here;
+    // the base of a part-select that reaches lower_lhs is a vector.
+    if(src.type().id() == ID_array)
+    {
+      throw errort().with_location(lhs.source_location())
+        << "unsupported lvalue for RTL construction: `" << lhs.id() << "'";
+    }
+
+    auto src_width = verilog_bits(src.type());
+    auto src_width_int = numeric_cast_v<std::size_t>(src_width);
+    auto offset = mp_integer{src.type().get_int(ID_C_offset)};
+    bool increasing = src.type().get_bool(ID_C_increasing);
+
+    unsignedbv_typet bv_type{src_width_int};
+
+    // The shift amount is kept in a bit-vector type (not an unbounded
+    // integer) so that the shifts below are handled by the bit-vector
+    // backend. The base width is wide enough to hold any in-range
+    // internal position.
+    auto index_type = bv_type;
+
+    // The width of the selection (a constant) and the lowest internal
+    // bit of the selection (an expression, since the index may be
+    // non-constant).
+    mp_integer sel_width;
+    exprt lsb_internal;
+
+    if(lhs.id() == ID_verilog_non_indexed_part_select)
+    {
+      auto &part_select = to_verilog_non_indexed_part_select_expr(lhs);
+
+      auto msb = numeric_cast_v<mp_integer>(
+        to_constant_expr(part_select.msb())); // declared
+      auto lsb =
+        numeric_cast_v<mp_integer>(to_constant_expr(part_select.lsb()));
+
+      auto from = msb, to = lsb;
+      if(from > to)
+        std::swap(from, to);
+
+      sel_width = to - from + 1;
+
+      // decreasing: internal lsb is from-offset; increasing: it is
+      // (width-1)-(to-offset).
+      mp_integer lsb_const =
+        increasing ? (src_width - 1) - (to - offset) : from - offset;
+
+      lsb_internal = from_integer(lsb_const, index_type);
+    }
+    else // indexed part select, +: or -:
+    {
+      auto &part_select =
+        to_verilog_indexed_part_select_plus_or_minus_expr(lhs);
+
+      sel_width =
+        numeric_cast_v<mp_integer>(to_constant_expr(fold_system_functions(
+          simplify_expr(substitute(part_select.width(), state), ns))));
+
+      auto index = substitute(part_select.index(), state);
+
+      // Mirror the read-side lowering (verilog_expr.cpp): compute the
+      // lowest internal bit of the selection as an expression.
+      if(lhs.id() == ID_verilog_indexed_part_select_plus)
+      {
+        if(increasing)
+        {
+          // src_width - sel_width + offset - index
+          lsb_internal = minus_exprt{
+            from_integer(src_width - sel_width + offset, index.type()), index};
+        }
+        else
+        {
+          lsb_internal = minus_exprt{index, from_integer(offset, index.type())};
+        }
+      }
+      else // ID_verilog_indexed_part_select_minus
+      {
+        if(increasing)
+        {
+          lsb_internal = minus_exprt{
+            from_integer(src_width - 1 + offset, index.type()), index};
+        }
+        else
+        {
+          lsb_internal = minus_exprt{
+            index, from_integer(offset + sel_width - 1, index.type())};
+        }
+      }
+
+      lsb_internal =
+        typecast_exprt::conditional_cast(std::move(lsb_internal), index_type);
+    }
+
+    auto sel_width_int = numeric_cast_v<std::size_t>(sel_width);
+
+    // The old value of the base, as an unsigned bit vector.
+    auto old_value =
+      typecast_exprt::conditional_cast(read_lhs(src, state, blocking), bv_type);
+
+    // A width-bit all-ones mask, extended to the base width and shifted
+    // to the internal position of the selection.
+    auto mask = from_integer(power(2, sel_width_int) - 1, bv_type);
+    auto shifted_mask = shl_exprt{mask, lsb_internal};
+
+    // The right-hand side, truncated/zero-extended to the width of the
+    // base and shifted into position.
+    auto rhs_bv = typecast_exprt::conditional_cast(std::move(rhs), bv_type);
+    auto rhs_masked = bitand_exprt{std::move(rhs_bv), mask};
+    auto rhs_shifted = shl_exprt{std::move(rhs_masked), lsb_internal};
+
+    // base = (base & ~(mask << lsb)) | (rhs << lsb)
+    auto cleared =
+      bitand_exprt{std::move(old_value), bitnot_exprt{shifted_mask}};
+    auto combined = bitor_exprt{std::move(cleared), std::move(rhs_shifted)};
+
+    auto new_value =
+      typecast_exprt::conditional_cast(std::move(combined), src.type());
+
+    // recursive call
+    return lower_lhs(src, std::move(new_value), state, blocking);
+  }
+  else if(lhs.id() == ID_hierarchical_identifier)
+  {
+    // A hierarchical identifier selecting another module's variable
+    // (1800-2017 23.6, 23.7). Resolve it to the symbol it denotes and
+    // lower the assignment to that symbol. decompose_lhs handles the
+    // constant-index case through the same resolution; this case is
+    // reached when the resolved lvalue has a non-constant index.
+    return lower_lhs(
+      resolve_hierarchical_identifier(to_hierarchical_identifier_expr(lhs)),
+      std::move(rhs),
+      state,
+      blocking);
   }
   else if(lhs.id() == ID_member)
   {
