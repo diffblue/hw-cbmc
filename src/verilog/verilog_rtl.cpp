@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
 #include <util/expr_util.h>
+#include <util/find_symbols.h>
 #include <util/mathematical_types.h>
 #include <util/namespace.h>
 #include <util/simplify_expr.h>
@@ -531,6 +532,45 @@ protected:
   exprt composed_value(const statet::slice_valuest &, const symbol_exprt &);
 
   void commit(const statet &, kindt, const source_locationt &);
+
+  /// The identifiers that are read somewhere other than inside a
+  /// procedural block (always/initial) that also writes them. An
+  /// identifier that is only ever read inside the block(s) that write
+  /// it is dead at every block boundary: it is elaboration-only
+  /// scratch, e.g. a 'for' loop index shared by several blocks, and
+  /// its committed next-state value is never observed. Such an
+  /// identifier may legitimately be written by more than one block and
+  /// is exempt from the multiple-driver check. This liveness criterion
+  /// replaces a type-based one that keyed on ID_integer; it exempts a
+  /// shared loop index regardless of its declared type (int, reg, ...),
+  /// yet still rejects a genuine two-driver state variable that is read
+  /// by a block that does not write it.
+  std::set<irep_idt> read_outside_writing_block;
+
+  /// is the given identifier exempt from the multiple-driver check,
+  /// i.e., dead outside the block(s) that write it?
+  bool is_dead_outside_writing_block(const irep_idt &identifier) const
+  {
+    return read_outside_writing_block.find(identifier) ==
+           read_outside_writing_block.end();
+  }
+
+  /// Populate \ref read_outside_writing_block for the given module
+  /// items, by collecting the identifiers that are read and written in
+  /// each procedural block and at module level.
+  void
+  collect_liveness(const verilog_module_exprt::module_itemst &module_items);
+
+  /// collect the identifiers written and read by the given statement;
+  /// the base of each lvalue is a write, the index expressions of an
+  /// lvalue and all rvalues are reads
+  void collect_rw(
+    const verilog_statementt &,
+    std::set<irep_idt> &writes,
+    std::set<irep_idt> &reads) const;
+
+  /// the base identifier of the given lvalue, if any
+  static std::optional<irep_idt> lvalue_base(const exprt &);
 
   /// The width of the entire identifier as a slice. Types without
   /// a fixed number of bits, e.g. chandles, are treated as a single
@@ -3363,6 +3403,222 @@ void verilog_rtl_buildert::build_statement(
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::lvalue_base
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<irep_idt> verilog_rtl_buildert::lvalue_base(const exprt &lhs)
+{
+  if(lhs.id() == ID_symbol)
+    return to_symbol_expr(lhs).get_identifier();
+  else if(
+    lhs.id() == ID_verilog_bit_select ||
+    lhs.id() == ID_verilog_non_indexed_part_select ||
+    lhs.id() == ID_verilog_indexed_part_select_plus ||
+    lhs.id() == ID_verilog_indexed_part_select_minus || lhs.id() == ID_member ||
+    lhs.id() == ID_index)
+  {
+    return lvalue_base(to_multi_ary_expr(lhs).op0());
+  }
+  else if(lhs.id() == ID_typecast)
+    return lvalue_base(to_typecast_expr(lhs).op());
+  else
+    return {};
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::collect_rw
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Collects the identifiers written and read by the given
+          statement. The base of each lvalue is a write; the index
+          expressions of an lvalue and all rvalues are reads. The
+          analysis is used for the liveness-based exemption of the
+          multiple-driver check (see read_outside_writing_block).
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::collect_rw(
+  const verilog_statementt &statement,
+  std::set<irep_idt> &writes,
+  std::set<irep_idt> &reads) const
+{
+  // the base of an lvalue is a write; everything else in the lvalue
+  // (e.g. a bit-select index) is a read
+  auto record_lvalue = [&writes, &reads](const exprt &lhs)
+  {
+    auto base = lvalue_base(lhs);
+    if(base.has_value())
+      writes.insert(*base);
+
+    // all symbols in the lvalue other than the base are reads
+    for(auto &id : find_symbol_identifiers(lhs))
+      if(!base.has_value() || id != *base)
+        reads.insert(id);
+  };
+
+  auto record_rvalue = [&reads](const exprt &rhs)
+  {
+    for(auto &id : find_symbol_identifiers(rhs))
+      reads.insert(id);
+  };
+
+  auto &id = statement.id();
+
+  if(id == ID_block)
+  {
+    for(auto &s : to_verilog_block(statement).statements())
+      collect_rw(s, writes, reads);
+  }
+  else if(
+    id == ID_verilog_blocking_assign || id == ID_verilog_non_blocking_assign ||
+    id == ID_verilog_blocking_assign_plus ||
+    id == ID_verilog_blocking_assign_minus ||
+    id == ID_verilog_blocking_assign_mult ||
+    id == ID_verilog_blocking_assign_div ||
+    id == ID_verilog_blocking_assign_mod ||
+    id == ID_verilog_blocking_assign_bitand ||
+    id == ID_verilog_blocking_assign_bitor ||
+    id == ID_verilog_blocking_assign_bitxor ||
+    id == ID_verilog_blocking_assign_lshr ||
+    id == ID_verilog_blocking_assign_lshl ||
+    id == ID_verilog_blocking_assign_ashr ||
+    id == ID_verilog_blocking_assign_ashl)
+  {
+    auto &assign = to_verilog_assign(statement);
+    record_lvalue(assign.lhs());
+    record_rvalue(assign.rhs());
+  }
+  else if(
+    id == ID_preincrement || id == ID_predecrement || id == ID_postincrement ||
+    id == ID_postdecrement)
+  {
+    record_lvalue(to_unary_expr(statement).op());
+  }
+  else if(id == ID_if)
+  {
+    auto &if_statement = to_verilog_if(statement);
+    record_rvalue(if_statement.cond());
+    collect_rw(if_statement.then_case(), writes, reads);
+    if(if_statement.has_else_case())
+      collect_rw(if_statement.else_case(), writes, reads);
+  }
+  else if(
+    id == ID_verilog_case || id == ID_verilog_casex || id == ID_verilog_casez)
+  {
+    auto &case_statement = to_verilog_case_statement_base(statement);
+    record_rvalue(case_statement.case_operand());
+    for(std::size_t i = 1; i < case_statement.operands().size(); i++)
+    {
+      auto &case_item = to_verilog_case_item(case_statement.operands()[i]);
+      record_rvalue(case_item.case_value());
+      collect_rw(case_item.case_statement(), writes, reads);
+    }
+  }
+  else if(id == ID_for)
+  {
+    auto &for_statement = to_verilog_for(statement);
+    for(auto &init : for_statement.initialization())
+      collect_rw(to_verilog_statement(init), writes, reads);
+    record_rvalue(for_statement.condition());
+    collect_rw(for_statement.inc_statement(), writes, reads);
+    collect_rw(for_statement.body(), writes, reads);
+  }
+  else if(id == ID_delay)
+    collect_rw(to_verilog_delay(statement).body(), writes, reads);
+  else if(id == ID_verilog_label_statement)
+  {
+    collect_rw(
+      to_verilog_label_statement(statement).statement(), writes, reads);
+  }
+  else
+  {
+    // Conservatively treat every symbol in any other statement as read.
+    // Over-approximating reads only makes the exemption more
+    // conservative (fewer identifiers exempt), never less sound.
+    record_rvalue(statement);
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::collect_liveness
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::collect_liveness(
+  const verilog_module_exprt::module_itemst &module_items)
+{
+  for(auto &module_item : module_items)
+  {
+    auto &id = module_item.id();
+
+    if(
+      id == ID_verilog_always || id == ID_verilog_always_comb ||
+      id == ID_verilog_always_ff || id == ID_verilog_always_latch ||
+      id == ID_initial)
+    {
+      const verilog_statementt *body;
+
+      if(id == ID_initial)
+        body = &to_verilog_initial(module_item).statement();
+      else
+      {
+        auto &always = to_verilog_always_base(module_item);
+        body = &always.statement();
+        if(body->id() == ID_event_guard)
+        {
+          // the event-control expression is a read
+          auto &event_guard = to_verilog_event_guard(*body);
+          for(auto &id : find_symbol_identifiers(event_guard.guard()))
+            read_outside_writing_block.insert(id);
+          body = &event_guard.body();
+        }
+      }
+
+      std::set<irep_idt> writes, reads;
+      collect_rw(*body, writes, reads);
+
+      // An identifier read in this block but not written by it is read
+      // outside a block that writes it.
+      for(auto &read : reads)
+        if(writes.find(read) == writes.end())
+          read_outside_writing_block.insert(read);
+    }
+    else if(id == ID_generate_block)
+    {
+      // recurse into generate blocks
+      collect_liveness(to_verilog_generate_block(module_item).module_items());
+    }
+    else
+    {
+      // Any identifier read at module level (continuous assignments,
+      // properties, port connections, net declarations with values,
+      // ...) is read outside a procedural block, hence not scratch.
+      for(auto &id : find_symbol_identifiers(module_item))
+        read_outside_writing_block.insert(id);
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::commit
 
   Inputs:
@@ -3386,19 +3642,19 @@ void verilog_rtl_buildert::commit(
     if(is_cycle_local(identifier))
       continue;
 
-    // Variables declared with the Verilog 'integer' type are idiomatically
-    // used as loop counters and combinational scratch. They are effectively
-    // a fresh temporary in each always/initial block, so the same counter
-    // may legitimately be assigned by more than one block (e.g. a shared
-    // 'for' loop index). Exempt them from the multiple-driver check, which
-    // would otherwise flag the reuse as a spurious driver conflict. The
-    // driver is still recorded, so a singly-driven 'integer' net (e.g.
-    // 'wire integer') keeps its definition. This mirrors verilog_synthesist,
-    // which excludes 'integer'-typed symbols from its driver-conflict
-    // tracking.
-    const symbolt *symbol_ptr;
-    bool is_integer = !ns.lookup(identifier, symbol_ptr) &&
-                      symbol_ptr->type.get(ID_C_verilog_type) == ID_integer;
+    // Variables that are dead outside the block(s) that write them are
+    // elaboration-only scratch, e.g. a 'for' loop index shared by
+    // several always/initial blocks. The same counter may then
+    // legitimately be assigned by more than one block, so exempt it
+    // from the multiple-driver check, which would otherwise flag the
+    // reuse as a spurious driver conflict. The driver is still
+    // recorded. The exemption is based on liveness (the index is never
+    // read outside a block that writes it) rather than on the declared
+    // type, so a shared loop index is exempt whether it is declared
+    // 'integer', 'int', 'reg [N-1:0]' or 'logic [N-1:0]'; a genuine
+    // two-driver state variable that is read by a block that does not
+    // write it is still rejected.
+    bool exempt = is_dead_outside_writing_block(identifier);
 
     auto &slice_map = rtl.identifier_map[identifier];
 
@@ -3406,7 +3662,7 @@ void verilog_rtl_buildert::commit(
     {
       auto &slice = slice_entry.first;
 
-      if(!is_integer)
+      if(!exempt)
       {
         for(auto &existing : slice_map)
         {
@@ -4269,6 +4525,10 @@ void verilog_rtl_buildert::build_module(const symbolt &module_symbol)
 
   auto &module_items =
     to_verilog_module_expr(module_symbol.value).module_items();
+
+  // Collect the liveness information used to exempt elaboration-only
+  // scratch (e.g. shared loop indices) from the multiple-driver check.
+  collect_liveness(module_items);
 
   // Record the port-declared variables, since ANSI-style port
   // declarations do not appear as decl module items.

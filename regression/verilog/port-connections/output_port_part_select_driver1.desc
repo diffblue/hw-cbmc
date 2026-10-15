@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 output_port_part_select_driver1.sv
 --bound 10
 ^\[main\.p0\] always main\.counter != 5: REFUTED$
@@ -8,19 +8,3 @@ output_port_part_select_driver1.sv
 --
 ^warning: ignoring
 --
-An output port of a child module connected to a part-select of a parent net
-(.o(v[3:0])) is not recognised as a driver of those bits.  EBMC fills the
-part-select with a time-invariant nondet(main.v) and additionally constrains
-it to equal the port, so the two constraints conflict and no trace longer
-than one step survives.  Both properties are therefore wrongly reported as
-PROVED, even p0, which does not mention v.
-
---show-trans shows two conflicting constraints on v:
-  main.v == { 4'b0000, nondet(main.v)[3:0] }
-  main.v[3:0] == main.s.o
-
-Both properties should be REFUTED: the counter reaches 5 after 5 cycles.
-Driving the same bits with "assign v[3:0] = counter[3:0];" instead of the
-child output port correctly refutes both.
-
-See https://github.com/diffblue/hw-cbmc/issues/2251
