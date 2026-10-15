@@ -3,6 +3,10 @@
 * Verilog: implicit nets for undeclared identifiers used as members of a
   concatenation on the LHS of a continuous assignment, including nested
   concatenations
+* Verilog: constant functions may read their return variable before
+  assigning it
+* Verilog: implicit nets in port connections are visible to
+  elaboration-time constants
 
 # EBMC 6.1
 
