@@ -1,8 +1,12 @@
-KNOWNBUG
+CORE
 upwards_reference1.sv
-
+--bound 1
+^\[top\.sub\.assert\.1\] top\.P == 123: PROVED up to bound 1$
 ^EXIT=0$
 ^SIGNAL=0$
 --
+^warning: ignoring
 --
-This does not typecheck.
+An upward name reference (1800-2017 23.8) to a parameter of the
+top-level module, reached from within a submodule via the top-level
+module name (top.P).
