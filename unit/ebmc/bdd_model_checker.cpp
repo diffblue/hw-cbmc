@@ -350,3 +350,135 @@ SCENARIO("BDD model checker with constraints")
     }
   }
 }
+
+/// Build a system whose last transition conjunct is a relation whose BDD
+/// has two distinct nodes labelled with the same variable (s1), one of which
+/// is the only node leading to the next-state variable s0'. A support
+/// computation that uses variable indices rather than node numbers as its
+/// "visited" marker will miss s0' in this conjunct, and early quantification
+/// would then eliminate s0' before the conjunct is conjoined.
+///
+/// Variable ordering: s0, s1, s0', s1'.
+/// Conjuncts: s1' == s0, and (s0 & s1 & s0') | (!s0 & s1 & s1')
+static bdd_transition_relationt make_shared_var_system(mini_bdd_mgrt &mgr)
+{
+  auto s0 = mgr.Var("s0");
+  auto s1 = mgr.Var("s1");
+  auto s0_next = mgr.Var("s0'");
+  auto s1_next = mgr.Var("s1'");
+
+  bdd_transition_relationt tr;
+  tr.variables.push_back({s0, s0_next});
+  tr.variables.push_back({s1, s1_next});
+  tr.transition_conjuncts.push_back(s1_next == s0);
+  tr.transition_conjuncts.push_back((s0 & s1 & s0_next) | (!s0 & s1 & s1_next));
+
+  return tr;
+}
+
+SCENARIO("BDD model checker EX with shared variable in conjunct BDD")
+{
+  mini_bdd_mgrt mgr;
+  auto tr = make_shared_var_system(mgr);
+  auto s0 = tr.variables[0].current;
+  auto s1 = tr.variables[1].current;
+  bdd_model_checkert mc(tr);
+
+  GIVEN("The relation (s1' == s0) & ((s0 & s1 & s0') | (!s0 & s1 & s1'))")
+  {
+    THEN("EX(s0) is s0 & s1")
+    {
+      // s0=1: s1'=1, need s1 and s0'=1 -- possible.
+      // s0=0: s1'=0, need s1 and s1'=1 -- impossible.
+      auto result = mc.EX(s0);
+      REQUIRE((result == (s0 & s1)).is_true());
+    }
+
+    THEN("EX agrees with the monolithic image")
+    {
+      REQUIRE((mc.EX(s0) == mc.EX_monolithic(s0)).is_true());
+      REQUIRE((mc.EX(!s0) == mc.EX_monolithic(!s0)).is_true());
+      REQUIRE((mc.EX(s1) == mc.EX_monolithic(s1)).is_true());
+    }
+  }
+}
+
+SCENARIO("BDD model checker EX with no transition conjuncts")
+{
+  mini_bdd_mgrt mgr;
+  auto i = mgr.Var("i");
+  auto i_next = mgr.Var("i'");
+
+  // A system that has only an unconstrained input and no state.
+  bdd_transition_relationt tr;
+  tr.variables.push_back({i, i_next, true});
+  bdd_model_checkert mc(tr);
+
+  GIVEN("Only an input, no transition conjuncts")
+  {
+    THEN("EX(i) is true, and does not mention any next-state variable")
+    {
+      REQUIRE(mc.EX(i).is_true());
+    }
+
+    THEN("EX(!i) is true")
+    {
+      REQUIRE(mc.EX(!i).is_true());
+    }
+
+    THEN("EX(false) is false")
+    {
+      REQUIRE(mc.EX(mgr.False()).is_false());
+    }
+  }
+}
+
+SCENARIO("BDD model checker early and monolithic EX agree")
+{
+  GIVEN("The counter system")
+  {
+    mini_bdd_mgrt mgr;
+    auto tr = make_counter_system(mgr);
+    auto s0 = tr.variables[0].current;
+    auto s1 = tr.variables[1].current;
+    bdd_model_checkert mc(tr);
+
+    const mini_bddt sets[] = {
+      s0,
+      s1,
+      !s0,
+      !s1,
+      s0 & s1,
+      s0 | s1,
+      s0 ^ s1,
+      !s0 & !s1,
+      mgr.True(),
+      mgr.False()};
+
+    THEN("EX agrees with EX_monolithic on all sets")
+    {
+      for(const auto &f : sets)
+        REQUIRE((mc.EX(f) == mc.EX_monolithic(f)).is_true());
+    }
+  }
+
+  GIVEN("The input-driven system with a constraint on the input")
+  {
+    mini_bdd_mgrt mgr;
+    auto tr = make_input_driven_system(mgr);
+    auto i = tr.variables[0].current;
+    auto s = tr.variables[1].current;
+    // the input must equal the state
+    tr.constraint_conjuncts.push_back(i == s);
+    bdd_model_checkert mc(tr);
+
+    THEN("EX agrees with EX_monolithic")
+    {
+      REQUIRE((mc.EX(s) == mc.EX_monolithic(s)).is_true());
+      REQUIRE((mc.EX(!s) == mc.EX_monolithic(!s)).is_true());
+      // s' = i = s, so the only successor of s is s
+      REQUIRE((mc.EX(s) == s).is_true());
+      REQUIRE((mc.EX(!s) == !s).is_true());
+    }
+  }
+}
