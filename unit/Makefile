@@ -24,6 +24,7 @@ SRC += ebmc/bdd_model_checker.cpp \
        verilog/indexed_part_select.cpp \
        verilog/preprocessor.cpp \
        verilog/typename.cpp \
+       verilog/verilog_constant_folding.cpp \
        verilog/verilog_expr.cpp \
        verilog/verilog_rtl.cpp \
        # Empty last line
