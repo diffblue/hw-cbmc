@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 generate_loop_block1.sv
 --module main --bound 0
 ^\[main\.p0\] main\.blk\[0\]\.x == 10: PROVED up to bound 0$
@@ -9,7 +9,5 @@ generate_loop_block1.sv
 ^warning: ignoring
 --
 The names of the generate blocks created by a generate loop, blk[0] and
-blk[1] here, are not visible to hierarchical references.  ebmc rejects the
-references with "unknown identifier blk", although it does use these very
-names when reporting the properties and signals inside the blocks.  The
-same gap for the block of a generate-if is hierarchical_identifiers2.
+blk[1] here, are part of the hierarchy, and hence can be used in
+hierarchical references.
