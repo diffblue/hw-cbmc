@@ -26,6 +26,7 @@ SRC += ebmc/bdd_model_checker.cpp \
        verilog/typename.cpp \
        verilog/verilog_expr.cpp \
        verilog/verilog_rtl.cpp \
+       verilog/verilog_simplifier.cpp \
        # Empty last line
 
 INCLUDES= -I ../src/ -I . -I $(CPROVER_DIR)/unit -I $(CPROVER_DIR)/src
