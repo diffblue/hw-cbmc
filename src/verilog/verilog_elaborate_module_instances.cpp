@@ -541,10 +541,12 @@ void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
       }
       else
       {
-        // constant-fold
+        // constant-fold, and raise back to the Verilog type
         convert_expr(value);
-        value =
-          elaborate_constant_expression_check(value).with_source_location(*it);
+        auto value_type = value.type();
+        value = raise_parameter_value(
+                  value_type, elaborate_constant_expression_check(value))
+                  .second.with_source_location(*it);
       }
     }
     else
@@ -555,10 +557,12 @@ void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
       }
       else
       {
-        // constant-fold
+        // constant-fold, and raise back to the Verilog type
         convert_expr(*it);
-        *it =
-          elaborate_constant_expression_check(*it).with_source_location(*it);
+        auto value_type = it->type();
+        *it = raise_parameter_value(
+                value_type, elaborate_constant_expression_check(*it))
+                .second.with_source_location(*it);
       }
     }
   }

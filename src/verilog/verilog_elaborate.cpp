@@ -13,8 +13,123 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "aval_bval_encoding.h"
 #include "verilog_bind.h"
+#include "verilog_lowering.h"
 #include "verilog_typecheck.h"
 #include "verilog_types.h"
+
+/// The type and value of a parameter symbol.
+///
+/// Constant folding lowers the value of a parameter to the encoding used
+/// by the back-ends, e.g. a real becomes a floatbv and a four-valued
+/// vector becomes an aval/bval pair. A parameter is used in expressions
+/// that are still being type-checked, however, and hence its type and
+/// value must be at the Verilog level, as if the parameter were replaced
+/// by a literal. Given the Verilog type the value had before lowering and
+/// the lowered constant, this returns the Verilog type and the constant
+/// with that type. In line with the typing of literals, a four-valued
+/// value that does not actually contain x/z is given the two-valued type.
+std::pair<typet, exprt> verilog_typecheckt::raise_parameter_value(
+  const typet &verilog_type,
+  exprt lowered)
+{
+  if(!lowered.is_constant())
+    return {lowered.type(), std::move(lowered)};
+
+  auto &constant = to_constant_expr(lowered);
+
+  if(
+    (verilog_type.id() == ID_verilog_real ||
+     verilog_type.id() == ID_verilog_shortreal ||
+     verilog_type.id() == ID_verilog_realtime) &&
+    lowered.type().id() == ID_floatbv)
+  {
+    // The encoding does not change, only the type does.
+    lowered.type() = verilog_type;
+    return {verilog_type, std::move(lowered)};
+  }
+  else if(
+    verilog_type.id() == ID_verilog_integer &&
+    lowered.type() == signedbv_typet{32})
+  {
+    // This is the type of e.g. $bits. Use the type that an 'integer'
+    // declaration elaborates to.
+    auto integer_type = signedbv_typet{32};
+    integer_type.set(ID_C_verilog_type, ID_integer);
+    lowered.type() = integer_type;
+    return {integer_type, std::move(lowered)};
+  }
+  else if(
+    is_four_valued(verilog_type) &&
+    (lowered.type().id() == ID_bool ||
+     can_cast_type<bitvector_typet>(lowered.type())))
+  {
+    // The lowered constant is usually an aval/bval pair of twice the
+    // width, but the simplifier may have produced a two-valued constant
+    // (a bit-vector of the same width, or a Boolean), and may have
+    // dropped the aval/bval type attribute. Hence, decode by width.
+    auto width = to_bitvector_type(verilog_type).get_width();
+    mp_integer aval;
+    bool has_xz = false;
+
+    if(lowered.type().id() == ID_bool)
+    {
+      DATA_INVARIANT(width == 1, "Boolean constant must have width 1");
+      aval = constant.is_true() ? 1 : 0;
+    }
+    else
+    {
+      auto lowered_width = to_bitvector_type(lowered.type()).get_width();
+      if(lowered_width == 2 * width)
+      {
+        const constant_exprt aval_bval{
+          constant.get_value(), lower_to_aval_bval(verilog_type)};
+        has_xz = aval_bval_has_xz(aval_bval);
+        aval = bvrep2integer(constant.get_value(), 2 * width, false) %
+               power(2, width);
+      }
+      else
+      {
+        DATA_INVARIANT(
+          lowered_width == width, "lowered constant must have same width");
+        aval = bvrep2integer(constant.get_value(), width, false);
+      }
+    }
+
+    if(has_xz)
+    {
+      // The x/z are retained, and the parameter is four-valued.
+      const constant_exprt aval_bval{
+        constant.get_value(), lower_to_aval_bval(verilog_type)};
+      auto value = raise_from_aval_bval(aval_bval, verilog_type);
+      value.add_source_location() = lowered.source_location();
+      return {verilog_type, std::move(value)};
+    }
+    else
+    {
+      // No x/z: the parameter is two-valued, like a literal without x/z.
+      auto two_valued_type = make_two_valued(verilog_type);
+      // interpret as signed if the type is signed
+      if(
+        verilog_type.id() == ID_verilog_signedbv && aval >= power(2, width - 1))
+        aval -= power(2, width);
+      auto value = from_integer(aval, two_valued_type);
+      value.add_source_location() = lowered.source_location();
+      return {two_valued_type, std::move(value)};
+    }
+  }
+  else if(verilog_lowering(verilog_type) == lowered.type())
+  {
+    // The lowering does not change the type; prefer the Verilog type,
+    // which may carry attributes (e.g. the enum) that folding dropped.
+    lowered.type() = verilog_type;
+    return {verilog_type, std::move(lowered)};
+  }
+  else
+  {
+    // Not a case we know how to raise; keep the lowered form.
+    return {lowered.type(), std::move(lowered)};
+  }
+}
 
 /// Record the net/variable declaration kind (reg or wire) on the
 /// elaborated type, so that $typename can reproduce it per
@@ -1528,30 +1643,21 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
       // First elaborate the value, possibly recursively.
       convert_expr(symbol.value);
 
-      // When there is no explicit type, a parameter takes the type of its
-      // final value (1800-2017 6.20.2). We record this Verilog type before
-      // the value is lowered; it is used when the value is four-valued and
-      // contains x/z (see below).
+      // A parameter without an explicit type takes the type of its final
+      // value (1800-2017 6.20.2). This is the Verilog type of the value
+      // before constant folding lowers it. The value is an expression,
+      // and hence has the range [size-1:0] rather than any declared range.
       auto value_type = symbol.value.type();
+      value_type.remove(ID_C_offset);
+      value_type.remove(ID_C_increasing);
 
-      if(!is_let)
-        symbol.value = elaborate_constant_expression_check(symbol.value);
-
-      // A parameter is a constant and may legitimately hold x/z values
-      // (1800-2017 6.20.2). When the lowered value actually contains x/z,
-      // we give the parameter the four-valued Verilog type (so that $bits
-      // is well-defined and the x/z are retained) rather than the internal
-      // aval/bval encoding produced by lowering. Otherwise the parameter
-      // takes the type of its lowered value, as before.
-      if(
-        symbol.value.id() == ID_constant && is_aval_bval(symbol.value.type()) &&
-        aval_bval_has_xz(to_constant_expr(symbol.value)))
-      {
-        symbol.type = value_type; // four-valued Verilog type
-      }
+      if(is_let)
+        symbol.type = value_type;
       else
       {
-        symbol.type = symbol.value.type();
+        auto lowered = elaborate_constant_expression_check(symbol.value);
+        std::tie(symbol.type, symbol.value) =
+          raise_parameter_value(value_type, std::move(lowered));
       }
     }
     else
@@ -1567,59 +1673,32 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
 
         if(symbol.is_macro)
         {
-          // A parameter is a constant and may legitimately hold x/z
-          // values (1800-2017 6.20.2). We first convert the value in a
-          // four-valued assignment context so that any x/z are retained,
-          // then decide the parameter type based on whether the value
-          // actually contains x/z.
+          // A parameter may hold x/z values (1800-2017 6.20.2). Packed
+          // vector types elaborate to their two-valued form, and hence
+          // the value is converted in the four-valued form of the
+          // declared type, so that x/z are retained. The parameter is then
+          // given the two-valued type unless the value does contain x/z,
+          // see raise_parameter_value. Enumeration constants are excluded;
+          // their values are checked as given (1800-2017 6.19).
           auto four_valued_type = make_four_valued(elaborated_type);
-          auto two_valued_type = make_two_valued(elaborated_type);
 
-          // The four-valued handling only applies to packed integral
-          // parameter types that have a distinct four-valued form. In
-          // particular, it must not be applied to enumeration constants
-          // (whose base type is two-valued "bit" and whose value is
-          // checked for constness as given, 1800-2017 6.19).
           bool four_state_capable =
-            four_valued_type != two_valued_type &&
+            four_valued_type != make_two_valued(elaborated_type) &&
             elaborated_type.get(ID_C_verilog_type) != ID_verilog_enum;
 
-          if(four_state_capable)
-          {
-            assignment_conversion(symbol.value, four_valued_type);
+          auto &conversion_type =
+            four_state_capable ? four_valued_type : elaborated_type;
 
-            auto lowered =
-              is_let ? symbol.value
-                     : elaborate_constant_expression_check(exprt{symbol.value});
+          // Convert to the given type. These are assignment contexts.
+          assignment_conversion(symbol.value, conversion_type);
 
-            bool has_xz = lowered.id() == ID_constant &&
-                          is_aval_bval(lowered.type()) &&
-                          aval_bval_has_xz(to_constant_expr(lowered));
-
-            if(has_xz)
-            {
-              symbol.type = four_valued_type;
-              symbol.value = lowered;
-            }
-            else
-            {
-              // No x/z: use the two-valued type and value, as is
-              // expected for ordinary parameter values.
-              symbol.type = two_valued_type;
-              assignment_conversion(symbol.value, two_valued_type);
-              if(!is_let)
-                symbol.value =
-                  elaborate_constant_expression_check(symbol.value);
-            }
-          }
+          if(is_let)
+            symbol.type = conversion_type;
           else
           {
-            // Not four-state capable (e.g. an enumeration constant):
-            // behave exactly as for an ordinary two-valued symbol.
-            symbol.type = two_valued_type;
-            assignment_conversion(symbol.value, symbol.type);
-            if(!is_let)
-              symbol.value = elaborate_constant_expression_check(symbol.value);
+            auto lowered = elaborate_constant_expression_check(symbol.value);
+            std::tie(symbol.type, symbol.value) =
+              raise_parameter_value(conversion_type, std::move(lowered));
           }
         }
         else
