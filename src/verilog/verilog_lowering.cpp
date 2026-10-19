@@ -525,7 +525,7 @@ exprt verilog_lowering(exprt expr)
   }
   else if(
     expr.id() == ID_le || expr.id() == ID_ge || expr.id() == ID_lt ||
-    expr.id() == ID_ge)
+    expr.id() == ID_gt)
   {
     if(is_four_valued(expr))
     {
