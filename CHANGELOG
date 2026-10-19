@@ -43,6 +43,8 @@
 * Verilog: arithmetic, conditional operator on reals
 * Verilog: parameters without a type that have a real value
 * --property can now be given multiple times (unless --ic3 is used)
+* Verilog: parameter values passed on to module instances keep their
+  Verilog type
 
 # EBMC 6.1
 
