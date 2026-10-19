@@ -28,6 +28,8 @@
 * Verilog: improved error message when a type is given as a value
   parameter
 * SystemVerilog: property declarations in compilation-unit scope
+* Verilog: parameters keep the Verilog type of their value, e.g. real
+  parameters and parameters passed on to module instances
 
 # EBMC 6.1
 

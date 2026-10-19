@@ -5623,8 +5623,7 @@ hierarchical_identifier_bit_select_plus:
 
 time_literal: TOK_TIME_LITERAL
                 { init($$, ID_constant);
-                  addswap($$, ID_value, $1);
-                  stack_expr($$).type().id(ID_verilog_realtime); }
+                  addswap($$, ID_value, $1); }
         ;
 
 cast:
