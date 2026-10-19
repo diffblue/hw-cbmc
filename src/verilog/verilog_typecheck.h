@@ -112,6 +112,8 @@ protected:
   verilog_module_exprt elaborate(const verilog_module_sourcet &);
   module_itemst elaborate_level(const module_itemst &);
   void elaborate_symbol_rec(irep_idt) override;
+  static std::pair<typet, exprt>
+  parameter_type_and_value(const typet &, exprt folded);
   void add_symbol(symbolt);
   void collect_symbols(const typet &);
   void collect_symbols(const verilog_module_sourcet &);

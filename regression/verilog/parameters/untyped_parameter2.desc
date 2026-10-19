@@ -1,0 +1,12 @@
+CORE
+untyped_parameter2.sv
+--module main
+^\[main\.s1\.assert\.1\] main\.s1\.p == main\.s1\.expected: PROVED .*$
+^\[main\.s1\.assert\.2\] \$typename\(main\.s1\.p\) == "real": PROVED .*$
+^\[main\.s2\.assert\.1\] main\.s2\.p == main\.s2\.expected: PROVED .*$
+^\[main\.s2\.assert\.2\] \$typename\(main\.s2\.p\) == "real": PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+^REFUTED

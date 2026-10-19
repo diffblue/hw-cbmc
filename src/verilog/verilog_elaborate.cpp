@@ -16,12 +16,48 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_typecheck.h"
 #include "verilog_types.h"
 
-/// true iff the given expression is a constant of four-valued type
-/// that contains an x or z bit
-static bool is_four_valued_constant_with_xz(const exprt &expr)
+/// The type and value of a parameter symbol, given the type of the
+/// parameter (the declared type, or the type of the value when there is
+/// no declared type) and its constant-folded value. Constant folding
+/// yields a constant of the Verilog type of the value, which may lack
+/// attributes of the declared type, e.g. its range. In line with the
+/// typing of literals, a four-valued value that does not actually contain
+/// x/z is given the two-valued type.
+std::pair<typet, exprt>
+verilog_typecheckt::parameter_type_and_value(const typet &type, exprt folded)
 {
-  return expr.is_constant() && is_four_valued(expr.type()) &&
-         aval_bval_has_xz(lower_to_aval_bval(to_constant_expr(expr)));
+  if(!folded.is_constant())
+    return {folded.type(), folded};
+
+  // The types are equal up to attributes; use the declared one.
+  if(folded.type() == type)
+    folded.type() = type;
+
+  if(is_four_valued(folded.type()))
+  {
+    auto lowered = lower_to_aval_bval(to_constant_expr(folded));
+
+    if(!aval_bval_has_xz(lowered))
+    {
+      // No x/z: the parameter is two-valued, like a literal without x/z.
+      auto width = to_bitvector_type(folded.type()).get_width();
+      auto two_valued_type = make_two_valued(folded.type());
+      auto aval =
+        bvrep2integer(lowered.get_value(), 2 * width, false) % power(2, width);
+      // interpret as signed if the type is signed
+      if(
+        folded.type().id() == ID_verilog_signedbv &&
+        aval >= power(2, width - 1))
+      {
+        aval -= power(2, width);
+      }
+      auto value = from_integer(aval, two_valued_type);
+      value.add_source_location() = folded.source_location();
+      return {two_valued_type, std::move(value)};
+    }
+  }
+
+  return {folded.type(), folded};
 }
 
 /// Record the net/variable declaration kind (reg or wire) on the
@@ -1536,29 +1572,16 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
       // First elaborate the value, possibly recursively.
       convert_expr(symbol.value);
 
-      // When there is no explicit type, a parameter takes the type of its
-      // final value (1800-2017 6.20.2). We record this Verilog type before
-      // the value is lowered; it is used when the value is four-valued and
-      // contains x/z (see below).
-      auto value_type = symbol.value.type();
-
-      if(!is_let)
-        symbol.value = elaborate_constant_expression_check(symbol.value);
-
-      // A parameter is a constant and may legitimately hold x/z values
-      // (1800-2017 6.20.2). Constant folding lifts four-valued values
-      // back to the four-valued Verilog type. When the value actually
-      // contains x/z, we give the parameter the four-valued Verilog type
-      // (so that $bits is well-defined and the x/z are retained).
-      // Otherwise the parameter takes the type of its folded value, as
-      // before.
-      if(is_four_valued_constant_with_xz(symbol.value))
-      {
-        symbol.type = value_type; // four-valued Verilog type
-      }
+      // A parameter without an explicit type takes the type of its final
+      // value (1800-2017 6.20.2).
+      if(is_let)
+        symbol.type = symbol.value.type();
       else
       {
-        symbol.type = symbol.value.type();
+        auto folded = elaborate_constant_expression_check(symbol.value);
+        auto value_type = folded.type();
+        std::tie(symbol.type, symbol.value) =
+          parameter_type_and_value(value_type, std::move(folded));
       }
     }
     else
@@ -1574,55 +1597,32 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
 
         if(symbol.is_macro)
         {
-          // A parameter is a constant and may legitimately hold x/z
-          // values (1800-2017 6.20.2). We first convert the value in a
-          // four-valued assignment context so that any x/z are retained,
-          // then decide the parameter type based on whether the value
-          // actually contains x/z.
+          // A parameter may hold x/z values (1800-2017 6.20.2). Packed
+          // vector types elaborate to their two-valued form, and hence
+          // the value is converted in the four-valued form of the
+          // declared type, so that x/z are retained. The parameter is then
+          // given the two-valued type unless the value does contain x/z,
+          // see parameter_type_and_value. Enumeration constants are excluded;
+          // their values are checked as given (1800-2017 6.19).
           auto four_valued_type = make_four_valued(elaborated_type);
-          auto two_valued_type = make_two_valued(elaborated_type);
 
-          // The four-valued handling only applies to packed integral
-          // parameter types that have a distinct four-valued form. In
-          // particular, it must not be applied to enumeration constants
-          // (whose base type is two-valued "bit" and whose value is
-          // checked for constness as given, 1800-2017 6.19).
           bool four_state_capable =
-            four_valued_type != two_valued_type &&
+            four_valued_type != make_two_valued(elaborated_type) &&
             elaborated_type.get(ID_C_verilog_type) != ID_verilog_enum;
 
-          if(four_state_capable)
-          {
-            assignment_conversion(symbol.value, four_valued_type);
+          auto &conversion_type =
+            four_state_capable ? four_valued_type : elaborated_type;
 
-            auto folded =
-              is_let ? symbol.value
-                     : elaborate_constant_expression_check(exprt{symbol.value});
+          // Convert to the given type. These are assignment contexts.
+          assignment_conversion(symbol.value, conversion_type);
 
-            if(is_four_valued_constant_with_xz(folded))
-            {
-              symbol.type = four_valued_type;
-              symbol.value = folded;
-            }
-            else
-            {
-              // No x/z: use the two-valued type and value, as is
-              // expected for ordinary parameter values.
-              symbol.type = two_valued_type;
-              assignment_conversion(symbol.value, two_valued_type);
-              if(!is_let)
-                symbol.value =
-                  elaborate_constant_expression_check(symbol.value);
-            }
-          }
+          if(is_let)
+            symbol.type = conversion_type;
           else
           {
-            // Not four-state capable (e.g. an enumeration constant):
-            // behave exactly as for an ordinary two-valued symbol.
-            symbol.type = two_valued_type;
-            assignment_conversion(symbol.value, symbol.type);
-            if(!is_let)
-              symbol.value = elaborate_constant_expression_check(symbol.value);
+            auto folded = elaborate_constant_expression_check(symbol.value);
+            std::tie(symbol.type, symbol.value) =
+              parameter_type_and_value(conversion_type, std::move(folded));
           }
         }
         else

@@ -2512,12 +2512,17 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
     // only add a typecast for now
     return typecast_exprt{std::move(expr), std::move(result.type())};
   }
-  else if(expr.type().id()==ID_unsignedbv ||
-          expr.type().id()==ID_signedbv ||
-          expr.type().id()==ID_verilog_signedbv ||
-          expr.type().id()==ID_verilog_unsignedbv)
+  else if(
+    expr.type().id() == ID_unsignedbv || expr.type().id() == ID_signedbv ||
+    expr.type().id() == ID_verilog_signedbv ||
+    expr.type().id() == ID_verilog_unsignedbv || expr.type().id() == ID_bool ||
+    expr.type().id() == ID_verilog_real ||
+    expr.type().id() == ID_verilog_shortreal ||
+    expr.type().id() == ID_verilog_realtime)
   {
-    // done already
+    // Done already. Literals from the parser do not have a type; a typed
+    // constant has been converted, e.g. the value of a parameter that is
+    // passed on to a module instance.
     return std::move(expr);
   }
 
