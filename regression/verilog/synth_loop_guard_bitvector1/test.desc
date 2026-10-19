@@ -1,0 +1,10 @@
+CORE
+main.v
+--bound 0
+^\[main\.property\.p1\] always main\.r == main\.DW: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+^CONVERSION ERROR$
+synthesis failed to evaluate loop guard
