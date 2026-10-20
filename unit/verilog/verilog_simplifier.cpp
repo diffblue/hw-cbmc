@@ -304,8 +304,17 @@ SCENARIO("verilog_simplifier folds four-valued relational operators")
     REQUIRE(
       lower_and_simplify(l4_relation(ID_ge, l4("0011"), l4("0100")), ns) ==
       encoded(l1("0")));
+    REQUIRE(
+      lower_and_simplify(l4_relation(ID_gt, l4("0100"), l4("0011")), ns) ==
+      encoded(l1("1")));
+    REQUIRE(
+      lower_and_simplify(l4_relation(ID_gt, l4("0011"), l4("0011")), ns) ==
+      encoded(l1("0")));
 
     // IEEE 1800-2017 11.4.4: x if either operand contains x or z
+    REQUIRE(
+      lower_and_simplify(l4_relation(ID_gt, l4("00x1"), l4("0100")), ns) ==
+      encoded(l1("x")));
     REQUIRE(
       lower_and_simplify(l4_relation(ID_lt, l4("00x1"), l4("0100")), ns) ==
       encoded(l1("x")));
