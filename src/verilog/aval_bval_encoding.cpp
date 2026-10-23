@@ -121,6 +121,34 @@ bool aval_bval_has_xz(const constant_exprt &src)
   return bval != 0;
 }
 
+constant_exprt
+raise_from_aval_bval(const constant_exprt &src, const typet &four_valued_type)
+{
+  PRECONDITION(is_aval_bval(src.type()));
+  PRECONDITION(is_four_valued(four_valued_type));
+
+  auto width = aval_bval_width(src.type());
+  DATA_INVARIANT(
+    width == to_bitvector_type(four_valued_type).get_width(),
+    "aval/bval constant and four-valued type must have the same width");
+
+  auto value = bvrep2integer(src.get_value(), width * 2, false);
+
+  // The string is most-significant bit first; see lower_to_aval_bval
+  // for the encoding table.
+  std::string digits;
+  digits.reserve(width);
+
+  for(std::size_t i = width; i-- > 0;)
+  {
+    bool aval_bit = (value >> i) % 2 != 0;
+    bool bval_bit = (value >> (i + width)) % 2 != 0;
+    digits += bval_bit ? (aval_bit ? 'z' : 'x') : (aval_bit ? '1' : '0');
+  }
+
+  return constant_exprt{digits, four_valued_type};
+}
+
 exprt aval(const exprt &src)
 {
   if(is_aval_bval(src.type()))

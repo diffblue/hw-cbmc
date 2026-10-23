@@ -34,6 +34,12 @@ typet aval_bval_underlying(const typet &);
 bv_typet lower_to_aval_bval(const typet &);
 constant_exprt lower_to_aval_bval(const constant_exprt &);
 
+/// The inverse of lower_to_aval_bval(const constant_exprt &): turn a
+/// lowered aval/bval constant back into a constant of the given four-valued
+/// Verilog type, whose value is the usual string of 0/1/x/z digits.
+constant_exprt
+raise_from_aval_bval(const constant_exprt &, const typet &four_valued_type);
+
 /// true iff the lowered aval/bval constant contains an x or z bit
 bool aval_bval_has_xz(const constant_exprt &);
 
