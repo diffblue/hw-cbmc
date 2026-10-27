@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
+#include <util/expr_iterator.h>
 #include <util/expr_util.h>
 #include <util/mathematical_types.h>
 #include <util/namespace.h>
@@ -494,6 +495,10 @@ protected:
   /// constant-fold system function calls such as $bits
   exprt fold_system_functions(exprt) const;
 
+  /// Folds the system functions in the given expression, and then
+  /// simplifies it, when the simplifier supports its types.
+  exprt fold_and_simplify(exprt) const;
+
   /// the current value of the given slice of the given symbol
   exprt slice_of(const symbol_exprt &, const verilog_rtl_slicet &);
 
@@ -614,6 +619,39 @@ exprt verilog_rtl_buildert::fold_system_functions(exprt expr) const
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::fold_and_simplify
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_rtl_buildert::fold_and_simplify(exprt expr) const
+{
+  auto folded = fold_system_functions(std::move(expr));
+
+  // The expression is not lowered yet. The simplifier does not support
+  // the Verilog integer and real types, e.g., of $test$plusargs("A") or
+  // of $itor(x).
+  for(auto it = folded.depth_cbegin(); it != folded.depth_cend(); ++it)
+  {
+    auto &id = it->type().id();
+    if(
+      id == ID_verilog_integer || id == ID_verilog_real ||
+      id == ID_verilog_shortreal || id == ID_verilog_realtime)
+    {
+      return folded;
+    }
+  }
+
+  return simplify_expr(std::move(folded), ns);
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::constant_index
 
   Inputs:
@@ -633,8 +671,7 @@ verilog_rtl_buildert::constant_index(const exprt &expr, statet &state)
 std::optional<mp_integer>
 verilog_rtl_buildert::constant_index(const exprt &expr) const
 {
-  auto folded = fold_system_functions(expr);
-  auto simplified = simplify_expr(std::move(folded), ns);
+  auto simplified = fold_and_simplify(expr);
   return numeric_cast<mp_integer>(simplified);
 }
 
@@ -2069,7 +2106,7 @@ void verilog_rtl_buildert::build_assign(
   auto rhs = substitute(assign.rhs(), state);
 
   // Can the rhs be simplified to a constant, for propagation?
-  auto rhs_simplified = simplify_expr(fold_system_functions(rhs), ns);
+  auto rhs_simplified = fold_and_simplify(rhs);
 
   if(rhs_simplified.is_constant())
     rhs = rhs_simplified;
@@ -2100,7 +2137,7 @@ void verilog_rtl_buildert::build_compound_assign(
     state);
 
   // Can the rhs be simplified to a constant, for propagation?
-  auto rhs_simplified = simplify_expr(fold_system_functions(rhs), ns);
+  auto rhs_simplified = fold_and_simplify(rhs);
 
   if(rhs_simplified.is_constant())
     rhs = rhs_simplified;
@@ -2633,7 +2670,7 @@ void verilog_rtl_buildert::build_if(
   // Constant conditions do not branch; the path condition
   // of break, continue and return statements in the branch
   // that is taken becomes the path condition of the if statement.
-  auto cond_simplified = simplify_expr(fold_system_functions(cond), ns);
+  auto cond_simplified = fold_and_simplify(cond);
 
   if(cond_simplified.is_true())
   {
@@ -3207,8 +3244,7 @@ void verilog_rtl_buildert::build_for(
     if(is_dead(state))
       break;
 
-    auto guard = simplify_expr(
-      fold_system_functions(substitute(statement.condition(), state)), ns);
+    auto guard = fold_and_simplify(substitute(statement.condition(), state));
 
     if(guard.is_false())
       break;

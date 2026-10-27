@@ -1,10 +1,13 @@
-KNOWNBUG
+CORE
 test_plusargs2.sv
-
-^no properties$
-^EXIT=10$
+--bound 3
+^\[main\.p0\] .*: PROVED up to bound 3$
+^\[main\.p1\] .*: PROVED up to bound 3$
+^\[main\.p2\] .*: PROVED up to bound 3$
+^EXIT=0$
 ^SIGNAL=0$
 --
 ^Invariant check failed$
 --
-Fails the precondition in from_integer, called by simplify_typecast.
+The simplification of the condition in the RTL construction failed for
+expressions of type integer.
