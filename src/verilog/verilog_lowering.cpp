@@ -663,6 +663,35 @@ exprt verilog_lowering(exprt expr)
       else
         offset_in_bv = (lsb - src_offset) * element_width;
 
+      // The selected range may extend beyond the declared range of the
+      // array, in either direction. The bits outside the array read as
+      // zero, as for part-selects on vectors (verilog_expr.cpp); the
+      // source is padded accordingly.
+      auto result_width = verilog_bits(result_array_type);
+      auto src_width = verilog_bits(src.type());
+
+      if(offset_in_bv < 0)
+      {
+        auto padding_width = -offset_in_bv;
+        bv = concatenation_exprt{
+          {bv,
+           unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)}
+             .zero_expr()},
+          bv_typet{numeric_cast_v<std::size_t>(src_width + padding_width)}};
+        src_width += padding_width;
+        offset_in_bv = 0;
+      }
+
+      if(offset_in_bv + result_width > src_width)
+      {
+        auto padding_width = offset_in_bv + result_width - src_width;
+        bv = concatenation_exprt{
+          {unsignedbv_typet{numeric_cast_v<std::size_t>(padding_width)}
+             .zero_expr(),
+           bv},
+          bv_typet{numeric_cast_v<std::size_t>(src_width + padding_width)}};
+      }
+
       return from_bitvector(bv, offset_in_bv, result_array_type);
     }
 
