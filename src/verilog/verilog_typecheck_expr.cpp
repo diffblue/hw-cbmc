@@ -25,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2verilog.h"
 #include "typename.h"
 #include "verilog_bits.h"
+#include "verilog_constant_folding.h"
 #include "verilog_expr.h"
 #include "verilog_lowering.h"
 #include "verilog_simplifier.h"
@@ -2563,18 +2564,13 @@ Function: verilog_typecheck_exprt::elaborate_constant_expression
 
 exprt verilog_typecheck_exprt::elaborate_constant_expression(exprt expr)
 {
-  // This performs constant-folding on a type-checked expression
-  // according to Section 11.2.1 IEEE 1800-2017.
-  auto expr_lowered = verilog_lowering(std::move(expr));
+  // replace elaboration-time constant symbols
+  auto expr_replaced = elaborate_constant_expression_rec(std::move(expr));
 
-  // replace constant symbols
-  auto expr_replaced =
-    elaborate_constant_expression_rec(std::move(expr_lowered));
+  // do constant folding
+  auto expr_folded = verilog_constant_folding(std::move(expr_replaced), ns);
 
-  // finally simplify
-  auto expr_simplified = verilog_simplifier(std::move(expr_replaced), ns);
-
-  return expr_simplified;
+  return expr_folded;
 }
 
 /*******************************************************************\

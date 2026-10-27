@@ -16,6 +16,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_typecheck.h"
 #include "verilog_types.h"
 
+/// true iff the given expression is a constant of four-valued type
+/// that contains an x or z bit
+static bool is_four_valued_constant_with_xz(const exprt &expr)
+{
+  return expr.is_constant() && is_four_valued(expr.type()) &&
+         aval_bval_has_xz(lower_to_aval_bval(to_constant_expr(expr)));
+}
+
 /// Record the net/variable declaration kind (reg or wire) on the
 /// elaborated type, so that $typename can reproduce it per
 /// IEEE 1800-2017 20.6.1.  The kind is stored in C_verilog_vector_type,
@@ -1538,14 +1546,13 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
         symbol.value = elaborate_constant_expression_check(symbol.value);
 
       // A parameter is a constant and may legitimately hold x/z values
-      // (1800-2017 6.20.2). When the lowered value actually contains x/z,
-      // we give the parameter the four-valued Verilog type (so that $bits
-      // is well-defined and the x/z are retained) rather than the internal
-      // aval/bval encoding produced by lowering. Otherwise the parameter
-      // takes the type of its lowered value, as before.
-      if(
-        symbol.value.id() == ID_constant && is_aval_bval(symbol.value.type()) &&
-        aval_bval_has_xz(to_constant_expr(symbol.value)))
+      // (1800-2017 6.20.2). Constant folding lifts four-valued values
+      // back to the four-valued Verilog type. When the value actually
+      // contains x/z, we give the parameter the four-valued Verilog type
+      // (so that $bits is well-defined and the x/z are retained).
+      // Otherwise the parameter takes the type of its folded value, as
+      // before.
+      if(is_four_valued_constant_with_xz(symbol.value))
       {
         symbol.type = value_type; // four-valued Verilog type
       }
@@ -1588,18 +1595,14 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
           {
             assignment_conversion(symbol.value, four_valued_type);
 
-            auto lowered =
+            auto folded =
               is_let ? symbol.value
                      : elaborate_constant_expression_check(exprt{symbol.value});
 
-            bool has_xz = lowered.id() == ID_constant &&
-                          is_aval_bval(lowered.type()) &&
-                          aval_bval_has_xz(to_constant_expr(lowered));
-
-            if(has_xz)
+            if(is_four_valued_constant_with_xz(folded))
             {
               symbol.type = four_valued_type;
-              symbol.value = lowered;
+              symbol.value = folded;
             }
             else
             {

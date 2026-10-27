@@ -19,11 +19,13 @@ SRC += ebmc/bdd_model_checker.cpp \
        temporal-logic/trivial_sva.cpp \
        trans-netlist/aig.cpp \
        trans-netlist/id2smv.cpp \
+       verilog/aval_bval_encoding.cpp \
        verilog/convert_literals.cpp \
        verilog/expr2verilog.cpp \
        verilog/indexed_part_select.cpp \
        verilog/preprocessor.cpp \
        verilog/typename.cpp \
+       verilog/verilog_constant_folding.cpp \
        verilog/verilog_expr.cpp \
        verilog/verilog_rtl.cpp \
        verilog/verilog_simplifier.cpp \
