@@ -1,0 +1,9 @@
+CORE
+define_inactive1.sv
+
+^\[main\.p0\] always 1: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+expecting an identifier after backtick
+unknown preprocessor directive

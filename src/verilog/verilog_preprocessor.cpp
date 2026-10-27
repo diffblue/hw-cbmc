@@ -662,8 +662,15 @@ void verilog_preprocessort::directive()
   {
     if(!condition)
     {
-      // ignore
-      tokenizer().skip_until_eol();
+      // Ignore, including any lines that continue the macro text.
+      tokenizer().in_macro_text = true;
+      while(!tokenizer().eof() && tokenizer().peek() != '\n')
+      {
+        auto token = tokenizer().next_token();
+        if(token == '\\' && tokenizer().peek() == '\n')
+          tokenizer().next_token();
+      }
+      tokenizer().in_macro_text = false;
       return;
     }
 
