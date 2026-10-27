@@ -1,0 +1,11 @@
+KNOWNBUG
+dynamic_array1.sv
+
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--
+^Invariant check failed$
+--
+Fails the precondition in verilog_declaratort::merged_type, which does
+not handle dynamic arrays.
