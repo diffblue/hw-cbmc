@@ -23,6 +23,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_initializer.h"
 #include "verilog_types.h"
 
+#include <optional>
+
 /// Lowers
 /// * the three Verilog real types to floatbv;
 /// * Verilog integer to signedbv[32]
@@ -191,9 +193,120 @@ exprt from_bitvector(
   }
 }
 
+/// If \p bits is the concatenation (most significant first) of extracts
+/// of consecutive, adjacent ranges of one and the same source expression,
+/// returns the extract of the combined range; otherwise nullopt.
+static std::optional<exprt>
+merge_adjacent_extracts(const exprt::operandst &bits, const typet &result_type)
+{
+  if(bits.empty())
+    return {};
+
+  // the source and the bit range of each operand
+  std::optional<exprt> source;
+  std::optional<mp_integer> top, bottom;
+
+  for(auto &op : bits)
+  {
+    exprt op_source;
+    mp_integer op_low, op_high;
+
+    if(op.id() == ID_extractbits)
+    {
+      auto &extract = to_extractbits_expr(op);
+      auto index_opt = numeric_cast<mp_integer>(extract.index());
+      if(!index_opt.has_value())
+        return {};
+      op_source = extract.src();
+      op_low = *index_opt;
+      op_high = op_low + to_bitvector_type(op.type()).get_width() - 1;
+    }
+    else if(op.id() == ID_extractbit)
+    {
+      auto &extract = to_extractbit_expr(op);
+      auto index_opt = numeric_cast<mp_integer>(extract.index());
+      if(!index_opt.has_value())
+        return {};
+      op_source = extract.src();
+      op_low = op_high = *index_opt;
+    }
+    else
+      return {};
+
+    if(!source.has_value())
+    {
+      source = op_source;
+      top = op_high;
+      bottom = op_low;
+    }
+    else
+    {
+      // most significant first: this operand must be directly below
+      if(op_source != *source || op_high + 1 != *bottom)
+        return {};
+      bottom = op_low;
+    }
+  }
+
+  auto width = *top - *bottom + 1;
+  if(width != to_bitvector_type(result_type).get_width())
+    return {};
+
+  // The whole source? The source is a bit-vector of some kind (bv,
+  // unsignedbv, ...); the result is given the requested type.
+  if(
+    *bottom == 0 && source->type().id() != ID_bool &&
+    can_cast_type<bitvector_typet>(source->type()) &&
+    to_bitvector_type(source->type()).get_width() == width)
+  {
+    if(source->type() == result_type)
+      return *source;
+    else
+      return typecast_exprt{*source, result_type};
+  }
+
+  return extractbits_exprt{
+    *source, from_integer(*bottom, integer_typet{}), result_type};
+}
+
 exprt to_bitvector(const exprt &src)
 {
   const auto &src_type = src.type();
+
+  if(
+    src_type.id() == ID_struct || src_type.id() == ID_union ||
+    src_type.id() == ID_array)
+  {
+    // Reversing a conversion: the flattening of a value that was itself
+    // built from a bit-vector yields that bit-vector.
+    if(src.id() == ID_typecast)
+    {
+      auto &op = to_typecast_expr(src).op();
+      if(
+        (op.type().id() == ID_unsignedbv || op.type().id() == ID_signedbv ||
+         op.type().id() == ID_bv) &&
+        to_bitvector_type(op.type()).get_width() == verilog_bits(src_type))
+      {
+        return op;
+      }
+    }
+
+    // A conditional: flatten the branches, rather than selecting each
+    // member or element from the conditional, which would replicate the
+    // conditional once per member or element.
+    if(src.id() == ID_if)
+    {
+      auto &if_expr = to_if_expr(src);
+      auto true_bv = to_bitvector(if_expr.true_case());
+      auto false_bv = to_bitvector(if_expr.false_case());
+      auto type = true_bv.type();
+      return if_exprt{
+        if_expr.cond(),
+        std::move(true_bv),
+        typecast_exprt::conditional_cast(std::move(false_bv), type),
+        type};
+    }
+  }
 
   if(src_type.id() == ID_struct)
   {
@@ -202,14 +315,35 @@ exprt to_bitvector(const exprt &src)
     field_values.reserve(struct_type.components().size());
 
     // the first struct member is the most significant
-    for(auto &component : struct_type.components())
+    if(src.id() == ID_struct)
     {
-      auto member = member_exprt{src, component};
-      auto field_value = to_bitvector(member); // rec. call
-      field_values.push_back(std::move(field_value));
+      // A struct constructor: use its operands, rather than member
+      // expressions on the constructor, which would replicate the entire
+      // constructor once per member.
+      auto &operands = src.operands();
+      DATA_INVARIANT(
+        operands.size() == struct_type.components().size(),
+        "struct constructor must have one operand per component");
+      for(auto &operand : operands)
+        field_values.push_back(to_bitvector(operand)); // rec. call
+    }
+    else
+    {
+      for(auto &component : struct_type.components())
+      {
+        auto member = member_exprt{src, component};
+        auto field_value = to_bitvector(member); // rec. call
+        field_values.push_back(std::move(field_value));
+      }
     }
 
     auto width_int = numeric_cast_v<std::size_t>(verilog_bits(src));
+
+    // A struct that was built from a bit-vector (from_bitvector) flattens
+    // back to that bit-vector.
+    if(auto merged = merge_adjacent_extracts(field_values, bv_typet{width_int}))
+      return *merged;
+
     return concatenation_exprt{std::move(field_values), bv_typet{width_int}};
   }
   else if(src_type.id() == ID_union)
@@ -235,28 +369,42 @@ exprt to_bitvector(const exprt &src)
     bool is_packed =
       array_type.get(ID_C_verilog_type) == ID_verilog_packed_array;
 
+    // An array constructor: use its operands, rather than index
+    // expressions on the constructor, which would replicate the entire
+    // constructor once per element.
+    auto element = [&src](std::size_t index) -> exprt
+    {
+      if(src.id() == ID_array)
+      {
+        DATA_INVARIANT(
+          index < src.operands().size(),
+          "array constructor must have one operand per element");
+        return src.operands()[index];
+      }
+      else
+        return index_exprt{src, from_integer(index, integer_typet{})};
+    };
+
     if(is_packed && array_type.get_bool(ID_C_increasing))
     {
       for(std::size_t index = 0; index < size_int; index++)
-      {
-        auto element_expr =
-          index_exprt{src, from_integer(index, integer_typet{})};
-        auto element_value = to_bitvector(element_expr); // rec. call
-        element_values.push_back(std::move(element_value));
-      }
+        element_values.push_back(to_bitvector(element(index))); // rec. call
     }
     else
     {
       for(std::size_t index = size_int; index > 0; index--)
-      {
-        auto element_expr =
-          index_exprt{src, from_integer(index - 1, integer_typet{})};
-        auto element_value = to_bitvector(element_expr); // rec. call
-        element_values.push_back(std::move(element_value));
-      }
+        element_values.push_back(to_bitvector(element(index - 1))); // rec.
     }
 
     auto width_int = numeric_cast_v<std::size_t>(verilog_bits(src));
+
+    // An array that was built from a bit-vector (from_bitvector) flattens
+    // back to that bit-vector.
+    if(
+      auto merged =
+        merge_adjacent_extracts(element_values, bv_typet{width_int}))
+      return *merged;
+
     return concatenation_exprt{std::move(element_values), bv_typet{width_int}};
   }
   else
