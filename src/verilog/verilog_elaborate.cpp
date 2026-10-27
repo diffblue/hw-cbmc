@@ -232,7 +232,8 @@ void verilog_typecheckt::collect_symbols(
   {
     // The default value is optional, and then it's an error if it is not
     // supplied in the instantiation.  This is checked in set_parameter_values(...).
-    PRECONDITION(declarator.value().is_not_nil());
+    // A parameter of a class or of the top-level module may still have
+    // no value.
 
     // If there's no type, parameters take the type of the final
     // value. We signal this using the special type "derive_from_value".
@@ -1567,7 +1568,17 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
     bool is_let = let_symbols.find(symbol.name) != let_symbols.end();
 
     // Is the type derived from the value (e.g., parameters)?
-    if(to_type_with_subtype(symbol.type).subtype().id() == ID_derive_from_value)
+    if(
+      to_type_with_subtype(symbol.type).subtype().id() ==
+        ID_derive_from_value &&
+      symbol.value.is_nil())
+    {
+      // A parameter without type and without value, e.g., of a class.
+      // Its uses are errors.
+      symbol.type = derive_from_value_typet{};
+    }
+    else if(
+      to_type_with_subtype(symbol.type).subtype().id() == ID_derive_from_value)
     {
       // First elaborate the value, possibly recursively.
       convert_expr(symbol.value);
