@@ -40,6 +40,7 @@
 * SystemVerilog: slices of unpacked arrays
 * SystemVerilog: equality of unpacked arrays of equivalent types
 * Verilog: arithmetic and the conditional operator on reals
+* Verilog: parameters without a type that have a real value
 
 # EBMC 6.1
 
