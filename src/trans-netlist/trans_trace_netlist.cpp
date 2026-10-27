@@ -45,6 +45,14 @@ exprt bitstring_to_expr(const std::string &src, const typet &type)
   {
     return from_integer(binary2integer(src, true), type);
   }
+  else if(
+    type.id() == ID_bv || type.id() == ID_floatbv || type.id() == ID_fixedbv)
+  {
+    // from_integer doesn't support these; build the bit representation
+    auto width = to_bitvector_type(type).get_width();
+    return constant_exprt{
+      integer2bvrep(binary2integer(src, false), width), type};
+  }
   else if(type.id() == ID_range)
   {
     // from_integer doesn't support range_typet

@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/floatbv_expr.h>
 #include <util/ieee_float.h>
 #include <util/std_expr.h>
+#include <util/symbol_table_base.h>
 
 #include "aval_bval_encoding.h"
 #include "convert_literals.h"
@@ -55,6 +56,32 @@ typet verilog_lowering(typet type)
   }
   else
     return type;
+}
+
+void verilog_lower_symbol_types(symbol_table_baset &symbol_table)
+{
+  for(auto it = symbol_table.begin(); it != symbol_table.end(); it++)
+  {
+    const auto &symbol = it->second;
+
+    // Parameters are substituted by their value, and types are not
+    // variables.
+    if(symbol.mode != ID_Verilog || symbol.is_macro || symbol.is_type)
+      continue;
+
+    auto &type = symbol.type;
+
+    if(
+      type.id() == ID_verilog_real || type.id() == ID_verilog_shortreal ||
+      type.id() == ID_verilog_realtime || type.id() == ID_verilog_chandle ||
+      type.id() == ID_verilog_event)
+    {
+      // Remember the Verilog type, e.g. for showing values in traces.
+      auto lowered = verilog_lowering(type);
+      lowered.set(ID_C_verilog_type, type.id());
+      it.get_writeable_symbol().type = std::move(lowered);
+    }
+  }
 }
 
 exprt extract(

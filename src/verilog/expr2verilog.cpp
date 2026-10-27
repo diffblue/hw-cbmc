@@ -1392,16 +1392,37 @@ expr2verilogt::convert_constant(const constant_exprt &src)
     const irep_idt &value = src.get_value();
     dest=id2string(value);
   }
-  else if(type.id() == ID_verilog_real)
+  else if(
+    type.id() == ID_verilog_real || type.id() == ID_verilog_realtime ||
+    type.id() == ID_verilog_shortreal || type.id() == ID_floatbv)
   {
+    // floatbv is the lowered form of the real types, e.g. for the values
+    // of variables in a trace
     constant_exprt tmp = src;
-    tmp.type() = ieee_float_spect::double_precision().to_type();
+    if(type.id() == ID_verilog_shortreal)
+      tmp.type() = ieee_float_spect::single_precision().to_type();
+    else if(type.id() != ID_floatbv)
+      tmp.type() = ieee_float_spect::double_precision().to_type();
     auto ieee_float = ieee_float_valuet{tmp};
     return {precedence, ieee_float.to_ansi_c_string()};
   }
   else if(type.id() == ID_string)
   {
     dest = verilog_string_literal(id2string(src.get_value()));
+  }
+  else if(
+    type.id() == ID_bv && (type.get(ID_C_verilog_type) == ID_verilog_chandle ||
+                           type.get(ID_C_verilog_type) == ID_verilog_event))
+  {
+    // the lowered form of chandle and event, e.g. for the values of
+    // variables in a trace; other values than null have no literal,
+    // and we show the encoding
+    auto width = to_bv_type(type).get_width();
+    auto value = bvrep2integer(src.get_value(), width, false);
+    if(value == 0)
+      dest = "null";
+    else
+      dest = std::to_string(width) + "'h" + integer2string(value, 16);
   }
   else if(type.id() == ID_verilog_chandle || type.id() == ID_verilog_event)
   {

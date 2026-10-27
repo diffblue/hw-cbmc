@@ -1,0 +1,12 @@
+CORE
+real_variable3.sv
+--bound 1 --waveform
+^\[main\.p0\] always main\.r == 1\.5: REFUTED$
+^  main\.r  1\.5  2\.5$
+^  main\.s 0\.25 0\.25$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The values of real variables in a trace are shown as decimals.
