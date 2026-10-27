@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2verilog.h"
 #include "verilog_preprocessor_error.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 
@@ -238,7 +239,13 @@ void verilog_preprocessort::preprocessor()
             out << token;
 
             // track parser line number
-            if(token == '\n')
+            if(token.is_string_literal())
+            {
+              // string literals may span lines, using a line continuation
+              parser_line_no +=
+                std::count(token.text.begin(), token.text.end(), '\n');
+            }
+            else if(token == '\n')
             {
               parser_line_no++;
 

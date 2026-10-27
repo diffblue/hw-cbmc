@@ -192,6 +192,7 @@ void verilog_scanner_init()
                   return TOK_SCANNER_ERROR;
                 }
 
+   "\\"{NL}      { /* line continuation (1800-2017 5.9) */ }
    "\\n"        { SCANNER.string_literal += '\n'; }       // NL (0x0a) */
    "\\t"        { SCANNER.string_literal += '\t'; }       // HT (0x09) */
    "\\".        { SCANNER.string_literal += yytext[1]; }  // ignore the backslash

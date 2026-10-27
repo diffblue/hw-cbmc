@@ -1,0 +1,8 @@
+CORE
+string_continuation1.sv
+
+^\[main\.p0\] always "a b" == "a b": PROVED .*$
+^\[main\.p1\] always "a b" != "a \\nb": PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--

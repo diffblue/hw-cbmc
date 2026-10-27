@@ -27,7 +27,7 @@ using tokent = verilog_preprocessor_tokenizert::tokent;
 %s STRING
 
 Identifier	[a-zA-Z_][0-9a-zA-Z_$]*
-String		\"(\\.|[^"\\])*\"
+String		\"(\\(.|\n)|[^"\\])*\"
 
 %%
 

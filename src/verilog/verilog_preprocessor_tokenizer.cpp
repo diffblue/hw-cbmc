@@ -10,6 +10,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/invariant.h>
 
+#include <algorithm>
+
 void verilog_preprocessor_token_sourcet::skip_until_eol()
 {
   while(true)
@@ -75,6 +77,11 @@ auto verilog_preprocessor_token_sourcet::next_token() -> const tokent &
 
   if(token == '\n')
     _line_no++;
+  else if(token.is_string_literal())
+  {
+    // string literals may span lines, using a line continuation
+    _line_no += std::count(token.text.begin(), token.text.end(), '\n');
+  }
 
   return token;
 }
