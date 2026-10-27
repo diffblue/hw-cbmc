@@ -493,6 +493,57 @@ static exprt lower_unpacked_array_slice(
   return std::move(result);
 }
 
+/// true iff the type is one of the Verilog real types
+static bool is_verilog_real(const typet &type)
+{
+  return type.id() == ID_verilog_real || type.id() == ID_verilog_shortreal ||
+         type.id() == ID_verilog_realtime;
+}
+
+/// Lower +, -, * and / on reals, whose operands are lowered already, to
+/// the IEEE 754 operations on floatbv. 1800-2017 6.12 defines the real
+/// types as IEEE 754 floating-point, and the standard does not specify a
+/// rounding mode for arithmetic; we use the IEEE 754 default,
+/// round-to-nearest-even.
+static exprt lower_real_arithmetic(const multi_ary_exprt &expr)
+{
+  auto type = verilog_lowering(expr.type());
+
+  irep_idt id;
+  if(expr.id() == ID_plus)
+    id = ID_floatbv_plus;
+  else if(expr.id() == ID_minus)
+    id = ID_floatbv_minus;
+  else if(expr.id() == ID_mult)
+    id = ID_floatbv_mult;
+  else if(expr.id() == ID_div)
+    id = ID_floatbv_div;
+  else
+    PRECONDITION(false);
+
+  auto &operands = expr.operands();
+  PRECONDITION(operands.size() >= 2);
+
+  for(auto &op : operands)
+  {
+    DATA_INVARIANT(
+      op.type() == type, "real arithmetic operands must have the result type");
+  }
+
+  auto rm =
+    ieee_floatt::rounding_mode_expr(ieee_floatt::rounding_modet::ROUND_TO_EVEN);
+
+  // Operators with more than two operands are evaluated left to right.
+  exprt result = operands.front();
+
+  for(std::size_t i = 1; i < operands.size(); i++)
+    result = ieee_float_op_exprt{result, id, operands[i], rm};
+
+  result.add_source_location() = expr.source_location();
+
+  return result;
+}
+
 exprt verilog_lowering(exprt expr)
 {
   // lowered already
@@ -969,10 +1020,7 @@ exprt verilog_lowering(exprt expr)
   }
   else if(expr.id() == ID_unary_minus || expr.id() == ID_unary_plus)
   {
-    if(
-      expr.type().id() == ID_verilog_real ||
-      expr.type().id() == ID_verilog_realtime ||
-      expr.type().id() == ID_verilog_shortreal)
+    if(is_verilog_real(expr.type()))
     {
       // turn into floatbv
       expr.type() = verilog_lowering(expr.type());
@@ -987,14 +1035,18 @@ exprt verilog_lowering(exprt expr)
   }
   else if(expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult)
   {
-    if(is_four_valued(expr))
+    if(is_verilog_real(expr.type()))
+      return lower_real_arithmetic(to_multi_ary_expr(expr));
+    else if(is_four_valued(expr))
       return default_aval_bval_lowering(expr);
     else
       return expr;
   }
   else if(expr.id() == ID_div || expr.id() == ID_mod)
   {
-    if(is_four_valued(expr))
+    if(expr.id() == ID_div && is_verilog_real(expr.type()))
+      return lower_real_arithmetic(to_multi_ary_expr(expr));
+    else if(is_four_valued(expr))
       return aval_bval_div_mod(to_binary_expr(expr));
     else
       return expr;
@@ -1212,6 +1264,12 @@ exprt verilog_lowering(exprt expr)
   {
     if(is_four_valued(expr.type()))
       return aval_bval(to_if_expr(expr));
+    else if(is_verilog_real(expr.type()))
+    {
+      // The operands are floatbv already; the result must be, too.
+      expr.type() = verilog_lowering(expr.type());
+      return expr;
+    }
     else
       return expr; // leave as is
   }

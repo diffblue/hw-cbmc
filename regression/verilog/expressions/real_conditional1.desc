@@ -1,0 +1,13 @@
+CORE
+real_conditional1.sv
+
+^\[main\.p0\] always main\.A == 1\.5: PROVED .*$
+^\[main\.p1\] always main\.B == 2\.5: PROVED .*$
+^\[main\.p2\] always main\.C == 2\.5: PROVED .*$
+^\[main\.p3\] always \(1 \? 1\.5 : 2\.5\) == 1\.5: PROVED .*$
+^\[main\.p4\] always main\.B == 1\.5: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
