@@ -12,7 +12,8 @@ under tests/.  See sv-tests.sh in this directory, which copies this
 file into a checkout of sv-tests before invoking 'make report'; no
 further registration is required.
 
-Only EBMC's front end is exercised here (--preprocess / --show-parse),
+Only EBMC's front end is exercised here (--preprocess / --show-parse /
+--show-properties),
 since sv-tests measures parsing/elaboration coverage rather than
 verification results, so most of BaseRunner's simulation-related hooks
 are unused.
@@ -55,6 +56,13 @@ class ebmc(BaseRunner):
             self.cmd.append('--preprocess')
         elif params['mode'] == 'parsing':
             self.cmd += ['--show-parse']
+        elif params['mode'] == 'elaboration':
+            # Run the front end up to and including the construction of
+            # the transition system, without checking any properties.
+            # Without an option, EBMC checks the properties of the design,
+            # and exits with 10 when there are none (most sv-tests tests
+            # have no properties) or when one is refuted.
+            self.cmd += ['--show-properties']
 
         if params['top_module'] != '':
             self.cmd += ['--top', params['top_module']]
