@@ -1,0 +1,20 @@
+CORE
+real_arithmetic1.sv
+
+^\[main\.p0\] always main\.A == 2\.5: PROVED .*$
+^\[main\.p1\] always main\.B == -0\.5: PROVED .*$
+^\[main\.p2\] always main\.C == 3: PROVED .*$
+^\[main\.p3\] always main\.D == 0\.75: PROVED .*$
+^\[main\.p4\] always main\.E == 7\.5: PROVED .*$
+^\[main\.p5\] always main\.F == 2\.5: PROVED .*$
+^\[main\.p6\] always main\.G == 3\.5: PROVED .*$
+^\[main\.p7\] always main\.H != 0\.3 && main\.H > 0\.3: PROVED .*$
+^\[main\.p8\] always main\.I \* 3 == 1: PROVED .*$
+^\[main\.p9\] always 1\.5 \+ 1 == 2\.5: PROVED .*$
+^\[main\.p10\] always 1\.5 \* 2 - 0\.5 / 0\.25 == 1: PROVED .*$
+^\[main\.p11\] always main\.A == 2: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
