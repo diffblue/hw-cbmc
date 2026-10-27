@@ -9,6 +9,7 @@ Author: Daniel Kroening, Amazon, dkr@amazon.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
+#include <util/ieee_float.h>
 #include <util/namespace.h>
 #include <util/std_expr.h>
 #include <util/symbol_table.h>
@@ -47,6 +48,17 @@ static binary_exprt l4_relation(
   const constant_exprt &rhs)
 {
   return binary_exprt{lhs, id, rhs, verilog_unsignedbv_typet{1}};
+}
+
+/// helper: a constant of the given Verilog real type, with the value
+/// encoded as for the back-ends
+static constant_exprt real_constant(double value, const typet &type)
+{
+  ieee_float_valuet f{ieee_float_spect::double_precision()};
+  if(type.id() == ID_verilog_shortreal)
+    f = ieee_float_valuet{ieee_float_spect::single_precision()};
+  f.from_double(value);
+  return constant_exprt{f.to_expr().get_value(), type};
 }
 
 static mp_integer as_integer(const exprt &expr)
@@ -208,6 +220,107 @@ SCENARIO("verilog_constant_folding on non-constant expressions")
       REQUIRE(result.id() == ID_plus);
       REQUIRE(to_plus_expr(result).op0() == a);
       REQUIRE(as_integer(to_plus_expr(result).op1()) == 3);
+    }
+  }
+}
+
+SCENARIO("verilog_constant_folding lifts constants of other Verilog types")
+{
+  symbol_tablet symbol_table;
+  namespacet ns{symbol_table};
+
+  GIVEN("a real constant")
+  {
+    auto c = real_constant(1.5, verilog_real_typet{});
+
+    THEN("the result has the Verilog real type, not floatbv")
+    {
+      auto result = verilog_constant_folding(c, ns);
+      REQUIRE(result == c);
+      REQUIRE(result.type() == verilog_real_typet{});
+    }
+  }
+
+  GIVEN("a real expression that folds to a constant")
+  {
+    auto c1 = real_constant(1.5, verilog_real_typet{});
+    auto c2 = real_constant(2.5, verilog_real_typet{});
+    if_exprt expr{true_exprt{}, c1, c2, verilog_real_typet{}};
+
+    THEN("the result is a constant of the Verilog real type")
+    {
+      auto result = verilog_constant_folding(expr, ns);
+      REQUIRE(result == c1);
+      REQUIRE(result.type() == verilog_real_typet{});
+    }
+  }
+
+  GIVEN("real arithmetic that folds to a constant")
+  {
+    plus_exprt expr{
+      real_constant(1.5, verilog_real_typet{}),
+      real_constant(1.0, verilog_real_typet{})};
+
+    THEN("the result is a constant of the Verilog real type")
+    {
+      auto result = verilog_constant_folding(expr, ns);
+      REQUIRE(result == real_constant(2.5, verilog_real_typet{}));
+      REQUIRE(result.type() == verilog_real_typet{});
+    }
+  }
+
+  GIVEN("a shortreal constant")
+  {
+    auto c = real_constant(0.25, verilog_shortreal_typet{});
+
+    THEN("the result has the Verilog shortreal type")
+    {
+      auto result = verilog_constant_folding(c, ns);
+      REQUIRE(result == c);
+      REQUIRE(result.type() == verilog_shortreal_typet{});
+    }
+  }
+
+  GIVEN("a two-valued expression whose type has attributes")
+  {
+    auto type = unsignedbv_typet{8};
+    type.set(ID_C_verilog_type, ID_verilog_enum);
+    plus_exprt expr{from_integer(1, type), from_integer(2, type)};
+
+    THEN("the attributes are retained")
+    {
+      auto result = verilog_constant_folding(expr, ns);
+      REQUIRE(as_integer(result) == 3);
+      REQUIRE(result.type().get(ID_C_verilog_type) == ID_verilog_enum);
+    }
+  }
+
+  GIVEN("an expression whose type has a declared range")
+  {
+    // e.g. a parameter declared with range [10:3]
+    auto type = unsignedbv_typet{8};
+    type.set(ID_C_offset, 3);
+    plus_exprt expr{from_integer(1, type), from_integer(2, type)};
+
+    THEN("the constant has the range [size-1:0]")
+    {
+      auto result = verilog_constant_folding(expr, ns);
+      REQUIRE(as_integer(result) == 3);
+      REQUIRE(result.type().find(ID_C_offset).is_nil());
+    }
+  }
+
+  GIVEN("a four-valued expression whose type has a declared range")
+  {
+    auto type = verilog_unsignedbv_typet{4};
+    type.set(ID_C_offset, 3);
+    plus_exprt expr{constant_exprt{"0011", type}, constant_exprt{"0001", type}};
+
+    THEN("the constant has the range [size-1:0]")
+    {
+      auto result = verilog_constant_folding(expr, ns);
+      REQUIRE(result == l4("0100"));
+      REQUIRE(result.type().find(ID_C_offset).is_nil());
     }
   }
 }

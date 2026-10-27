@@ -1,0 +1,15 @@
+CORE
+untyped_real_parameter1.sv
+
+^\[main\.assert\.1\] main\.P == 1\.5: PROVED .*$
+^\[main\.assert\.2\] main\.P > 1: PROVED .*$
+^\[main\.assert\.3\] \$typename\(main\.P\) == "real": PROVED .*$
+^\[main\.assert\.4\] main\.Q == 1\.5: PROVED .*$
+^\[main\.assert\.5\] \$typename\(main\.Q\) == "real": PROVED .*$
+^\[main\.assert\.6\] main\.R == 2\.5: PROVED .*$
+^\[main\.assert\.7\] \$typename\(main\.R\) == "real": PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+^REFUTED

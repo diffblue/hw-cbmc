@@ -74,7 +74,11 @@ exprt verilog_constant_folding(exprt expr, const namespacet &ns)
 {
   // This performs constant-folding on a type-checked expression
   // according to Section 11.2.1 IEEE 1800-2017.
+  // The result is a value, and hence has the range [size-1:0] rather
+  // than any declared range of the expression.
   auto verilog_type = expr.type();
+  verilog_type.remove(ID_C_offset);
+  verilog_type.remove(ID_C_increasing);
   auto source_location = expr.source_location();
 
   auto expr_lowered = verilog_lowering(std::move(expr));
@@ -82,14 +86,34 @@ exprt verilog_constant_folding(exprt expr, const namespacet &ns)
   // simplify
   auto expr_simplified = verilog_simplifier(std::move(expr_lowered), ns);
 
+  // Only constants are lifted.
+  if(!expr_simplified.is_constant())
+    return expr_simplified;
+
   // Lift four-valued constants back to their Verilog type.
   if(
-    expr_simplified.is_constant() && is_four_valued(verilog_type) &&
+    is_four_valued(verilog_type) &&
     (expr_simplified.type().id() == ID_bool ||
      can_cast_type<bitvector_typet>(expr_simplified.type())))
   {
     return lift_four_valued(
       to_constant_expr(expr_simplified), verilog_type, source_location);
+  }
+  else if(
+    (verilog_type.id() == ID_verilog_real ||
+     verilog_type.id() == ID_verilog_shortreal ||
+     verilog_type.id() == ID_verilog_realtime) &&
+    expr_simplified.type().id() == ID_floatbv)
+  {
+    // The encoding does not change, only the type does.
+    expr_simplified.type() = verilog_type;
+  }
+  else if(verilog_lowering(verilog_type) == expr_simplified.type())
+  {
+    // The lowering does not change the type; restore the Verilog type,
+    // which may carry attributes (e.g. of an enum) that the simplifier
+    // dropped.
+    expr_simplified.type() = verilog_type;
   }
 
   return expr_simplified;
