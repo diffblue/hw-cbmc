@@ -518,7 +518,7 @@ void ebmc_parse_optionst::help()
     " {y--waveform}                  \t show a waveform for failing properties\n"
     " {y--numbered-trace}            \t give a trace with identifiers numbered by timeframe\n"
     " {y--show-properties}           \t list the properties in the model\n"
-    " {y--property} {uid}            \t check the property with given ID\n"
+    " {y--property} {uid}            \t check the property with given ID; may be given more than once\n"
     " {y--liveness-to-safety}        \t translate liveness properties to safety properties\n"
     " {y--buechi}                    \t translate LTL/SVA properties to Buechi acceptance\n"
     " {y--coi}                       \t reduce the model to the cone of influence of the properties (word-level BMC and k-induction)\n"

@@ -1,0 +1,10 @@
+CORE
+multiple-properties1.sv
+--bound 1 --property main.p0 --property main.nope
+^error: Property main\.nope not found$
+^EXIT=6$
+^SIGNAL=0$
+--
+^\[main\.p0\]
+--
+Every property given with --property must exist.
