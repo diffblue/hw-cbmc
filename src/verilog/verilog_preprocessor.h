@@ -71,6 +71,11 @@ protected:
     bool include_paths_only);
   definet::parameterst parse_define_parameters();
 
+  // `"...`" in macro text
+  std::string read_stringified();
+  static std::size_t stringified_end(const std::string &);
+  static std::vector<tokent> tokenize_stringified(const std::string &);
+
   using define_argumentst = std::map<std::string, std::vector<tokent>>;
   define_argumentst parse_define_arguments(const definet &);
 

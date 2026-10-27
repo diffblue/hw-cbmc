@@ -8,12 +8,14 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "verilog_preprocessor.h"
 
+#include <util/invariant.h>
 #include <util/unicode.h>
 
 #include "expr2verilog.h"
 #include "verilog_preprocessor_error.h"
 
 #include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 
@@ -493,6 +495,139 @@ auto verilog_preprocessort::parse_define_arguments(const definet &define)
 
 /*******************************************************************\
 
+Function: verilog_preprocessort::stringified_end
+
+  Inputs: text that begins with the " of `"
+
+ Outputs: the position of the closing `", or npos
+
+ Purpose:
+
+\*******************************************************************/
+
+std::size_t verilog_preprocessort::stringified_end(const std::string &text)
+{
+  for(std::size_t i = 1; i + 1 < text.size(); i++)
+  {
+    if(text.compare(i, 4, "`\\`\"") == 0)
+      i += 3; // `\`"
+    else if(text[i] == '`' && text[i + 1] == '"')
+      return i;
+  }
+
+  return std::string::npos;
+}
+
+/*******************************************************************\
+
+Function: verilog_preprocessort::read_stringified
+
+  Inputs:
+
+ Outputs: the text of `"...`", without the first backtick
+
+ Purpose: The tokenizer reads `"S`" as a backtick, followed by the
+          string literal "S`". A `\`" ends the string literal early;
+          hence, the text of the following tokens is collected until
+          the closing `".
+
+\*******************************************************************/
+
+std::string verilog_preprocessort::read_stringified()
+{
+  std::string text = tokenizer().next_token().text;
+
+  while(true)
+  {
+    auto end = stringified_end(text);
+
+    if(end != std::string::npos)
+    {
+      if(end + 2 != text.size())
+        throw verilog_preprocessor_errort() << "unexpected text after `\\\"";
+      return text;
+    }
+
+    if(tokenizer().eof() || tokenizer().peek() == '\n')
+      throw verilog_preprocessor_errort() << "unterminated `\\\"";
+
+    text += tokenizer().next_token().text;
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_preprocessort::tokenize_stringified
+
+  Inputs: the text of `"...`", without the first backtick
+
+ Outputs: the tokens of the macro text
+
+ Purpose: 1800-2017 22.5.1: "A `" overrides the usual lexical meaning
+          of " and indicates that the expansion shall include the
+          quotation mark, substitution of actual arguments, and
+          expansions of embedded macros." A `\`" indicates a quotation
+          mark escaped with a backslash in the expansion.
+
+\*******************************************************************/
+
+auto verilog_preprocessort::tokenize_stringified(const std::string &text)
+  -> std::vector<tokent>
+{
+  PRECONDITION(stringified_end(text) + 2 == text.size());
+
+  std::vector<tokent> result;
+
+  auto add = [&result](int kind, std::string token_text)
+  {
+    tokent token;
+    token.kind = static_cast<tokent::kindt>(kind);
+    token.text = std::move(token_text);
+    result.push_back(std::move(token));
+  };
+
+  auto is_identifier_start = [](char ch)
+  { return isalpha(static_cast<unsigned char>(ch)) || ch == '_'; };
+
+  auto is_identifier_char = [](char ch)
+  { return isalnum(static_cast<unsigned char>(ch)) || ch == '_' || ch == '$'; };
+
+  add('"', "\"");
+
+  // the text between `" and `"
+  const std::size_t end = text.size() - 2;
+
+  for(std::size_t i = 1; i < end;)
+  {
+    const char ch = text[i];
+
+    if(text.compare(i, 4, "`\\`\"") == 0 && i + 4 <= end)
+    {
+      add('\\', "\\\"");
+      i += 4;
+    }
+    else if(is_identifier_start(ch))
+    {
+      std::size_t j = i + 1;
+      while(j < end && is_identifier_char(text[j]))
+        j++;
+      add(tokent::IDENTIFIER, text.substr(i, j - i));
+      i = j;
+    }
+    else
+    {
+      add(static_cast<unsigned char>(ch), std::string(1, ch));
+      i++;
+    }
+  }
+
+  add('"', "\"");
+
+  return result;
+}
+
+/*******************************************************************\
+
 Function: verilog_preprocessort::directive
 
   Inputs:
@@ -571,7 +706,16 @@ void verilog_preprocessort::directive()
     while(!tokenizer().eof() && tokenizer().peek() != '\n')
     {
       auto token = tokenizer().next_token();
-      if(token == '\\' && tokenizer().peek() == '\n')
+      if(token == '`' && tokenizer().peek().is_string_literal())
+      {
+        // `"...`" (1800-2017 22.5.1)
+        auto stringified = tokenize_stringified(read_stringified());
+        define.tokens.insert(
+          define.tokens.end(),
+          std::make_move_iterator(stringified.begin()),
+          std::make_move_iterator(stringified.end()));
+      }
+      else if(token == '\\' && tokenizer().peek() == '\n')
       {
         // 1800-2017 22.5.1: "The newline character preceded by a
         // backslash shall be replaced in the expanded macro with a

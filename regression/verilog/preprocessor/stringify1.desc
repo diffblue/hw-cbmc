@@ -1,10 +1,13 @@
-KNOWNBUG
+CORE
 stringify1.sv
---preprocess
-^  p0: assert final \("abc" == "abc"\);$
+
+^\[main\.p0\] always "abc" == "abc": PROVED .*$
+^\[main\.p1\] always "runx_phase" == "runx_phase": PROVED .*$
+^\[main\.p2\] always "a bar" == "a bar": PROVED .*$
+^\[main\.p3\] always "z \\"q\\"" == "z \\"q\\"": PROVED .*$
+^\[main\.p4\] always "a \+ b" == "a \+ b": PROVED .*$
+^\[main\.p5\] always "S`" == "S`": PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
 --
 expecting an identifier after backtick
---
-The preprocessor does not support `" in macro bodies.
