@@ -1,9 +1,10 @@
 name: github-io-webpages
 
 # Runs ebmc over the LogikBench, HWMCC08 and HWMCC17 benchmark suites and
-# publishes a small benchmark index plus per-suite HTML reports to GitHub
-# Pages.  Each benchmark suite runs as its own job; the publishing job
-# collates the per-suite results once all benchmarking jobs finish.
+# the chipsalliance/sv-tests SystemVerilog conformance suite, and publishes
+# a small benchmark index plus per-suite HTML reports to GitHub Pages.
+# Each suite runs as its own job; the publishing job collates the
+# per-suite results once all jobs finish.
 
 on:
   # Refresh the published report whenever main changes.
@@ -198,11 +199,69 @@ jobs:
           path: _site/hwmcc-2017
           retention-days: 1
 
+  # Run the chipsalliance/sv-tests SystemVerilog conformance suite and
+  # upload its report as an artifact.
+  sv-tests:
+    name: Run sv-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get remove --purge man-db
+          packages_to_install="flex bison libxml2-utils ccache wget python3-pip"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
+      - name: Prepare ccache
+        uses: actions/cache/restore@v6
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-24.04-make-gcc-sv-tests-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-24.04-make-gcc-sv-tests
+            ${{ runner.os }}-24.04-make-gcc
+      - name: ccache environment
+        run: |
+          echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
+      - name: Zero ccache stats and limit in size
+        run: ccache -z --max-size=500M
+      - name: Get cadical and minisat
+        run: make -C lib/cbmc/src cadical-download minisat2-download
+      - name: Build ebmc with make
+        run: make -C src ebmc.dir -j4 CXX="ccache g++" MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
+      - name: Save ccache
+        uses: actions/cache/save@v6
+        if: always()
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-24.04-make-gcc-sv-tests-${{ github.sha }}
+      - name: Try the ebmc binary
+        run: ./src/ebmc/ebmc --version
+      - name: Run ebmc on the sv-tests suite
+        run: |
+          mkdir -p _site/sv-tests
+          PATH=$PATH:$PWD/src/ebmc examples/chipsalliance-sv-tests/sv-tests.sh
+          cp -r sv-tests/out/report/. _site/sv-tests/
+      - name: Upload the sv-tests report
+        uses: actions/upload-artifact@v7
+        with:
+          name: report-sv-tests
+          path: _site/sv-tests
+          retention-days: 1
+
   # Collate the per-suite reports and upload them as a single Pages artifact.
   # This job takes less than 1 minute.
   collate:
     name: Collate benchmark reports
-    needs: [ logikbench, hwmcc-2008, hwmcc-2017 ]
+    needs: [ logikbench, hwmcc-2008, hwmcc-2017, sv-tests ]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -221,6 +280,11 @@ jobs:
         with:
           name: report-hwmcc-2017
           path: _site/hwmcc-2017
+      - name: Download the sv-tests report
+        uses: actions/download-artifact@v8
+        with:
+          name: report-sv-tests
+          path: _site/sv-tests
       - name: Generate the benchmark landing page
         run: cp benchmarking/index.html _site/index.html
       - name: Upload the report as a Pages artifact
