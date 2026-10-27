@@ -627,6 +627,15 @@ exprt verilog_lowering(exprt expr)
       auto &event_type = to_verilog_event_type(expr.type());
       return symbol_exprt{symbol_expr.identifier(), event_type.encoding()};
     }
+    else if(
+      expr.type().id() == ID_verilog_real ||
+      expr.type().id() == ID_verilog_shortreal ||
+      expr.type().id() == ID_verilog_realtime)
+    {
+      // The symbol table keeps the Verilog type; turn into floatbv.
+      expr.type() = verilog_lowering(expr.type());
+      return expr;
+    }
     else
       return expr;
   }
