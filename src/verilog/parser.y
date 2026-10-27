@@ -2756,6 +2756,10 @@ unpacked_dimension:
 
 variable_dimension:
           unsized_dimension
+                { // a dynamic array (1800-2017 7.5)
+                  init($$, ID_verilog_dynamic_array);
+                  stack_type($$).add_subtype().make_nil();
+                }
         | unpacked_dimension
         | associative_dimension
         | queue_dimension
