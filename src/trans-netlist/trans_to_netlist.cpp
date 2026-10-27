@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/mathematical_expr.h>
 #include <util/namespace.h>
+#include <util/simplify_expr.h>
 #include <util/std_expr.h>
 
 #include <ebmc/ebmc_error.h>
@@ -581,6 +582,28 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       return;
     }
   }
+  else if(expr.id() == ID_lshr)
+  {
+    // Bits [from, to] of a logical right shift by a constant are the bits
+    // [from + distance, to + distance] of the shifted operand, as far as
+    // these exist; the remaining bits are zero.
+    auto &shift = to_shift_expr(expr);
+    mp_integer distance;
+
+    if(!to_integer_non_constant(shift.distance(), distance) && distance >= 0)
+    {
+      boolbv_widtht boolbv_width(ns);
+      const std::size_t op_width = boolbv_width(shift.op().type());
+      const auto d = numeric_cast_v<std::size_t>(distance);
+
+      if(op_width != 0 && from + d < op_width)
+      {
+        convert_lhs_rec(shift.op(), from + d, std::min(to + d, op_width - 1));
+      }
+
+      return;
+    }
+  }
 
   boolbv_widtht boolbv_width(ns);
 
@@ -651,6 +674,70 @@ void convert_trans_to_netlistt::add_equality(const equal_exprt &src)
 {
   const exprt &lhs=src.lhs();
   const exprt &rhs=src.rhs();
+
+  // A concatenation on the right-hand side is split into one equality per
+  // operand, on the corresponding bits of the left-hand side. The bits of
+  // the left-hand side are converted on demand, by converting the entire
+  // right-hand side that defines them. Without the split, a wire whose
+  // slices are defined in terms of other slices of the same wire, e.g.,
+  // v == { v[1:0] + 1, 2'b01 }, would appear to depend on itself.
+  {
+    const exprt *concat = &rhs;
+
+    // look through a typecast between bit-vector types of the same width
+    if(
+      concat->id() == ID_typecast &&
+      can_cast_type<bitvector_typet>(concat->type()) &&
+      can_cast_type<bitvector_typet>(to_typecast_expr(*concat).op().type()) &&
+      to_bitvector_type(concat->type()).get_width() ==
+        to_bitvector_type(to_typecast_expr(*concat).op().type()).get_width())
+    {
+      concat = &to_typecast_expr(*concat).op();
+    }
+
+    if(
+      concat->id() == ID_concatenation && concat->operands().size() >= 2 &&
+      can_cast_type<bitvector_typet>(lhs.type()))
+    {
+      boolbv_widtht boolbv_width(ns);
+
+      // the operands of a concatenation are most significant first
+      std::size_t offset = boolbv_width(concat->type());
+
+      for(auto &op : concat->operands())
+      {
+        auto op_width = boolbv_width(op.type());
+        if(op_width == 0)
+          continue;
+
+        offset -= op_width;
+
+        exprt lhs_part;
+
+        // Simplify, to resolve selects of the wire with constant indices,
+        // e.g., (v >> (2 - 1) * 2)[1:0], into extracts of the bits they
+        // read, which the dependency analysis of the wire's bits needs.
+        exprt rhs_part = simplify_expr(op, ns);
+
+        if(op.type().id() == ID_bool)
+        {
+          lhs_part =
+            extractbit_exprt{lhs, from_integer(offset, integer_typet{})};
+        }
+        else
+        {
+          auto part_type = unsignedbv_typet{op_width};
+          lhs_part = extractbits_exprt{
+            lhs, from_integer(offset, integer_typet{}), part_type};
+          rhs_part = typecast_exprt::conditional_cast(rhs_part, part_type);
+        }
+
+        add_equality(equal_exprt{std::move(lhs_part), std::move(rhs_part)});
+      }
+
+      return;
+    }
+  }
 
   rhs_list.push_back(rhs_entryt(rhs));
   rhs_entryt &rhs_entry=rhs_list.back();
