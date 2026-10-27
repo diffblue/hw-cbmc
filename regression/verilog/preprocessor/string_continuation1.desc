@@ -1,0 +1,11 @@
+KNOWNBUG
+string_continuation1.sv
+--preprocess
+^y,z" \+ 1\);$
+^EXIT=0$
+^SIGNAL=0$
+--
+expected 2 arguments, but got 3
+--
+The preprocessor ends the string literal in a macro argument at a line
+continuation, and then takes the comma to separate arguments.
