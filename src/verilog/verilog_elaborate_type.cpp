@@ -658,7 +658,7 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     // package::typedef
     return elaborate_package_scope_typedef(to_verilog_package_scope_type(src));
   }
-  else if(src.id() == ID_verilog_queue)
+  else if(src.id() == ID_verilog_queue || src.id() == ID_verilog_dynamic_array)
   {
     // The subtype is the element type.
     auto tmp = to_type_with_subtype(src);
