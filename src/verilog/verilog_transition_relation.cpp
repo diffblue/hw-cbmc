@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
+#include <util/expr_iterator.h>
 #include <util/expr_util.h>
 #include <util/mathematical_expr.h>
 #include <util/mathematical_types.h>
@@ -82,6 +83,23 @@ protected:
 
   void convert_definitions(const verilog_rtlt &, transt &);
   void convert_initial_values(const verilog_rtlt &, transt &);
+
+  /// Constrains the given slices of the given variable in the initial
+  /// state, one by one. Returns false, without adding any constraint,
+  /// when this is not possible, e.g., when the values read the
+  /// variable's own pre-initial value.
+  bool convert_initial_slices(
+    const symbolt &,
+    const verilog_rtlt::slice_value_mapt &,
+    transt &);
+
+  /// The given slice of the given value of the given Verilog type.
+  /// Selects the element of an unpacked array that contains the slice,
+  /// where possible. Returns nullopt when the slice cannot be selected.
+  std::optional<exprt> select_slice(
+    const exprt &,
+    const typet &verilog_type,
+    const verilog_rtl_slicet &);
   void convert_constraints(const verilog_rtlt &, transt &);
   void convert_properties(const verilog_rtlt &);
 
@@ -743,6 +761,147 @@ void verilog_transition_relationt::convert_definitions(
 
 /*******************************************************************\
 
+Function: verilog_transition_relationt::select_slice
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<exprt> verilog_transition_relationt::select_slice(
+  const exprt &value,
+  const typet &verilog_type,
+  const verilog_rtl_slicet &slice)
+{
+  // The elements of an unpacked array are stored starting from the left
+  // index of the declared range, i.e., the element with internal index i
+  // occupies bits [i*w, i*w+w-1] (verilog_rtl.h). The element is selected
+  // by its declared index, as the lowering expects.
+  if(
+    verilog_type.id() == ID_array &&
+    verilog_type.get(ID_C_verilog_type) == ID_verilog_unpacked_array)
+  {
+    auto &array_type = to_verilog_array_type(verilog_type);
+    auto element_width = verilog_bits(array_type.element_type());
+
+    if(element_width > 0)
+    {
+      auto internal = slice.lower / element_width;
+      auto element_lower = internal * element_width;
+
+      if(slice.higher < element_lower + element_width)
+      {
+        auto declared =
+          array_type.increasing()
+            ? array_type.offset() + internal
+            : array_type.offset() + array_type.size_int() - 1 - internal;
+
+        exprt element = verilog_bit_select_exprt{
+          value,
+          from_integer(declared, integer_typet{}),
+          array_type.element_type()};
+
+        verilog_rtl_slicet sub{
+          slice.lower - element_lower, slice.higher - element_lower};
+
+        return select_slice(element, array_type.element_type(), sub);
+      }
+    }
+  }
+
+  auto whole = whole_slice(verilog_type);
+
+  if(slice == whole)
+    return value;
+
+  // The bit-level representation of an unpacked union is that of its
+  // first member, which may be narrower than the union.
+  if(verilog_type.id() == ID_union && !verilog_type.get_bool(ID_packed))
+    return {};
+
+  return extract_range(value, whole, slice);
+}
+
+/*******************************************************************\
+
+Function: verilog_transition_relationt::convert_initial_slices
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool verilog_transition_relationt::convert_initial_slices(
+  const symbolt &symbol,
+  const verilog_rtlt::slice_value_mapt &slice_values,
+  transt &trans)
+{
+  // Only arrays benefit, since only their size can be large.
+  if(
+    symbol.type.id() != ID_array ||
+    symbol.type.get(ID_C_verilog_type) != ID_verilog_unpacked_array)
+  {
+    return false;
+  }
+
+  // the whole variable: the general case is as good
+  auto whole = whole_slice(symbol.type);
+  if(slice_values.size() == 1 && slice_values.begin()->first == whole)
+    return false;
+
+  // a value that is not a bit-vector, e.g., real
+  if(!verilog_bits_opt(symbol.type).has_value())
+    return false;
+
+  exprt::operandst constraints;
+  constraints.reserve(slice_values.size());
+
+  for(auto &[slice, value] : slice_values)
+  {
+    // the slice of the variable, before lowering
+    const symbol_exprt symbol_expr_raw{symbol.name, symbol.type};
+    auto lhs_opt = select_slice(symbol_expr_raw, symbol.type, slice);
+    if(!lhs_opt.has_value())
+      return false;
+    auto lhs_raw = std::move(*lhs_opt);
+    auto rhs_raw = typecast_exprt::conditional_cast(value, lhs_raw.type());
+
+    auto lhs = lower(std::move(lhs_raw));
+    auto rhs = lower(std::move(rhs_raw));
+
+    // reads of state-holding variables yield their
+    // non-deterministic pre-initial value
+    initial_nondet(rhs);
+
+    // A read of the variable's own pre-initial value refers to the same
+    // non-deterministic value as the slices that are not assigned, which
+    // separate constraints cannot express.
+    for(auto it = rhs.depth_begin(); it != rhs.depth_end(); ++it)
+    {
+      if(it->id() == ID_nondet_symbol && it->get(ID_identifier) == symbol.name)
+      {
+        return false;
+      }
+    }
+
+    rhs = typecast_exprt::conditional_cast(std::move(rhs), lhs.type());
+    constraints.push_back(equal_exprt{std::move(lhs), std::move(rhs)});
+  }
+
+  for(auto &constraint : constraints)
+    trans.init().add_to_operands(std::move(constraint));
+
+  return true;
+}
+
+/*******************************************************************\
+
 Function: verilog_transition_relationt::convert_initial_values
 
   Inputs:
@@ -792,12 +951,18 @@ void verilog_transition_relationt::convert_initial_values(
     const symbol_exprt symbol_expr_raw{identifier, symbol.type};
     const auto lowered_type = verilog_lowering(symbol.type);
 
-    // Slices that are not assigned are non-deterministic.
+    auto whole = whole_slice(symbol.type);
+
+    // Slices that are not assigned are non-deterministic. When only some
+    // slices are assigned, it suffices to constrain those, one by one;
+    // this avoids composing the value of the entire variable, which, for
+    // a large array, is repeated for every assigned slice.
+    if(convert_initial_slices(symbol, initial_entry.second, trans))
+      continue;
+
     exprt nondet = symbol_expr_raw;
     nondet.id(ID_nondet_symbol);
     nondet.set("initial_value", true);
-
-    auto whole = whole_slice(symbol.type);
 
     auto value = compose_values(
       initial_entry.second,

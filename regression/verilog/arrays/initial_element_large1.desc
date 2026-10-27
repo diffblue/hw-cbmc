@@ -1,0 +1,17 @@
+CORE
+initial_element_large1.sv
+--bound 1
+^\[main\.p0\] always main\.mem\[123\]\[2\] == 125: PROVED up to bound 1$
+^\[main\.p1\] always main\.mem\[5\]\[0\] == 17: PROVED up to bound 1$
+^\[main\.p2\] always main\.a == 125: PROVED up to bound 1$
+^\[main\.p3\] always main\.v\[1:0\] == 2'b01: PROVED up to bound 1$
+^\[main\.p4\] always main\.mem\[123\]\[1\] == 0: REFUTED$
+^\[main\.p5\] always main\.v\[3:2\] == 0: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The initial value of a large array, of which only some elements are
+assigned. The composed value of the entire array was repeated for every
+assigned element, which ran out of memory for this array.
