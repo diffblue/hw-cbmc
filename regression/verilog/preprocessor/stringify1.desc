@@ -1,0 +1,10 @@
+KNOWNBUG
+stringify1.sv
+--preprocess
+^  p0: assert final \("abc" == "abc"\);$
+^EXIT=0$
+^SIGNAL=0$
+--
+expecting an identifier after backtick
+--
+The preprocessor does not support `" in macro bodies.
