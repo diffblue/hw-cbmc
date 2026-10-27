@@ -27,7 +27,16 @@ Requirements: the 'ebmc' binary must be on $PATH when the runner is
 invoked.
 """
 
+import os
+
 from BaseRunner import BaseRunner
+
+# sv-tests limits the runtime of each test (30 s by default), but not its
+# memory. Some tests make EBMC allocate memory faster than the timeout
+# can stop it, which exhausts the memory of the CI runner and takes down
+# the entire job. Each invocation of EBMC is hence run with a limit on its
+# address space, in KiB; set EBMC_MEMORY_LIMIT_KB to override.
+MEMORY_LIMIT_KB = int(os.environ.get('EBMC_MEMORY_LIMIT_KB', 4 * 1024 * 1024))
 
 
 class ebmc(BaseRunner):
@@ -57,6 +66,12 @@ class ebmc(BaseRunner):
             self.cmd.append('-D' + define)
 
         self.cmd += params['files']
+
+        # Apply the memory limit; 'exec' replaces the shell by EBMC, so
+        # that the exit status and the timeout apply to EBMC itself.
+        self.cmd = [
+            'sh', '-c', 'ulimit -v %d && exec "$@"' % MEMORY_LIMIT_KB, 'sh'
+        ] + self.cmd
 
     def get_version_cmd(self):
         return [self.executable, "--version"]

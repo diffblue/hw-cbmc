@@ -28,8 +28,10 @@ cp "$SCRIPT_DIR/ebmc.py" sv-tests/tools/runners/
 
 cd sv-tests
 
-# run the sv-tests and generate the HTML report
-make report
+# Run the sv-tests and generate the HTML report. Only the ebmc runner
+# is used; sv-tests would otherwise import, and run, every other runner
+# whose tool happens to be installed.
+make report RUNNERS_FILTER=ebmc
 
 # print a summary of pass/fail results
 python3 - <<'EOF'
