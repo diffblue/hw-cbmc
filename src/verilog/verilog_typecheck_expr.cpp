@@ -2278,6 +2278,15 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
     {
       // A parameter, or enum. The type is elaborated recursively.
       elaborate_symbol_rec(symbol->name);
+
+      // A parameter port of a class or of the top-level module need not
+      // have a value.
+      if(symbol->is_macro && symbol->value.is_nil())
+      {
+        throw errort().with_location(expr.source_location())
+          << "parameter " << symbol->display_name() << " without value";
+      }
+
       return symbol->symbol_expr().with_source_location(expr);
     }
     else if(symbol->type.id() == ID_verilog_genvar)
@@ -2304,6 +2313,11 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
     {
       return instantiate_named_sequence_property(
         *symbol, expr.source_location());
+    }
+    else if(symbol->is_macro && symbol->value.is_nil())
+    {
+      throw errort().with_location(expr.source_location())
+        << "parameter " << symbol->display_name() << " without value";
     }
     else
     {
@@ -2648,6 +2662,14 @@ exprt verilog_typecheck_exprt::elaborate_constant_expression_rec(exprt expr)
     {
       // Elaborate recursively
       elaborate_symbol_rec(symbol.name);
+
+      // A parameter port of a class or of the top-level module need not
+      // have a value.
+      if(symbol.value.is_nil())
+      {
+        throw errort().with_location(expr.source_location())
+          << "parameter " << symbol.display_name() << " without value";
+      }
 
       // A parameter or local parameter. Replace by its value.
       return symbol.value;

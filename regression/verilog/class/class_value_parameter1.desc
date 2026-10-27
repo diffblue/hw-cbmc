@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 class_value_parameter1.sv
 
 ^no properties$
@@ -6,5 +6,3 @@ class_value_parameter1.sv
 ^SIGNAL=0$
 --
 ^Invariant check failed$
---
-Fails the precondition declarator.value().is_not_nil() in collect_symbols.
