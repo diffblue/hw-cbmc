@@ -1,12 +1,8 @@
-KNOWNBUG
+CORE
 string_method_task1.sv
 
-^EXIT=(2|10)$
+^file .* line 4: expected identifier as task$
+^EXIT=2$
 ^SIGNAL=0$
 --
 ^Invariant check failed$
---
-A method call used as a task-enable statement fails the precondition
-expr.id() == ID_verilog_identifier in
-convert_function_call_or_task_enable. Strings are not supported, but this
-should be an error message, as for method calls in expressions.

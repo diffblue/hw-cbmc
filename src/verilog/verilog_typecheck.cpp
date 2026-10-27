@@ -1003,6 +1003,12 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
       // package-scoped task call, e.g., moo::foo()
       auto &package_scope = to_verilog_package_scope_expr(statement.function());
 
+      if(package_scope.identifier().id() != ID_verilog_identifier)
+      {
+        throw errort().with_location(statement.function().source_location())
+          << "expected identifier as task";
+      }
+
       auto package_base = package_scope.package_base_name();
       base_name =
         to_verilog_identifier_expr(package_scope.identifier()).base_name();
@@ -1016,6 +1022,13 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
           << "task `" << base_name << "' not known in package `" << package_base
           << '\'';
       }
+    }
+    else if(statement.function().id() != ID_verilog_identifier)
+    {
+      // e.g., a method call, such as q.push_back(1), or a hierarchical
+      // task call
+      throw errort().with_location(statement.function().source_location())
+        << "expected identifier as task";
     }
     else
     {
