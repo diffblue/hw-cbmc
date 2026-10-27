@@ -1,0 +1,10 @@
+KNOWNBUG
+class_value_parameter1.sv
+
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--
+^Invariant check failed$
+--
+Fails the precondition declarator.value().is_not_nil() in collect_symbols.

@@ -1,0 +1,10 @@
+KNOWNBUG
+test_plusargs2.sv
+
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--
+^Invariant check failed$
+--
+Fails the precondition in from_integer, called by simplify_typecast.
