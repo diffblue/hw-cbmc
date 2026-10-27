@@ -1,0 +1,10 @@
+KNOWNBUG
+macro_name_paste1.sv
+
+^\[main\.p0\] always 1 \+ 1 == 2: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+unknown preprocessor directive
+--
+The preprocessor takes `m_ to be a directive, before pasting the tokens.
