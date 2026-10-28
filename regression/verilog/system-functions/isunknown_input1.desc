@@ -1,0 +1,12 @@
+KNOWNBUG
+isunknown_input1.sv
+
+^\[main\.p0\] .*: REFUTED$
+^\[main\.p1\] .*: PROVED.*$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+Inputs are two-valued, so p0 is proved. The standard does not define
+the environment of a formal tool; this assumes that an input may carry
+any value of its type.
