@@ -1,0 +1,10 @@
+CORE
+bobcount.sv
+--old-ic3
+^property HOLDS
+^inductive invariant verification is ok
+^\[bobcount\.assert\.1\] always !bobcount\.p0: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^inductive invariant verification failed
