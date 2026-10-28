@@ -1,9 +1,0 @@
-KNOWNBUG
-unconstrained_initial.sv
---ic3
-^EXIT=10$
-^SIGNAL=0$
-^property FAILED
-^cex verification is ok
---
-^cex verification failed

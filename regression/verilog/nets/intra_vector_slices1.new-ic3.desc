@@ -1,6 +1,6 @@
 CORE
 intra_vector_slices1.sv
---new-ic3
+--ic3
 ^\[main\.p0\] always main\.v == 228: PROVED$
 ^\[main\.p1\] always main\.w == \{ 4 \{ main\.x \} \}: PROVED$
 ^\[main\.p2\] always main\.y == \{ main\.a, main\.a \}: PROVED$
@@ -15,7 +15,7 @@ intra_vector_slices1.sv
 --
 ^warning: ignoring
 --
-As intra_vector_slices1.desc, with the new-ic3 engine, which uses the netlist.
+As intra_vector_slices1.desc, with the IC3 engine, which uses the netlist.
 Continuous assignments to slices of a vector may read other slices of the
 same vector. Only slices that depend on themselves, directly or through
 other slices of the vector, are combinational loops, and only those are

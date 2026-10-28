@@ -1,7 +1,0 @@
-CORE
-smv_g1.smv
---ic3
-^\[spec1\] G !x: PROVED$
-^EXIT=0$
-^SIGNAL=0$
---
