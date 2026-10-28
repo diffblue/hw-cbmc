@@ -1,0 +1,12 @@
+KNOWNBUG
+isunknown_packed_array1.sv
+--bound 2
+^\[main\.p0\] .*: PROVED up to bound 2$
+^\[main\.p1\] .*: PROVED up to bound 2$
+^\[main\.p2\] .*: PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^Invariant check failed$
+--
+The initializer with a z fails a precondition in aval_bval.

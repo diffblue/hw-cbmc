@@ -1,0 +1,12 @@
+KNOWNBUG
+isunknown_parameter1.sv
+
+^\[main\.p0\] .*: PROVED.*$
+^\[main\.p1\] .*: PROVED.*$
+^\[main\.p2\] .*: PROVED.*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The bit-select of the parameter gives the error "type `bv' has unknown
+number of bits". Without p0 and p1, p2 is refuted.

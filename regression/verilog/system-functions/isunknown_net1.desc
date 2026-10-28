@@ -1,0 +1,12 @@
+KNOWNBUG
+isunknown_net1.sv
+--bound 2
+^\[main\.p0\] .*: PROVED up to bound 2$
+^\[main\.p1\] .*: PROVED up to bound 2$
+^\[main\.p2\] .*: PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Nets are encoded as two-valued, like variables, and an undriven net is
+an unconstrained known value rather than z. All three are refuted.
