@@ -1,0 +1,12 @@
+CORE
+combinational_cycle1.sv
+--bdd
+^\[main\.p0\] always main\.a == main\.b: PROVED$
+^\[main\.p1\] always main\.a == 0: REFUTED$
+^\[main\.p2\] always main\.a == 1: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+As combinational_cycle1.desc, with the bdd engine, which uses the netlist.

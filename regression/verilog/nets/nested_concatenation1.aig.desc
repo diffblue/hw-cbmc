@@ -1,0 +1,12 @@
+CORE
+nested_concatenation1.sv
+--aig --bound 1
+^\[main\.p0\] always main\.v == \{ main\.x, 2'b10, 2'b01 \}: PROVED up to bound 1$
+^\[main\.p1\] always main\.w == \{ main\.x, 2'b10, 2'b01 \}: PROVED up to bound 1$
+^\[main\.p2\] always main\.v\[5:4\] == 2'b00: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+As nested_concatenation1.desc, with the aig engine, which uses the netlist. The netlist converter failed with "failed to find ... in lhs_map".
