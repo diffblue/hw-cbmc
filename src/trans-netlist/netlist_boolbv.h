@@ -39,6 +39,14 @@ public:
   literalt convert_bool(const exprt &) override;
   bvt convert_bitvector(const exprt &expr) override;
 
+  // The literals of a symbol are looked up in the var_map, and may change
+  // while the netlist is built: the bits of a wire are set when the wire's
+  // definition is converted, which may be after an earlier read of other
+  // bits of the same wire. Symbols are hence not served from the cache.
+  const bvt &convert_bv(
+    const exprt &expr,
+    const std::optional<std::size_t> expected_width = {}) override;
+
   using boolbvt::get_literal;
   literalt get_literal(const std::string &symbol, const unsigned bit);
 

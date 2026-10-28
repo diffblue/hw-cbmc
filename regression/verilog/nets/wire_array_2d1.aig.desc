@@ -1,0 +1,14 @@
+KNOWNBUG
+wire_array_2d1.sv
+--aig --bound 1
+^\[main\.p0\] .*: PROVED up to bound 1$
+^\[main\.p1\] .*: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The netlist converter leaves the definitions of the elements of a
+two-dimensional array unsplit, and the elements read by them are then on
+a cycle, and unconstrained. p0 is refuted. This is sound, but less precise
+than word-level BMC.

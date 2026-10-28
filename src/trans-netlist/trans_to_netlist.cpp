@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/mathematical_expr.h>
 #include <util/namespace.h>
+#include <util/simplify_expr.h>
 #include <util/std_expr.h>
 
 #include <ebmc/ebmc_error.h>
@@ -462,7 +463,13 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator lhs_it)
   if(lhs.converted) return;
 
   if(lhs.in_progress) // cycle found?
+  {
+    // The bit is read while it is being converted. The read yields an
+    // unconstrained value rather than the placeholder.
+    if(!lhs.var->is_latch() && lhs.bit->current.is_constant())
+      lhs.bit->current = dest.new_var_node();
     return;
+  }
 
   if(lhs.equal_to.empty()) // no definition?
   {
@@ -485,6 +492,7 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator lhs_it)
   // do first one by setting the node appropriately
 
   lhs.in_progress=true;
+
   lhs.l = convert_rhs(lhs.equal_to.front());
 
   if(lhs.var->is_latch())
@@ -581,6 +589,96 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       return;
     }
   }
+  else if(
+    (expr.id() == ID_concatenation || expr.id() == ID_array) &&
+    std::all_of(
+      expr.operands().begin(),
+      expr.operands().end(),
+      [](const exprt &op)
+      {
+        return can_cast_type<bitvector_typet>(op.type()) ||
+               op.type().id() == ID_bool;
+      }))
+  {
+    // Distribute [from, to] over the operands. The operands of a
+    // concatenation are most significant first; the elements of an
+    // array constructor are element 0 first.
+    const bool is_concat = expr.id() == ID_concatenation;
+    boolbv_widtht boolbv_width(ns);
+    std::size_t offset = is_concat ? boolbv_width(expr.type()) : 0;
+
+    for(auto &op : expr.operands())
+    {
+      const std::size_t op_width = boolbv_width(op.type());
+      if(op_width == 0)
+        continue;
+
+      if(is_concat)
+        offset -= op_width;
+
+      const std::size_t lo = std::max(from, offset);
+      const std::size_t hi = std::min(to, offset + op_width - 1);
+
+      if(lo <= hi)
+        convert_lhs_rec(op, lo - offset, hi - offset);
+
+      if(!is_concat)
+        offset += op_width;
+    }
+
+    return;
+  }
+  else if(expr.id() == ID_index)
+  {
+    // An element of an array with a constant index reads the bits
+    // [i*w, (i+1)*w) of the array, where w is the element width.
+    auto &index_expr = to_index_expr(expr);
+    mp_integer i;
+
+    // Only for one-dimensional arrays of bitvector or Boolean elements;
+    // the bit layout of nested arrays and arrays of structs is left to
+    // the default case.
+    const bool simple_element = can_cast_type<bitvector_typet>(expr.type()) ||
+                                expr.type().id() == ID_bool;
+
+    if(
+      simple_element && index_expr.array().type().id() == ID_array &&
+      !to_integer_non_constant(index_expr.index(), i) && i >= 0)
+    {
+      boolbv_widtht boolbv_width(ns);
+      const std::size_t element_width = boolbv_width(expr.type());
+      const std::size_t array_width = boolbv_width(index_expr.array().type());
+      const auto offset = numeric_cast_v<std::size_t>(i) * element_width;
+
+      if(element_width != 0 && to + offset < array_width)
+      {
+        convert_lhs_rec(index_expr.array(), from + offset, to + offset);
+        return;
+      }
+    }
+  }
+  else if(expr.id() == ID_lshr)
+  {
+    // Bits [from, to] of a logical right shift by a constant are the bits
+    // [from + distance, to + distance] of the shifted operand, as far as
+    // these exist; the remaining bits are zero.
+    auto &shift = to_shift_expr(expr);
+    mp_integer distance;
+
+    if(!to_integer_non_constant(shift.distance(), distance) && distance >= 0)
+    {
+      boolbv_widtht boolbv_width(ns);
+      const std::size_t op_width = boolbv_width(shift.op().type());
+      const auto d = numeric_cast_v<std::size_t>(distance);
+
+      if(op_width != 0 && from + d < op_width)
+      {
+        convert_lhs_rec(shift.op(), from + d, std::min(to + d, op_width - 1));
+      }
+
+      return;
+    }
+  }
 
   boolbv_widtht boolbv_width(ns);
 
@@ -651,6 +749,93 @@ void convert_trans_to_netlistt::add_equality(const equal_exprt &src)
 {
   const exprt &lhs=src.lhs();
   const exprt &rhs=src.rhs();
+
+  // A concatenation on the right-hand side is split into one equality per
+  // operand, on the corresponding bits of the left-hand side. The bits of
+  // the left-hand side are converted on demand, by converting the entire
+  // right-hand side that defines them. Without the split, a wire whose
+  // slices are defined in terms of other slices of the same wire, e.g.,
+  // v == { v[1:0] + 1, 2'b01 }, would appear to depend on itself.
+  {
+    const exprt *concat = &rhs;
+
+    // look through a typecast between bit-vector types of the same width
+    if(
+      concat->id() == ID_typecast &&
+      can_cast_type<bitvector_typet>(concat->type()) &&
+      can_cast_type<bitvector_typet>(to_typecast_expr(*concat).op().type()) &&
+      to_bitvector_type(concat->type()).get_width() ==
+        to_bitvector_type(to_typecast_expr(*concat).op().type()).get_width())
+    {
+      concat = &to_typecast_expr(*concat).op();
+    }
+
+    boolbv_widtht boolbv_width(ns);
+
+    // The operands of a concatenation are most significant first;
+    // the elements of an array constructor are element 0 first.
+    const bool is_concat = concat->id() == ID_concatenation;
+    const bool is_array = concat->id() == ID_array;
+
+    // Only split when every operand is a bitvector or Boolean; the bit
+    // layout of struct and nested-array elements is left to the
+    // unsplit conversion.
+    const bool simple_operands =
+      (is_concat || is_array) &&
+      std::all_of(
+        concat->operands().begin(),
+        concat->operands().end(),
+        [](const exprt &op)
+        {
+          return can_cast_type<bitvector_typet>(op.type()) ||
+                 op.type().id() == ID_bool;
+        });
+
+    if(
+      simple_operands && concat->operands().size() >= 2 &&
+      boolbv_width(lhs.type()) == boolbv_width(concat->type()) &&
+      boolbv_width(lhs.type()) != 0)
+    {
+      std::size_t offset = is_concat ? boolbv_width(concat->type()) : 0;
+
+      for(auto &op : concat->operands())
+      {
+        auto op_width = boolbv_width(op.type());
+        if(op_width == 0)
+          continue;
+
+        if(is_concat)
+          offset -= op_width;
+
+        exprt lhs_part;
+
+        // Simplify, to resolve selects of the wire with constant indices,
+        // e.g., (v >> (2 - 1) * 2)[1:0], into extracts of the bits they
+        // read, which the dependency analysis of the wire's bits needs.
+        exprt rhs_part = simplify_expr(op, ns);
+
+        if(op.type().id() == ID_bool)
+        {
+          lhs_part =
+            extractbit_exprt{lhs, from_integer(offset, integer_typet{})};
+        }
+        else
+        {
+          auto part_type = unsignedbv_typet{op_width};
+          lhs_part = extractbits_exprt{
+            lhs, from_integer(offset, integer_typet{}), part_type};
+          rhs_part = typecast_exprt::conditional_cast(rhs_part, part_type);
+        }
+
+        add_equality(equal_exprt{std::move(lhs_part), std::move(rhs_part)});
+
+        if(is_array)
+          offset += op_width;
+      }
+
+      return;
+    }
+  }
 
   rhs_list.push_back(rhs_entryt(rhs));
   rhs_entryt &rhs_entry=rhs_list.back();
@@ -750,8 +935,11 @@ void convert_trans_to_netlistt::add_equality_rec(
 
     DATA_INVARIANT(width != 0, "add_equality_rec got zero-width bit-vector");
 
+    DATA_INVARIANT(
+      lhs_to - lhs_from < width, "add_equality_rec range within extract");
+
     std::size_t new_lhs_from = lhs_from + index.to_ulong();
-    std::size_t new_lhs_to = lhs_from + index.to_ulong() + width - 1;
+    std::size_t new_lhs_to = lhs_to + index.to_ulong();
 
     add_equality_rec(
       src, to_extractbits_expr(lhs).src(), new_lhs_from, new_lhs_to, rhs_entry);

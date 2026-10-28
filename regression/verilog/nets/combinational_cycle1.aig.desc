@@ -1,0 +1,12 @@
+CORE
+combinational_cycle1.sv
+--aig --bound 1
+^\[main\.p0\] always main\.a == main\.b: PROVED up to bound 1$
+^\[main\.p1\] always main\.a == 0: REFUTED$
+^\[main\.p2\] always main\.a == 1: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+As combinational_cycle1.desc, with the aig engine. The netlist converter used the placeholder value 0 for the bits on the cycle, and proved p1.

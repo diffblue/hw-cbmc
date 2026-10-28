@@ -1,0 +1,11 @@
+CORE
+assignment.sv
+--bdd
+^\[main\.assert\.1\] always !main\.data\[1\]: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^SAT solver says UNSAT!$
+--
+The BDD engine, which uses the default netlist converter, for a wire whose
+bits are defined in terms of other bits of the same wire.

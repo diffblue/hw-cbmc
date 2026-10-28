@@ -95,6 +95,29 @@ bvt netlist_boolbvt::convert_bitvector(const exprt &expr)
 
 /*******************************************************************\
 
+Function: netlist_boolbvt::convert_bv
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Like boolbvt::convert_bv, but the bits of symbols are
+          looked up anew, rather than taken from the cache.
+
+\*******************************************************************/
+
+const bvt &netlist_boolbvt::convert_bv(
+  const exprt &expr,
+  const std::optional<std::size_t> expected_width)
+{
+  if(expr.id() == ID_symbol || expr.id() == ID_next_symbol)
+    bv_cache.erase(expr);
+
+  return SUB::convert_bv(expr, expected_width);
+}
+
+/*******************************************************************\
+
 Function: netlist_boolbvt::get_literal
 
   Inputs:

@@ -1,0 +1,16 @@
+KNOWNBUG
+wire_array_elements2.sv
+--bdd
+^\[main\.p0\] .*: PROVED$
+^\[main\.p1\] .*: REFUTED$
+^\[main\.p2\] .*: PROVED$
+^\[main\.p3\] .*: REFUTED$
+^\[main\.p4\] .*: PROVED$
+^\[main\.p5\] .*: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^Invariant check failed$
+--
+As wire_array_elements2.desc, with the bdd engine. The engine fails the
+invariant "non-AND BDD already done", also on main.

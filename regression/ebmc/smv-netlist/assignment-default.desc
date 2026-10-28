@@ -1,0 +1,10 @@
+CORE
+assignment.sv
+--smv-netlist
+^LTLSPEC G !node[0-9]+$
+^EXIT=0$
+^SIGNAL=0$
+--
+^LTLSPEC G TRUE$
+--
+As assignment.desc, but with the default netlist converter.

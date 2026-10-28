@@ -1,0 +1,11 @@
+CORE
+wire_array_2d1.sv
+--bound 1
+^\[main\.p0\] always main\.arr\[1\]\[1\] == 2'b10: PROVED up to bound 1$
+^\[main\.p1\] always main\.arr\[1\]\[1\] == 2'b00: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A two-dimensional unpacked array of nets, assigned element-wise in terms of other elements.

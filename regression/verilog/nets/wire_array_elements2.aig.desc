@@ -1,0 +1,15 @@
+CORE
+wire_array_elements2.sv
+--aig --bound 1
+^\[main\.p0\] always main\.d\[2\] == 2'b10 && main\.d\[0\] == 2'b10: PROVED up to bound 1$
+^\[main\.p1\] always main\.d\[0\] == 2'b00: REFUTED$
+^\[main\.p2\] always main\.o\[3\] == 2'b11 && main\.o\[4\] == 2'b10: PROVED up to bound 1$
+^\[main\.p3\] always main\.o\[4\] == 2'b00: REFUTED$
+^\[main\.p4\] always main\.v\[main\.i\] == main\.i: PROVED up to bound 1$
+^\[main\.p5\] always main\.v\[main\.i\] == 2'b00: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+As wire_array_elements2.desc, with the aig engine, which uses the netlist.
