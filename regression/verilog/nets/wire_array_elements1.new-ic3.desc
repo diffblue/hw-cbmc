@@ -1,6 +1,6 @@
 CORE
 wire_array_elements1.sv
---new-ic3
+--ic3
 ^\[main\.p0\] always main\.arr\[1\] == 2'b10: PROVED$
 ^\[main\.p1\] always main\.arr\[2\] == 2'b11: PROVED$
 ^\[main\.p2\] always main\.arr\[3\] == 2'b10: PROVED$
