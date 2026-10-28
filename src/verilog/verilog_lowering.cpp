@@ -23,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_initializer.h"
 #include "verilog_types.h"
 
+#include <algorithm>
 #include <optional>
 
 /// Lowers
@@ -110,6 +111,80 @@ exprt from_bitvector(
   const mp_integer &offset,
   const typet &dest)
 {
+  // Take the bits from the part of the source that holds them, rather
+  // than extracting each member or element from the entire source.
+  // When the source is, e.g., the concatenation of the values of the
+  // elements of an array, each element is then taken from its operand,
+  // rather than from all of them.
+  {
+    const auto dest_width_opt = verilog_bits_opt(dest);
+    const auto src_width_opt = bitvector_bits_opt(src.type());
+    const mp_integer dest_width = dest_width_opt.value_or(0);
+
+    // the operands, if all their widths are known
+    bool operand_widths_known =
+      src.id() == ID_concatenation && src_width_opt.has_value() &&
+      std::all_of(
+        src.operands().begin(),
+        src.operands().end(),
+        [](const exprt &op)
+        { return bitvector_bits_opt(op.type()).has_value(); });
+
+    if(operand_widths_known && dest_width != 0)
+    {
+      // the operands are most significant first
+      mp_integer op_lower = *src_width_opt;
+
+      for(auto &op : src.operands())
+      {
+        auto op_width = *bitvector_bits_opt(op.type());
+        op_lower -= op_width;
+
+        if(op_lower <= offset && offset + dest_width <= op_lower + op_width)
+        {
+          // the operand already has the requested type and width;
+          // full_eq, as == ignores the direction and offset of ranges
+          if(offset == op_lower && op.type().full_eq(dest))
+            return op;
+
+          auto &op_type = op.type();
+          bool op_is_aggregate = op_type.id() == ID_struct ||
+                                 op_type.id() == ID_union ||
+                                 op_type.id() == ID_array;
+          return from_bitvector( // rec. call
+            op_is_aggregate ? to_bitvector(op) : op,
+            offset - op_lower,
+            dest);
+        }
+      }
+    }
+    else if(
+      src.id() == ID_extractbits && dest_width != 0 &&
+      src_width_opt.has_value() && offset + dest_width <= *src_width_opt)
+    {
+      // Only when the bits are within the extract; bits beyond it are
+      // zero padding, not the bits of the source above the extract.
+      auto index_opt =
+        numeric_cast<mp_integer>(to_extractbits_expr(src).index());
+      if(index_opt.has_value())
+      {
+        return from_bitvector( // rec. call
+          to_extractbits_expr(src).src(),
+          offset + *index_opt,
+          dest);
+      }
+    }
+    else if(src.id() == ID_if && dest_width != 0)
+    {
+      auto &if_expr = to_if_expr(src);
+      auto true_value =
+        from_bitvector(if_expr.true_case(), offset, dest); // rec. call
+      auto false_value =
+        from_bitvector(if_expr.false_case(), offset, dest); // rec. call
+      return if_exprt{if_expr.cond(), true_value, false_value, dest};
+    }
+  }
+
   if(dest.id() == ID_struct)
   {
     const auto &struct_type = to_struct_type(dest);
