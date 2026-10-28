@@ -98,6 +98,12 @@ void output_aiger(const netlistt &netlist, std::ostream &out)
       aiger_add_input(aig, lit, nullptr);
   }
 
+  // Non-deterministic variables, e.g., wires without a driver, are
+  // AIGER inputs as well. They differ from inputs in that they are
+  // chosen in every state, which is what AIGER inputs are.
+  for(auto var_no : netlist.var_map.nondets)
+    aiger_add_input(aig, to_aiger_lit(literalt{var_no, false}), nullptr);
+
   // Add latches
   for(auto var_no : netlist.var_map.latches)
   {
