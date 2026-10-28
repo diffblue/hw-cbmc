@@ -37,7 +37,8 @@ hw-cbmc/
 │   ├── trans-word-level/   # Word-level transition system transformations
 │   ├── trans-netlist/      # Netlist transformations
 │   ├── aiger/              # AIGER format support
-│   ├── ic3/                # IC3 unbounded model checker
+│   ├── ic3/                # IC3/PDR unbounded model checker (AIG-based)
+│   ├── old-ic3/            # Previous IC3 engine (--old-ic3)
 │   ├── vlindex/            # Verilog indexer tool
 │   ├── util/               # Shared utility functions
 │   └── Makefile            # Top-level build file for all tools

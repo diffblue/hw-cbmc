@@ -1,7 +1,0 @@
-CORE
-not_supported2.smv
---ic3
-^\[.*\] AF x: FAILURE: property not supported by IC3 engine$
-^EXIT=10$
-^SIGNAL=0$
---

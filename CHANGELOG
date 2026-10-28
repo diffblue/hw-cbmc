@@ -41,6 +41,8 @@
 * SystemVerilog: equality of unpacked arrays of equivalent types
 * Verilog: arithmetic and the conditional operator on reals
 * Verilog: parameters without a type that have a real value
+* --ic3 now selects the AIG-based IC3 engine (previously --new-ic3);
+  the previous IC3 engine is available as --old-ic3
 
 # EBMC 6.1
 
