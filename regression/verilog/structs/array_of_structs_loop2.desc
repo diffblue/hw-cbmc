@@ -1,0 +1,19 @@
+CORE
+array_of_structs_loop2.sv
+--bound 1
+^\[main\.p0\] .*: PROVED up to bound 1$
+^\[main\.p1\] .*: PROVED up to bound 1$
+^\[main\.p2\] .*: PROVED up to bound 1$
+^\[main\.p3\] .*: PROVED up to bound 1$
+^\[main\.p4\] .*: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+As array_of_structs_loop1, with 64 elements, and with a member read of
+an element written by the previous iteration. Reads of members and
+elements of an aggregate value select the parts that hold the bits,
+rather than extracting the bits from the flattening of the entire value;
+otherwise, the expressions grow with the cube of the number of elements,
+and this test runs out of memory.

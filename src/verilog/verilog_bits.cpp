@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "verilog_bits.h"
 
 #include <util/arith_tools.h>
+#include <util/bitvector_types.h>
 
 #include <ebmc/ebmc_error.h>
 
@@ -73,6 +74,14 @@ std::optional<mp_integer> verilog_bits_opt(const typet &type)
     return 64;
 
   return {};
+}
+
+std::optional<mp_integer> bitvector_bits_opt(const typet &type)
+{
+  if(type.id() == ID_bv)
+    return to_bv_type(type).get_width();
+  else
+    return verilog_bits_opt(type);
 }
 
 mp_integer verilog_bits(const typet &type)

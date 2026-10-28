@@ -1,0 +1,14 @@
+CORE
+struct_of_structs_roundtrip1.sv
+
+^\[main\.p1\] .*: PROVED \(transition property\)$
+^\[main\.p2\] .*: PROVED \(transition property\)$
+^\[main\.p3\] .*: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A packed struct of packed structs whose members are written, read as a
+whole into a bit-vector, and converted back. A member read after the
+conversion used to be wrong.
