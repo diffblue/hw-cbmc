@@ -117,6 +117,18 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
   {
     return timeframe_symbol(t, to_symbol_expr(std::move(expr)));
   }
+  else if(expr.id() == ID_nondet_symbol)
+  {
+    // A non-deterministic choice is made anew in every time frame. The
+    // identifier of a nondet_symbol may be that of a symbol, e.g., of the
+    // wire whose bits it gives; the prefix keeps it distinct from the
+    // symbol in the same time frame.
+    auto identifier = expr.get(ID_identifier);
+    expr.set(
+      ID_identifier,
+      timeframe_identifier(t, "nondet::" + id2string(identifier)));
+    return expr;
+  }
   else if(
     expr.id() == ID_typecast && expr.type().id() == ID_bool &&
     to_typecast_expr(expr).op().type().id() == ID_verilog_sva_sequence)
