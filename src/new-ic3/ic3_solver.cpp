@@ -121,18 +121,11 @@ static void add_minisat_clause(IctMinisat::Solver &S, const bvt &clause)
 // ic3_solvert implementation
 // ============================================================
 
-ic3_solvert::ic3_solvert(
+void ic3_solvert::initialize_base_cnf(
   const netlistt &netlist,
-  literalt prop_netlist_lit,
-  message_handlert &message_handler)
-  : message_handler(message_handler)
+  const bmc_mapt &bmc_map,
+  literalt prop_netlist_lit)
 {
-  // Encode the netlist into CNF: one timeframe only — the next-state
-  // functions are nodes in the same variable space.
-  base_cnf = std::make_unique<recording_cnft>(message_handler);
-
-  bmc_mapt bmc_map(netlist, 1, *base_cnf);
-
   {
     // We ask unwind() not to assert the in-state AIG constraints.
     // In the lifting solver they would weaken lift()'s
@@ -157,33 +150,6 @@ ic3_solvert::ic3_solvert(
     literalt l = bmc_map.translate(0, n);
     if(!l.is_true())
       init_units.push_back(l);
-  }
-
-  // Collect latch and input literals.
-  for(auto v_it : netlist.var_map.sorted())
-  {
-    const var_mapt::vart &var = v_it->second;
-    if(var.is_latch())
-    {
-      for(const auto &bit : var.bits)
-      {
-        literalt current = bmc_map.translate(0, bit.current);
-        if(current.is_constant())
-          continue;
-        literalt next = bmc_map.translate(0, bit.next);
-        current_to_latch[current.var_no()] = latches.size();
-        latches.push_back({current, next});
-      }
-    }
-    else if(var.is_input() || var.is_nondet())
-    {
-      for(const auto &bit : var.bits)
-      {
-        literalt current = bmc_map.translate(0, bit.current);
-        if(!current.is_constant())
-          input_lits.push_back(current);
-      }
-    }
   }
 
   // The conjunction of the invariant constraints, as a literal at the
@@ -212,9 +178,44 @@ ic3_solvert::ic3_solvert(
       prop_current = base_cnf->lor(!c_all, prop_current);
     }
   }
+}
+
+void ic3_solvert::collect_latches_and_inputs(
+  const netlistt &netlist,
+  const bmc_mapt &bmc_map)
+{
+  // Collect latch and input literals.
+  for(auto v_it : netlist.var_map.sorted())
+  {
+    const var_mapt::vart &var = v_it->second;
+    if(var.is_latch())
+    {
+      for(const auto &bit : var.bits)
+      {
+        literalt current = bmc_map.translate(0, bit.current);
+        if(current.is_constant())
+          continue;
+        literalt next = bmc_map.translate(0, bit.next);
+        current_to_latch[current.var_no()] = latches.size();
+        latches.push_back({current, next});
+      }
+    }
+    else if(var.is_input() || var.is_nondet())
+    {
+      for(const auto &bit : var.bits)
+      {
+        literalt current = bmc_map.translate(0, bit.current);
+        if(!current.is_constant())
+          input_lits.push_back(current);
+      }
+    }
+  }
 
   lit_activity.resize(latches.size(), 0.0f);
+}
 
+void ic3_solvert::initialize_init_solver()
+{
   // Create the initial state solver.
   init_solver =
     std::make_unique<satcheck_no_simplifiert>(solver_message_handler);
@@ -224,7 +225,10 @@ ic3_solvert::ic3_solvert(
 
   // Create lifting solver using IC3's MiniSAT (has releaseVar).
   lift_minisat = new_minisat_solver();
+}
 
+void ic3_solvert::analyze_initial_state()
+{
   // Determine which latches have forced initial values. If all are
   // forced, the initial state is unique and intersection checks
   // become purely syntactic.
@@ -247,6 +251,22 @@ ic3_solvert::ic3_solvert(
         init_is_unique_state = false;
     }
   }
+}
+
+ic3_solvert::ic3_solvert(
+  const netlistt &netlist,
+  literalt prop_netlist_lit,
+  message_handlert &message_handler)
+  : message_handler(message_handler)
+{
+  // Encode the netlist into CNF: one timeframe only — the next-state
+  // functions are nodes in the same variable space.
+  base_cnf = std::make_unique<recording_cnft>(message_handler);
+  bmc_mapt bmc_map(netlist, 1, *base_cnf);
+  initialize_base_cnf(netlist, bmc_map, prop_netlist_lit);
+  collect_latches_and_inputs(netlist, bmc_map);
+  initialize_init_solver();
+  analyze_initial_state();
 
   // F_0
   frame_clauses.emplace_back();
