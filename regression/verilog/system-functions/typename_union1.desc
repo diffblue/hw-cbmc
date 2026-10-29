@@ -1,0 +1,12 @@
+KNOWNBUG
+typename_union1.sv
+
+^\[main\.p0\] always \$typename\(main\.u\) == "union packed\{bit\[31:0\]a;int b;\}main\.u_t": PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+$typename gives "?" for unions. The expected string applies the rules of
+1800-2017 20.6.1; the scope prefix of the type name (main.) follows the
+example given there.
