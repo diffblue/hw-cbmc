@@ -1,0 +1,14 @@
+CORE
+real_variable1.sv
+--bound 3
+^\[main\.p0\] always main\.r == 1\.5 \|\| main\.r == 2\.5: PROVED up to bound 3$
+^\[main\.p1\] always main\.r >= 1\.5: PROVED up to bound 3$
+^\[main\.p2\] always main\.s == 0\.25: PROVED up to bound 3$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Properties over variables of the real types. Counterexample traces of
+real variables, the netlist-based engines and conditional assignments to
+real variables are not covered yet.
