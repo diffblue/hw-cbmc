@@ -554,6 +554,14 @@ protected:
   /// slice values
   exprt composed_value(const statet::slice_valuest &, const symbol_exprt &);
 
+  /// the value of the given slice of the given symbol, composed from
+  /// the given slice values; fragments that are not recorded hold the
+  /// current value of the symbol
+  exprt sub_slice_value(
+    const statet::slice_valuest &,
+    const verilog_rtl_slicet &,
+    const symbol_exprt &);
+
   void commit(const statet &, kindt, const source_locationt &);
 
   /// The width of the entire identifier as a slice. Types without
@@ -1535,6 +1543,56 @@ exprt verilog_rtl_buildert::substitute(exprt expr, statet &state)
       resolve_hierarchical_identifier(to_hierarchical_identifier_expr(expr)),
       state);
   }
+  else if(
+    expr.id() == ID_verilog_bit_select ||
+    expr.id() == ID_verilog_non_indexed_part_select ||
+    expr.id() == ID_verilog_indexed_part_select_plus ||
+    expr.id() == ID_verilog_indexed_part_select_minus || expr.id() == ID_member)
+  {
+    // A select on a symbol that has been assigned by blocking assignments
+    // in this block. When the indices are constants, only the selected
+    // slice is read, rather than substituting the composed value of the
+    // entire symbol and selecting from that: the latter copies the
+    // values of all slices into every read, which grows exponentially
+    // with the number of assignments and reads, e.g., in a loop that
+    // reads and writes the members of an array of structs.
+    // Out-of-range constant indices are errors for lvalues, but yield
+    // 'x' when reading (1800-2017 11.5.1); such reads are left to the
+    // generic path.
+    std::optional<lhst> read_opt;
+
+    try
+    {
+      read_opt = decompose(
+        expr,
+        [this, &state](const exprt &index)
+        { return constant_index(index, state); });
+    }
+    catch(const errort &)
+    {
+    }
+
+    if(read_opt.has_value())
+    {
+      auto &symbol = read_opt->symbol;
+      auto value_it = state.blocking_values.find(symbol.get_identifier());
+
+      if(value_it != state.blocking_values.end())
+      {
+        auto whole = whole_slice(symbol);
+        auto &slice = read_opt->slice;
+
+        // within the symbol only; out-of-range selects take the
+        // generic path below
+        if(whole.lower <= slice.lower && slice.higher <= whole.higher)
+        {
+          auto slice_value = sub_slice_value(value_it->second, slice, symbol);
+          return typecast_exprt::conditional_cast(
+            std::move(slice_value), expr.type());
+        }
+      }
+    }
+  }
   else if(expr.id() == ID_sva_sequence_property_instance)
   {
     // an instance of a named property or sequence
@@ -1927,6 +1985,74 @@ exprt verilog_rtl_buildert::composed_value(
   return typecast_exprt::conditional_cast(
     concatenation_exprt{std::move(fragments), unsignedbv_typet{width}},
     symbol.type());
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::sub_slice_value
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Composes the value of the given slice of the given symbol
+          from the given slice values. Like composed_value, but
+          restricted to the fragments within the slice.
+
+\*******************************************************************/
+
+exprt verilog_rtl_buildert::sub_slice_value(
+  const statet::slice_valuest &slice_values,
+  const verilog_rtl_slicet &slice,
+  const symbol_exprt &symbol)
+{
+  // the fragment boundaries within the slice
+  std::set<mp_integer> cut_points;
+
+  cut_points.insert(slice.lower);
+  cut_points.insert(slice.higher + 1);
+
+  for(auto &entry : slice_values)
+  {
+    if(entry.first.lower > slice.lower && entry.first.lower <= slice.higher)
+      cut_points.insert(entry.first.lower);
+    if(entry.first.higher >= slice.lower && entry.first.higher < slice.higher)
+      cut_points.insert(entry.first.higher + 1);
+  }
+
+  // the fragment values, from least to most significant
+  exprt::operandst fragments;
+
+  for(auto it = cut_points.begin(); it != cut_points.end();)
+  {
+    auto next = std::next(it);
+    if(next == cut_points.end())
+      break;
+
+    verilog_rtl_slicet fragment{*it, *next - 1};
+    it = next;
+
+    fragments.push_back(fragment_value(slice_values, fragment, symbol));
+  }
+
+  DATA_INVARIANT(!fragments.empty(), "slice must have at least one fragment");
+
+  auto width = numeric_cast_v<std::size_t>(slice.width());
+  typet result_type =
+    width == 1 ? typet{bool_typet{}} : typet{unsignedbv_typet{width}};
+
+  if(fragments.size() == 1)
+    return typecast_exprt::conditional_cast(fragments.front(), result_type);
+
+  // The fragments may have aggregate types; the concatenation requires
+  // their bit-level representation.
+  for(auto &fragment : fragments)
+    fragment = to_bitvector(fragment);
+
+  // concatenations take the most significant operand first
+  std::reverse(fragments.begin(), fragments.end());
+
+  return concatenation_exprt{std::move(fragments), unsignedbv_typet{width}};
 }
 
 /*******************************************************************\

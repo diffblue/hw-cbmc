@@ -1,0 +1,25 @@
+CORE broken-smt-backend
+array_of_structs_loop1.sv
+--bound 1
+^\[main\.p0\] always \(main\.lp == 6 \|-> !main\.nq\[0\]\.hold_preq && main\.nq\[1\]\.hold_preq && main\.nq\[2\]\.hold_preq && main\.nq\[3\]\.hold_preq\): PROVED up to bound 1$
+^\[main\.p1\] always \(main\.lp == 200 \|-> !main\.nq\[0\]\.hold_preq && main\.nq\[1\]\.hold_preq && !main\.nq\[2\]\.hold_preq && !main\.nq\[3\]\.hold_preq\): PROVED up to bound 1$
+^\[main\.p2\] always main\.nq\[2\]\.pseq == 100 && main\.nq\[1\]\.tag == 2'b10: PROVED up to bound 1$
+^\[main\.p3\] always main\.nq == main\.nq2: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A loop over a packed array of packed structs that reads and writes members
+of the elements. The RTL builder substituted the composed value of the
+entire array into every read of a member, and the lowering replicated
+struct and array values once per member or element when flattening them;
+together, this grew exponentially with the number of iterations and ran
+out of memory for four iterations.
+
+The test is excluded from the SMT back-ends: the equality of two packed
+arrays (p3) is encoded as the equality of two SMT arrays indexed by 64-bit
+values, of which only the used indices are constrained, and hence is
+refuted by Z3 and cvc5 although the printed values agree. This happens
+independently of this test's fix, and is to be addressed in the SMT2
+back-end.
