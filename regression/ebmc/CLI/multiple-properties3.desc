@@ -1,0 +1,11 @@
+CORE
+multiple-properties1.sv
+--ic3 --property main.p0 --property main.p2
+^error: the IC3 engine checks one property at a time; give a single --property$
+^EXIT=6$
+^SIGNAL=0$
+--
+^\[main\.p0\]
+--
+The IC3 engine checks one property at a time, and rejects multiple
+--property options rather than silently checking the first.

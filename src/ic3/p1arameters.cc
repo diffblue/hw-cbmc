@@ -13,6 +13,7 @@ Author: Eugene Goldberg, eu.goldberg@gmail.com
 #include <algorithm>
 #include <iostream>
 
+#include <ebmc/ebmc_error.h>
 #include <ebmc/property_checker.h>
 #include <trans-netlist/netlist.h>
 
@@ -39,9 +40,13 @@ void ic3_enginet::read_parameters()
     exit(0);
   }
 
-  if (cmdline.isset("property")) 
+  if(cmdline.isset("property"))
+  {
+    if(cmdline.get_values("property").size() > 1)
+      throw ebmc_errort() << "the IC3 engine checks one property at a time; "
+                          << "give a single --property";
     Ci.prop_name = cmdline.get_value("property");
-  
+  }
 
   if (cmdline.isset("constr")) 
     Ci.constr_flag = true;

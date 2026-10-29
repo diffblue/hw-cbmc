@@ -1,0 +1,12 @@
+CORE
+multiple-properties1.sv
+--bound 1 --property main.p0 --property main.p2
+^\[main\.p0\] always 1: PROVED up to bound 1$
+^\[main\.p2\] always 1: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^\[main\.p1\]
+--
+The --property option may be given more than once; all given properties
+are checked, and the others are not.

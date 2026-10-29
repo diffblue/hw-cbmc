@@ -122,25 +122,30 @@ void ebmc_propertiest::select_property(
 {
   if(cmdline.isset("property"))
   {
-    std::string property = cmdline.get_value("property");
+    // --property may be given more than once; the properties that
+    // are given are checked, all others are disabled
+    auto property_ids = cmdline.get_values("property");
 
     // disable all assertions (not: assumptions)
     for(auto &p : properties)
       if(!p.is_assumed())
         p.status = propertyt::statust::DISABLED;
 
-    bool found = false;
+    for(auto &property_id : property_ids)
+    {
+      bool found = false;
 
-    for(auto &p : properties)
-      if(p.name == property)
-      {
-        found = true;
-        p.status = propertyt::statust::UNKNOWN;
-        break;
-      }
+      for(auto &p : properties)
+        if(p.name == property_id)
+        {
+          found = true;
+          p.status = propertyt::statust::UNKNOWN;
+          break;
+        }
 
-    if(!found)
-      throw ebmc_errort() << "Property " << property << " not found";
+      if(!found)
+        throw ebmc_errort() << "Property " << property_id << " not found";
+    }
   }
 }
 
