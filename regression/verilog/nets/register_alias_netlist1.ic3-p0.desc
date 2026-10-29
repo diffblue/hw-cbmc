@@ -1,0 +1,8 @@
+CORE
+register_alias_netlist1.sv
+--ic3 --property main.p0
+^\[main\.p0\] .*: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
