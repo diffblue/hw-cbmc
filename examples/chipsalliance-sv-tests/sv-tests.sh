@@ -17,6 +17,11 @@ if [ ! -e sv-tests/.git ] ; then
   (cd sv-tests && git checkout cbe02cf550b1345f5b75fee0c85145b1b68f379e)
 fi
 
+# The UVM tests use the UVM library, which sv-tests includes as a git
+# submodule. The other submodules are the tools and cores that sv-tests
+# compares, which are not needed here.
+(cd sv-tests && git submodule update --init --depth 1 third_party/tests/uvm)
+
 # install Python dependencies needed by the runner and report generator
 pip3 install psutil pygments jinja2 markupsafe
 
