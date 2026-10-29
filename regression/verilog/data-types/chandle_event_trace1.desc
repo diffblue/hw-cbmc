@@ -1,0 +1,13 @@
+KNOWNBUG
+chandle_event_trace1.sv
+
+^\[main\.p0\] always main\.x: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^Invariant check failed$
+--
+Building the counterexample fails a precondition in boolbvt::get
+(boolbv_get.cpp), for the chandle and event variables. The same holds for
+real variables; #2295 lists that as a follow-up, as the trace uses the
+unlowered symbol.type.

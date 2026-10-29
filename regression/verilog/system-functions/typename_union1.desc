@@ -1,0 +1,12 @@
+KNOWNBUG
+typename_union1.sv
+
+^\[main\.p0\] .*: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+$typename gives "?" for unions. The expected string follows the one for
+structs, e.g., "struct{bit s;bit t;}"; it needs checking against the
+standard.
