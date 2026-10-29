@@ -1,0 +1,11 @@
+CORE
+partially_driven_net2.sv
+--k-induction --bound 10
+^\[main\.p0\] always !\(main\.warm >= 5'b01000\): REFUTED$
+^\[main\.p1\] always main\.a\[0\] == 1: PROVED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+As partially_driven_net2.desc, with k-induction.
