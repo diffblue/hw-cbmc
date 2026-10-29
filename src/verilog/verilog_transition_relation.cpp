@@ -769,6 +769,13 @@ void verilog_transition_relationt::convert_initial_values(
     if(!symbol.is_lvalue)
       continue; // demoted to a wire
 
+    // Dynamic arrays, queues and associative arrays have no fixed number
+    // of bits, and are not supported. Their operations are rejected by the
+    // type checker; a variable that is merely declared is not part of the
+    // state.
+    if(is_unbounded_array_type(symbol.type))
+      continue;
+
     symbol.is_state_var = true;
 
     trans.trans().add_to_operands(

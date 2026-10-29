@@ -4,6 +4,10 @@ module main;
   bit [7:0] arr[];
   int arr2[][];
   int arr3[][4];
+  int arr4[4][];
+  // from #1948
+  byte dynamic_array_of_bytes[];
+  string dynamic_array_of_strings[];
 
   function int f(int a[]);
     return 0;

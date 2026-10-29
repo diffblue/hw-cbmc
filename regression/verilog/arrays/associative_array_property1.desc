@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 associative_array_property1.sv
 
 ^\[main\.p0\] always 1: PROVED .*$
@@ -7,5 +7,4 @@ associative_array_property1.sv
 --
 ^Invariant check failed$
 --
-Fails with "unimplemented boolbv_widtht::get_entry" for the type of the
-variable.
+The variable has no fixed number of bits, and is not part of the state.
