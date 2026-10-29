@@ -613,6 +613,38 @@ exprt verilog_lowering_cast(typecast_exprt expr)
   return std::move(expr);
 }
 
+/// The elements lsb..msb (declared indices) of the packed array \p src,
+/// as a packed array of type \p result_type. The source is flattened to a
+/// bit vector, and the selected sub-array is reconstructed from it.
+static exprt lower_packed_array_slice(
+  const exprt &src,
+  const mp_integer &lsb,
+  const mp_integer &msb,
+  const typet &result_type)
+{
+  auto &src_array_type = to_verilog_array_type(src.type());
+  auto &result_array_type = to_verilog_array_type(result_type);
+
+  auto src_offset = src_array_type.offset();
+  auto src_size = src_array_type.size_int();
+  auto element_width = verilog_bits(src_array_type.element_type());
+
+  // Flatten the source packed array to a bit vector.
+  auto bv = to_bitvector(src);
+
+  // Lowest internal bit of the selected sub-array, following the
+  // element-to-bit mapping used by to_bitvector/from_bitvector and
+  // the write side (decompose_lhs in verilog_rtl.cpp).
+  mp_integer offset_in_bv;
+
+  if(src_array_type.increasing())
+    offset_in_bv = (src_size - 1 - (msb - src_offset)) * element_width;
+  else
+    offset_in_bv = (lsb - src_offset) * element_width;
+
+  return from_bitvector(bv, offset_in_bv, result_array_type);
+}
+
 /// Lower a slice (part-select) of an unpacked array to a fresh array built
 /// from element accesses into the source (1800-2017 7.4.3, 7.4.6). The
 /// declared indices lsb..msb (with msb>=lsb) select the elements; the
@@ -929,32 +961,12 @@ exprt verilog_lowering(exprt expr)
       src.type().id() == ID_array &&
       src.type().get(ID_C_verilog_type) == ID_verilog_packed_array)
     {
-      auto &src_array_type = to_verilog_array_type(src.type());
-      auto &result_array_type = to_verilog_array_type(part_select.type());
-
       auto msb = numeric_cast_v<mp_integer>(
         to_constant_expr(part_select.msb())); // declared index, msb>=lsb
       auto lsb =
         numeric_cast_v<mp_integer>(to_constant_expr(part_select.lsb()));
 
-      auto src_offset = src_array_type.offset();
-      auto src_size = src_array_type.size_int();
-      auto element_width = verilog_bits(src_array_type.element_type());
-
-      // Flatten the source packed array to a bit vector.
-      auto bv = to_bitvector(src);
-
-      // Lowest internal bit of the selected sub-array, following the
-      // element-to-bit mapping used by to_bitvector/from_bitvector and
-      // the write side (decompose_lhs in verilog_rtl.cpp).
-      mp_integer offset_in_bv;
-
-      if(src_array_type.increasing())
-        offset_in_bv = (src_size - 1 - (msb - src_offset)) * element_width;
-      else
-        offset_in_bv = (lsb - src_offset) * element_width;
-
-      return from_bitvector(bv, offset_in_bv, result_array_type);
+      return lower_packed_array_slice(src, lsb, msb, part_select.type());
     }
 
     // A non-indexed part-select on an unpacked array selects a range of
@@ -984,6 +996,22 @@ exprt verilog_lowering(exprt expr)
   {
     auto &part_select = to_verilog_indexed_part_select_plus_or_minus_expr(expr);
     auto &src = part_select.src();
+
+    // An indexed part-select on a packed array selects a range of
+    // ELEMENTS (1800-2017 7.4.6, 11.5.1); the result is itself a packed
+    // array.
+    if(
+      src.type().id() == ID_array &&
+      src.type().get(ID_C_verilog_type) == ID_verilog_packed_array)
+    {
+      // The type checker has rewritten index and width to constants and
+      // computed the result type with declared offset lsb.
+      auto &result_array_type = to_verilog_array_type(part_select.type());
+      auto lsb = result_array_type.offset();
+      auto msb = lsb + result_array_type.size_int() - 1;
+
+      return lower_packed_array_slice(src, lsb, msb, part_select.type());
+    }
 
     // An indexed part-select on an unpacked array selects a range of
     // ELEMENTS (1800-2017 7.4.6); the result is itself an unpacked array.

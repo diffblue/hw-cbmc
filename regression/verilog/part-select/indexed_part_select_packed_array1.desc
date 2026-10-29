@@ -1,0 +1,21 @@
+CORE
+indexed_part_select_packed_array1.sv
+--bound 2
+^\[main\.p0\] .*: PROVED up to bound 2$
+^\[main\.p1\] .*: PROVED up to bound 2$
+^\[main\.p2\] .*: PROVED up to bound 2$
+^\[main\.p3\] .*: PROVED up to bound 2$
+^\[main\.p4\] .*: PROVED up to bound 2$
+^\[main\.p5\] .*: PROVED up to bound 2$
+^\[main\.p6\] .*: PROVED up to bound 2$
+^\[main\.p7\] .*: PROVED up to bound 2$
+^\[main\.p8\] .*: PROVED up to bound 2$
+^\[main\.p9\] .*: PROVED up to bound 2$
+^\[main\.p10\] .*: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+On main, the reads failed a precondition in part_select_src_width, and
+the writes failed one in the concatenation of the solver.
