@@ -1,0 +1,15 @@
+KNOWNBUG
+typename_associative_array1.sv
+
+^\[main\.p0\] always \$typename\(main\.aa\) == "int\$\[int\]": PROVED .*$
+^\[main\.p1\] always \$typename\(main\.aw\) == "int\$\[\*\]": PROVED .*$
+^\[main\.p2\] always \$typename\(main\.as\) == "bit\[7:0\]\$\[string\]": PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+$typename gives "?" for associative arrays. The parser drops the index
+type, so it is not available to $typename. Before #2301, the associative array
+variables make the property check fail "unimplemented
+boolbv_widtht::get_entry" first.
