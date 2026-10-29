@@ -9,8 +9,23 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "build_netlist_var_map.h"
 
 #include <util/namespace.h>
+#include <util/std_types.h>
 
 #include <solvers/flattening/boolbv_width.h>
+
+/// Whether the type is an array, possibly multi-dimensional, of module
+/// instances, e.g., of the instances of an interface, sif i[1:0]().
+static bool is_module_instance_array(const typet &type)
+{
+  if(type.id() != ID_array)
+    return false;
+
+  const typet *element_type = &to_array_type(type).element_type();
+  while(element_type->id() == ID_array)
+    element_type = &to_array_type(*element_type).element_type();
+
+  return element_type->id() == ID_verilog_module_instance;
+}
 
 var_mapt
 build_netlist_var_map(symbol_table_baset &symbol_table, const irep_idt &module)
@@ -48,6 +63,10 @@ build_netlist_var_map(symbol_table_baset &symbol_table, const irep_idt &module)
       symbol.type.id() == ID_smv_module_instance)
     {
       return; // ignore modules
+    }
+    else if(is_module_instance_array(symbol.type))
+    {
+      return; // ignore arrays of module instances, e.g., of interfaces
     }
     else if(symbol.type.id() == ID_named_block)
     {
