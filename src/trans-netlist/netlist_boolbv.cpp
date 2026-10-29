@@ -8,6 +8,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "netlist_boolbv.h"
 
+#include <util/cprover_prefix.h>
+#include <util/prefix.h>
+
 #include <ebmc/ebmc_error.h>
 #include <verilog/sva_expr.h>
 
@@ -72,6 +75,18 @@ bvt netlist_boolbvt::convert_bitvector(const exprt &expr)
 
     std::size_t width = boolbv_width(expr.type());
 
+    // Symbols that the flattening introduces itself, e.g., for a read
+    // with a non-constant index from an array constructor
+    // (__CPROVER_internal_actual_array_...), are not state variables of the
+    // netlist; they are given fresh literals.
+    if(
+      expr.id() == ID_symbol &&
+      has_prefix(id2string(identifier), CPROVER_PREFIX "internal_") &&
+      var_map.map.find(identifier) == var_map.map.end())
+    {
+      return SUB::convert_bitvector(expr);
+    }
+
     if(width != 0)
     {
       bvt bv;
@@ -110,8 +125,12 @@ const bvt &netlist_boolbvt::convert_bv(
   const exprt &expr,
   const std::optional<std::size_t> expected_width)
 {
-  if(expr.id() == ID_symbol || expr.id() == ID_next_symbol)
+  if(
+    (expr.id() == ID_symbol || expr.id() == ID_next_symbol) &&
+    var_map.map.find(expr.get(ID_identifier)) != var_map.map.end())
+  {
     bv_cache.erase(expr);
+  }
 
   return SUB::convert_bv(expr, expected_width);
 }

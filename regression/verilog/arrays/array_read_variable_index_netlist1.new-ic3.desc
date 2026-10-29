@@ -1,0 +1,11 @@
+CORE
+array_read_variable_index_netlist1.sv
+--new-ic3
+^\[main\.p0\] .*: PROVED$
+^\[main\.p1\] .*: REFUTED$
+^\[main\.p2\] .*: PROVED$
+^\[main\.p3\] .*: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
