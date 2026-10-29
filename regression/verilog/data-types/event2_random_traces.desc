@@ -1,0 +1,12 @@
+CORE broken-smt-backend
+event2.sv
+--random-trace --trace-steps 1
+^  main\.e = (null|32'h[0-9A-F]+) \([01]+\)$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Random traces need random values of the lowered type of event.
+The SMT2 back-end does not return the values of bv-typed variables,
+which are shown as ?.

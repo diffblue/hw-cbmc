@@ -456,11 +456,16 @@ static std::string as_vcd_binary(
 
   if(expr.id()==ID_constant)
   {
-    if(
+    if(type.id() == ID_bv || type.id() == ID_fixedbv || type.id() == ID_floatbv)
+    {
+      // numeric_cast does not interpret these; output the bits
+      auto width = to_bitvector_type(type).get_width();
+      auto i = bvrep2integer(to_constant_expr(expr).get_value(), width, false);
+      return integer2binary(i, width);
+    }
+    else if(
       type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
-      type.id() == ID_bv || type.id() == ID_fixedbv ||
-      type.id() == ID_floatbv || type.id() == ID_pointer ||
-      type.id() == ID_integer)
+      type.id() == ID_pointer || type.id() == ID_integer)
     {
       mp_integer i = numeric_cast_v<mp_integer>(to_constant_expr(expr));
       auto width = numeric_cast_v<std::size_t>(vcd_width(type, ns));

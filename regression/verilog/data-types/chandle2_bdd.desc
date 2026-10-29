@@ -1,0 +1,10 @@
+CORE
+chandle2.sv
+--bdd --trace
+^\[main\.p0\] always main\.h == null: PROVED$
+^\[main\.p1\] always main\.b == 0: REFUTED$
+^  main\.h = null \(0+\)$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring

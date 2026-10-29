@@ -1,0 +1,11 @@
+CORE
+event2.sv
+--bdd
+^\[main\.p0\] always main\.b == 0: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The netlist-based engines use the types of the symbols in the symbol
+table, which must be lowered.

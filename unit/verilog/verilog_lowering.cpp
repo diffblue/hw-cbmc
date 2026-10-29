@@ -9,6 +9,7 @@ Author: Daniel Kroening, Amazon, dkr@amazon.com
 #include <util/floatbv_expr.h>
 #include <util/ieee_float.h>
 #include <util/std_expr.h>
+#include <util/symbol_table.h>
 
 #include <testing-utils/use_catch.h>
 #include <verilog/verilog_lowering.h>
@@ -112,5 +113,65 @@ SCENARIO("verilog_lowering lowers the type of a conditional on reals")
       REQUIRE(to_if_expr(result).true_case() == verilog_lowering(a));
       REQUIRE(to_if_expr(result).false_case() == verilog_lowering(b));
     }
+  }
+}
+
+SCENARIO("verilog_lower_symbol_types lowers the Verilog-specific types")
+{
+  symbol_tablet symbol_table;
+
+  auto add = [&symbol_table](const irep_idt &name, const typet &type)
+  {
+    symbolt symbol{name, type, ID_Verilog};
+    symbol.is_state_var = true;
+    symbol.is_lvalue = true;
+    symbol_table.insert(std::move(symbol));
+  };
+
+  add("r", verilog_real_typet{});
+  add("s", verilog_shortreal_typet{});
+  add("t", verilog_realtime_typet{});
+  add("h", verilog_chandle_typet{});
+  add("e", verilog_event_typet{});
+  // an unsignedbv is a lowered type already, and is left unchanged
+  add("b", unsignedbv_typet{8});
+
+  // a parameter: substituted by its value, and left unchanged
+  {
+    symbolt p{"p", verilog_real_typet{}, ID_Verilog};
+    p.is_macro = true;
+    symbol_table.insert(std::move(p));
+  }
+
+  verilog_lower_symbol_types(symbol_table);
+
+  THEN("the real types become floatbv, keeping the Verilog type")
+  {
+    for(const auto &name : {"r", "t"})
+    {
+      auto &type = symbol_table.lookup_ref(name).type;
+      REQUIRE(type == ieee_float_spect::double_precision().to_type());
+    }
+
+    auto &s_type = symbol_table.lookup_ref("s").type;
+    REQUIRE(s_type == ieee_float_spect::single_precision().to_type());
+    REQUIRE(s_type.get(ID_C_verilog_type) == ID_verilog_shortreal);
+  }
+
+  THEN("chandle and event become bv, keeping the Verilog type")
+  {
+    auto &h_type = symbol_table.lookup_ref("h").type;
+    REQUIRE(h_type.id() == ID_bv);
+    REQUIRE(h_type.get(ID_C_verilog_type) == ID_verilog_chandle);
+
+    auto &e_type = symbol_table.lookup_ref("e").type;
+    REQUIRE(e_type.id() == ID_bv);
+    REQUIRE(e_type.get(ID_C_verilog_type) == ID_verilog_event);
+  }
+
+  THEN("already-lowered and parameter symbols are unchanged")
+  {
+    REQUIRE(symbol_table.lookup_ref("b").type == unsignedbv_typet{8});
+    REQUIRE(symbol_table.lookup_ref("p").type == verilog_real_typet{});
   }
 }

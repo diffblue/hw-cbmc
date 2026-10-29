@@ -39,7 +39,8 @@
 * --bdd: early variable quantification in the image computation
 * SystemVerilog: slices of unpacked arrays
 * SystemVerilog: equality of unpacked arrays of equivalent types
-* SystemVerilog: properties over variables of the real types
+* SystemVerilog: variables of the real types, and chandle and event
+  variables
 * Verilog: arithmetic, conditional operator on reals
 * Verilog: parameters without a type that have a real value
 * --property can now be given multiple times (unless --ic3 is used)

@@ -1,0 +1,14 @@
+CORE
+real_variable3.sv
+--random-trace --trace-steps 1 --vcd -
+^  \$var reg 64 main\.r r \[63:0\] \$end$
+^  \$var reg 32 main\.s s \[31:0\] \$end$
+^b0011111111111000000000000000000000000000000000000000000000000000 main\.r$
+^b00111110100000000000000000000000 main\.s$
+^b0100000000000100000000000000000000000000000000000000000000000000 main\.r$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Real variables are written as IEEE 754 bit vectors.

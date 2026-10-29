@@ -351,6 +351,11 @@ transition_systemt verilog_ebmc_languaget::create_transition_system(
     throw;
   }
 
+  // The RTL and the transition relation are built from the Verilog types
+  // of the symbols, and lower them as needed. The back-ends use the types
+  // of the symbols in the symbol table, and need the lowered types.
+  verilog_lower_symbol_types(transition_system.symbol_table);
+
   return transition_system;
 }
 

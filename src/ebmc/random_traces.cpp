@@ -421,6 +421,19 @@ constant_exprt random_tracest::random_value(const typet &type)
     return from_integer(
       binary2integer(binary_string, type.id() == ID_signedbv), type);
   }
+  else if(
+    type.id() == ID_bv || type.id() == ID_floatbv || type.id() == ID_fixedbv)
+  {
+    // from_integer doesn't support these; build the bit representation
+    auto width = to_bitvector_type(type).get_width();
+    std::string binary_string;
+    binary_string.reserve(width);
+    for(std::size_t index = 0; index < width; index++)
+      binary_string.push_back(random_bit() ? '1' : '0');
+
+    return constant_exprt{
+      integer2bvrep(binary2integer(binary_string, false), width), type};
+  }
   else if(type.id() == ID_bool)
   {
     return make_boolean_expr(random_bit());
