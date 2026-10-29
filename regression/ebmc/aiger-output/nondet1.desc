@@ -1,0 +1,12 @@
+CORE
+nondet1.sv
+--aiger --top main
+^aag [0-9]+ [0-9]+ 0 0 [0-9]+ 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+aiger_check
+--
+Non-deterministic netlist variables, here for $time, are AIGER inputs.
+Without them, their literals are undefined, and the AIGER library's
+check fails.
