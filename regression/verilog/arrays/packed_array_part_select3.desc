@@ -1,0 +1,21 @@
+CORE
+packed_array_part_select3.sv
+--bound 1
+^\[main\.p0\] always main\.la\[1:0\] == 165: PROVED up to bound 1$
+^\[main\.p1\] always main\.sa\[1:0\] == 165: PROVED up to bound 1$
+^\[main\.p2\] always main\.sa\[1\]\.d == 3'b010: PROVED up to bound 1$
+^\[main\.p3\] always main\.la\[7:4\] == 0: PROVED up to bound 1$
+^\[main\.p4\] always main\.sa\[7:4\] == 0: PROVED up to bound 1$
+^\[main\.p5\] always main\.la\[0:-1\] == 80: PROVED up to bound 1$
+^\[main\.p6\] always main\.sa\[0:-1\] == 80: PROVED up to bound 1$
+^\[main\.p7\] always main\.la\[3:0\] == 165: PROVED up to bound 1$
+^\[main\.p8\] always main\.sa\[3:0\] == 165: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A non-indexed part-select on a packed array whose range extends beyond the
+array's declared range. The lowering extracted bits at a negative offset
+(an invariant violation in the solver) or beyond the width of the flattened
+array (a wrong value).
