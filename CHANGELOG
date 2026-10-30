@@ -1,6 +1,8 @@
 # EBMC 6.2
 
 * Verilog: string literals continued on the next line with a backslash
+* Verilog: `" and `\`" in macro text
+* Verilog: continued `define in an inactive `ifdef branch
 * Verilog: implicit nets for undeclared identifiers used as members of a
   concatenation on the LHS of a continuous assignment, including nested
   concatenations
