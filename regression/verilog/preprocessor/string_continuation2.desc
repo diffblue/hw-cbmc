@@ -1,0 +1,14 @@
+CORE
+string_continuation2.sv
+
+^file .* line 7: Making main\.l1 a wire$
+^file .* line 11: Making main\.l2 a wire$
+^file .* line 15: Making main\.l3 a wire$
+^file .* line 20: Making main\.l4 a wire$
+^\[main\.p0\] always 10 == 10: PROVED .*$
+^\[main\.p1\] always 14 == 14: PROVED .*$
+^\[main\.p2\] always 19 == 19: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
