@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 undriven_bits_frozen1.sv
 --bound 4
 ^\[main\.p_part\] always !main\.started \|\| main\.v\[3:0\] == main\.v_prev: REFUTED$
@@ -8,13 +8,5 @@ undriven_bits_frozen1.sv
 --
 ^warning: ignoring
 --
-Bits of a net that have no driver (v[3:0], where only v[7:4] is assigned) are
-filled with a time-invariant nondet(main.v) rather than being free in every
-timeframe.  As a result the undriven bits keep one value for the whole trace,
-and p_part is wrongly reported as PROVED.
-
-A net with no driver at all (w) is correctly free in every cycle, so p_whole
-is REFUTED.  Undriven bits of a partially driven net should behave the same
-way: p_part should also be REFUTED.
-
-See https://github.com/diffblue/hw-cbmc/issues/2251
+Bits of a net that have no driver (v[3:0], where only v[7:4] is assigned)
+are free in every timeframe, as a net with no driver at all (w) is.
