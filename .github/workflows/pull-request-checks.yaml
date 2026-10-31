@@ -173,6 +173,8 @@ jobs:
         run: make -C regression/vhdl test
       - name: Run the vlindex tests
         run: make -C regression/vlindex test
+      - name: Run the vlsim tests
+        run: make -C regression/vlsim test
       - name: Run the hw-cbmc tests
         run: make -C regression/hw-cbmc test
       - name: Print ccache stats
