@@ -153,10 +153,11 @@ protected:
     PRECONDITION(false);
   }
 
-  // to be overridden
-  virtual exprt var_value(const irep_idt &identifier)
+  // To be overridden. The value of the given variable during
+  // constant evaluation, or nil when it is not known.
+  virtual exprt var_value(const irep_idt &)
   {
-    PRECONDITION(false);
+    return nil_exprt{};
   }
 
   bool warn_implicit_nets = false;
