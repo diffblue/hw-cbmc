@@ -32,6 +32,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "netlist_boolbv.h"
 
 #include <algorithm>
+#include <vector>
 
 /*******************************************************************\
 
@@ -141,11 +142,15 @@ protected:
     std::size_t lhs_from, std::size_t lhs_to,
     rhs_entryt &rhs_entry);
 
-  literalt convert_rhs(const rhst &);
-
   void finalize_lhs(lhs_mapt::iterator);
 
-  void convert_lhs_rec(const exprt &expr, std::size_t from, std::size_t to);
+  using lhs_dependenciest = std::vector<lhs_mapt::iterator>;
+
+  void collect_lhs_rec(
+    const exprt &expr,
+    std::size_t from,
+    std::size_t to,
+    lhs_dependenciest &dependencies);
 
   void convert_constraints();
 
@@ -452,88 +457,192 @@ Function: convert_trans_to_netlistt::finalize_lhs
 
  Outputs:
 
- Purpose:
+ Purpose: Convert the definitions of the given LHS bit, after
+          converting the definitions of all LHS bits that these
+          depend on.
 
 \*******************************************************************/
 
-void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator lhs_it)
+void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator root)
 {
-  lhs_entryt &lhs=lhs_it->second;
-
-  if(lhs.converted) return;
-
-  if(lhs.in_progress) // cycle found?
+  // This is a depth-first traversal of the dependencies between the
+  // LHS bits. It uses an explicit stack, as the depth of the traversal
+  // is the length of the longest chain of combinational definitions,
+  // e.g., the depth of an AIG, which may exceed the call stack.
+  struct framet
   {
-    // The bit is read while it is being converted. The read yields an
-    // unconstrained value rather than the placeholder.
-    if(!lhs.var->is_latch() && lhs.bit->current.is_constant())
-      lhs.bit->current = dest.new_var_node();
-    return;
-  }
+    // An LHS frame converts the definitions of an LHS bit,
+    // an RHS frame converts an RHS.
+    bool is_rhs;
 
-  if(lhs.equal_to.empty()) // no definition?
+    // LHS frames: the LHS bit, and the definition being converted
+    lhs_mapt::iterator lhs_it;
+    std::list<rhst>::const_iterator equal_to_it;
+
+    // RHS frames: the RHS, and the LHS bits it depends on
+    const rhst *rhs = nullptr;
+    bool started = false, needs_conversion = false;
+    lhs_dependenciest dependencies;
+    std::size_t next_dependency = 0;
+  };
+
+  std::vector<framet> stack;
+
+  // the value of the RHS frame that was popped last
+  literalt rhs_value;
+
+  auto push_rhs = [&stack](const rhst &rhs)
   {
-    if(lhs.var->is_latch())
+    framet frame;
+    frame.is_rhs = true;
+    frame.rhs = &rhs;
+    stack.push_back(std::move(frame));
+  };
+
+  auto push_lhs = [this, &stack, &push_rhs](lhs_mapt::iterator lhs_it)
+  {
+    lhs_entryt &lhs = lhs_it->second;
+
+    if(lhs.converted)
+      return;
+
+    if(lhs.in_progress) // cycle found?
     {
-      // there needs to be _something_ as next-state value,
-      // make it a new input
-      lhs.l=lhs.bit->next=new_input();
+      // The bit is read while it is being converted. The read yields an
+      // unconstrained value rather than the placeholder.
+      if(!lhs.var->is_latch() && lhs.bit->current.is_constant())
+        lhs.bit->current = dest.new_var_node();
+      return;
     }
-    else if(lhs.var->is_wire() || lhs.var->is_output())
+
+    if(lhs.equal_to.empty()) // no definition?
     {
-      // there needs to be _something_ as value,
-      // make it a new input
-      lhs.l=lhs.bit->current=new_input();
+      if(lhs.var->is_latch())
+      {
+        // there needs to be _something_ as next-state value,
+        // make it a new input
+        lhs.l = lhs.bit->next = new_input();
+      }
+      else if(lhs.var->is_wire() || lhs.var->is_output())
+      {
+        // there needs to be _something_ as value,
+        // make it a new input
+        lhs.l = lhs.bit->current = new_input();
+      }
+
+      return;
     }
 
-    return;
-  }
+    // do the first definition by setting the node appropriately
+    lhs.in_progress = true;
 
-  // do first one by setting the node appropriately
+    framet frame;
+    frame.is_rhs = false;
+    frame.lhs_it = lhs_it;
+    frame.equal_to_it = lhs.equal_to.begin();
+    stack.push_back(std::move(frame));
 
-  lhs.in_progress=true;
+    push_rhs(lhs.equal_to.front());
+  };
 
-  lhs.l = convert_rhs(lhs.equal_to.front());
+  push_lhs(root);
 
-  if(lhs.var->is_latch())
-    lhs.bit->next=lhs.l;
-  else
-    lhs.bit->current=lhs.l;
-
-  lhs.converted=true;
-  lhs.in_progress=false;
-
-  // do any additional constraints
-
-  for(std::list<rhst>::const_iterator
-      it=lhs.equal_to.begin();
-      it!=lhs.equal_to.end();
-      it++)
+  while(!stack.empty())
   {
-    // first one? -- already done
-    if(it==lhs.equal_to.begin()) continue;
+    // Note that pushing a frame invalidates this reference.
+    framet &frame = stack.back();
 
-    literalt l_rhs = convert_rhs(*it);
-    transition_constraints.push_back(aig_prop.lequal(lhs.l, l_rhs));
+    if(frame.is_rhs)
+    {
+      rhs_entryt &rhs_entry = *frame.rhs->entry;
+
+      if(!frame.started)
+      {
+        frame.started = true;
+
+        // done already?
+        frame.needs_conversion = !rhs_entry.converted;
+
+        // get all lhs symbols this depends on
+        if(frame.needs_conversion)
+        {
+          collect_lhs_rec(
+            rhs_entry.expr, 0, rhs_entry.width - 1, frame.dependencies);
+        }
+      }
+
+      if(frame.next_dependency < frame.dependencies.size())
+      {
+        push_lhs(frame.dependencies[frame.next_dependency++]);
+        continue;
+      }
+
+      if(frame.needs_conversion)
+      {
+        rhs_entry.converted = true;
+
+        // now we can convert
+        rhs_entry.bv = solver.convert_bv(rhs_entry.expr);
+
+        DATA_INVARIANT(
+          rhs_entry.bv.size() == rhs_entry.width, "bit-width match");
+      }
+
+      DATA_INVARIANT(
+        frame.rhs->bit_number < rhs_entry.bv.size(), "bit index in range");
+      rhs_value = rhs_entry.bv[frame.rhs->bit_number];
+      stack.pop_back();
+    }
+    else
+    {
+      // the RHS frame for frame.equal_to_it has been popped
+      lhs_entryt &lhs = frame.lhs_it->second;
+
+      if(frame.equal_to_it == lhs.equal_to.begin())
+      {
+        lhs.l = rhs_value;
+
+        if(lhs.var->is_latch())
+          lhs.bit->next = lhs.l;
+        else
+          lhs.bit->current = lhs.l;
+
+        lhs.converted = true;
+        lhs.in_progress = false;
+      }
+      else
+      {
+        // an additional constraint
+        transition_constraints.push_back(aig_prop.lequal(lhs.l, rhs_value));
+      }
+
+      if(++frame.equal_to_it == lhs.equal_to.end())
+        stack.pop_back();
+      else
+        push_rhs(*frame.equal_to_it);
+    }
   }
 }
 
 /*******************************************************************\
 
-Function: convert_trans_to_netlistt::convert_lhs_rec
+Function: convert_trans_to_netlistt::collect_lhs_rec
 
   Inputs:
 
  Outputs:
 
- Purpose:
+ Purpose: Collect the LHS bits for bits [from, to] of the given
+          expression, in the order in which they need to be
+          finalized.
 
 \*******************************************************************/
 
-void convert_trans_to_netlistt::convert_lhs_rec(
+void convert_trans_to_netlistt::collect_lhs_rec(
   const exprt &expr,
   std::size_t from,
-  std::size_t to)
+  std::size_t to,
+  lhs_dependenciest &dependencies)
 {
   PRECONDITION(from <= to);
 
@@ -554,7 +663,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       if(!it->second.var->is_wire() && !it->second.var->is_output())
         return;
 
-      finalize_lhs(it);
+      dependencies.push_back(it);
     }
 
     return;
@@ -566,7 +675,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
          to_extractbit_expr(expr).index(), i)) // constant?
     {
       from = i.to_ulong();
-      convert_lhs_rec(to_extractbit_expr(expr).src(), from, from);
+      collect_lhs_rec(to_extractbit_expr(expr).src(), from, from, dependencies);
       return;
     }
   }
@@ -585,7 +694,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       from = new_from.to_ulong();
       to = new_to.to_ulong();
 
-      convert_lhs_rec(to_extractbits_expr(expr).src(), from, to);
+      collect_lhs_rec(to_extractbits_expr(expr).src(), from, to, dependencies);
       return;
     }
   }
@@ -620,7 +729,7 @@ void convert_trans_to_netlistt::convert_lhs_rec(
       const std::size_t hi = std::min(to, offset + op_width - 1);
 
       if(lo <= hi)
-        convert_lhs_rec(op, lo - offset, hi - offset);
+        collect_lhs_rec(op, lo - offset, hi - offset, dependencies);
 
       if(!is_concat)
         offset += op_width;
@@ -652,7 +761,8 @@ void convert_trans_to_netlistt::convert_lhs_rec(
 
       if(element_width != 0 && to + offset < array_width)
       {
-        convert_lhs_rec(index_expr.array(), from + offset, to + offset);
+        collect_lhs_rec(
+          index_expr.array(), from + offset, to + offset, dependencies);
         return;
       }
     }
@@ -673,7 +783,8 @@ void convert_trans_to_netlistt::convert_lhs_rec(
 
       if(op_width != 0 && from + d < op_width)
       {
-        convert_lhs_rec(shift.op(), from + d, std::min(to + d, op_width - 1));
+        collect_lhs_rec(
+          shift.op(), from + d, std::min(to + d, op_width - 1), dependencies);
       }
 
       return;
@@ -695,42 +806,8 @@ void convert_trans_to_netlistt::convert_lhs_rec(
     if(width==0)
       continue;
 
-    convert_lhs_rec(*it, 0, width - 1);
+    collect_lhs_rec(*it, 0, width - 1, dependencies);
   }
-}
-
-/*******************************************************************\
-
-Function: convert_trans_to_netlistt::convert_rhs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-literalt convert_trans_to_netlistt::convert_rhs(const rhst &rhs)
-{
-  rhs_entryt &rhs_entry=*rhs.entry;
-
-  // done already?
-  if(!rhs_entry.converted)
-  {
-    // get all lhs symbols this depends on
-    convert_lhs_rec(rhs_entry.expr, 0, rhs_entry.width - 1);
-
-    rhs_entry.converted=true;
-
-    // now we can convert
-    rhs_entry.bv = solver.convert_bv(rhs_entry.expr);
-
-    DATA_INVARIANT(rhs_entry.bv.size() == rhs_entry.width, "bit-width match");
-  }
-
-  DATA_INVARIANT(rhs.bit_number < rhs_entry.bv.size(), "bit index in range");
-  return rhs_entry.bv[rhs.bit_number];
 }
 
 /*******************************************************************\
