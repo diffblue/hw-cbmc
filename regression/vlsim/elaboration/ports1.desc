@@ -1,0 +1,6 @@
+CORE
+ports1.v
+
+^Type-checking Verilog::adder$
+^EXIT=0$
+^SIGNAL=0$
