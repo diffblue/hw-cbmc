@@ -1,5 +1,8 @@
 # EBMC 6.3
 
+* netlist conversion no longer overflows the stack on long chains of
+  combinational definitions, e.g., deep AIGs
+
 # EBMC 6.2
 
 * netlist conversion: next-state values that are read in the definition of
