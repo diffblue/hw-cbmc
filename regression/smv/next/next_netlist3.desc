@@ -1,0 +1,11 @@
+CORE
+next_netlist3.smv
+--bound 3 --aig
+^\[spec1\] AG a = b: PROVED up to bound 3$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A cycle through next-state values: the value that is read while it is
+being converted must equal its definition.

@@ -1,5 +1,9 @@
 # EBMC 6.2
 
+* netlist conversion: next-state values that are read in the definition of
+  a next-state value, e.g., next(a) := next(b), were read as FALSE
+* netlist conversion: every read of a wire without driver yields the same
+  value
 * Verilog: string literals continued on the next line with a backslash
 * Verilog: implicit nets for undeclared identifiers used as members of a
   concatenation on the LHS of a continuous assignment, including nested

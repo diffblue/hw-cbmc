@@ -1,0 +1,8 @@
+MODULE main
+VAR a : boolean; x : boolean;
+INIT !a
+-- next(a) is unconstrained whenever x is FALSE
+TRANS next(a) = (x | next(a))
+INVAR !x
+-- fails
+SPEC AG !a

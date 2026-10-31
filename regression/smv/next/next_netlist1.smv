@@ -1,0 +1,9 @@
+MODULE main
+VAR a : boolean; b : boolean; x : boolean;
+ASSIGN
+  init(a) := FALSE; init(b) := FALSE;
+  -- the next-state value of a is given by the one of b
+  next(a) := next(b);
+  next(b) := x;
+-- fails: a becomes TRUE in the step after x is TRUE
+SPEC AG !a
