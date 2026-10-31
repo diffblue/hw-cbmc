@@ -550,8 +550,9 @@ def render_report(
     f"`{best_vs_default['shared_correct_solves']}` cases solved correctly by "
     f"both MiniSAT-based backends, `ictminisat` vs `minisat2` yielded a "
     f"`{format_float(best_vs_default['left_speedup'])}x` geomean speedup for "
-    f"`ictminisat`, so `minisat2` wins overall by solving two additional "
-    f"known-label cases rather than by being faster on the shared subset.",
+    f"`ictminisat`, so `minisat2` wins overall by solving "
+    f"{minisat2_margin} additional known-label case(s) rather than by being "
+    f"faster on the shared subset.",
     f"- `cadical` solved fewer known-label cases "
     f"(`{summaries['cadical']['correct_decisive']}/{data['total_known']}`, "
     f"`{cadical_margin:+d}` versus `ictminisat`) but did contribute "

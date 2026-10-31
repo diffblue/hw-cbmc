@@ -11,15 +11,15 @@ backends for `ebmc --new-ic3` on the full HWMCC 2017 single-track suite.
 - Timeout: `60` seconds per benchmark/backend
 - Parallel jobs: `24`
 - Host: `AMD EPYC 9R14, 48 cores, 92 GiB RAM`
-- Build command: `env CCACHE_DIR=/tmp/ccache make -C src -j4 CXX='ccache clang++' MINISAT2=/local/home/dkr/3hw-cbmc/lib/cbmc/minisat-2.2.1 CADICAL=/local/home/dkr/3hw-cbmc/lib/cbmc/cadical`
+- Build command: `env CCACHE_DIR=/tmp/ccache make -C src -j16 CXX='ccache clang++' MINISAT2=/local/home/dkr/hw-cbmc/lib/cbmc/minisat-2.2.1 CADICAL=/local/home/dkr/3hw-cbmc/lib/cbmc/cadical`
 - Benchmark command: `BENCH_DIR=/local/home/dkr/3hw-cbmc/benchmarking/hwmcc17-single JOBS=24 benchmarking/compare_new_ic3_sat_solvers.sh 60`
 - Expected labels: `benchmarking/hwmcc17_single_expected.csv`
 - Raw results: `benchmarking/hwmcc17_single_new_ic3_sat_backends.csv`
 
 ## Key Findings
 
-- `minisat2` had the best known-label coverage at `107/166` correct solves, `+2` versus `ictminisat` and `+11` versus `cadical`.
-- `minisat2` also had the best PAR-2 score at `44.86` seconds; on the `104` cases solved correctly by both MiniSAT-based backends, `ictminisat` vs `minisat2` yielded a `1.05x` geomean speedup for `ictminisat`, so `minisat2` wins overall by solving two additional known-label cases rather than by being faster on the shared subset.
+- `minisat2` had the best known-label coverage at `109/166` correct solves, `+4` versus `ictminisat` and `+13` versus `cadical`.
+- `minisat2` also had the best PAR-2 score at `43.52` seconds; on the `105` cases solved correctly by both MiniSAT-based backends, `ictminisat` vs `minisat2` yielded a `1.03x` geomean speedup for `ictminisat`, so `minisat2` wins overall by solving 4 additional known-label case(s) rather than by being faster on the shared subset.
 - `cadical` solved fewer known-label cases (`96/166`, `-9` versus `ictminisat`) but did contribute `1` unique correct solve(s): `139444p22`.
 - Wrong decisive results observed: `0`.
 
@@ -40,24 +40,24 @@ backends for `ebmc --new-ic3` on the full HWMCC 2017 single-track suite.
 | backend | proved | refuted | timeout | error | missing |
 | --- | --- | --- | --- | --- | --- |
 | ictminisat | 78 | 28 | 192 | 2 | 0 |
-| minisat2 | 80 | 28 | 191 | 1 | 0 |
-| cadical | 70 | 27 | 201 | 2 | 0 |
+| minisat2 | 81 | 29 | 187 | 3 | 0 |
+| cadical | 70 | 27 | 200 | 3 | 0 |
 
 ## Known-Label Accuracy
 
 | backend | correct decisive | wrong decisive | unsolved known | known solved rate |
 | --- | --- | --- | --- | --- |
 | ictminisat | 105 | 0 | 61 | 63.3% |
-| minisat2 | 107 | 0 | 59 | 64.5% |
+| minisat2 | 109 | 0 | 57 | 65.7% |
 | cadical | 96 | 0 | 70 | 57.8% |
 
 ## Unknown-Label Behavior
 
 | backend | decisive on unknown | timeout unknown | error unknown |
 | --- | --- | --- | --- |
-| ictminisat | 1 | 133 | 0 |
-| minisat2 | 1 | 133 | 0 |
-| cadical | 1 | 133 | 0 |
+| ictminisat | 1 | 132 | 1 |
+| minisat2 | 1 | 132 | 1 |
+| cadical | 1 | 132 | 1 |
 
 ## Runtime Summary
 
@@ -68,16 +68,16 @@ of `120` seconds for PAR-2 and
 
 | backend | median s | geomean s | mean s | PAR-2 | PAR-10 |
 | --- | --- | --- | --- | --- | --- |
-| ictminisat | 0.27 | 0.31 | 2.47 | 45.66 | 222.05 |
-| minisat2 | 0.27 | 0.35 | 3.44 | 44.86 | 215.47 |
-| cadical | 0.38 | 0.36 | 3.61 | 52.69 | 255.10 |
+| ictminisat | 0.23 | 0.25 | 1.88 | 45.28 | 221.67 |
+| minisat2 | 0.22 | 0.30 | 3.52 | 43.52 | 208.34 |
+| cadical | 0.26 | 0.29 | 2.88 | 52.27 | 254.68 |
 
 ## Unique Correct Solves
 
 | backend | unique correct solves |
 | --- | --- |
-| ictminisat | 1 |
-| minisat2 | 3 |
+| ictminisat | 0 |
+| minisat2 | 4 |
 | cadical | 1 |
 
 ## Pairwise Shared Correct Solves
@@ -87,25 +87,26 @@ values above `1.00` favor the left backend.
 
 | pair | shared correct | left wins | right wins | ties | geomean speedup |
 | --- | --- | --- | --- | --- | --- |
-| ictminisat vs minisat2 | 104 | 42 | 35 | 27 | 1.05 |
-| ictminisat vs cadical | 95 | 73 | 11 | 11 | 1.59 |
-| minisat2 vs cadical | 95 | 71 | 13 | 11 | 1.52 |
+| ictminisat vs minisat2 | 105 | 30 | 37 | 38 | 1.03 |
+| ictminisat vs cadical | 95 | 73 | 8 | 14 | 1.60 |
+| minisat2 vs cadical | 95 | 75 | 7 | 13 | 1.56 |
 
 ## Notable Benchmarks
 
 | benchmark | expected | fastest backend | fastest time (s) | results | note |
 | --- | --- | --- | --- | --- | --- |
-| beemadd4b1 | refuted | ictminisat | 56.52 | ictminisat: refuted@56.52s; minisat2: timeout@-s; cadical: timeout@-s | unique correct solve by ictminisat |
-| 6s380b511 | refuted | minisat2 | 14.63 | ictminisat: timeout@-s; minisat2: refuted@14.63s; cadical: timeout@-s | unique correct solve by minisat2 |
-| bobsmi2c | proved | minisat2 | 29.35 | ictminisat: timeout@-s; minisat2: proved@29.35s; cadical: timeout@-s | unique correct solve by minisat2 |
-| 6s221rb14 | proved | minisat2 | 48.47 | ictminisat: timeout@-s; minisat2: proved@48.47s; cadical: timeout@-s | unique correct solve by minisat2 |
-| 139444p22 | refuted | cadical | 13.14 | ictminisat: timeout@-s; minisat2: timeout@-s; cadical: refuted@13.14s | unique correct solve by cadical |
-| 6s344rb054 | proved | minisat2 | 2.09 | ictminisat: proved@2.44s; minisat2: proved@2.09s; cadical: proved@24.63s | minisat2 faster than cadical by 11.78x; ictminisat faster than cadical by 10.09x |
-| 6s276rb342 | proved | minisat2 | 5.03 | ictminisat: proved@5.67s; minisat2: proved@5.03s; cadical: proved@47.86s | minisat2 faster than cadical by 9.51x; ictminisat faster than cadical by 8.44x |
-| pj2016 | proved | minisat2 | 4.43 | ictminisat: proved@4.74s; minisat2: proved@4.43s; cadical: proved@41.34s | minisat2 faster than cadical by 9.33x; ictminisat faster than cadical by 8.72x |
-| 6s372rb26 | proved | ictminisat | 10.15 | ictminisat: proved@10.15s; minisat2: proved@16.41s; cadical: proved@58.51s | ictminisat faster than cadical by 5.76x |
-| bob3 | proved | ictminisat | 10.61 | ictminisat: proved@10.61s; minisat2: proved@58.51s; cadical: proved@37.60s | ictminisat faster than minisat2 by 5.51x |
-| pdtvisblackjack0 | proved | minisat2 | 0.15 | ictminisat: proved@0.19s; minisat2: proved@0.15s; cadical: proved@0.80s | minisat2 faster than cadical by 5.33x; ictminisat faster than cadical by 4.21x |
+| 6s380b511 | refuted | minisat2 | 8.86 | ictminisat: timeout@-s; minisat2: refuted@8.86s; cadical: timeout@-s | unique correct solve by minisat2 |
+| bobsmi2c | proved | minisat2 | 23.46 | ictminisat: timeout@-s; minisat2: proved@23.46s; cadical: timeout@-s | unique correct solve by minisat2 |
+| 6s221rb14 | proved | minisat2 | 37.92 | ictminisat: timeout@-s; minisat2: proved@37.92s; cadical: timeout@-s | unique correct solve by minisat2 |
+| bob05 | proved | minisat2 | 54.02 | ictminisat: timeout@-s; minisat2: proved@54.02s; cadical: timeout@-s | unique correct solve by minisat2 |
+| 139444p22 | refuted | cadical | 10.61 | ictminisat: timeout@-s; minisat2: timeout@-s; cadical: refuted@10.61s | unique correct solve by cadical |
+| 6s276rb342 | proved | minisat2 | 3.81 | ictminisat: proved@4.28s; minisat2: proved@3.81s; cadical: proved@38.41s | minisat2 faster than cadical by 10.08x; ictminisat faster than cadical by 8.97x |
+| pj2016 | proved | minisat2 | 5.15 | ictminisat: proved@5.41s; minisat2: proved@5.15s; cadical: proved@43.08s | minisat2 faster than cadical by 8.37x; ictminisat faster than cadical by 7.96x |
+| 6s344rb054 | proved | minisat2 | 1.65 | ictminisat: proved@1.67s; minisat2: proved@1.65s; cadical: proved@11.27s | minisat2 faster than cadical by 6.83x; ictminisat faster than cadical by 6.75x |
+| 6s372rb26 | proved | ictminisat | 7.21 | ictminisat: proved@7.21s; minisat2: proved@11.53s; cadical: proved@41.05s | ictminisat faster than cadical by 5.69x |
+| pdtvisblackjack0 | proved | minisat2 | 0.15 | ictminisat: proved@0.19s; minisat2: proved@0.15s; cadical: proved@0.82s | minisat2 faster than cadical by 5.47x |
+| 6s421rb083 | proved | minisat2 | 0.85 | ictminisat: proved@0.91s; minisat2: proved@0.85s; cadical: proved@4.50s | minisat2 faster than cadical by 5.29x |
+| bob3 | proved | ictminisat | 8.72 | ictminisat: proved@8.72s; minisat2: proved@43.92s; cadical: proved@30.26s | ictminisat faster than minisat2 by 5.04x |
 
 ## Sanity Checks
 
