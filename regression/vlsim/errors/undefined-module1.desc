@@ -1,0 +1,7 @@
+CORE
+undefined-module1.v
+
+module .nonexistent_module. not found
+^CONVERSION ERROR$
+^EXIT=2$
+^SIGNAL=0$
