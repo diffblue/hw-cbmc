@@ -1,0 +1,16 @@
+CORE
+typename_dynamic_array1.sv
+
+^\[main\.p0\] .*: PROVED .*$
+^\[main\.p1\] .*: PROVED .*$
+^\[main\.p2\] .*: PROVED .*$
+^\[main\.p3\] .*: PROVED .*$
+^\[main\.p4\] .*: PROVED .*$
+^\[main\.p5\] .*: PROVED .*$
+^\[main\.p6\] .*: PROVED .*$
+^\[main\.p7\] .*: PROVED .*$
+^\[main\.p8\] .*: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
