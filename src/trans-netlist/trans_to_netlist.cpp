@@ -466,13 +466,23 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator lhs_it)
   {
     // The bit is read while it is being converted. The read yields an
     // unconstrained value rather than the placeholder.
-    if(!lhs.var->is_latch() && lhs.bit->current.is_constant())
+    if(lhs.var->is_latch())
+    {
+      // The next-state value of a latch, which is constrained to
+      // equal its definition below.
+      if(lhs.bit->next.is_constant())
+        lhs.bit->next = dest.new_var_node();
+    }
+    else if(lhs.bit->current.is_constant())
       lhs.bit->current = dest.new_var_node();
     return;
   }
 
   if(lhs.equal_to.empty()) // no definition?
   {
+    // Every read of the bit needs to yield the same value.
+    lhs.converted = true;
+
     if(lhs.var->is_latch())
     {
       // there needs to be _something_ as next-state value,
@@ -496,7 +506,14 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator lhs_it)
   lhs.l = convert_rhs(lhs.equal_to.front());
 
   if(lhs.var->is_latch())
-    lhs.bit->next=lhs.l;
+  {
+    // Was the next-state value read while it was converted? Then the
+    // value that was read must equal the definition.
+    if(!lhs.bit->next.is_constant())
+      transition_constraints.push_back(aig_prop.lequal(lhs.bit->next, lhs.l));
+
+    lhs.bit->next = lhs.l;
+  }
   else
     lhs.bit->current=lhs.l;
 
@@ -552,6 +569,29 @@ void convert_trans_to_netlistt::convert_lhs_rec(
 
       // we only need to do wires and outputs
       if(!it->second.var->is_wire() && !it->second.var->is_output())
+        return;
+
+      finalize_lhs(it);
+    }
+
+    return;
+  }
+  else if(expr.id() == ID_next_symbol)
+  {
+    // The next-state value of a latch is given by its definition,
+    // which needs to be converted first.
+    auto identifier = expr.get(ID_identifier);
+
+    for(std::size_t bit_nr = from; bit_nr <= to; bit_nr++)
+    {
+      bv_varidt bv_varid{identifier, bit_nr};
+      lhs_mapt::iterator it = lhs_map.find(bv_varid);
+
+      if(it == lhs_map.end())
+        throw ebmc_errort{} << "lhs_rec: failed to find `"
+                            << bv_varid.as_string() << "' in lhs_map";
+
+      if(!it->second.var->is_latch())
         return;
 
       finalize_lhs(it);

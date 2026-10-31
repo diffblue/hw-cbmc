@@ -1,0 +1,9 @@
+MODULE main
+VAR a : boolean; b : boolean; x : boolean;
+ASSIGN
+  init(a) := FALSE; init(b) := FALSE;
+  -- a cycle through the next-state values of a and b
+  next(a) := next(b) | x;
+  next(b) := next(a);
+-- holds
+SPEC AG (a = b)
