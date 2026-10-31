@@ -1,0 +1,6 @@
+CORE
+fatal1.v
+
+^FATAL: error: 99$
+^EXIT=1$
+^SIGNAL=0$
