@@ -715,6 +715,45 @@ verilog_rtl_buildert::decompose_lhs(const exprt &lhs, statet &state)
     [this, &state](const exprt &expr) { return constant_index(expr, state); });
 }
 
+/// The bit slice, relative to \p lower, of the elements from..to (declared
+/// indices) of the packed array \p src. This follows the layout of the
+/// read side (to_bitvector/from_bitvector in verilog_lowering.cpp).
+static verilog_rtl_slicet packed_array_slice(
+  const exprt &src,
+  const mp_integer &lower,
+  const mp_integer &from,
+  const mp_integer &to,
+  const source_locationt &source_location)
+{
+  auto &array_type = to_verilog_array_type(src.type());
+  auto element_width = verilog_bits(array_type.element_type());
+  auto size = array_type.size_int();
+  auto offset = array_type.offset();
+
+  if(from - offset < 0 || to - offset >= size)
+  {
+    throw verilog_typecheck_baset::errort().with_location(source_location)
+      << "array index out of range";
+  }
+
+  mp_integer slice_lower;
+
+  if(array_type.increasing())
+  {
+    // The element with the low declared index is the most significant;
+    // the lowest internal bit corresponds to the largest element index.
+    slice_lower = lower + (size - 1 - (to - offset)) * element_width;
+  }
+  else
+  {
+    slice_lower = lower + (from - offset) * element_width;
+  }
+
+  auto slice_width = (to - from + 1) * element_width;
+
+  return verilog_rtl_slicet{slice_lower, slice_lower + slice_width - 1};
+}
+
 /*******************************************************************\
 
 Function: verilog_rtl_buildert::decompose
@@ -863,34 +902,9 @@ verilog_rtl_buildert::decompose(const exprt &lhs, const index_functiont &index)
       src.type().id() == ID_array &&
       src.type().get(ID_C_verilog_type) == ID_verilog_packed_array)
     {
-      auto &array_type = to_verilog_array_type(src.type());
-      auto element_width = get_width(array_type.element_type());
-      auto size = array_type.size_int();
-
-      if(from - offset < 0 || to - offset >= size)
-      {
-        throw errort().with_location(lhs.source_location())
-          << "array index out of range";
-      }
-
-      mp_integer slice_lower;
-
-      if(array_type.increasing())
-      {
-        // The element with the low declared index is the most significant;
-        // the lowest internal bit corresponds to the largest element index.
-        slice_lower = lower + (size - 1 - (to - offset)) * element_width;
-      }
-      else
-      {
-        slice_lower = lower + (from - offset) * element_width;
-      }
-
-      auto slice_width = (to - from + 1) * element_width;
-
       return lhst{
         sub_opt->symbol,
-        verilog_rtl_slicet{slice_lower, slice_lower + slice_width - 1}};
+        packed_array_slice(src, lower, from, to, lhs.source_location())};
     }
 
     // For a decreasing range the declared index i maps to the internal bit
@@ -955,6 +969,17 @@ verilog_rtl_buildert::decompose(const exprt &lhs, const index_functiont &index)
 
     auto offset = mp_integer{src.type().get_int(ID_C_offset)};
     auto lower = sub_opt->slice.lower;
+
+    // An indexed part-select on a packed array selects a range of
+    // ELEMENTS (1800-2017 7.4.6, 11.5.1), as for the non-indexed case.
+    if(
+      src.type().id() == ID_array &&
+      src.type().get(ID_C_verilog_type) == ID_verilog_packed_array)
+    {
+      return lhst{
+        sub_opt->symbol,
+        packed_array_slice(src, lower, lo, hi, lhs.source_location())};
+    }
 
     // For a decreasing range the declared index i maps to the internal bit
     // i-offset; for an increasing range it maps to (width-1)-(i-offset)
