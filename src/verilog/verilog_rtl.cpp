@@ -1456,6 +1456,186 @@ verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
   }
 }
 
+/// The bits [offset, offset + width) of the bit-level representation
+/// (to_bitvector) of the given value. Struct members, array elements,
+/// concatenation operands, constant extracts, reinterpretations of a
+/// bit-vector as an aggregate, and conditionals are navigated, so that
+/// the result only refers to the parts of the value that hold the bits,
+/// rather than to the flattening of the entire value. The result has
+/// type bool when width is 1, and unsignedbv[width] otherwise.
+static exprt
+extract_bits(const exprt &value, const mp_integer &offset, std::size_t width)
+{
+  PRECONDITION(width != 0);
+  const typet &type = value.type();
+
+  // A conditional: extract from the branches.
+  if(value.id() == ID_if)
+  {
+    auto &if_expr = to_if_expr(value);
+    auto true_bits = extract_bits(if_expr.true_case(), offset, width);
+    auto false_bits = extract_bits(if_expr.false_case(), offset, width);
+    auto result_type = true_bits.type();
+    return if_exprt{
+      if_expr.cond(), std::move(true_bits), std::move(false_bits), result_type};
+  }
+
+  // A bit-vector reinterpreted as an aggregate: extract from the
+  // bit-vector, as to_bitvector does.
+  if(
+    value.id() == ID_typecast &&
+    (type.id() == ID_struct || type.id() == ID_array))
+  {
+    auto &op = to_typecast_expr(value).op();
+    if(
+      (op.type().id() == ID_unsignedbv || op.type().id() == ID_signedbv ||
+       op.type().id() == ID_bv) &&
+      to_bitvector_type(op.type()).get_width() == verilog_bits(type))
+    {
+      return extract_bits(op, offset, width);
+    }
+  }
+
+  // An extract with a constant index: extract from its source.
+  if(value.id() == ID_extractbits)
+  {
+    auto index_opt =
+      numeric_cast<mp_integer>(to_extractbits_expr(value).index());
+    if(index_opt.has_value())
+      return extract_bits(
+        to_extractbits_expr(value).src(), offset + *index_opt, width);
+  }
+  else if(value.id() == ID_extractbit)
+  {
+    auto index_opt =
+      numeric_cast<mp_integer>(to_extractbit_expr(value).index());
+    if(index_opt.has_value())
+      return extract_bits(
+        to_extractbit_expr(value).src(), offset + *index_opt, width);
+  }
+
+  const auto value_width_opt = bitvector_bits_opt(type);
+
+  // All bits of a bit-vector or Boolean: the value itself.
+  if(offset == 0 && value_width_opt.has_value() && *value_width_opt == width)
+  {
+    if(width == 1 && type.id() == ID_bool)
+      return value;
+    if(width != 1 && type == unsignedbv_typet{width})
+      return value;
+    if(
+      width != 1 && (type.id() == ID_signedbv || type.id() == ID_bv) &&
+      to_bitvector_type(type).get_width() == width)
+    {
+      return typecast_exprt{value, unsignedbv_typet{width}};
+    }
+  }
+
+  // The parts of the value, with the position of their least
+  // significant bit and their width, most significant part first.
+  // Parts whose width is not known make the value opaque.
+  struct partt
+  {
+    exprt expr;
+    mp_integer lower, width;
+  };
+  std::vector<partt> parts;
+  bool opaque = !value_width_opt.has_value();
+  mp_integer position = value_width_opt.value_or(0);
+
+  auto add_part = [&parts, &position, &opaque](exprt part, const typet &t)
+  {
+    auto part_width_opt = bitvector_bits_opt(t);
+    if(!part_width_opt.has_value())
+    {
+      opaque = true;
+      return;
+    }
+    position -= *part_width_opt;
+    parts.push_back({std::move(part), position, *part_width_opt});
+  };
+
+  if(opaque)
+  {
+  }
+  else if(value.id() == ID_concatenation)
+  {
+    for(auto &op : value.operands())
+      add_part(op, op.type());
+  }
+  else if(type.id() == ID_struct)
+  {
+    // the first struct member is the most significant
+    auto &components = to_struct_type(type).components();
+    for(std::size_t i = 0; i < components.size(); i++)
+    {
+      exprt part = value.id() == ID_struct
+                     ? value.operands()[i]
+                     : exprt{member_exprt{value, components[i]}};
+      add_part(std::move(part), components[i].type());
+    }
+  }
+  else if(type.id() == ID_array && to_array_type(type).size().is_constant())
+  {
+    auto &array_type = to_array_type(type);
+    auto size =
+      numeric_cast_v<std::size_t>(to_constant_expr(array_type.size()));
+
+    // as in to_bitvector: for increasing packed arrays, element 0 is
+    // the most significant; otherwise, the least significant
+    bool element_zero_first =
+      array_type.get(ID_C_verilog_type) == ID_verilog_packed_array &&
+      array_type.get_bool(ID_C_increasing);
+
+    for(std::size_t i = 0; i < size; i++)
+    {
+      auto index = element_zero_first ? i : size - 1 - i;
+      exprt part =
+        value.id() == ID_array
+          ? value.operands()[index]
+          : exprt{index_exprt{value, from_integer(index, integer_typet{})}};
+      add_part(std::move(part), array_type.element_type());
+    }
+  }
+
+  if(!opaque && !parts.empty() && position == 0)
+  {
+    exprt::operandst pieces;
+    const mp_integer top = offset + width - 1;
+
+    for(auto &[part, part_lower, part_width] : parts)
+    {
+      if(part_width == 0)
+        continue;
+      mp_integer part_higher = part_lower + part_width - 1;
+      auto lower = std::max(offset, part_lower);
+      auto higher = std::min(top, part_higher);
+      if(lower <= higher)
+      {
+        pieces.push_back(extract_bits(
+          part,
+          lower - part_lower,
+          numeric_cast_v<std::size_t>(higher - lower + 1)));
+      }
+    }
+
+    if(pieces.size() == 1)
+      return std::move(pieces.front());
+
+    if(!pieces.empty())
+      return concatenation_exprt{std::move(pieces), unsignedbv_typet{width}};
+  }
+
+  // otherwise, extract from the flattened value
+  exprt bv_value = to_bitvector(value);
+
+  if(width == 1)
+    return extractbit_exprt{bv_value, from_integer(offset, integer_typet{})};
+
+  return extractbits_exprt{
+    bv_value, from_integer(offset, integer_typet{}), unsignedbv_typet{width}};
+}
+
 /*******************************************************************\
 
 Function: verilog_rtl_buildert::slice_of
@@ -1477,18 +1657,10 @@ exprt verilog_rtl_buildert::slice_of(
 
   // A packed struct/union/array does not have a bit-vector type; its
   // bit-level layout (1800-2017 7.2.1) is only realized by to_bitvector.
-  // Convert to the bit-vector representation before extracting a range.
-  exprt value = to_bitvector(symbol);
-
-  if(slice.width() == 1)
-  {
-    return extractbit_exprt{value, from_integer(slice.lower, integer_typet{})};
-  }
-
-  auto width = numeric_cast_v<std::size_t>(slice.width());
-
-  return extractbits_exprt{
-    value, from_integer(slice.lower, integer_typet{}), unsignedbv_typet{width}};
+  // Select the members or elements that hold the slice, rather than
+  // extracting the slice from the flattening of the entire symbol.
+  return extract_bits(
+    symbol, slice.lower, numeric_cast_v<std::size_t>(slice.width()));
 }
 
 /*******************************************************************\
@@ -2079,21 +2251,10 @@ exprt verilog_rtl_buildert::extract_range(
 
   // A packed struct/union/array does not have a bit-vector type; its
   // bit-level layout (1800-2017 7.2.1) is only realized by to_bitvector.
-  // Convert to the bit-vector representation before extracting a range.
-  exprt bv_value = to_bitvector(value);
-
-  if(sub.width() == 1)
-  {
-    return extractbit_exprt{
-      bv_value, from_integer(sub.lower - from.lower, integer_typet{})};
-  }
-
-  auto width = numeric_cast_v<std::size_t>(sub.width());
-
-  return extractbits_exprt{
-    bv_value,
-    from_integer(sub.lower - from.lower, integer_typet{}),
-    unsignedbv_typet{width}};
+  // Select the parts of the value that hold the range, rather than
+  // extracting the range from the flattening of the entire value.
+  return extract_bits(
+    value, sub.lower - from.lower, numeric_cast_v<std::size_t>(sub.width()));
 }
 
 /*******************************************************************\
