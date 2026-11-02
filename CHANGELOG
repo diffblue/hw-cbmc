@@ -1,5 +1,7 @@
 # EBMC 6.2
 
+* netlist conversion no longer overflows the stack on long chains of
+  combinational definitions, e.g., deep AIGs
 * Verilog: string literals continued on the next line with a backslash
 * Verilog: `" and `\`" in macro text
 * Verilog: continued `define in an inactive `ifdef branch
