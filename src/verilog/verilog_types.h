@@ -14,6 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/mp_arith.h>
 #include <util/std_types.h>
 
+class symbol_exprt;
+
 /// Used during elaboration only,
 /// to signal that a symbol is yet to be elaborated.
 class to_be_elaborated_typet : public type_with_subtypet
@@ -375,6 +377,10 @@ public:
       result.emplace(port.identifier(), port);
     return result;
   }
+
+  const irept::subt &symbols() const;
+
+  void add_symbol(const symbol_exprt &);
 };
 
 /*! \brief Cast a generic typet to a \ref module_typet

@@ -12,6 +12,16 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/mathematical_types.h>
 #include <util/std_expr.h>
 
+const irept::subt &module_typet::symbols() const
+{
+  return find(ID_module_symbols).get_sub();
+}
+
+void module_typet::add_symbol(const symbol_exprt &symbol_expr)
+{
+  add(ID_module_symbols).get_sub().push_back(symbol_expr);
+}
+
 constant_exprt verilog_chandle_typet::null_expr() const
 {
   return encoding().all_zeros_expr();
