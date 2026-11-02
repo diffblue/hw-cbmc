@@ -1,0 +1,11 @@
+CORE
+partially_driven_net3.sv
+--aig --bound 10
+^\[main\.p0\] always !\(main\.warm >= 5'b01000\): REFUTED$
+^\[main\.p1\] always main\.a\[0\] == 1: PROVED up to bound 10$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The netlist-based BMC engine refutes p0, as it should.
