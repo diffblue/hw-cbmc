@@ -14,7 +14,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <verilog/expr2verilog.h>
 #include <verilog/verilog_language.h>
-#include <verilog/verilog_synthesis.h>
 #include <verilog/verilog_typecheck.h>
 #include <verilog/verilog_types.h>
 
