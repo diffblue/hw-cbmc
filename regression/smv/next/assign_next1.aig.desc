@@ -1,0 +1,10 @@
+CORE
+assign_next1.smv
+--bound 3 --aig
+^\[spec1\] AG x = y: PROVED up to bound 3$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The netlist variant of assign_next1.desc.

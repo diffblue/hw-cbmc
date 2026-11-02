@@ -1,0 +1,11 @@
+CORE
+next_netlist1.smv
+--bound 3 --aig
+^\[spec1\] AG !a: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The next-state value of a latch that is read in the definition of another
+latch's next-state value must be converted first.
