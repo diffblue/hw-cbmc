@@ -352,6 +352,16 @@ std::unique_ptr<IctMinisat::Solver> ic3_solvert::new_minisat_solver()
     S->newVar();
   for(const auto &clause : base_cnf->get_clauses())
     add_minisat_clause(*S, clause);
+  // Restrict decisions to latch and input variables. The AIG gates are
+  // encoded with the full 3-clause Tseitin AND encoding (both polarities),
+  // so once all latch-current and input variables are assigned, BCP
+  // implies every internal gate variable; models are thus still total.
+  for(IctMinisat::Var v = 0; v < S->nVars(); v++)
+    S->setDecisionVar(v, false);
+  for(const auto &latch : latches)
+    S->setDecisionVar(latch.current.var_no(), true);
+  for(auto l : input_lits)
+    S->setDecisionVar(l.var_no(), true);
   return S;
 }
 
@@ -885,11 +895,21 @@ std::optional<ic3_resultt> ic3_solvert::block_frame(std::size_t k)
       else
       {
         cubet generalized = generalize(level - 1, core);
-        add_clause(level, negate_cube(generalized));
 
-        // Re-queue at level+1 to push the blocking clause higher
-        if(level + 1 <= k)
-          obligations.push({std::move(cube), level + 1, depth});
+        // Eagerly push the generalized clause to the highest frame where
+        // it is still relatively inductive: one query per level, instead
+        // of a full re-generalization when the obligation is re-queued.
+        std::size_t push_to = level;
+        while(push_to < k &&
+              relative_induction(push_to, generalized, nullptr, false))
+        {
+          push_to++;
+        }
+
+        add_clause(push_to, negate_cube(generalized));
+
+        if(push_to + 1 <= k)
+          obligations.push({std::move(cube), push_to + 1, depth});
       }
     }
   }

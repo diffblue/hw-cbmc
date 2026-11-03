@@ -48,6 +48,107 @@ than ~50 frames deep).
 rIC3 remains substantially ahead of both ebmc engines; it is the source
 of several of the techniques used in the new engine.
 
+## Update: decision-variable restriction and eager clause pushing
+
+Two further optimizations:
+
+1. *Decision-variable restriction*: the per-frame MiniSAT solvers only
+   branch on latch and input variables. The AIG gates use the full
+   3-clause Tseitin encoding, so BCP totalizes any assignment of the
+   latches and inputs; models remain genuine.
+2. *Eager clause pushing*: after MIC generalization, the blocking phase
+   pushes the generalized clause to the highest frame where it is still
+   relatively inductive — one SAT query per level — instead of
+   re-running a full MIC generalization each time the obligation is
+   re-queued one level higher.
+
+A third experiment, VSIDS-style decay of the MIC literal-activity
+ordering, improved eijkbs3330 but caused a reproducible 15x regression
+on 139453p22 and was dropped.
+
+### Setup
+
+* Machine: Apple M2 Max, 64 GB RAM, macOS 26.5.1
+* Timeout: 60 seconds wall-clock per benchmark, including front-end
+* All runs read the original AIGER files with ebmc's native AIGER
+  front-end (not the SMV translations used above)
+* Configurations, all `--new-ic3`:
+  * *base*: main at 5d8e0a1a
+  * *push*: base + eager clause pushing
+  * *both*: base + eager clause pushing + decision-variable restriction
+    (this PR)
+* Benchmark sets:
+  * HWMCC'08: the 49-benchmark sample above, run sequentially; expected
+    verdicts from `hwmcc08results.csv`
+  * HWMCC'17: all 300 single-property benchmarks, 4 parallel workers;
+    expected verdicts are the consensus of the 14 HWMCC'17 solvers,
+    available for 242 of the 300 (no solver disagreed on any of them)
+  * HWMCC'25 bit-level safety track: 142-benchmark sample — every 2nd
+    (in alphabetical order, starting with the first) of the 284
+    benchmarks with a definitive competition verdict — 2 parallel
+    workers
+* 13 HWMCC'17 benchmarks (intel012/013/027/028/036/039/040/043 and
+  oski15a01b00s/a01b57s/a07b0s/a08b00s/a08b08s) overflow the default
+  8 MB stack in the recursion of `convert_trans_to_netlistt`, before
+  the engine starts, with every configuration and with `--ic3`. These
+  were run with `ulimit -s 65520`.
+
+No configuration reported a wrong verdict on any of the three sets.
+
+### Results
+
+| configuration | HWMCC'08 (of 49) | HWMCC'17 (of 300) | HWMCC'25 (of 142) |
+|---|---:|---:|---:|
+| base | 43 | 115 | 70 |
+| push | 43 | 119 | 72 |
+| both (this PR) | 46 | 120 | 70 |
+
+Total time on the benchmarks solved by all three configurations:
+
+| configuration | HWMCC'08 (42) | HWMCC'17 (109) | HWMCC'25 (63) |
+|---|---:|---:|---:|
+| base | 93.3 s | 333.8 s | 362.6 s |
+| push | 94.1 s | 291.1 s | 258.7 s |
+| both (this PR) | 33.2 s | 228.7 s | 318.2 s |
+
+HWMCC'08: the PR newly solves 139454p23 (24.0 s), csmacdp2 (43.0 s)
+and prodcellp2 (46.7 s); largest improvements over base are
+139453p22 38.4 → 1.8 s, neclaftp1001 23.3 → 0.7 s and nusmvtcasp5
+18.1 → 5.9 s. Eager pushing alone is neutral on this set; the gain
+comes from combining it with the decision-variable restriction.
+
+HWMCC'17: the PR solves 9 benchmarks that base does not (among them
+139444p22, csmacdp2, intel026, intel056, intel061 and
+productioncellp0), and is faster on 63 of the 111 commonly solved.
+
+The decision-variable restriction is not uniformly beneficial.
+It turns 4 HWMCC'17 solves into timeouts — 6s120 (0.8 s), 6s421rb083 (0.5 s), bobunr2p10d40l (0.1 s),
+6s221rb14 (30.4 s) — where a single SAT query at frame 1 does not
+terminate; without the restriction all four are solved as before. On
+HWMCC'25 it costs a net 2 benchmarks relative to *push* (5 gained,
+7 lost, the latter mostly hkust miters), and several instances slow
+down by 10x or more (e.g. collision.1.prop1-func-interl 2.0 → 47.3 s).
+Restricting decisions to inputs and latches can make the SAT search
+exponentially harder on circuits where branching on internal gates
+pays off.
+
+Comparison with the in-tree `--ic3` engine on HWMCC'17 (same
+machine, 4 workers, built from this PR):
+
+| engine | solved (of 300) | proved / refuted | total time on solved | wrong verdicts |
+|---|---:|---:|---:|---:|
+| ebmc `--ic3` | 126 | 92 / 34 | 617 s | 0 |
+| ebmc `--new-ic3` | 120 | 87 / 33 | 588 s | 0 |
+
+Of the 116 benchmarks solved by both engines, the new engine is
+faster on 84. The old engine solves 10 uniquely (among them
+bc57sensorsp2, prodcellp4, irstdme6 and three of the
+decision-restriction regressions above), the new engine 4. `--ic3`
+reports 6s128 as not supported (no latches).
+
+For scale, on the HWMCC'25 sample rIC3 solved 112 within 60 s in the
+competition (on different hardware).
+
 ## Reproducing
 
     # ebmc engines + rIC3 + Pono, CSV output
