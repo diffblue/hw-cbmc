@@ -223,6 +223,10 @@ protected:
   void interface_block(const class verilog_blockt &);
   void interface_generate_block(const class verilog_generate_blockt &);
   void interface_statement(const class verilog_statementt &);
+  // Add the symbol for the scope introduced by a named block, which may be
+  // a block statement or a generate block.
+  void
+  add_named_block_symbol(const irep_idt &base_name, const source_locationt &);
 
   // type checking
 
