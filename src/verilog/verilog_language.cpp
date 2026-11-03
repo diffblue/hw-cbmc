@@ -6,17 +6,17 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <sstream>
+#include "verilog_language.h"
 
 #include <util/suffix.h>
 #include <util/symbol_table.h>
 
-#include "verilog_language.h"
-#include "verilog_typecheck.h"
-#include "verilog_synthesis.h"
 #include "expr2verilog.h"
 #include "verilog_parser.h"
 #include "verilog_preprocessor.h"
+#include "verilog_typecheck.h"
+
+#include <sstream>
 
 /*******************************************************************\
 
@@ -271,7 +271,7 @@ bool verilog_languaget::to_expr(
   message_handlert &message_handler)
 {
   expr.make_nil();
-  
+
   // no preprocessing yet...
 
   std::istringstream i_preprocessed(code);
@@ -283,27 +283,19 @@ bool verilog_languaget::to_expr(
   verilog_parsert verilog_parser(standard, scopes, message_handler);
 
   verilog_parser.set_file("");
-  verilog_parser.in=&i_preprocessed;
-  verilog_parser.grammar=verilog_parsert::EXPRESSION;
+  verilog_parser.in = &i_preprocessed;
+  verilog_parser.grammar = verilog_parsert::EXPRESSION;
   verilog_scanner_init();
 
-  bool result=verilog_parser.parse();
-  if(result) return true;
+  bool result = verilog_parser.parse();
+  if(result)
+    return true;
 
   expr.swap(verilog_parser.parse_tree.expr);
 
-  // typecheck it
-  result =
-    verilog_typecheck(expr, module, module, standard, message_handler, ns);
-  if(result)
-    return true;
-
-  // synthesize it
-  result = verilog_synthesis(expr, module, standard, message_handler, ns);
-  if(result)
-    return true;
-
-  return result;
+  // typecheck it; this also resolves references to signals within
+  // module instances into symbol expressions
+  return verilog_typecheck(expr, module, module, standard, message_handler, ns);
 }
 
 /*******************************************************************\
