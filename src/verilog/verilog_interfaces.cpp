@@ -288,6 +288,11 @@ void verilog_typecheckt::interface_generate_block(
   if(is_named)
   {
     irep_idt base_name = generate_block.base_name();
+
+    // 1800-2017 27.6: the name of a generate block is part of the
+    // hierarchy, and hence must be visible to hierarchical identifiers.
+    add_named_block_symbol(base_name, generate_block.source_location());
+
     enter_named_block(base_name);
   }
 
@@ -501,6 +506,38 @@ void verilog_typecheckt::interface_statement(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::add_named_block_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_typecheckt::add_named_block_symbol(
+  const irep_idt &base_name,
+  const source_locationt &source_location)
+{
+  symbolt symbol{
+    hierarchical_identifier(base_name), typet{ID_named_block}, mode};
+
+  symbol.base_name = base_name;
+  symbol.module = module_identifier;
+  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+  symbol.location = source_location;
+
+  if(symbol_table.add(symbol))
+  {
+    throw errort().with_location(source_location)
+      << "duplicate definition of identifier `" << base_name << "' in module `"
+      << module_symbol().base_name << '\'';
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::interface_block
 
   Inputs:
@@ -511,31 +548,10 @@ Function: verilog_typecheckt::interface_block
 
 \*******************************************************************/
 
-void verilog_typecheckt::interface_block(
-  const verilog_blockt &statement)
+void verilog_typecheckt::interface_block(const verilog_blockt &statement)
 {
   if(statement.is_named())
-  {
-    const irep_idt base_name = statement.base_name();
-
-    // need to add to symbol table
-    symbolt symbol;
-
-    symbol.mode=mode;
-    symbol.base_name = base_name;
-    symbol.type=typet(ID_named_block);
-    symbol.module=module_identifier;
-    symbol.name = hierarchical_identifier(symbol.base_name);
-    symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
-    symbol.value=nil_exprt();
-
-    if(symbol_table.add(symbol))
-    {
-      throw errort().with_location(statement.source_location())
-        << "duplicate definition of identifier `" << symbol.base_name
-        << "' in module `" << module_symbol().base_name << '\'';
-    }
-  }
+    add_named_block_symbol(statement.base_name(), statement.source_location());
 
   enter_named_block(statement.block_id());
 
