@@ -129,7 +129,42 @@ const bvt &netlist_boolbvt::convert_bv(
     (expr.id() == ID_symbol || expr.id() == ID_next_symbol) &&
     var_map.map.find(expr.get(ID_identifier)) != var_map.map.end())
   {
-    bv_cache.erase(expr);
+    // Redo the conversion, to pick up bits that may have been set since an
+    // earlier read of this symbol.
+    //
+    // The cache entry must not be erased: callers such as
+    // boolbvt::convert_equality hold a reference to a cache entry while
+    // converting further operands, relying on the guarantee that references
+    // into the cache stay valid. Erasing the entry destroys the bvt and
+    // leaves those references dangling. We hence overwrite the entry in
+    // place, which both keeps the references valid and updates the bits
+    // they see.
+    auto bv = convert_bitvector(expr);
+
+    INVARIANT_WITH_DIAGNOSTICS(
+      !expected_width || bv.size() == *expected_width,
+      "bitvector width shall match the indicated expected width",
+      expr.find_source_location(),
+      irep_pretty_diagnosticst{expr});
+
+    for(const auto &literal : bv)
+    {
+      if(freeze_all && !literal.is_constant())
+        prop.set_frozen(literal);
+
+      INVARIANT_WITH_DIAGNOSTICS(
+        literal.var_no() != literalt::unused_var_no(),
+        "variable number must be different from the unused variable number",
+        expr.find_source_location(),
+        irep_pretty_diagnosticst{expr});
+    }
+
+    auto &cache_entry =
+      bv_cache.insert(std::make_pair(expr, bvt{})).first->second;
+
+    cache_entry = std::move(bv);
+
+    return cache_entry;
   }
 
   return SUB::convert_bv(expr, expected_width);
