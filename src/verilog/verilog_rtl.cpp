@@ -313,12 +313,6 @@ protected:
     {
       record_forced(to_multi_ary_expr(lhs).op0(), instance_identifier);
     }
-    else if(lhs.id() == ID_hierarchical_identifier)
-    {
-      record_forced(
-        resolve_hierarchical_identifier(to_hierarchical_identifier_expr(lhs)),
-        instance_identifier);
-    }
   }
 
   /// record a declared variable; unassigned variables hold
@@ -546,9 +540,6 @@ protected:
   /// restore the bindings of the symbols with the given prefix
   static void
   restore_bindings(statet &, const std::string &prefix, saved_bindingst);
-
-  /// resolve a hierarchical identifier to a symbol
-  exprt resolve_hierarchical_identifier(const hierarchical_identifier_exprt &);
 
   /// the value of the given symbol composed from the given
   /// slice values
@@ -1047,12 +1038,6 @@ verilog_rtl_buildert::decompose(const exprt &lhs, const index_functiont &index)
     // assumed to be a reinterpret cast; the bit positions are unchanged
     return decompose(to_typecast_expr(lhs).op(), index);
   }
-  else if(lhs.id() == ID_hierarchical_identifier)
-  {
-    return decompose(
-      resolve_hierarchical_identifier(to_hierarchical_identifier_expr(lhs)),
-      index);
-  }
   else
     return {};
 }
@@ -1091,16 +1076,6 @@ exprt verilog_rtl_buildert::read_lhs(exprt expr, statet &state, bool blocking)
 
     return composed_value(
       slice_values_of(value_map, symbol_expr.get_identifier()), symbol_expr);
-  }
-
-  if(expr.id() == ID_hierarchical_identifier)
-  {
-    // Resolve to the symbol the hierarchical identifier denotes
-    // (1800-2017 23.6, 23.7), then read that symbol.
-    return read_lhs(
-      resolve_hierarchical_identifier(to_hierarchical_identifier_expr(expr)),
-      state,
-      blocking);
   }
 
   // an lvalue-shaped expression: the first operand is the base
@@ -1431,19 +1406,6 @@ verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
     // recursive call
     return lower_lhs(src, std::move(new_value), state, blocking);
   }
-  else if(lhs.id() == ID_hierarchical_identifier)
-  {
-    // A hierarchical identifier selecting another module's variable
-    // (1800-2017 23.6, 23.7). Resolve it to the symbol it denotes and
-    // lower the assignment to that symbol. decompose_lhs handles the
-    // constant-index case through the same resolution; this case is
-    // reached when the resolved lvalue has a non-constant index.
-    return lower_lhs(
-      resolve_hierarchical_identifier(to_hierarchical_identifier_expr(lhs)),
-      std::move(rhs),
-      state,
-      blocking);
-  }
   else if(lhs.id() == ID_member)
   {
     // turn
@@ -1562,12 +1524,6 @@ exprt verilog_rtl_buildert::substitute(exprt expr, statet &state)
 
     return expr;
   }
-  else if(expr.id() == ID_hierarchical_identifier)
-  {
-    return substitute(
-      resolve_hierarchical_identifier(to_hierarchical_identifier_expr(expr)),
-      state);
-  }
   else if(
     expr.id() == ID_verilog_bit_select ||
     expr.id() == ID_verilog_non_indexed_part_select ||
@@ -1665,64 +1621,6 @@ exprt verilog_rtl_buildert::substitute(exprt expr, statet &state)
     op = substitute(op, state);
 
   return expr;
-}
-
-/*******************************************************************\
-
-Function: verilog_rtl_buildert::resolve_hierarchical_identifier
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt verilog_rtl_buildert::resolve_hierarchical_identifier(
-  const hierarchical_identifier_exprt &expr)
-{
-  // The type checker resolves hierarchical identifiers into module
-  // instances (including instance array elements) and stores the
-  // identifier of the symbol. Use it when available.
-  irep_idt full_identifier = expr.identifier();
-
-  if(full_identifier.empty())
-  {
-    exprt lhs = expr.lhs();
-
-    if(lhs.id() == ID_hierarchical_identifier)
-      lhs =
-        resolve_hierarchical_identifier(to_hierarchical_identifier_expr(lhs));
-
-    if(lhs.id() != ID_symbol)
-    {
-      throw errort().with_location(expr.source_location())
-        << "expected symbol on lhs of `.'";
-    }
-
-    if(lhs.type().id() != ID_verilog_module_instance)
-    {
-      throw errort().with_location(expr.source_location())
-        << "expected module instance on lhs of `.'";
-    }
-
-    auto &lhs_identifier = to_symbol_expr(lhs).get_identifier();
-    auto &rhs_base_name = expr.rhs().base_name();
-
-    // just patch together
-    full_identifier =
-      id2string(lhs_identifier) + '.' + id2string(rhs_base_name);
-  }
-
-  const symbolt *symbol;
-  if(ns.lookup(full_identifier, symbol))
-  {
-    throw errort().with_location(expr.source_location())
-      << "failed to find identifier `" << full_identifier << "'";
-  }
-
-  return symbol_exprt{full_identifier, symbol->type};
 }
 
 /*******************************************************************\
@@ -4036,8 +3934,7 @@ void verilog_rtl_buildert::collect_reads(
     expr.id() == ID_verilog_non_indexed_part_select ||
     expr.id() == ID_verilog_indexed_part_select_plus ||
     expr.id() == ID_verilog_indexed_part_select_minus ||
-    expr.id() == ID_member || expr.id() == ID_typecast ||
-    expr.id() == ID_hierarchical_identifier)
+    expr.id() == ID_member || expr.id() == ID_typecast)
   {
     std::optional<lhst> read_opt;
 
@@ -4073,12 +3970,6 @@ void verilog_rtl_buildert::collect_reads(
   if(expr.id() == ID_symbol)
   {
     if(to_symbol_expr(expr).get_identifier() == identifier)
-      dest.push_back(whole);
-    return;
-  }
-  else if(expr.id() == ID_hierarchical_identifier)
-  {
-    if(to_hierarchical_identifier_expr(expr).identifier() == identifier)
       dest.push_back(whole);
     return;
   }

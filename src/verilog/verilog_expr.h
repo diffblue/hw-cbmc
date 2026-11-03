@@ -102,8 +102,10 @@ inline verilog_identifier_exprt &to_verilog_identifier_expr(exprt &expr)
   return static_cast<verilog_identifier_exprt &>(expr);
 }
 
-/// The syntax for these A.B, where A is a module instance
-/// and B is an identifier within that module. B is given als symbol_exprt.
+/// The syntax for these is A.B, where A is a module instance and B is an
+/// identifier within that module, given as a verilog_identifier_exprt.
+/// This is a parse-tree node only: the type checker resolves it into the
+/// symbol it denotes, so it does not survive type checking.
 class hierarchical_identifier_exprt : public binary_exprt
 {
 public:
@@ -125,16 +127,6 @@ public:
   const verilog_identifier_exprt &rhs() const
   {
     return item();
-  }
-
-  const irep_idt &identifier() const
-  {
-    return get(ID_identifier);
-  }
-
-  void identifier(irep_idt _identifier)
-  {
-    set(ID_identifier, _identifier);
   }
 
 protected:

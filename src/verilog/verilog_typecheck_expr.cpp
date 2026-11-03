@@ -2412,8 +2412,6 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
   {
     if(lhs.id() == ID_symbol)
       return to_symbol_expr(lhs).identifier();
-    else if(lhs.id() == ID_hierarchical_identifier)
-      return to_hierarchical_identifier_expr(lhs).identifier();
     else if(lhs.id() == ID_verilog_bit_select)
     {
       // an element of an instance array
@@ -3866,8 +3864,6 @@ exprt verilog_typecheck_exprt::convert_interface_array_element(
   {
     if(src.id() == ID_symbol)
       return to_symbol_expr(src).identifier();
-    else if(src.id() == ID_hierarchical_identifier)
-      return to_hierarchical_identifier_expr(src).identifier();
     else
     {
       throw errort().with_location(src.source_location())
