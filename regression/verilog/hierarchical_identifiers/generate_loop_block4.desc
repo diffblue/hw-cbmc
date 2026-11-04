@@ -1,0 +1,11 @@
+CORE
+generate_loop_block4.sv
+--module main --bound 0
+^\[main\.p0\] main\.blk\[1\]\.x == 11: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Hierarchical reference into the block of a generate loop, starting from
+$root.
