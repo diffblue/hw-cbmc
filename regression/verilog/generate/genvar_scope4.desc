@@ -1,0 +1,10 @@
+CORE
+genvar_scope4.sv
+
+^file .* line 11: unknown identifier gi$
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+A genvar declared in the header of a loop generate construct is not visible
+outside of that loop.
