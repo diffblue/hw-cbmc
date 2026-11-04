@@ -7,6 +7,7 @@ Author: Daniel Kroening, dkr@amazon.com
 \*******************************************************************/
 
 #include <util/arith_tools.h>
+#include <util/expr_iterator.h>
 #include <util/mathematical_types.h>
 #include <util/std_expr.h>
 
@@ -45,9 +46,159 @@ void verilog_typecheckt::process_module_instantiations(
   for(auto &module_item : verilog_module_expr.module_items())
     process_parameter_override(module_item);
 
-  // now parameterize the instantiated modules
+  // Now parameterize the instantiated modules. An instance whose interface
+  // ports are bound to interface instances of this module needs the
+  // parameters of those instances, which are hence parameterized first,
+  // i.e., the instantiations are processed in the order of these
+  // dependencies. The interface instances may themselves have interface
+  // ports.
+  pending_instantiations.clear();
+  instance_to_pending.clear();
+
   for(auto &module_item : verilog_module_expr.module_items())
-    parameterize_instantiated_modules(module_item);
+    collect_instantiations(module_item);
+
+  for(std::size_t i = 0; i < pending_instantiations.size(); i++)
+    parameterize_pending_instantiation(i);
+
+  pending_instantiations.clear();
+  instance_to_pending.clear();
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::collect_instantiations
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Record the module instantiations of the given module item,
+          together with the scope and the genvar values in which they
+          are to be parameterized.
+
+\*******************************************************************/
+
+void verilog_typecheckt::collect_instantiations(
+  verilog_module_itemt &module_item)
+{
+  if(module_item.id() == ID_inst || module_item.id() == ID_inst_builtin)
+  {
+    auto index = pending_instantiations.size();
+    pending_instantiations.push_back(
+      pending_instantiationt{&module_item, named_blocks, genvars});
+
+    if(module_item.id() == ID_inst)
+    {
+      for(auto &instance : to_verilog_inst(module_item).instances())
+      {
+        instance_to_pending[hierarchical_identifier(instance.base_name())] =
+          index;
+      }
+    }
+  }
+  else if(module_item.id() == ID_generate_block)
+  {
+    auto &generate_block = to_verilog_generate_block(module_item);
+
+    // These introduce scope, much like a named block statement.
+    bool is_named = generate_block.is_named();
+
+    if(is_named)
+    {
+      irep_idt base_name = generate_block.base_name();
+      enter_named_block(base_name);
+    }
+
+    for(auto &item : generate_block.module_items())
+      collect_instantiations(item);
+
+    if(is_named)
+      named_blocks.pop_back();
+  }
+  else if(module_item.id() == ID_set_genvars)
+  {
+    auto old_genvars = genvars;
+    auto &set_genvars = to_verilog_set_genvars(module_item);
+    genvars = set_genvars.build_map();
+    collect_instantiations(set_genvars.module_item());
+    genvars = std::move(old_genvars);
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::parameterize_pending_instantiation
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Parameterize the given module instantiation, after the
+          instantiations of the interface instances that are bound to
+          its interface ports.
+
+\*******************************************************************/
+
+void verilog_typecheckt::parameterize_pending_instantiation(std::size_t index)
+{
+  auto &pending = pending_instantiations[index];
+
+  if(pending.state == pending_instantiationt::statet::DONE)
+    return;
+
+  auto &module_item = *pending.module_item;
+
+  if(pending.state == pending_instantiationt::statet::IN_PROGRESS)
+  {
+    throw errort().with_location(module_item.source_location())
+      << "cyclic dependency between interface port connections";
+  }
+
+  pending.state = pending_instantiationt::statet::IN_PROGRESS;
+
+  // enter the scope of the instantiation
+  auto old_named_blocks = std::move(named_blocks);
+  auto old_genvars = std::move(genvars);
+  named_blocks = pending.named_blocks;
+  genvars = pending.genvars;
+
+  if(module_item.id() == ID_inst)
+  {
+    auto &inst = to_verilog_inst(module_item);
+    const irep_idt module_identifier =
+      verilog_module_symbol(id2string(inst.module_base_name()));
+
+    // the instantiations this one depends on
+    for(auto &instance : inst.instances())
+    {
+      for(auto &[port, actual] :
+          interface_port_actuals(module_identifier, instance))
+      {
+        for(auto it = actual.depth_cbegin(); it != actual.depth_cend(); ++it)
+        {
+          if(it->id() != ID_symbol)
+            continue;
+
+          auto pending_it =
+            instance_to_pending.find(to_symbol_expr(*it).get_identifier());
+
+          if(pending_it != instance_to_pending.end())
+            parameterize_pending_instantiation(pending_it->second);
+        }
+      }
+    }
+
+    parameterize_instantiated_modules(inst);
+  }
+  else
+    parameterize_instantiated_modules(to_verilog_inst_builtin(module_item));
+
+  named_blocks = std::move(old_named_blocks);
+  genvars = std::move(old_genvars);
+
+  // the reference may have been invalidated by the recursion
+  pending_instantiations[index].state = pending_instantiationt::statet::DONE;
 }
 
 /*******************************************************************\
@@ -466,58 +617,6 @@ Function: verilog_typecheckt::parameterize_instantiated_modules
 
 \*******************************************************************/
 
-void verilog_typecheckt::parameterize_instantiated_modules(
-  verilog_module_itemt &module_item)
-{
-  if(module_item.id() == ID_inst)
-  {
-    parameterize_instantiated_modules(to_verilog_inst(module_item));
-  }
-  else if(module_item.id() == ID_inst_builtin)
-  {
-    parameterize_instantiated_modules(to_verilog_inst_builtin(module_item));
-  }
-  else if(module_item.id() == ID_generate_block)
-  {
-    auto &generate_block = to_verilog_generate_block(module_item);
-
-    // These introduce scope, much like a named block statement.
-    bool is_named = generate_block.is_named();
-
-    if(is_named)
-    {
-      irep_idt base_name = generate_block.base_name();
-      enter_named_block(base_name);
-    }
-
-    for(auto &item : generate_block.module_items())
-      parameterize_instantiated_modules(item);
-
-    if(is_named)
-      named_blocks.pop_back();
-  }
-  else if(module_item.id() == ID_set_genvars)
-  {
-    auto old_genvars = genvars;
-    auto &set_genvars = to_verilog_set_genvars(module_item);
-    genvars = set_genvars.build_map();
-    parameterize_instantiated_modules(set_genvars.module_item());
-    genvars = std::move(old_genvars);
-  }
-}
-
-/*******************************************************************\
-
-Function: verilog_typecheckt::parameterize_instantiated_modules
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
 {
   const irep_idt &inst_module = inst.module_base_name();
@@ -596,7 +695,8 @@ void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
       inst_module,
       instance_identifier,
       parameter_assignments,
-      instance_defparams);
+      instance_defparams,
+      interface_port_actuals(module_identifier, instance));
 
     instance.identifier(instance_identifier);
     instance.module_identifier(new_module_identifier);
@@ -648,6 +748,10 @@ void verilog_typecheckt::expand_instance_array(
 
   const mp_integer number_of_elements = suffixes.size();
 
+  // The interface instances connected to the interface ports, if any;
+  // these are bound to every element of the array.
+  auto actuals = interface_port_actuals(module_identifier, instance);
+
   // Instantiate the module for each element of the array.
   std::vector<irep_idt> element_base_names, element_identifiers,
     element_modules;
@@ -670,7 +774,8 @@ void verilog_typecheckt::expand_instance_array(
       inst_module,
       element_identifier,
       parameter_assignments,
-      instance_defparams);
+      instance_defparams,
+      actuals);
 
     // fix the module in the instance symbol
     symbolt &element_symbol = symbol_table_lookup(element_identifier);
