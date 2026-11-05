@@ -163,12 +163,17 @@ Function: verilog_preprocessort::emit_line_directive
 
 void verilog_preprocessort::emit_line_directive(unsigned level)
 {
-  PRECONDITION(context().is_file());
+  // An `include directive may be the result of expanding a macro, in
+  // which case the enclosing context is a macro expansion (not a file).
+  // The line directive must refer to the nearest enclosing file.
+  contextt *file_context = topmost_file_context();
 
-  out << "`line " << tokenizer().line_no() << " \""
-      << context().filename_as_string() << "\" " << level << '\n';
+  PRECONDITION(file_context != nullptr);
 
-  parser_line_no = tokenizer().line_no();
+  out << "`line " << file_context->tokenizer->line_no() << " \""
+      << file_context->filename_as_string() << "\" " << level << '\n';
+
+  parser_line_no = file_context->tokenizer->line_no();
 }
 
 /*******************************************************************\
@@ -918,7 +923,14 @@ void verilog_preprocessort::directive()
           << "preprocessor directive inside `include directive";
       }
 
-      argument += token.text;
+      // When the `include directive is itself the result of expanding a
+      // macro, the file name may be given as a macro argument (1800-2017
+      // 22.4). Substitute macro arguments here.
+      auto a_it = context().define_arguments.find(token.text);
+      if(a_it != context().define_arguments.end())
+        argument += as_string(a_it->second);
+      else
+        argument += token.text;
     }
 
     // We expect the argument to be one of:
