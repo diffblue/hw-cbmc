@@ -203,6 +203,19 @@ protected:
   {
     return *(context().tokenizer);
   }
+
+  // The topmost context that is a file, i.e. the innermost `include'd
+  // file that is currently being processed, skipping over any macro
+  // expansion contexts. Returns nullptr if there is none.
+  contextt *topmost_file_context()
+  {
+    for(auto it = context_stack.rbegin(); it != context_stack.rend(); ++it)
+    {
+      if(it->is_file())
+        return &*it;
+    }
+    return nullptr;
+  }
 };
 
 #endif

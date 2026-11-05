@@ -1,0 +1,11 @@
+CORE
+include_via_define1.sv
+--preprocess
+^`line 1 "include_via_define1\.svh" 1$
+^`line 6 "include_via_define1\.sv" 2$
+^module top \(\);$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning
+^.*nonexistent
