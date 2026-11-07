@@ -1,0 +1,10 @@
+CORE
+include_via_define4.sv
+--preprocess
+activate-multi-line-match
+^  `line 1 "include_via_define1_a\.svh" 1$
+^  `line 1 "include_via_define1_b\.svh" 1$
+^wire a;[\s\S]*wire b;
+^EXIT=0$
+^SIGNAL=0$
+--

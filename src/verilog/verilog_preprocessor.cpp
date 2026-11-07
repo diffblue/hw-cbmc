@@ -163,12 +163,15 @@ Function: verilog_preprocessort::emit_line_directive
 
 void verilog_preprocessort::emit_line_directive(unsigned level)
 {
-  PRECONDITION(context().is_file());
+  // An `include directive may be the result of expanding a macro, in
+  // which case the enclosing context is a macro expansion (not a file).
+  // The line directive must refer to the nearest enclosing file.
+  contextt &file_context = topmost_file_context();
 
-  out << "`line " << tokenizer().line_no() << " \""
-      << context().filename_as_string() << "\" " << level << '\n';
+  out << "`line " << file_context.tokenizer->line_no() << " \""
+      << file_context.filename_as_string() << "\" " << level << '\n';
 
-  parser_line_no = tokenizer().line_no();
+  parser_line_no = file_context.tokenizer->line_no();
 }
 
 /*******************************************************************\
@@ -227,7 +230,8 @@ void verilog_preprocessort::preprocessor()
           }
           catch(const verilog_preprocessor_errort &e)
           {
-            error().source_location = context().make_source_location();
+            error().source_location =
+              topmost_file_context().make_source_location();
             error() << e.what() << eom;
             error_found = true;
           }
@@ -279,7 +283,7 @@ void verilog_preprocessort::preprocessor()
   catch(const verilog_preprocessor_errort &e)
   {
     if(!context_stack.empty())
-      error().source_location = context().make_source_location();
+      error().source_location = topmost_file_context().make_source_location();
     error() << e.what() << eom;
     error_found = true;
   }
@@ -437,9 +441,34 @@ auto verilog_preprocessort::parse_define_arguments(const definet &define)
         nesting++;
       else if(token == ')' || token == ']' || token == '}')
         nesting--;
-      arguments.back().push_back(std::move(token));
+
+      // When this macro call is itself inside a macro expansion, an
+      // actual argument may be a formal parameter of the enclosing
+      // macro. Substitute it so that forwarded arguments resolve
+      // (e.g. `define DO(FN) `include FN / `define INC(F) `DO(F)).
+      auto a_it = context().define_arguments.find(token.text);
+      if(token.is_identifier() && a_it != context().define_arguments.end())
+      {
+        for(const auto &t : a_it->second)
+          arguments.back().push_back(t);
+      }
+      else
+        arguments.back().push_back(std::move(token));
     }
   }
+
+  // 1800-2017 22.5.1: leading and trailing white space in an actual
+  // argument is ignored.
+  auto trim = [](std::vector<tokent> &tokens)
+  {
+    while(!tokens.empty() && tokens.front().is_ws())
+      tokens.erase(tokens.begin());
+    while(!tokens.empty() && tokens.back().is_ws())
+      tokens.pop_back();
+  };
+
+  for(auto &argument : arguments)
+    trim(argument);
 
   // An actual argument that is empty or whitespace only is treated as
   // omitted (1800-2017 22.5.1).
@@ -893,57 +922,74 @@ void verilog_preprocessort::directive()
   {
     if(!condition)
     {
-      // ignore
-      tokenizer().skip_until_eol();
+      // ignore the rest of the line, if any
+      if(context().is_file())
+        tokenizer().skip_until_eol();
       return;
     }
 
     // skip whitespace
     tokenizer().skip_ws();
 
-    std::string argument;
-
-    // Read any tokens until end of line.
-    // 1800-2017 is silent on whether further directives are
-    // processed. We emit an error.
-    // 1800-2017 is silent wether file names in quotes are processed
-    // as string literals. We assume not so.
-    while(!tokenizer().eof() && tokenizer().peek() != '\n')
+    // Resolve a token to its text, substituting a macro argument when
+    // the `include was produced by expanding a macro whose argument is
+    // (part of) the file name (1800-2017 22.4).
+    auto resolve = [this](const tokent &token) -> std::string
     {
-      auto token = tokenizer().next_token();
+      auto a_it = context().define_arguments.find(token.text);
+      if(a_it != context().define_arguments.end())
+        return as_string(a_it->second);
+      return token.text;
+    };
 
-      if(token == '`')
-      {
-        throw verilog_preprocessor_errort()
-          << "preprocessor directive inside `include directive";
-      }
+    if(tokenizer().eof() || tokenizer().peek() == '\n')
+      throw verilog_preprocessor_errort()
+        << "expecting a file name after `include";
 
-      argument += token.text;
-    }
-
-    // We expect the argument to be one of:
+    // We expect the file name to be one of:
     // <filename> -- include paths only
     // "filename" -- relative path, then include paths.
     std::string given_filename;
     bool include_paths_only;
 
-    if(!argument.empty() && argument[0] == '"')
+    // The "filename" form is a single string-literal token (possibly
+    // supplied via a macro argument); the <filename> form may span
+    // several tokens, up to the closing '>'.
+    auto first_token = tokenizer().next_token();
+
+    if(first_token == '`')
+      throw verilog_preprocessor_errort()
+        << "preprocessor directive inside `include directive";
+
+    std::string first = resolve(first_token);
+
+    if(!first.empty() && first[0] == '"')
     {
       include_paths_only = false;
-      auto quote_pos = argument.find('"', 1);
+      auto quote_pos = first.find('"', 1);
       if(quote_pos == std::string::npos)
         throw verilog_preprocessor_errort()
           << "expected closing \" in include directive";
-      given_filename = std::string(argument, 1, quote_pos - 1);
+      given_filename = std::string(first, 1, quote_pos - 1);
     }
-    else if(!argument.empty() && argument[0] == '<')
+    else if(!first.empty() && first[0] == '<')
     {
       include_paths_only = true;
-      auto quote_pos = argument.find('>', 1);
-      if(quote_pos == std::string::npos)
+      std::string argument = first;
+      while(argument.find('>', 1) == std::string::npos && !tokenizer().eof() &&
+            tokenizer().peek() != '\n')
+      {
+        auto token = tokenizer().next_token();
+        if(token == '`')
+          throw verilog_preprocessor_errort()
+            << "preprocessor directive inside `include directive";
+        argument += resolve(token);
+      }
+      auto gt_pos = argument.find('>', 1);
+      if(gt_pos == std::string::npos)
         throw verilog_preprocessor_errort()
           << "expected closing > in include directive";
-      given_filename = std::string(argument, 1, quote_pos - 1);
+      given_filename = std::string(argument, 1, gt_pos - 1);
     }
     else
     {
@@ -951,16 +997,27 @@ void verilog_preprocessort::directive()
         << "expecting either \" or < after `include";
     }
 
-    auto full_path =
-      find_include_file(context().path, given_filename, include_paths_only);
+    // Resolve the file relative to the innermost enclosing file, not the
+    // macro-expansion context (whose path is empty).
+    auto full_path = find_include_file(
+      topmost_file_context().path, given_filename, include_paths_only);
 
     auto in = new std::ifstream(full_path);
 
     if(!*in)
       throw verilog_preprocessor_errort() << "failed to open an include file";
 
-    tokenizer().skip_until_eol();
-    tokenizer().next_token(); // eat the \n
+    // 1800-2017 22.4: only white space or a comment may follow the file
+    // name on the line. When the directive was read straight from a
+    // file, consume the rest of the line and the newline. When it is the
+    // result of a macro expansion, any following tokens belong to the
+    // macro text and are processed normally once the include has been
+    // read.
+    if(context().is_file())
+    {
+      tokenizer().skip_until_eol();
+      tokenizer().next_token(); // eat the \n
+    }
 
     context_stack.emplace_back(true, in, full_path);
     emit_line_directive(1); // 'enter'
