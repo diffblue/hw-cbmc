@@ -115,19 +115,11 @@ public:
 
   // for flex
   std::size_t yy_input(char *buffer, std::size_t max_size);
-  void text(const char *buffer, std::size_t len)
-  {
-    token.text = std::string(buffer, len);
-  }
-
-  void text(char ch)
-  {
-    token.text = std::string(1, ch);
-  }
 
 protected:
   std::istream &in;
   void get_token_from_stream() override;
+  static std::string text();
 };
 
 // tokenize a given string
