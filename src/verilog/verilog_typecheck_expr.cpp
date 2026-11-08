@@ -1208,6 +1208,166 @@ void verilog_typecheck_exprt::convert_arguments(
 
 /*******************************************************************\
 
+Function: verilog_typecheck_exprt::expand_let
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Expand an instance of a let with ports, as per 1800-2017
+          11.12. The actual arguments are substituted for the formal
+          arguments in the let body, which is then converted.
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::expand_let(
+  const symbolt &symbol,
+  exprt::operandst arguments,
+  const source_locationt &source_location)
+{
+  auto &ports = symbol.value.find(ID_ports).get_sub();
+
+  // Detect recursive instances, which are not allowed (1800-2017 11.12).
+  if(!let_expansion_stack.insert(symbol.name).second)
+  {
+    throw errort().with_location(source_location)
+      << "recursive let `" << symbol.base_name << "'";
+  }
+
+  // Map the actual arguments onto the formal arguments, which may be
+  // given by position or by name (1800-2017 11.12, A.8.2). The actual
+  // arguments are not converted here, but substituted into the body.
+  // Formals without actual argument are nil, and are given their default
+  // value below.
+  exprt::operandst resolved(ports.size(), nil_exprt{});
+  std::size_t next_positional = 0;
+  bool seen_named = false;
+
+  for(auto &argument : arguments)
+  {
+    if(argument.id() == ID_verilog_named_port_connection)
+    {
+      seen_named = true;
+
+      const irep_idt &base_name = argument.get(ID_base_name);
+
+      std::optional<std::size_t> index;
+      for(std::size_t i = 0; i < ports.size(); i++)
+        if(ports[i].id() == base_name)
+        {
+          index = i;
+          break;
+        }
+
+      if(!index.has_value())
+      {
+        throw errort().with_location(argument.source_location())
+          << "no formal argument named `" << base_name << "'";
+      }
+
+      if(resolved[*index].is_not_nil())
+      {
+        throw errort().with_location(argument.source_location())
+          << "formal argument `" << base_name << "' assigned twice";
+      }
+
+      if(argument.operands().size() != 1)
+      {
+        throw errort().with_location(argument.source_location())
+          << "malformed named argument";
+      }
+
+      // An empty named argument ".name()" uses the default value.
+      resolved[*index] = to_unary_expr(argument).op();
+    }
+    else
+    {
+      if(seen_named)
+      {
+        throw errort().with_location(argument.source_location())
+          << "ordered arguments must precede named arguments";
+      }
+
+      if(next_positional >= ports.size())
+      {
+        throw errort().with_location(source_location)
+          << "let `" << symbol.base_name << "' expects " << ports.size()
+          << " arguments, but got " << arguments.size();
+      }
+
+      resolved[next_positional++] = argument;
+    }
+  }
+
+  arguments = std::move(resolved);
+
+  // Missing trailing positional arguments, and named arguments without
+  // value, take the default value of the formal, if any.
+  arguments.resize(ports.size(), nil_exprt{});
+
+  for(std::size_t i = 0; i < ports.size(); i++)
+  {
+    if(arguments[i].is_nil())
+    {
+      auto &default_value = static_cast<const exprt &>(ports[i].find(ID_value));
+
+      if(default_value.is_nil())
+      {
+        throw errort().with_location(source_location)
+          << "no argument for formal `" << ports[i].id() << "' of let `"
+          << symbol.base_name << "'";
+      }
+
+      arguments[i] = default_value;
+    }
+  }
+
+  // Build the substitution. Typed formals cast the actual argument to
+  // the type of the formal.
+  std::map<irep_idt, exprt> substitution;
+
+  for(std::size_t i = 0; i < ports.size(); i++)
+  {
+    auto &port_type = static_cast<const typet &>(ports[i].find(ID_type));
+    exprt actual = arguments[i];
+
+    if(port_type.is_not_nil())
+    {
+      exprt cast{ID_verilog_explicit_type_cast, port_type, {std::move(actual)}};
+      cast.add_source_location() = arguments[i].source_location();
+      actual = std::move(cast);
+    }
+
+    substitution.emplace(ports[i].id(), std::move(actual));
+  }
+
+  // Substitute the actual arguments for the formal arguments in the let
+  // body. The substitution is simultaneous, i.e., the actual arguments
+  // are not themselves subject to substitution.
+  exprt body = symbol.value;
+  body.remove(ID_ports);
+
+  body.visit_post(
+    [&substitution](exprt &expr)
+    {
+      if(expr.id() == ID_verilog_identifier)
+      {
+        auto s_it =
+          substitution.find(to_verilog_identifier_expr(expr).base_name());
+        if(s_it != substitution.end())
+          expr = s_it->second;
+      }
+    });
+
+  convert_expr(body);
+
+  let_expansion_stack.erase(symbol.name);
+
+  return body;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_exprt::convert_expr_function_call
 
   Inputs:
@@ -1333,6 +1493,12 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
 
   if(symbol->type.id()!=ID_code)
   {
+    // Is this a let expression with ports? 1800-2017 11.12
+    if(symbol->is_macro && symbol->value.find(ID_ports).is_not_nil())
+    {
+      return expand_let(*symbol, std::move(arguments), expr.source_location());
+    }
+
     throw errort().with_location(f_op.source_location())
       << "expected function name";
   }
@@ -2278,7 +2444,13 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
   if(symbol != nullptr)
   {
     // found!
-    if(
+    if(symbol->is_macro && symbol->value.find(ID_ports).is_not_nil())
+    {
+      // An instance of a let with ports, but without parentheses
+      // (1800-2017 11.12). All formals need a default value.
+      return expand_let(*symbol, {}, expr.source_location());
+    }
+    else if(
       symbol->type.id() == ID_to_be_elaborated ||
       symbol->type.id() == ID_elaborating)
     {
