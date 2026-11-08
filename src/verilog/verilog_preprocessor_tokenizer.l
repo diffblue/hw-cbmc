@@ -1,5 +1,7 @@
 %option nounput
 %option noinput
+%option reentrant
+%option noyywrap
 
 %{
 #include <util/pragma_wdeprecated_register.def>
@@ -13,13 +15,15 @@ static int isatty(int) { return 0; }
 
 #include "verilog_preprocessor_tokenizer.h"
 
-extern verilog_preprocessor_tokenizert *verilog_preprocessor_tokenizer;
 using tokent = verilog_preprocessor_tokenizert::tokent;
 
-#define TOKENIZER (*verilog_preprocessor_tokenizer)
-
-#define YY_INPUT(buf, result, max_size) \
-  { result = TOKENIZER.yy_input(buf, max_size); }
+// The scanner is reentrant; its "extra" data is the flex_interfacet
+// wrapper (a verilog_preprocessor_scannert), reached via yyget_extra.
+#define YY_INPUT(buf, result, max_size)                          \
+  {                                                              \
+    result = FLEX_CLASS_NAME::from_extra(yyget_extra(yyscanner)) \
+               .yy_input(buf, max_size);                         \
+  }
 %}
 
 %s SLCOMMENT
@@ -40,7 +44,8 @@ String		\"(\\(.|\n)|[^"\\])*\"
 <SLCOMMENT>\\\n		{
 			  /* 1800-2017 22.5.1: a one-line comment ending in a
 			     backslash continues a `define on the next line */
-			  if(TOKENIZER.in_macro_text)
+			  if(static_cast<const verilog_preprocessor_scannert &>(
+			       FLEX_CLASS_NAME::from_extra(yyget_extra(yyscanner))).in_macro_text)
 			  {
 			    yyless(1); /* return the \n to the input */
 			    return '\\';
@@ -60,15 +65,4 @@ String		\"(\\(.|\n)|[^"\\])*\"
 
 %%
 
-int yywrap() { return 1; }
-
-std::string verilog_preprocessor_tokenizert::text()
-{
-  return std::string(yytext, yyleng);
-}
-
-void verilog_preprocessor_tokenizer_init()
-{
-  YY_FLUSH_BUFFER;
-  BEGIN INITIAL;
-}
+#include "flex_interface.inc"

@@ -11,6 +11,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "verilog_preprocessor_error.h"
 
+#define FLEX_PREFIX yyverilog_preprocessor
+#include "flex_interface.h"
+
 #include <vector>
 
 // returns true if the argument is space, tab, vertical tab,
@@ -107,19 +110,35 @@ protected:
   virtual void get_token_from_stream() = 0;
 };
 
+// The scanner is the flex-generated reentrant tokenizer wrapped by
+// flex_interfacet (FLEX_CLASS_NAME). The subclass adds the
+// preprocessor-specific in_macro_text flag, which the scanner reads via
+// yyget_extra(). The flag itself lives on the token source (not the
+// generic flex base).
+class verilog_preprocessor_scannert : public FLEX_CLASS_NAME
+{
+public:
+  verilog_preprocessor_scannert(std::istream &_in, const bool &_in_macro_text)
+    : FLEX_CLASS_NAME(_in), in_macro_text(_in_macro_text)
+  {
+  }
+
+  // see verilog_preprocessor_token_sourcet::in_macro_text
+  const bool &in_macro_text;
+};
+
 class verilog_preprocessor_tokenizert
   : public verilog_preprocessor_token_sourcet
 {
 public:
-  explicit verilog_preprocessor_tokenizert(std::istream &_in);
-
-  // for flex
-  std::size_t yy_input(char *buffer, std::size_t max_size);
+  explicit verilog_preprocessor_tokenizert(std::istream &_in)
+    : scanner(_in, in_macro_text)
+  {
+  }
 
 protected:
-  std::istream &in;
+  verilog_preprocessor_scannert scanner;
   void get_token_from_stream() override;
-  static std::string text();
 };
 
 // tokenize a given string
