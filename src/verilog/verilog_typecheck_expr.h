@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "sva_expr.h"
 #include "verilog_typecheck_base.h"
 
+#include <map>
 #include <set>
 #include <stack>
 
@@ -75,6 +76,9 @@ protected:
   // Named properties/sequences currently being flattened, used to
   // detect recursive instantiation (1800-2017 16.12.17).
   std::set<irep_idt> sva_flatten_stack;
+
+  // let instances currently being expanded, to detect recursion
+  std::set<irep_idt> let_expansion_stack;
 
   // module_identifier.function.block.base_name
   // including the Verilog:: prefix.
@@ -224,6 +228,9 @@ protected:
     exprt::operandst &arguments,
     const code_typet::parameterst &parameters,
     const source_locationt &);
+  // Expand an instance of a let with ports (1800-2017 11.12)
+  [[nodiscard]] exprt
+  expand_let(const symbolt &, exprt::operandst, const source_locationt &);
   [[nodiscard]] exprt convert_system_function(function_call_exprt);
   [[nodiscard]] exprt convert_bit_select_expr(verilog_bit_select_exprt);
   [[nodiscard]] exprt convert_interface_array_element(verilog_bit_select_exprt);

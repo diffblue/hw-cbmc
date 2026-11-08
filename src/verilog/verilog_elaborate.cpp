@@ -945,13 +945,6 @@ void verilog_typecheckt::collect_symbols(const verilog_lett &let)
   // These have one declarator.
   auto &declarator = let.declarator();
 
-  // We don't currently do let ports
-  if(declarator.type().is_not_nil())
-  {
-    throw errort().with_location(let.source_location())
-      << "let ports not supported yet";
-  }
-
   const irep_idt &base_name = declarator.base_name();
   irep_idt identifier = hierarchical_identifier(base_name);
 
@@ -967,6 +960,35 @@ void verilog_typecheckt::collect_symbols(const verilog_lett &let)
   new_symbol.value = declarator.value();
   new_symbol.base_name = base_name;
   new_symbol.pretty_name = strip_verilog_root_prefix(new_symbol.name);
+
+  // Let expressions with ports are expanded at the call site.
+  // We store the formal arguments, i.e., their names, optional types
+  // and optional default values, alongside the body (1800-2017 11.12).
+  if(declarator.type().is_not_nil())
+  {
+    irept::subt ports;
+    for(auto &port_item : declarator.type().get_sub())
+    {
+      // Each port_item is an ID_decl with one declarator
+      auto &port_decl = static_cast<const exprt &>(port_item);
+      DATA_INVARIANT(
+        port_decl.id() == ID_decl && port_decl.operands().size() == 1,
+        "let port must have one declarator");
+      auto &port_declarator = to_unary_expr(port_decl).op();
+      irept port{port_declarator.get(ID_base_name)};
+
+      auto &port_type = static_cast<const typet &>(port_decl.find(ID_type));
+      if(port_type.is_not_nil() && port_type.id() != ID_verilog_untyped)
+        port.set(ID_type, port_type);
+
+      auto &default_value = port_declarator.find(ID_value);
+      if(default_value.is_not_nil())
+        port.set(ID_value, default_value);
+
+      ports.push_back(std::move(port));
+    }
+    new_symbol.value.add(ID_ports).get_sub() = std::move(ports);
+  }
 
   let_symbols.insert(new_symbol.name);
 
@@ -1580,19 +1602,32 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
     else if(
       to_type_with_subtype(symbol.type).subtype().id() == ID_derive_from_value)
     {
-      // First elaborate the value, possibly recursively.
-      convert_expr(symbol.value);
+      // Let expressions with ports are not elaborated until call site.
+      bool is_let_with_ports =
+        is_let && symbol.value.find(ID_ports).is_not_nil();
 
-      // A parameter without an explicit type takes the type of its final
-      // value (1800-2017 6.20.2).
-      if(is_let)
-        symbol.type = symbol.value.type();
+      if(is_let_with_ports)
+      {
+        // Use a placeholder type; the actual type is determined at the
+        // call site after argument substitution.
+        symbol.type = typet(ID_nil);
+      }
       else
       {
-        auto folded = elaborate_constant_expression_check(symbol.value);
-        auto value_type = folded.type();
-        std::tie(symbol.type, symbol.value) =
-          parameter_type_and_value(value_type, std::move(folded));
+        // First elaborate the value, possibly recursively.
+        convert_expr(symbol.value);
+
+        // A parameter without an explicit type takes the type of its final
+        // value (1800-2017 6.20.2).
+        if(is_let)
+          symbol.type = symbol.value.type();
+        else
+        {
+          auto folded = elaborate_constant_expression_check(symbol.value);
+          auto value_type = folded.type();
+          std::tie(symbol.type, symbol.value) =
+            parameter_type_and_value(value_type, std::move(folded));
+        }
       }
     }
     else
