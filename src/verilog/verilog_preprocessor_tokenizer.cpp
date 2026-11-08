@@ -120,6 +120,7 @@ void verilog_preprocessor_tokenizert::get_token_from_stream()
   verilog_preprocessor_tokenizer = this;
   token.kind = static_cast<verilog_preprocessor_tokenizert::tokent::kindt>(
     yyverilog_preprocessorlex());
+  token.text = text();
 }
 
 std::vector<verilog_preprocessor_token_sourcet::tokent>

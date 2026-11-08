@@ -33,29 +33,27 @@ String		\"(\\(.|\n)|[^"\\])*\"
 
 <INITIAL>"//"		{ BEGIN SLCOMMENT; /* single-line comment */ }
 <INITIAL>"/*"           { BEGIN MLCOMMENT; /* multi-line comment */ }
-<INITIAL>{String}	{ TOKENIZER.text(yytext, yyleng); return tokent::STRING_LITERAL; }
-<INITIAL>{Identifier}	{ TOKENIZER.text(yytext, yyleng); return tokent::IDENTIFIER; }
-<INITIAL>.|\n		{ TOKENIZER.text(yytext[0]); return yytext[0]; /* anything else */ }
-<SLCOMMENT>\n		{ BEGIN INITIAL; TOKENIZER.text('\n'); return '\n'; }
+<INITIAL>{String}	{ return tokent::STRING_LITERAL; }
+<INITIAL>{Identifier}	{ return tokent::IDENTIFIER; }
+<INITIAL>.|\n		{ return yytext[0]; /* anything else */ }
+<SLCOMMENT>\n		{ BEGIN INITIAL; return '\n'; }
 <SLCOMMENT>\\\n		{
 			  /* 1800-2017 22.5.1: a one-line comment ending in a
 			     backslash continues a `define on the next line */
 			  if(TOKENIZER.in_macro_text)
 			  {
 			    yyless(1); /* return the \n to the input */
-			    TOKENIZER.text('\\');
 			    return '\\';
 			  }
 			  else
 			  {
 			    BEGIN INITIAL;
-			    TOKENIZER.text('\n');
 			    return '\n';
 			  }
 			}
 <SLCOMMENT>.		{ /* just eat up */ }
 <SLCOMMENT><<EOF>>      { /* we allow that */ BEGIN INITIAL; }
-<MLCOMMENT>\n		{ TOKENIZER.text('\n'); return '\n'; }
+<MLCOMMENT>\n		{ return '\n'; }
 <MLCOMMENT>"*/"         { BEGIN INITIAL; /* comment done */ }
 <MLCOMMENT>.		{ /* just eat up */ }
 <MLCOMMENT><<EOF>>      { throw verilog_preprocessor_errort() << "EOF inside a comment"; }
@@ -63,6 +61,11 @@ String		\"(\\(.|\n)|[^"\\])*\"
 %%
 
 int yywrap() { return 1; }
+
+std::string verilog_preprocessor_tokenizert::text()
+{
+  return std::string(yytext, yyleng);
+}
 
 void verilog_preprocessor_tokenizer_init()
 {
