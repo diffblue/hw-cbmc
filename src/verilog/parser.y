@@ -3735,11 +3735,20 @@ let_port_list:
 let_port_item:
           attribute_instance_brace let_formal_type formal_port_identifier
           variable_dimension_brace let_port_initializer_opt
+                {
+                  init($$, ID_decl);
+                  addswap($$, ID_type, $2);
+                  stack_expr($3).id(ID_declarator);
+                  addswap($3, ID_value, $5);
+                  mto($$, $3);
+                }
         ;
 
 let_port_initializer_opt:
           /* Optional */
+                { init($$, ID_nil); }
         | '=' expression
+                { $$ = $2; }
         ;
 
 let_formal_type:
