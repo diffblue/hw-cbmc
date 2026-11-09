@@ -1305,6 +1305,35 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
 
     symbol = found;
   }
+  else if(f_op.id() == ID_hierarchical_identifier)
+  {
+    // hierarchical function call, e.g., m.double()
+    auto &hi = to_hierarchical_identifier_expr(f_op);
+
+    convert_expr(hi.lhs());
+
+    base_name = hi.rhs().base_name();
+
+    if(
+      hi.lhs().id() != ID_symbol ||
+      hi.lhs().type().id() != ID_verilog_module_instance)
+    {
+      throw errort().with_location(f_op.source_location())
+        << "expected module instance on lhs of hierarchical function call";
+    }
+
+    const irep_idt &lhs_identifier = to_symbol_expr(hi.lhs()).identifier();
+
+    irep_idt full_identifier =
+      id2string(lhs_identifier) + "." + id2string(base_name);
+
+    if(ns.lookup(full_identifier, symbol))
+    {
+      throw errort().with_location(f_op.source_location())
+        << "unknown function `" << base_name << "' in `" << lhs_identifier
+        << '\'';
+    }
+  }
   else
   {
     throw errort().with_location(expr.source_location())

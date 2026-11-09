@@ -1,0 +1,10 @@
+CORE
+interface_function1.sv
+--bound 1
+^\[main\.p1\] always main\.m\.double\(\) == 42: PROVED up to bound 1
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Calling a function defined in an interface via hierarchical identifier
+(IEEE 1800-2017 25.4).
