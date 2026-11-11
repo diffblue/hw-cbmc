@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
+#include <util/bitvector_types.h>
 #include <util/c_types.h>
 #include <util/expr_util.h>
 #include <util/floatbv_expr.h>
@@ -131,6 +132,18 @@ exprt extract(
     return extractbits_exprt{
       padded_src, from_integer(offset, integer_typet{}), dest_type};
   }
+}
+
+/// Like verilog_bits_opt, but also gives the width of a bv_typet.
+/// verilog_bits_opt gives no width for bv_typet, as it is not a Verilog
+/// type. But to_bitvector converts a packed struct, union or array into
+/// a value of type bv_typet, e.g., the concatenation of the members.
+static std::optional<mp_integer> bitvector_bits_opt(const typet &type)
+{
+  if(type.id() == ID_bv)
+    return to_bv_type(type).get_width();
+  else
+    return verilog_bits_opt(type);
 }
 
 exprt from_bitvector(
