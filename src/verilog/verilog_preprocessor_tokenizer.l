@@ -48,7 +48,7 @@ String		\"(\\(.|\n)|[^"\\])*\"
 			  else
 			  {
 			    BEGIN INITIAL;
-			    return '\n';
+			    yyless(1); /* rescan the \n as a newline token */
 			  }
 			}
 <SLCOMMENT>.		{ /* just eat up */ }
