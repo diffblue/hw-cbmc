@@ -1,0 +1,7 @@
+CORE
+bf16_fma.sv
+--top bf16_fma --process 45nm
+^  Register bits:       16$
+^  Total:               1155\.4 um2$
+^EXIT=0$
+^SIGNAL=0$

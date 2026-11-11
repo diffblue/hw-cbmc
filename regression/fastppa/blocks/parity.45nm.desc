@@ -1,0 +1,9 @@
+CORE
+parity.sv
+--top parity --process 45nm
+^  Register bits:       1$
+^  Operators:           1$
+^  Comb. area:          32\.0 um2$
+^  Total:               36\.5 um2$
+^EXIT=0$
+^SIGNAL=0$

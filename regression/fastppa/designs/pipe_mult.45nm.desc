@@ -1,0 +1,7 @@
+CORE
+pipe_mult.sv
+--top pipe_mult --process 45nm
+^  Register bits:       96$
+^  Total:               2072\.3 um2$
+^EXIT=0$
+^SIGNAL=0$

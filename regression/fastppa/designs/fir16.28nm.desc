@@ -1,0 +1,7 @@
+CORE
+fir16.sv
+--top fir16 --process 28nm
+^  Register bits:       288$
+^  Total:               4364\.0 um2$
+^EXIT=0$
+^SIGNAL=0$

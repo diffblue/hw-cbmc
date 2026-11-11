@@ -1,0 +1,8 @@
+CORE
+divider.sv
+--top divider --process 45nm
+^  Register bits:       64$
+^  Operators:           2$
+^  Total:               9177\.6 um2$
+^EXIT=0$
+^SIGNAL=0$
