@@ -1514,7 +1514,7 @@ extract_bits(const exprt &value, const mp_integer &offset, std::size_t width)
         to_extractbit_expr(value).src(), offset + *index_opt, width);
   }
 
-  const auto value_width_opt = bitvector_bits_opt(type);
+  const auto value_width_opt = verilog_bits_opt(type);
 
   // All bits of a bit-vector or Boolean: the value itself.
   if(offset == 0 && value_width_opt.has_value() && *value_width_opt == width)
@@ -1545,7 +1545,7 @@ extract_bits(const exprt &value, const mp_integer &offset, std::size_t width)
 
   auto add_part = [&parts, &position, &opaque](exprt part, const typet &t)
   {
-    auto part_width_opt = bitvector_bits_opt(t);
+    auto part_width_opt = verilog_bits_opt(t);
     if(!part_width_opt.has_value())
     {
       opaque = true;
