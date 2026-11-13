@@ -1,0 +1,9 @@
+CORE
+subdir_via_define/in_subdir.sv
+--preprocess
+activate-multi-line-match
+^`line 1 "subdir_via_define/include_file\.vh" 1\nwire in_subdir;$
+^EXIT=0$
+^SIGNAL=0$
+--
+not found

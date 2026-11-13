@@ -203,6 +203,20 @@ protected:
   {
     return *(context().tokenizer);
   }
+
+  // The topmost context that is a file, i.e. the innermost `include'd
+  // file currently being processed, skipping over any macro expansion
+  // contexts. The bottom of the stack is always the input file, so this
+  // never fails once preprocessing has started.
+  contextt &topmost_file_context()
+  {
+    for(auto it = context_stack.rbegin(); it != context_stack.rend(); ++it)
+    {
+      if(it->is_file())
+        return *it;
+    }
+    UNREACHABLE;
+  }
 };
 
 #endif
