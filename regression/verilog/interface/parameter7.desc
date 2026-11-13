@@ -1,0 +1,9 @@
+CORE
+parameter7.sv
+
+^\[main\.p0\] always main\.c\.f == main\.x: PROVED .*$
+^\[main\.p1\] always \$bits\(main\.c\.b\.a\.d\) == 8: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
