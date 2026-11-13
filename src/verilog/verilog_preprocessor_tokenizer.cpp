@@ -86,41 +86,14 @@ auto verilog_preprocessor_token_sourcet::next_token() -> const tokent &
   return token;
 }
 
-verilog_preprocessor_tokenizert::verilog_preprocessor_tokenizert(
-  std::istream &_in)
-  : in(_in)
-{
-}
-
-std::size_t
-verilog_preprocessor_tokenizert::yy_input(char *buffer, std::size_t max_size)
-{
-  std::size_t result = 0;
-  while(result < max_size)
-  {
-    char ch;
-    if(!in.get(ch))
-      break; // eof
-    buffer[result++] = ch;
-    if(ch == '\n')
-    {
-      // We need to abort prematurely to enable
-      // switching input streams on `include.
-      break;
-    }
-  }
-  return result;
-}
-
-int yyverilog_preprocessorlex();
-verilog_preprocessor_tokenizert *verilog_preprocessor_tokenizer;
-
 void verilog_preprocessor_tokenizert::get_token_from_stream()
 {
-  verilog_preprocessor_tokenizer = this;
-  token.kind = static_cast<verilog_preprocessor_tokenizert::tokent::kindt>(
-    yyverilog_preprocessorlex());
-  token.text = text();
+  // Each tokenizer wraps its own reentrant flex scanner (its own state
+  // and buffer), so a file and the `include files opened while reading
+  // it can be tokenized independently.
+  token.kind =
+    static_cast<verilog_preprocessor_tokenizert::tokent::kindt>(scanner.lex());
+  token.text = std::string(scanner.text(), scanner.leng());
 }
 
 std::vector<verilog_preprocessor_token_sourcet::tokent>
