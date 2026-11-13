@@ -469,21 +469,85 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator root)
   // LHS bits. It uses an explicit stack, as the depth of the traversal
   // is the length of the longest chain of combinational definitions,
   // e.g., the depth of an AIG, which may exceed the call stack.
-  struct framet
+  //
+  // An LHS frame converts the definitions of an LHS bit, an RHS frame
+  // converts an RHS. The constructors establish which of the two a frame
+  // is, and the accessors check it.
+  class framet
   {
-    // An LHS frame converts the definitions of an LHS bit,
-    // an RHS frame converts an RHS.
-    bool is_rhs;
+  public:
+    // an LHS frame, starting with the first definition of the bit
+    explicit framet(lhs_mapt::iterator lhs_it)
+      : _is_rhs(false),
+        _lhs_it(lhs_it),
+        _equal_to_it(lhs_it->second.equal_to.begin())
+    {
+    }
+
+    // an RHS frame
+    explicit framet(const rhst &rhs) : _is_rhs(true), _rhs(&rhs)
+    {
+    }
+
+    bool is_rhs() const
+    {
+      return _is_rhs;
+    }
 
     // LHS frames: the LHS bit, and the definition being converted
-    lhs_mapt::iterator lhs_it;
-    std::list<rhst>::const_iterator equal_to_it;
+    lhs_mapt::iterator lhs_it() const
+    {
+      PRECONDITION(!_is_rhs);
+      return _lhs_it;
+    }
+
+    std::list<rhst>::const_iterator &equal_to_it()
+    {
+      PRECONDITION(!_is_rhs);
+      return _equal_to_it;
+    }
 
     // RHS frames: the RHS, and the LHS bits it depends on
-    const rhst *rhs = nullptr;
-    bool started = false, needs_conversion = false;
-    lhs_dependenciest dependencies;
-    std::size_t next_dependency = 0;
+    const rhst &rhs() const
+    {
+      PRECONDITION(_is_rhs);
+      return *_rhs;
+    }
+
+    bool &started()
+    {
+      PRECONDITION(_is_rhs);
+      return _started;
+    }
+
+    bool &needs_conversion()
+    {
+      PRECONDITION(_is_rhs);
+      return _needs_conversion;
+    }
+
+    lhs_dependenciest &dependencies()
+    {
+      PRECONDITION(_is_rhs);
+      return _dependencies;
+    }
+
+    std::size_t &next_dependency()
+    {
+      PRECONDITION(_is_rhs);
+      return _next_dependency;
+    }
+
+  private:
+    bool _is_rhs;
+
+    lhs_mapt::iterator _lhs_it;
+    std::list<rhst>::const_iterator _equal_to_it;
+
+    const rhst *_rhs = nullptr;
+    bool _started = false, _needs_conversion = false;
+    lhs_dependenciest _dependencies;
+    std::size_t _next_dependency = 0;
   };
 
   std::vector<framet> stack;
@@ -491,15 +555,7 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator root)
   // the value of the RHS frame that was popped last
   literalt rhs_value;
 
-  auto push_rhs = [&stack](const rhst &rhs)
-  {
-    framet frame;
-    frame.is_rhs = true;
-    frame.rhs = &rhs;
-    stack.push_back(std::move(frame));
-  };
-
-  auto push_lhs = [this, &stack, &push_rhs](lhs_mapt::iterator lhs_it)
+  auto push_lhs = [this, &stack](lhs_mapt::iterator lhs_it)
   {
     lhs_entryt &lhs = lhs_it->second;
 
@@ -546,13 +602,8 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator root)
     // do the first definition by setting the node appropriately
     lhs.in_progress = true;
 
-    framet frame;
-    frame.is_rhs = false;
-    frame.lhs_it = lhs_it;
-    frame.equal_to_it = lhs.equal_to.begin();
-    stack.push_back(std::move(frame));
-
-    push_rhs(lhs.equal_to.front());
+    stack.emplace_back(lhs_it);
+    stack.emplace_back(lhs.equal_to.front());
   };
 
   push_lhs(root);
@@ -562,32 +613,32 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator root)
     // Note that pushing a frame invalidates this reference.
     framet &frame = stack.back();
 
-    if(frame.is_rhs)
+    if(frame.is_rhs())
     {
-      rhs_entryt &rhs_entry = *frame.rhs->entry;
+      rhs_entryt &rhs_entry = *frame.rhs().entry;
 
-      if(!frame.started)
+      if(!frame.started())
       {
-        frame.started = true;
+        frame.started() = true;
 
         // done already?
-        frame.needs_conversion = !rhs_entry.converted;
+        frame.needs_conversion() = !rhs_entry.converted;
 
         // get all lhs symbols this depends on
-        if(frame.needs_conversion)
+        if(frame.needs_conversion())
         {
           collect_lhs_rec(
-            rhs_entry.expr, 0, rhs_entry.width - 1, frame.dependencies);
+            rhs_entry.expr, 0, rhs_entry.width - 1, frame.dependencies());
         }
       }
 
-      if(frame.next_dependency < frame.dependencies.size())
+      if(frame.next_dependency() < frame.dependencies().size())
       {
-        push_lhs(frame.dependencies[frame.next_dependency++]);
+        push_lhs(frame.dependencies()[frame.next_dependency()++]);
         continue;
       }
 
-      if(frame.needs_conversion)
+      if(frame.needs_conversion())
       {
         rhs_entry.converted = true;
 
@@ -599,16 +650,16 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator root)
       }
 
       DATA_INVARIANT(
-        frame.rhs->bit_number < rhs_entry.bv.size(), "bit index in range");
-      rhs_value = rhs_entry.bv[frame.rhs->bit_number];
+        frame.rhs().bit_number < rhs_entry.bv.size(), "bit index in range");
+      rhs_value = rhs_entry.bv[frame.rhs().bit_number];
       stack.pop_back();
     }
     else
     {
-      // the RHS frame for frame.equal_to_it has been popped
-      lhs_entryt &lhs = frame.lhs_it->second;
+      // the RHS frame for frame.equal_to_it() has been popped
+      lhs_entryt &lhs = frame.lhs_it()->second;
 
-      if(frame.equal_to_it == lhs.equal_to.begin())
+      if(frame.equal_to_it() == lhs.equal_to.begin())
       {
         lhs.l = rhs_value;
 
@@ -636,10 +687,10 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator root)
         transition_constraints.push_back(aig_prop.lequal(lhs.l, rhs_value));
       }
 
-      if(++frame.equal_to_it == lhs.equal_to.end())
+      if(++frame.equal_to_it() == lhs.equal_to.end())
         stack.pop_back();
       else
-        push_rhs(*frame.equal_to_it);
+        stack.emplace_back(*frame.equal_to_it());
     }
   }
 }
