@@ -1,5 +1,6 @@
 # EBMC 6.2
 
+* SystemVerilog: interface ports with a modport in non-ANSI port declarations
 * netlist conversion: next-state values that are read in the definition of
   a next-state value, e.g., next(a) := next(b), were read as FALSE
 * netlist conversion: every read of a wire without driver yields the same
