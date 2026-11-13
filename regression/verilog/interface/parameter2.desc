@@ -1,0 +1,12 @@
+CORE
+parameter2.sv
+--bound 2
+^\[main\.u\.p0\] always \$bits\(main\.u\.s\.a\) == 4: PROVED up to bound 2$
+^\[main\.p1\] always main\.i\.b == 4'b1111: PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The interface instantiated under an interface port must have the parameters
+of the interface instance that is bound to the port.
