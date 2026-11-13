@@ -1165,6 +1165,22 @@ port_declaration:
                 { add_attributes($2, $1); $$=$2; }
         | attribute_instance_brace output_declaration
                 { add_attributes($2, $1); $$=$2; }
+          // 1800-2017 A.2.1.2: interface ports may also be declared in
+          // the module body, for a module with a non-ANSI header. Only the
+          // form with a modport is accepted here; the form without, e.g.,
+          // intf i;, cannot be told apart from a variable declaration
+          // before elaboration.
+        | attribute_instance_brace interface_identifier '.' non_type_identifier list_of_port_identifiers
+                {
+                  init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_inout);
+                  auto interface_base_name = stack_expr($2).get(ID_base_name);
+                  stack_expr($$).type() = typet(ID_verilog_interface);
+                  stack_expr($$).type().set(ID_base_name, interface_base_name);
+                  stack_expr($$).type().set(ID_verilog_modport, stack_expr($4).get(ID_base_name));
+                  swapop($$, $5);
+                  add_attributes($$, $1);
+                }
         ;
 
 ansi_port_initializer_opt:

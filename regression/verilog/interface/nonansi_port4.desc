@@ -1,0 +1,16 @@
+KNOWNBUG
+nonansi_port4.sv
+--bound 2
+^\[main\.p0\] .*: PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A syntax error. In the module body, bus i; cannot be told apart from
+the declaration of a variable of a user-defined type, or from the start of
+an interface instantiation, before elaboration; an interface port
+declaration with a modport, bus.sink i;, is accepted. The parser would
+need to accept the declaration as a data declaration, and the type checker
+would need to turn it into an interface port when bus is an interface
+and i is in the port list.
