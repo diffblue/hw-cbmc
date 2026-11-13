@@ -540,6 +540,14 @@ exprt verilog_lowering_system_function(const function_call_exprt &call)
       arguments.size() == 1, id2string(base_name) + " takes one argument");
     return typecast_exprt{arguments[0], call.type()};
   }
+  else if(base_name == "$value$plusargs" || base_name == "$test$plusargs")
+  {
+    // IEEE 1800-2017 21.6. EBMC has no command-line plusargs; the
+    // functions hence return 0, indicating that the plusarg is not found,
+    // and $value$plusargs leaves its variable unchanged.
+    return from_integer(0, verilog_lowering(call.type()))
+      .with_source_location(call);
+  }
   else if(base_name == "$rtoi")
   {
     DATA_INVARIANT(

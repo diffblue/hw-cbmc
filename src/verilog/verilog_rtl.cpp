@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
+#include <util/expr_iterator.h>
 #include <util/expr_util.h>
 #include <util/mathematical_types.h>
 #include <util/namespace.h>
@@ -24,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2verilog.h"
 #include "sva_expr.h"
 #include "verilog_bits.h"
+#include "verilog_constant_folding.h"
 #include "verilog_expr.h"
 #include "verilog_lowering.h"
 #include "verilog_typecheck_base.h"
@@ -488,6 +490,10 @@ protected:
   /// constant-fold system function calls such as $bits
   exprt fold_system_functions(exprt) const;
 
+  /// Folds the system functions in the given expression, and then
+  /// simplifies it, when the simplifier supports its types.
+  exprt fold_and_simplify(exprt) const;
+
   /// the current value of the given slice of the given symbol
   exprt slice_of(const symbol_exprt &, const verilog_rtl_slicet &);
 
@@ -613,6 +619,34 @@ exprt verilog_rtl_buildert::fold_system_functions(exprt expr) const
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::fold_and_simplify
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_rtl_buildert::fold_and_simplify(exprt expr) const
+{
+  auto folded = fold_system_functions(std::move(expr));
+
+  // The expression is not lowered yet. verilog_constant_folding lowers it,
+  // simplifies it, and lifts a constant result back to the Verilog type.
+  // A result that is not constant is lowered, and is not used, since the
+  // RTL construction works on Verilog expressions.
+  auto result = verilog_constant_folding(folded, ns);
+
+  if(result.is_constant())
+    return result;
+  else
+    return folded;
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::constant_index
 
   Inputs:
@@ -632,8 +666,7 @@ verilog_rtl_buildert::constant_index(const exprt &expr, statet &state)
 std::optional<mp_integer>
 verilog_rtl_buildert::constant_index(const exprt &expr) const
 {
-  auto folded = fold_system_functions(expr);
-  auto simplified = simplify_expr(std::move(folded), ns);
+  auto simplified = fold_and_simplify(expr);
   return numeric_cast<mp_integer>(simplified);
 }
 
@@ -1339,9 +1372,17 @@ verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
       auto &part_select =
         to_verilog_indexed_part_select_plus_or_minus_expr(lhs);
 
-      sel_width =
-        numeric_cast_v<mp_integer>(to_constant_expr(fold_system_functions(
-          simplify_expr(substitute(part_select.width(), state), ns))));
+      auto sel_width_opt = constant_index(part_select.width(), state);
+
+      // The type checker ensures that the width is an elaboration-time
+      // constant (1800-2017 11.5.1).
+      if(!sel_width_opt.has_value())
+      {
+        throw errort().with_location(part_select.width().source_location())
+          << "width of indexed part-select is not constant";
+      }
+
+      sel_width = *sel_width_opt;
 
       auto index = substitute(part_select.index(), state);
 
@@ -2279,7 +2320,7 @@ void verilog_rtl_buildert::build_assign(
   auto rhs = substitute(assign.rhs(), state);
 
   // Can the rhs be simplified to a constant, for propagation?
-  auto rhs_simplified = simplify_expr(fold_system_functions(rhs), ns);
+  auto rhs_simplified = fold_and_simplify(rhs);
 
   if(rhs_simplified.is_constant())
     rhs = rhs_simplified;
@@ -2310,7 +2351,7 @@ void verilog_rtl_buildert::build_compound_assign(
     state);
 
   // Can the rhs be simplified to a constant, for propagation?
-  auto rhs_simplified = simplify_expr(fold_system_functions(rhs), ns);
+  auto rhs_simplified = fold_and_simplify(rhs);
 
   if(rhs_simplified.is_constant())
     rhs = rhs_simplified;
@@ -2807,11 +2848,11 @@ void verilog_rtl_buildert::merge_guards(
   }
   else
   {
-    // The simplifier removes complementary disjuncts, e.g.
+    // The constant folding recognises complementary disjuncts, e.g.
     // c || !c, which arise when neither branch of an if statement
     // alters the path condition.
     auto disjunction_simplified =
-      simplify_expr(disjunction(std::move(disjuncts)), ns);
+      fold_and_simplify(disjunction(std::move(disjuncts)));
 
     if(!disjunction_simplified.is_true())
       result.push_back(std::move(disjunction_simplified));
@@ -2843,7 +2884,7 @@ void verilog_rtl_buildert::build_if(
   // Constant conditions do not branch; the path condition
   // of break, continue and return statements in the branch
   // that is taken becomes the path condition of the if statement.
-  auto cond_simplified = simplify_expr(fold_system_functions(cond), ns);
+  auto cond_simplified = fold_and_simplify(cond);
 
   if(cond_simplified.is_true())
   {
@@ -3417,8 +3458,7 @@ void verilog_rtl_buildert::build_for(
     if(is_dead(state))
       break;
 
-    auto guard = simplify_expr(
-      fold_system_functions(substitute(statement.condition(), state)), ns);
+    auto guard = fold_and_simplify(substitute(statement.condition(), state));
 
     if(guard.is_false())
       break;
