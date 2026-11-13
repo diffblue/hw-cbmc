@@ -5,6 +5,7 @@
 * Verilog: continuous assignments to variables are rejected in Verilog
   (they remain allowed in SystemVerilog)
 * Verilog: variables connected to inout ports are rejected
+* Verilog: hierarchical references into named generate blocks
 
 # EBMC 6.2
 

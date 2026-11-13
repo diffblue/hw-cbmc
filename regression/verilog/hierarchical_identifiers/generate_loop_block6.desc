@@ -1,0 +1,11 @@
+CORE
+generate_loop_block6.sv
+--module main --bound 0
+^file .* line 10: duplicate definition of identifier `blk' in module `main'$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The name of a generate loop's block must not clash with any other name in
+the module.

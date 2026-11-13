@@ -4179,6 +4179,10 @@ generate_block:
                   init($$, ID_generate_block);
                   swapop($$, $5);
                   stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
+                  // Anchor the block's location to its label rather than
+                  // to the end of the block.
+                  stack_expr($$).add_source_location() =
+                    stack_expr($3).source_location();
                 }
         ;
 
