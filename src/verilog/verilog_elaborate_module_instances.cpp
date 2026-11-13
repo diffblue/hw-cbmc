@@ -828,6 +828,12 @@ void verilog_typecheckt::expand_instance_array(
         port.type().id() != ID_verilog_module_instance &&
         !is_interface_array_type(port.type()))
       {
+        // 1800-2017 6.5: "Variables cannot be connected to either side of
+        // an inout port." The actual connected to an inout port must be a
+        // net, not a variable.
+        if(port.direction() == ID_inout)
+          check_inout_connection(element_value, port);
+
         // like typecheck_port_connection
         if(port.output())
           check_lhs(element_value, A_CONTINUOUS);
