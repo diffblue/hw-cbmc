@@ -1,0 +1,9 @@
+CORE
+x_assignment_one_bit1.sv
+--bdd
+^\[main\.p0\] .*: PROVED$
+^\[main\.p1\] .*: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+^Invariant check failed$
