@@ -21,6 +21,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <map>
 
 class symbol_tablet;
+class verilog_macro_tablet;
 class verilog_scopest;
 
 class verilog_ebmc_languaget : public ebmc_languaget
@@ -41,10 +42,16 @@ public:
   using parse_treest = std::list<parse_treet>;
 
 protected:
-  void preprocess(const std::filesystem::path &, std::ostream &);
+  void preprocess(
+    const std::filesystem::path &,
+    std::ostream &,
+    verilog_macro_tablet &);
   void preprocess();
-  verilog_parse_treet parse(const std::filesystem::path &, verilog_scopest &);
-  void show_parse(const std::filesystem::path &);
+  verilog_parse_treet parse(
+    const std::filesystem::path &,
+    verilog_scopest &,
+    verilog_macro_tablet &);
+  void show_parse(const std::filesystem::path &, verilog_macro_tablet &);
   void show_parse();
 
   parse_treest parse();

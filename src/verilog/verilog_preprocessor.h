@@ -13,31 +13,10 @@
 #include <map>
 #include <optional>
 
-class verilog_preprocessort:public preprocessort
+/// The text macros of one Verilog compilation unit (IEEE 1800-2017 22.5.1).
+class verilog_macro_tablet
 {
-public:
-  virtual void preprocessor();
-
-  verilog_preprocessort(
-    std::istream &_in,
-    std::ostream &_out,
-    message_handlert &_message_handler,
-    const std::string &_filename,
-    const std::list<std::string> &_include_paths,
-    const std::list<std::string> &_initial_defines)
-    : preprocessort(_in, _out, _message_handler, _filename),
-      include_paths(_include_paths),
-      initial_defines(_initial_defines)
-  {
-    condition=true;
-  }
-
-  virtual ~verilog_preprocessort() { }
-
-protected:
-  // from the command line
-  const std::list<std::string> &include_paths;
-  const std::list<std::string> &initial_defines;
+  friend class verilog_preprocessort;
 
   using tokent = verilog_preprocessor_token_sourcet::tokent;
 
@@ -59,10 +38,47 @@ protected:
     }
   };
 
-  static std::string as_string(const std::vector<tokent> &);
-
   using definest = std::unordered_map<std::string, definet, string_hash>;
   definest defines;
+  bool initialized = false;
+};
+
+class verilog_preprocessort:public preprocessort
+{
+public:
+  virtual void preprocessor();
+
+  verilog_preprocessort(
+    std::istream &_in,
+    std::ostream &_out,
+    message_handlert &_message_handler,
+    const std::string &_filename,
+    const std::list<std::string> &_include_paths,
+    const std::list<std::string> &_initial_defines,
+    verilog_macro_tablet *compilation_unit_macros = nullptr)
+    : preprocessort(_in, _out, _message_handler, _filename),
+      include_paths(_include_paths),
+      initial_defines(_initial_defines),
+      macros(
+        compilation_unit_macros ? *compilation_unit_macros : standalone_macros)
+  {
+    condition=true;
+  }
+
+  virtual ~verilog_preprocessort() { }
+
+protected:
+  // from the command line
+  const std::list<std::string> &include_paths;
+  const std::list<std::string> &initial_defines;
+
+  using tokent = verilog_preprocessor_token_sourcet::tokent;
+  using definet = verilog_macro_tablet::definet;
+
+  static std::string as_string(const std::vector<tokent> &);
+
+  verilog_macro_tablet standalone_macros;
+  verilog_macro_tablet &macros;
 
   void directive();
   std::filesystem::path find_include_file(

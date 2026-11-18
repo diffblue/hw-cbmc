@@ -40,7 +40,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 void verilog_ebmc_languaget::preprocess(
   const std::filesystem::path &path,
-  std::ostream &out)
+  std::ostream &out,
+  verilog_macro_tablet &macros)
 {
   std::ifstream infile{path};
 
@@ -75,7 +76,8 @@ void verilog_ebmc_languaget::preprocess(
     message_handler,
     path.u8string(),
     all_include_paths,
-    initial_defines);
+    initial_defines,
+    &macros);
 
   try
   {
@@ -95,12 +97,14 @@ void verilog_ebmc_languaget::preprocess()
 
   const auto file_name = widen_if_needed(cmdline.args.front());
 
-  preprocess(file_name, std::cout);
+  verilog_macro_tablet macros;
+  preprocess(file_name, std::cout, macros);
 }
 
 verilog_parse_treet verilog_ebmc_languaget::parse(
   const std::filesystem::path &path,
-  verilog_scopest &scopes)
+  verilog_scopest &scopes,
+  verilog_macro_tablet &macros)
 {
   verilog_standardt standard;
 
@@ -112,7 +116,7 @@ verilog_parse_treet verilog_ebmc_languaget::parse(
     standard = verilog_standardt::V2005_SMV;
 
   std::stringstream preprocessed;
-  preprocess(path, preprocessed);
+  preprocess(path, preprocessed, macros);
 
   verilog_parsert verilog_parser{standard, scopes, message_handler};
 
@@ -130,38 +134,42 @@ verilog_parse_treet verilog_ebmc_languaget::parse(
   return std::move(verilog_parser.parse_tree);
 }
 
-void verilog_ebmc_languaget::show_parse(const std::filesystem::path &path)
+void verilog_ebmc_languaget::show_parse(
+  const std::filesystem::path &path,
+  verilog_macro_tablet &macros)
 {
   messaget message{message_handler};
 
   message.status() << "Parsing " << path << messaget::eom;
 
   verilog_scopest scopes;
-  auto parse_tree = parse(path, scopes);
+  auto parse_tree = parse(path, scopes, macros);
 
   parse_tree.show(std::cout);
 }
 
 void verilog_ebmc_languaget::show_parse()
 {
+  verilog_macro_tablet macros;
   for(auto &arg : cmdline.args)
-    show_parse(widen_if_needed(arg));
+    show_parse(widen_if_needed(arg), macros);
 }
 
 verilog_ebmc_languaget::parse_treest verilog_ebmc_languaget::parse()
 {
   parse_treest parse_trees;
   verilog_scopest scopes;
+  verilog_macro_tablet macros;
 
   for(auto &arg : cmdline.args)
-    parse_trees.push_back(parse(arg, scopes));
+    parse_trees.push_back(parse(arg, scopes, macros));
 
   // Parse library files specified with -l and +libfile+
   for(auto &lib_file : cmdline.get_values('l'))
-    parse_trees.push_back(parse(lib_file, scopes));
+    parse_trees.push_back(parse(lib_file, scopes, macros));
 
   for(auto &lib_file : cmdline.get_values("libfile"))
-    parse_trees.push_back(parse(lib_file, scopes));
+    parse_trees.push_back(parse(lib_file, scopes, macros));
 
   return parse_trees;
 }
@@ -549,7 +557,8 @@ void verilog_ebmc_languaget::resolve_library_modules(parse_treest &parse_trees)
             log.status() << "Library: parsing " << path << messaget::eom;
 
             verilog_scopest scopes;
-            parse_trees.push_back(parse(path, scopes));
+            verilog_macro_tablet macros;
+            parse_trees.push_back(parse(path, scopes, macros));
             found = true;
             found_any = true;
             break;
