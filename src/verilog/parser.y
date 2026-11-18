@@ -5731,7 +5731,7 @@ attribute_instance: TOK_PARENASTERIC attr_spec_list TOK_ASTERICPAREN
 
 attr_spec_list:
           attr_spec
-                { init($$); }
+                { init($$); mts($$, $1); }
         | attr_spec_list ',' attr_spec
                 { $$=$1; mts($$, $3); }
         ;
