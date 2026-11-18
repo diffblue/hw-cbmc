@@ -1,0 +1,8 @@
+CORE
+attribute_list1.sv
+--show-parse
+^ +\* base_name: anyseq$
+^ +\* base_name: keep$
+^ +\* base_name: anyconst$
+^EXIT=0$
+^SIGNAL=0$
