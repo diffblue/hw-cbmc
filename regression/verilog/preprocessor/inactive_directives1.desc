@@ -1,0 +1,12 @@
+CORE
+inactive_directives1.sv
+--preprocess
+^`default_nettype wire$
+^  localparam int LINE = 9;$
+^  localparam string FILE = "inactive_directives1\.sv";$
+^EXIT=0$
+^SIGNAL=0$
+--
+`default_nettype none
+^"inactive_directives1\.sv"
+^3
