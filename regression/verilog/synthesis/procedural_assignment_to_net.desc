@@ -4,5 +4,5 @@ procedural_assignment_to_net.v
 ^EXIT=2$
 ^SIGNAL=0$
 ^file procedural_assignment_to_net\.v line 6: procedural assignment to a net$
-^Identifier main\.some_net is declared as bool on line 3\.$
+^Identifier main\.some_net is declared as bit on line 3\.$
 --

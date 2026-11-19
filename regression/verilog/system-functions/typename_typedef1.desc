@@ -1,7 +1,7 @@
 CORE
 typename_typedef1.sv
 
-^\[.*\] \$typename\(bool\) == "bit": PROVED .*$
+^\[.*\] \$typename\(bit\) == "bit": PROVED .*$
 ^\[.*\] \$typename\(signed \[31:0\]\) == "int": PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$

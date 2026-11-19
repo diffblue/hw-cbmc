@@ -1,7 +1,7 @@
 CORE
 type_parameters1.sv
 
-^\[main\.p1\] always \$bits\(bool\) == 1: PROVED .*$
+^\[main\.p1\] always \$bits\(bit\) == 1: PROVED .*$
 ^\[main\.p2\] always \$bits\(\[31:0\]\) == 32: PROVED .*$
 ^EXIT=0$
 ^SIGNAL=0$
