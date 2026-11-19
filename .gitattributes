@@ -1,1 +1,2 @@
 *.aig binary
+regression/verilog/preprocessor/macro_continuation_crlf1.sv -text whitespace=cr-at-eol
