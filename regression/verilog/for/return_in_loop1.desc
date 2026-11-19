@@ -2,7 +2,7 @@ CORE
 return_in_loop1.sv
 --bound 2
 ^\[main\.4\.p0\] always main\.f\(2, main\.c\) == \(main\.c \? 100 : 2\): PROVED up to bound 2$
-^\[main\.4\.p1\] always main\.f\(10, 0\[0\]\) == -1: PROVED up to bound 2$
+^\[main\.4\.p1\] always main\.f\(10, 0\) == -1: PROVED up to bound 2$
 ^\[main\.4\.p2\] always main\.f\(main\.n, main\.c\) == \(main\.c \? 100 : main\.n < 4 \? main\.n : -1\): PROVED up to bound 2$
 ^\[main\.4\.p3\] always main\.count == \(main\.c \? 2 : 15\): PROVED up to bound 2$
 ^\[main\.4\.p4\] always 1: PROVED up to bound 2$

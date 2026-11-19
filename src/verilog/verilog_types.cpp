@@ -12,6 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/mathematical_types.h>
 #include <util/std_expr.h>
 
+#include "aval_bval_encoding.h"
+
 constant_exprt verilog_chandle_typet::null_expr() const
 {
   return encoding().all_zeros_expr();
@@ -107,11 +109,11 @@ bool is_unbounded_array_type(const typet &type)
 
 typet make_two_valued(typet src)
 {
-  if(src.id() == ID_verilog_unsignedbv)
+  if(src.id() == ID_verilog_unsignedbv || src.id() == ID_unsignedbv)
   {
     // Is it [0:0]? If so, make it 'bool'
     if(
-      to_verilog_unsignedbv_type(src).width() == 1 &&
+      to_bitvector_type(src).get_width() == 1 &&
       src.get(ID_C_offset) == irep_idt{})
     {
       auto result = bool_typet{}.with_source_location(src.source_location());
@@ -136,37 +138,15 @@ typet make_two_valued(typet src)
     src.id(ID_signedbv);
     return src;
   }
-  else if(src.id() == ID_unsignedbv)
-  {
-    // Is it [0:0]? If so, make it 'bool'
-    if(
-      to_unsignedbv_type(src).width() == 1 &&
-      src.get(ID_C_offset) == irep_idt{})
-    {
-      auto result = bool_typet{}.with_source_location(src.source_location());
-      irep_idt verilog_type = src.get(ID_C_verilog_type);
-      if(verilog_type != irep_idt{})
-        result.set(ID_C_verilog_type, verilog_type);
-      irep_idt verilog_vector_type = src.get(ID_C_verilog_vector_type);
-      if(verilog_vector_type != irep_idt{})
-        result.set(ID_C_verilog_vector_type, verilog_vector_type);
-      return result;
-    }
-    else
-    {
-      // leave as is
-      return src;
-    }
-  }
   else if(src.id() == ID_array)
   {
     auto &array_type = to_array_type(src);
     array_type.element_type() = make_two_valued(array_type.element_type());
     return src;
   }
-  else if(src.id() == ID_struct)
+  else if(src.id() == ID_struct || src.id() == ID_union)
   {
-    for(auto &component : to_struct_type(src).components())
+    for(auto &component : to_struct_union_type(src).components())
       component.type() = make_two_valued(component.type());
     return src;
   }
@@ -174,47 +154,23 @@ typet make_two_valued(typet src)
     return src;
 }
 
-typet make_four_valued(typet src)
+typet two_valued_vector_type(typet src)
 {
-  // The inverse of make_two_valued: turn a two-valued type into its
-  // four-valued (x/z-capable) counterpart. Used for parameters whose
-  // (constant) value contains x/z, which must be retained (1800-2017
-  // 6.20.2); state variables continue to use the two-valued modelling.
-  if(src.id() == ID_bool)
+  if(src.id() == ID_verilog_unsignedbv)
+    src.id(ID_unsignedbv);
+  else if(src.id() == ID_verilog_signedbv)
+    src.id(ID_signedbv);
+
+  return src;
+}
+
+constant_exprt verilog_from_integer(const mp_integer &value, const typet &type)
+{
+  if(is_four_valued(type))
   {
-    auto result = verilog_unsignedbv_typet{1};
-    result.add_source_location() = src.source_location();
-    irep_idt verilog_type = src.get(ID_C_verilog_type);
-    if(!verilog_type.empty())
-      result.set(ID_C_verilog_type, verilog_type);
-    irep_idt verilog_vector_type = src.get(ID_C_verilog_vector_type);
-    if(!verilog_vector_type.empty())
-      result.set(ID_C_verilog_vector_type, verilog_vector_type);
-    return std::move(result);
-  }
-  else if(src.id() == ID_unsignedbv)
-  {
-    // replace id, preserve width/offset/markers and location
-    src.id(ID_verilog_unsignedbv);
-    return src;
-  }
-  else if(src.id() == ID_signedbv)
-  {
-    src.id(ID_verilog_signedbv);
-    return src;
-  }
-  else if(src.id() == ID_array)
-  {
-    auto &array_type = to_array_type(src);
-    array_type.element_type() = make_four_valued(array_type.element_type());
-    return src;
-  }
-  else if(src.id() == ID_struct)
-  {
-    for(auto &component : to_struct_type(src).components())
-      component.type() = make_four_valued(component.type());
-    return src;
+    auto width = to_bitvector_type(type).get_width();
+    return constant_exprt{integer2binary(value, width), type};
   }
   else
-    return src;
+    return from_integer(value, type);
 }

@@ -17,8 +17,8 @@ module main;
   assert final ($typename(longint) == "longint");
   assert final ($typename(longint unsigned) == "longint unsigned");
   assert final ($typename(longint signed) == "longint");
-  assert final ($typename(integer) == "bit signed[31:0]");
-  assert final ($typename(integer unsigned) == "bit[31:0]");
-  assert final ($typename(integer signed) == "bit signed[31:0]");
+  assert final ($typename(integer) == "integer");
+  assert final ($typename(integer unsigned) == "logic[31:0]");
+  assert final ($typename(integer signed) == "integer");
 
 endmodule

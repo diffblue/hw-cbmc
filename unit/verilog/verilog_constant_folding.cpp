@@ -40,6 +40,30 @@ static constant_exprt l1(const std::string &bit)
   return constant_exprt{bit, verilog_unsignedbv_typet{1}};
 }
 
+/// helper: build a two-valued 4-bit unsigned constant from a bit string;
+/// this is the type of the result of a four-valued expression that does
+/// not contain x or z, in line with the typing of literals
+static constant_exprt u4(const std::string &bits)
+{
+  PRECONDITION(bits.size() == 4);
+  return from_integer(string2integer(bits, 2), unsignedbv_typet{4});
+}
+
+/// helper: build a two-valued 4-bit signed constant from a bit string
+static constant_exprt s4(const std::string &bits)
+{
+  PRECONDITION(bits.size() == 4);
+  return from_integer(
+    string2integer(bits, 2) - (bits[0] == '1' ? 16 : 0), signedbv_typet{4});
+}
+
+/// helper: build a two-valued 1-bit unsigned constant
+static constant_exprt u1(const std::string &bit)
+{
+  PRECONDITION(bit.size() == 1);
+  return from_integer(string2integer(bit, 2), unsignedbv_typet{1});
+}
+
 /// helper: a four-valued relational expression; the result type is
 /// a 1-bit four-valued vector, not bool
 static binary_exprt l4_relation(
@@ -105,25 +129,29 @@ SCENARIO("verilog_constant_folding lifts four-valued constants")
 
   GIVEN("a four-valued constant")
   {
-    THEN("the constant is returned unchanged")
+    THEN("the constant is returned unchanged if it has x or z")
     {
       REQUIRE(verilog_constant_folding(l4("x0z1"), ns) == l4("x0z1"));
-      REQUIRE(verilog_constant_folding(l4("0101"), ns) == l4("0101"));
+    }
+
+    THEN("the constant gets the two-valued type if it has no x or z")
+    {
+      REQUIRE(verilog_constant_folding(l4("0101"), ns) == u4("0101"));
     }
   }
 
   GIVEN("four-valued arithmetic without x or z")
   {
-    THEN("the result is a four-valued constant")
+    THEN("the result is a two-valued constant")
     {
       auto result =
         verilog_constant_folding(plus_exprt{l4("0011"), l4("0001")}, ns);
-      REQUIRE(result == l4("0100"));
-      REQUIRE(result.type() == verilog_unsignedbv_typet{4});
+      REQUIRE(result == u4("0100"));
+      REQUIRE(result.type() == unsignedbv_typet{4});
 
       REQUIRE(
         verilog_constant_folding(mult_exprt{l4("0011"), l4("0010")}, ns) ==
-        l4("0110"));
+        u4("0110"));
     }
   }
 
@@ -147,25 +175,25 @@ SCENARIO("verilog_constant_folding lifts four-valued constants")
       l4("x0x1"));
     REQUIRE(
       verilog_constant_folding(bitand_exprt{l4("x0z1"), l4("0000")}, ns) ==
-      l4("0000"));
+      u4("0000"));
     REQUIRE(
       verilog_constant_folding(bitor_exprt{l4("x0z1"), l4("0000")}, ns) ==
       l4("x0x1"));
     REQUIRE(
       verilog_constant_folding(bitor_exprt{l4("x0z1"), l4("1111")}, ns) ==
-      l4("1111"));
+      u4("1111"));
     REQUIRE(
       verilog_constant_folding(bitnot_exprt{l4("x0z1")}, ns) == l4("x1x0"));
   }
 
   GIVEN("a signed four-valued expression")
   {
-    THEN("the result has the signed four-valued type")
+    THEN("the result has the signed two-valued type")
     {
       auto result =
         verilog_constant_folding(unary_minus_exprt{sl4("0001")}, ns);
-      REQUIRE(result == sl4("1111"));
-      REQUIRE(result.type() == verilog_signedbv_typet{4});
+      REQUIRE(result == s4("1111"));
+      REQUIRE(result.type() == signedbv_typet{4});
     }
   }
 
@@ -173,10 +201,10 @@ SCENARIO("verilog_constant_folding lifts four-valued constants")
   {
     REQUIRE(
       verilog_constant_folding(
-        l4_relation(ID_lt, l4("0011"), l4("0100")), ns) == l1("1"));
+        l4_relation(ID_lt, l4("0011"), l4("0100")), ns) == u1("1"));
     REQUIRE(
       verilog_constant_folding(
-        l4_relation(ID_gt, l4("0011"), l4("0100")), ns) == l1("0"));
+        l4_relation(ID_gt, l4("0011"), l4("0100")), ns) == u1("0"));
     REQUIRE(
       verilog_constant_folding(
         l4_relation(ID_verilog_logical_equality, l4("00x1"), l4("0001")), ns) ==
@@ -194,7 +222,7 @@ SCENARIO("verilog_constant_folding lifts four-valued constants")
     THEN("the source location survives constant folding")
     {
       auto result = verilog_constant_folding(expr, ns);
-      REQUIRE(result == l4("0100"));
+      REQUIRE(result == u4("0100"));
       REQUIRE(result.source_location().get_file() == "test.sv");
       REQUIRE(result.source_location().get_line() == "42");
     }
@@ -319,7 +347,7 @@ SCENARIO("verilog_constant_folding lifts constants of other Verilog types")
     THEN("the constant has the range [size-1:0]")
     {
       auto result = verilog_constant_folding(expr, ns);
-      REQUIRE(result == l4("0100"));
+      REQUIRE(result == u4("0100"));
       REQUIRE(result.type().find(ID_C_offset).is_nil());
     }
   }

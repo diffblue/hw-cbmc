@@ -125,6 +125,11 @@ protected:
   /// lower Verilog-specific expressions
   exprt lower(exprt);
 
+  /// lower the given expression, and convert it to the given lowered
+  /// type; a four-valued value is converted to a two-valued type as an
+  /// assignment would (1800-2017 10.7)
+  exprt lower_to(exprt, const typet &lowered_type);
+
   exprt lower_system_functions(exprt);
 
   /// the symbol, with lowered type
@@ -370,8 +375,11 @@ exprt verilog_transition_relationt::lower_system_functions(exprt expr)
         id2string(module) + "::nondet::" + std::to_string(nondet_count++);
 
       auto arguments = call.arguments();
+      // the lowered type of the arguments
       exprt select_one(
-        ID_constraint_select_one, call.type(), std::move(arguments));
+        ID_constraint_select_one,
+        arguments.front().type(),
+        std::move(arguments));
       select_one.set(ID_identifier, identifier);
       return select_one.with_source_location(call);
     }
@@ -503,7 +511,40 @@ exprt verilog_transition_relationt::lower(exprt expr)
 {
   // First lower any Verilog-specific expressions, then rewrite
   // the remaining system function calls, e.g. $past.
-  return lower_system_functions(verilog_lowering(std::move(expr)));
+  auto l = verilog_lowering(std::move(expr));
+  auto r = lower_system_functions(std::move(l));
+  return r;
+}
+
+/*******************************************************************\
+
+Function: verilog_transition_relationt::lower_to
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_transition_relationt::lower_to(
+  exprt expr,
+  const typet &lowered_type)
+{
+  auto lowered = lower(std::move(expr));
+
+  // The variables and nets are modelled two-valued; a value that may
+  // hold x/z, e.g. 1'bx, is converted as a cast to the two-valued type.
+  if(
+    is_aval_bval(lowered) &&
+    (lowered_type.id() == ID_bool || lowered_type.id() == ID_unsignedbv ||
+     lowered_type.id() == ID_signedbv))
+  {
+    return aval_bval(typecast_exprt{std::move(lowered), lowered_type});
+  }
+
+  return typecast_exprt::conditional_cast(std::move(lowered), lowered_type);
 }
 
 /*******************************************************************\
@@ -692,8 +733,7 @@ void verilog_transition_relationt::convert_definitions(
         [&symbol_expr_raw, &whole](const verilog_rtl_slicet &fragment)
         { return extract_range(symbol_expr_raw, whole, fragment); });
 
-      auto lowered_value =
-        typecast_exprt::conditional_cast(lower(std::move(value)), lowered_type);
+      auto lowered_value = lower_to(std::move(value), lowered_type);
 
       exprt lhs = symbol_expr(symbol, true); // next state
 
@@ -748,8 +788,7 @@ void verilog_transition_relationt::convert_definitions(
         [&nondet, &whole](const verilog_rtl_slicet &fragment)
         { return extract_range(nondet, whole, fragment); });
 
-      auto lowered_value =
-        typecast_exprt::conditional_cast(lower(std::move(value)), lowered_type);
+      auto lowered_value = lower_to(std::move(value), lowered_type);
 
       exprt lhs = symbol_expr(symbol, false);
 
@@ -873,7 +912,7 @@ bool verilog_transition_relationt::convert_initial_slices(
     auto rhs_raw = typecast_exprt::conditional_cast(value, lhs_raw.type());
 
     auto lhs = lower(std::move(lhs_raw));
-    auto rhs = lower(std::move(rhs_raw));
+    auto rhs = lower_to(std::move(rhs_raw), lhs.type());
 
     // reads of state-holding variables yield their
     // non-deterministic pre-initial value
@@ -890,7 +929,6 @@ bool verilog_transition_relationt::convert_initial_slices(
       }
     }
 
-    rhs = typecast_exprt::conditional_cast(std::move(rhs), lhs.type());
     constraints.push_back(equal_exprt{std::move(lhs), std::move(rhs)});
   }
 
@@ -977,8 +1015,7 @@ void verilog_transition_relationt::convert_initial_values(
       [&nondet, &whole](const verilog_rtl_slicet &fragment)
       { return extract_range(nondet, whole, fragment); });
 
-    auto lowered_value =
-      typecast_exprt::conditional_cast(lower(std::move(value)), lowered_type);
+    auto lowered_value = lower_to(std::move(value), lowered_type);
 
     // reads of state-holding variables yield their
     // non-deterministic pre-initial value
@@ -1013,8 +1050,7 @@ void verilog_transition_relationt::convert_initial_values(
 
       trans.init().add_to_operands(equal_exprt{
         std::move(lhs),
-        typecast_exprt::conditional_cast(
-          lower(std::move(*initializer_opt)), verilog_lowering(symbol.type))});
+        lower_to(std::move(*initializer_opt), verilog_lowering(symbol.type))});
     }
   }
 

@@ -17,12 +17,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "aval_bval_encoding.h"
 #include "verilog_lowering.h"
 #include "verilog_simplifier.h"
+#include "verilog_types.h"
 
 /// Lift a lowered constant back to the given four-valued Verilog type.
-/// The lowered constant is usually an aval/bval pair of twice the width,
-/// but the simplifier may have produced a two-valued constant (a
-/// bit-vector of the same width, or a Boolean), and may have dropped the
-/// aval/bval type attribute. Hence, decode by width.
+/// The lowered constant is an aval/bval pair of twice the width when it
+/// contains x/z. Otherwise it is two-valued: a bit-vector of the same
+/// width, or a Boolean, and the simplifier may have dropped the aval/bval
+/// type attribute. Hence, decode by width. In line with the typing of
+/// literals, a value without x/z gets the two-valued vector type.
 static constant_exprt lift_four_valued(
   const constant_exprt &lowered,
   const typet &four_valued_type,
@@ -32,36 +34,37 @@ static constant_exprt lift_four_valued(
 
   auto width = to_bitvector_type(four_valued_type).get_width();
   const auto aval_bval_type = lower_to_aval_bval(four_valued_type);
+  const auto two_valued_type = two_valued_vector_type(four_valued_type);
 
-  // the aval/bval encoding of the value
-  irep_idt aval_bval_value;
+  auto lift = [&]() -> constant_exprt
+  {
+    if(lowered.type().id() == ID_bool)
+    {
+      DATA_INVARIANT(width == 1, "Boolean constant must have width 1");
+      return from_integer(lowered.is_true() ? 1 : 0, two_valued_type);
+    }
 
-  if(lowered.type().id() == ID_bool)
-  {
-    DATA_INVARIANT(width == 1, "Boolean constant must have width 1");
-    aval_bval_value =
-      integer2bvrep(lowered.is_true() ? 1 : 0, aval_bval_type.get_width());
-  }
-  else
-  {
     auto lowered_width = to_bitvector_type(lowered.type()).get_width();
+
     if(lowered_width == 2 * width)
     {
-      aval_bval_value = lowered.get_value();
-    }
-    else
-    {
-      DATA_INVARIANT(
-        lowered_width == width, "lowered constant must have same width");
-      // bval is zero
-      aval_bval_value = integer2bvrep(
-        bvrep2integer(lowered.get_value(), width, false),
-        aval_bval_type.get_width());
-    }
-  }
+      constant_exprt aval_bval_constant{lowered.get_value(), aval_bval_type};
 
-  auto result = raise_from_aval_bval(
-    constant_exprt{aval_bval_value, aval_bval_type}, four_valued_type);
+      if(aval_bval_has_xz(aval_bval_constant))
+        return raise_from_aval_bval(aval_bval_constant, four_valued_type);
+
+      // the aval is the lower half
+      auto aval =
+        bvrep2integer(lowered.get_value(), 2 * width, false) % power(2, width);
+      return constant_exprt{integer2bvrep(aval, width), two_valued_type};
+    }
+
+    DATA_INVARIANT(
+      lowered_width == width, "lowered constant must have same width");
+    return constant_exprt{lowered.get_value(), two_valued_type};
+  };
+
+  auto result = lift();
 
   // The lowering may have created new expressions without
   // source location; use the one of the original expression.
@@ -70,15 +73,57 @@ static constant_exprt lift_four_valued(
   return result;
 }
 
+/// Given a lowered expression and the Verilog type of the expression it
+/// was lowered from, lift the expression back to the Verilog type if it
+/// is a constant. Non-constant expressions are returned as given.
+static exprt
+verilog_lift_constant(exprt lowered, const typet &verilog_type_given)
+{
+  // The result is a value, and hence has the range [size-1:0] rather
+  // than any declared range of the expression.
+  auto verilog_type = verilog_type_given;
+  verilog_type.remove(ID_C_offset);
+  verilog_type.remove(ID_C_increasing);
+
+  // Only constants are lifted.
+  if(!lowered.is_constant())
+    return lowered;
+
+  // Lift four-valued constants back to their Verilog type, unless they
+  // are two-valued.
+  if(
+    is_four_valued(verilog_type) &&
+    (lowered.type().id() == ID_bool ||
+     can_cast_type<bitvector_typet>(lowered.type())))
+  {
+    return lift_four_valued(
+      to_constant_expr(lowered), verilog_type, lowered.source_location());
+  }
+  else if(
+    (verilog_type.id() == ID_verilog_real ||
+     verilog_type.id() == ID_verilog_shortreal ||
+     verilog_type.id() == ID_verilog_realtime) &&
+    lowered.type().id() == ID_floatbv)
+  {
+    // The encoding does not change, only the type does.
+    lowered.type() = verilog_type;
+  }
+  else if(verilog_lowering(verilog_type) == lowered.type())
+  {
+    // The lowering does not change the type; restore the Verilog type,
+    // which may carry attributes (e.g. of an enum) that the simplifier
+    // dropped.
+    lowered.type() = verilog_type;
+  }
+
+  return lowered;
+}
+
 exprt verilog_constant_folding(exprt expr, const namespacet &ns)
 {
   // This performs constant-folding on a type-checked expression
   // according to Section 11.2.1 IEEE 1800-2017.
-  // The result is a value, and hence has the range [size-1:0] rather
-  // than any declared range of the expression.
   auto verilog_type = expr.type();
-  verilog_type.remove(ID_C_offset);
-  verilog_type.remove(ID_C_increasing);
   auto source_location = expr.source_location();
 
   auto expr_lowered = verilog_lowering(std::move(expr));
@@ -86,35 +131,10 @@ exprt verilog_constant_folding(exprt expr, const namespacet &ns)
   // simplify
   auto expr_simplified = verilog_simplifier(std::move(expr_lowered), ns);
 
-  // Only constants are lifted.
-  if(!expr_simplified.is_constant())
-    return expr_simplified;
+  // The lowering may have created new expressions without
+  // source location; use the one of the original expression.
+  if(expr_simplified.is_constant())
+    expr_simplified.add_source_location() = source_location;
 
-  // Lift four-valued constants back to their Verilog type.
-  if(
-    is_four_valued(verilog_type) &&
-    (expr_simplified.type().id() == ID_bool ||
-     can_cast_type<bitvector_typet>(expr_simplified.type())))
-  {
-    return lift_four_valued(
-      to_constant_expr(expr_simplified), verilog_type, source_location);
-  }
-  else if(
-    (verilog_type.id() == ID_verilog_real ||
-     verilog_type.id() == ID_verilog_shortreal ||
-     verilog_type.id() == ID_verilog_realtime) &&
-    expr_simplified.type().id() == ID_floatbv)
-  {
-    // The encoding does not change, only the type does.
-    expr_simplified.type() = verilog_type;
-  }
-  else if(verilog_lowering(verilog_type) == expr_simplified.type())
-  {
-    // The lowering does not change the type; restore the Verilog type,
-    // which may carry attributes (e.g. of an enum) that the simplifier
-    // dropped.
-    expr_simplified.type() = verilog_type;
-  }
-
-  return expr_simplified;
+  return verilog_lift_constant(std::move(expr_simplified), verilog_type);
 }

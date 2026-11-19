@@ -159,7 +159,7 @@ void verilog_typecheckt::typecheck_port_connection(
       // The type of the implicit net is _not_ the type of the port,
       // but an "implicit scalar net of default net type".
       op = convert_verilog_identifier(
-        to_verilog_identifier_expr(op), bool_typet{});
+        to_verilog_identifier_expr(op), elaborate_type(typet{ID_wire}));
     }
     else
     {
@@ -193,6 +193,11 @@ void verilog_typecheckt::typecheck_port_connection(
           << "failed to connect output port of type `" << to_string(port.type())
           << "' to `" << to_string(op.type()) << "'";
       }
+    }
+    else if(port.direction() == ID_verilog_ref)
+    {
+      // A ref port and its actual denote the same variable (1800-2017
+      // 23.2.2.3); the actual is not converted.
     }
     else
     {
@@ -579,7 +584,7 @@ exprt verilog_typecheckt::elaborate_constant_function_call(
   // not-yet-assigned return value sees a constant.
   irep_idt return_identifier = id2string(function_symbol.name) + "." +
                                id2string(function_symbol.base_name);
-  vars[return_identifier] = from_integer(0, code_type.return_type());
+  vars[return_identifier] = verilog_from_integer(0, code_type.return_type());
 
   // interpret it
   for(auto &statement : function_body.statements())

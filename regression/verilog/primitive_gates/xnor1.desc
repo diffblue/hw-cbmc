@@ -1,8 +1,8 @@
 CORE
 xnor1.sv
 --top main
-^\[main\.xnor_ok\] always !xor\(xor\(main\.xnor_in1, main\.xnor_in2\), main\.xnor_in3\) == main\.xnor_out: PROVED .*$
-^\[main\.xnor_fail\] always main\.xnor_in1 == main\.xnor_in2 == main\.xnor_in3 == main\.xnor_out: REFUTED$
+^\[main\.xnor_ok\] always !\(main\.xnor_in1 \^ main\.xnor_in2 \^ main\.xnor_in3\) == main\.xnor_out: PROVED .*$
+^\[main\.xnor_fail\] always \(main\.xnor_in1 ~\^ main\.xnor_in2 ~\^ main\.xnor_in3\) == main\.xnor_out: REFUTED$
 ^\[main\.xnor_is_reduction_xnor\] always ~\^\{ main\.xnor_in1, main\.xnor_in2, main\.xnor_in3 \} == main\.xnor_out: PROVED .*$
 ^EXIT=10$
 ^SIGNAL=0$
