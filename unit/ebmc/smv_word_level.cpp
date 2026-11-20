@@ -209,3 +209,22 @@ SCENARIO("SMV word-level output: replication is concatenation")
     }
   }
 }
+
+SCENARIO("SMV word-level output: concatenation with Boolean operands")
+{
+  auto u4 = unsignedbv_typet{4};
+  auto a = symbol_exprt{"a", u4};
+  auto s = symbol_exprt{"s", bool_typet{}};
+
+  GIVEN("a concatenation of a Boolean and a word")
+  {
+    auto lines = invar_lines(
+      {a, s}, {{"cat", concatenation_exprt{{s, a}, unsignedbv_typet{5}}}});
+
+    THEN("the Boolean operand is converted using word1")
+    {
+      REQUIRE(lines.size() == 1);
+      REQUIRE(lines[0] == "cat = word1(s) :: a");
+    }
+  }
+}
