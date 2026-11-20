@@ -381,7 +381,9 @@ protected:
     if(def_it == wire_definitions.end())
       return {};
     const exprt &def = def_it->second;
-    auto k_opt = numeric_cast<mp_integer>(to_binary_expr(expr).op1());
+    // the index may be a constant expression, e.g. i - 1 after unrolling
+    auto k_opt =
+      numeric_cast<mp_integer>(simplify_expr(to_binary_expr(expr).op1(), ns));
     if(!k_opt.has_value() || *k_opt < 0)
       return {};
     const auto k = numeric_cast_v<std::size_t>(*k_opt);
@@ -451,6 +453,19 @@ protected:
       return leaf(ID_fastppa_input, expr);
     else if(expr.id() == ID_next_symbol)
       throw ebmc_errort{} << "unexpected next-state reference";
+
+    // Only the taken branch of an if with a constant condition is
+    // hardware; the other one may refer to elements that do not exist,
+    // e.g., the guard i >= 1 around acc[i - 1] for i = 0.
+    if(expr.id() == ID_if)
+    {
+      const auto &if_expr = to_if_expr(expr);
+      const auto c = build_rec(if_expr.cond());
+      if(is_constant(c))
+        return build_rec(
+          nodes[c].value.is_true() ? if_expr.true_case()
+                                   : if_expr.false_case());
+    }
 
     std::vector<std::size_t> ops;
     std::vector<std::size_t> op_index;
