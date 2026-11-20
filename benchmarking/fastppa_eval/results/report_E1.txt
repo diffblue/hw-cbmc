@@ -1,0 +1,179 @@
+designs: 157, compared: 139, excluded: 18
+  current handles 142/157
+
+Area vs G1 (Yosys+ABC, NanGate45)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  current     139    0     3.31     2.68    27.97     27%    40%   0.81
+
+Delay vs G1 (OpenSTA data arrival)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  current     139    0     1.32     1.79     9.03     37%    55%   0.73
+
+Area vs G2 (LogikBench yosys_freepdk45)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  current     139    0     3.03     2.36    32.05     34%    46%   0.80
+
+Delay vs G2 (1/fmax)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  current     139    0     1.98     2.08    16.03     27%    48%   0.66
+
+Per design: G1 area, current | G1 delay, current
+  arithmetic/abs                           49.5      174.4 |      484      619
+  arithmetic/absdiff                      178.0      286.4 |      608      620
+  arithmetic/absdiffs                     148.2      283.5 |      668     1232
+  arithmetic/add                           98.2      178.5 |      570     1206
+  arithmetic/addmod                      4076.2     3621.6 |    13450    17553
+  arithmetic/addsub                       141.2      225.6 |      679      619
+  arithmetic/addtree                     5897.8  2642028.9 |     1751    12049
+  arithmetic/argmax                       774.6    20553.2 |     3524     2472
+  arithmetic/argmin                       609.9    20553.2 |     3032     2472
+  arithmetic/atan                        1494.1    52338.6 |     4329     1942
+  arithmetic/avgn                         611.5    25693.0 |      978    29333
+  arithmetic/clamp                        152.4      188.8 |      662      370
+  arithmetic/clz                           58.0     4147.8 |      741     2702
+  arithmetic/cmp                           63.0      182.4 |      296      320
+  arithmetic/cos                         1212.7    52334.5 |     5082     2876
+  arithmetic/counter                      120.5      360.3 |      499     1188
+  arithmetic/csa32                         89.4      156.0 |       78       96
+  arithmetic/csa42                        211.2      312.0 |      185      142
+  arithmetic/ctz                           58.0      883.8 |      741      513
+  arithmetic/dec                           42.0       96.0 |      503      594
+  arithmetic/div                          548.2     1385.0 |     1009     1022
+  arithmetic/divs                         732.8     1657.6 |      854     1022
+  arithmetic/dotprod                    14441.4    41436.0 |     2127     7104
+  arithmetic/exp                         1218.5     4579.9 |     3369     6775
+  arithmetic/fmadd16                     1999.5    13732.3 |     4527    13604
+  arithmetic/fmadd32                     7886.6    39903.9 |     9896    15929
+  arithmetic/fmadd8                       823.8     8698.8 |     2818    12900
+  arithmetic/gelu                        1230.8     5367.8 |     2445     6539
+  arithmetic/hswish                      2020.8     6814.8 |     3190    31055
+  arithmetic/inc                           40.7       96.0 |      367      594
+  arithmetic/ln                          1268.3     4527.6 |     3722     8186
+  arithmetic/log2                          25.8       97.6 |      225      426
+  arithmetic/lrelu                         22.3      191.9 |       49      413
+  arithmetic/mac                         2100.6     3220.8 |     1792     3156
+  arithmetic/macc                        9237.1     8259.2 |     2361     3952
+  arithmetic/macs                        1178.6     2167.0 |     1848     2588
+  arithmetic/max                           94.2       94.4 |      490      345
+  arithmetic/maxn                         921.7    20319.4 |     3504     2512
+  arithmetic/min                           73.7       94.4 |      483      345
+  arithmetic/mod                          548.2     1385.0 |     1009     1022
+  arithmetic/msub                        1817.8     1830.4 |     1558     2537
+  arithmetic/mul                         1632.7     1638.4 |     1461     1449
+  arithmetic/muladd                      1787.3     1830.4 |     1415     2537
+  arithmetic/muladdc                     8716.6     7417.6 |     2228     3901
+  arithmetic/muladds                     2213.9     1830.4 |     1526     2537
+  arithmetic/mulc                        8270.2     6937.6 |     1722     2540
+  arithmetic/mulreg                      2254.3     1927.7 |     1640     1449
+  arithmetic/muls                        1957.2     1638.4 |     1439     1449
+  arithmetic/mulsu                       1665.7     1638.4 |     1474     1449
+  arithmetic/multconst                    563.4      960.0 |     1076      650
+  arithmetic/popcount                      72.6      748.0 |      619      432
+  arithmetic/premul                      2215.0     1940.4 |     1966     2609
+  arithmetic/recip                        558.3     1409.3 |      820     1025
+  arithmetic/relu                          28.5      128.0 |      169      413
+  arithmetic/requant                     4521.7     6465.6 |     3667     4569
+  arithmetic/rotl                         210.9      411.0 |      350     1390
+  arithmetic/rotr                         214.4      411.0 |      343     1390
+  arithmetic/round                         26.6      238.2 |      274     1703
+  arithmetic/rsqrt                        947.5     2354.5 |     1087     1221
+  arithmetic/shiftar                      109.6       97.5 |      228      287
+  arithmetic/shiftb                       233.5      363.6 |      301      338
+  arithmetic/shiftl                       105.1       97.5 |      226      287
+  arithmetic/shiftr                       103.2       97.5 |      227      287
+  arithmetic/sigmoid                      114.6      865.6 |      976     2155
+  arithmetic/simdmul                     3662.8    15083.2 |      808     1640
+  arithmetic/sine                         439.2 15269175.5 |      490    12992
+  arithmetic/sqdiff                      1811.2     1740.4 |     1964     2027
+  arithmetic/sqrt                        1140.9     2723.9 |     2042     2306
+  arithmetic/sub                           98.4      102.0 |      550      628
+  arithmetic/sum                          621.1    13014.2 |      978     3393
+  arithmetic/tanh                         114.6     1526.4 |      866     3375
+  basic/arbiter                            30.6       82.4 |      464     1015
+  basic/band                               28.2       64.0 |      155      110
+  basic/bin2gray                          100.5      703.9 |       48      473
+  basic/binv                               34.0       96.0 |        4       65
+  basic/bnand                              27.9        2.0 |      136       70
+  basic/bnor                               28.7        2.0 |      195       70
+  basic/bor                                29.0       64.0 |      232      110
+  basic/bxnor                             100.5        2.0 |      262       70
+  basic/bxor                              100.5       64.0 |      262      110
+  basic/crossbar                        22799.4   456386.1 |      812     3069
+  basic/dffasync                          340.5      482.8 |       94       90
+  basic/dffsync                           374.5      481.3 |       82       75
+  basic/fsm                               782.8     7383.7 |     1723    28344
+  basic/gray2bin                          100.5      126.0 |     3623     1317
+  basic/mux                              1646.3    23779.4 |     1445     2124
+  basic/muxcase                           476.1    76580.1 |     1056     1442
+  basic/muxhot                            919.3   389032.7 |      117     5786
+  basic/muxpri                            983.4   379007.5 |     1753     2899
+  basic/onehot                             78.2     1593.6 |      112      256
+  basic/pipeline                         6660.6    30532.6 |      474     1810
+  basic/shiftreg                          408.6      664.3 |      134       77
+  basic/tff                               459.6      770.8 |      137      116
+  basic/tmr                               170.2      456.0 |       39       96
+  blocks/apbregs                         8244.4    12580.0 |     3003     1384
+  blocks/axiram                         17028.8    79386.0 |     1972     8493
+  blocks/chiplink                        3613.9    10503.7 |    25000     4782
+  blocks/codec8b10b                       347.1     2220.6 |      571     2005
+  blocks/colorconv                       3453.2      251.8 |     2066     4651
+  blocks/conv2d                         68268.4   427196.5 |    12150   109757
+  blocks/ddc                            15494.8   242247.4 |     3339     9712
+  blocks/dds                             1505.6      587.5 |     1625      917
+  blocks/dma                            18660.7    18482.5 |     1499     1482
+  blocks/ethmac                          1916.3    11242.1 |      855     1704
+  blocks/fft                            53584.4   314776.7 |    14142    14002
+  blocks/firfix                          5457.0   137268.1 |     1685     8154
+  blocks/firprog                        35766.4   137268.1 |     2571     8154
+  blocks/fpu64                          20513.9    62369.7 |     4654     5526
+  blocks/gearbox66                       6063.2    23899.8 |     2519     1362
+  blocks/hft                            36162.4   435278.6 |     8001    13880
+  blocks/huffman                         1526.6     9592.4 |      970     8415
+  blocks/ialu                            2385.8      144.6 |     4091       50
+  blocks/jesd204b                        8564.4    28268.2 |     1300     3625
+  blocks/lfsr                              25.5     3802.5 |       75      126
+  blocks/linkmap                         2723.8     3851.7 |       94       92
+  blocks/median3x3                      65621.1   414194.9 |    12150   109792
+  blocks/openpiton                      20176.9    25886.9 |     5192     1974
+  blocks/picorv32                       26950.3    55597.2 |     3618     3196
+  blocks/reedsolomon                    84700.8  1272729.8 |   125110    18607
+  blocks/sad8x8                          7846.2  1255800.9 |     2155     6591
+  blocks/serv                            1449.2     2419.9 |      939      805
+  blocks/sha256                         19331.8    41206.6 |     9340     7065
+  blocks/sobel3x3                       64442.8   414055.9 |    12149   109719
+  blocks/umicross                        1590.4      465.7 |    24192      476
+  blocks/umidev                          3002.9     9403.6 |     1897      350
+  blocks/umiregs                         9053.6    14162.8 |     3046     1416
+  blocks/wordalign                       1698.9     3323.6 |     1693     2261
+  memory/cache                         247402.3   256623.0 |  1254896     7360
+  memory/cam                             8995.1    13523.8 |      926      574
+  memory/fifoasync                       8540.7     8388.3 |     3124     1950
+  memory/fifosync                        8266.0     7833.5 |     7109     1949
+  memory/ramasync                       30796.4    36613.1 |    11685      647
+  memory/rambyte                        31241.7    86816.6 |    12662    14535
+  memory/raminit                       123059.0   163426.3 |    39766    27504
+  memory/ramspnc                       124767.8   163305.4 |   156117    27534
+  memory/ramsprf                       124540.4   163281.7 |   147211    27504
+  memory/ramspwf                       123106.4   163305.4 |    41418    27534
+  memory/regfile                        29888.6    32227.9 |     1279      999
+  memory/rom                              849.9    63148.0 |      555    27487
+
+Excluded:
+  basic/bin2prio: current: timeout
+  basic/icg: ground truth: sta_failed
+  basic/latch: ground truth: sta_failed
+  blocks/beamformer: current: failed: exit 6
+  blocks/crc32: current: failed: exit 6
+  blocks/hamming: current: failed: exit 6; ground truth: synth_failed
+  blocks/hmac: current: failed: file logikbench/logikbench/benchmarks/blocks/hmac/rtl/hmac.sv line 9611: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'action_mask_t'; ground truth: synth_failed
+  blocks/i2c: current: failed: file logikbench/logikbench/benchmarks/blocks/i2c/rtl/i2c.sv line 7630: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; ground truth: synth_failed
+  blocks/lpddr5: current: timeout; ground truth: synth_failed
+  blocks/padring: ground truth: synth_failed
+  blocks/spi: current: failed: file logikbench/logikbench/benchmarks/blocks/spi/rtl/spi.sv line 8347: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; ground truth: synth_failed
+  blocks/uart: current: failed: file logikbench/logikbench/benchmarks/blocks/uart/rtl/uart.sv line 6211: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; ground truth: synth_failed
+  blocks/viterbi: current: timeout; ground truth: synth_failed
+  memory/rambit: current: failed: exit 6
+  memory/ramsdp: current: failed: exit 6
+  memory/ramsp: current: failed: exit 6
+  memory/ramtdp: current: failed: CONVERSION ERROR
+  memory/ramtdpdc: current: failed: CONVERSION ERROR; ground truth: sta_failed
