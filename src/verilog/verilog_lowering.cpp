@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
 #include <util/c_types.h>
+#include <util/expr_identity_map.h>
 #include <util/expr_util.h>
 #include <util/floatbv_expr.h>
 #include <util/ieee_float.h>
@@ -847,7 +848,29 @@ static exprt lower_real_arithmetic(const multi_ary_exprt &expr)
   return result;
 }
 
+using lowering_cachet = expr_identity_mapt<exprt>;
+
+static exprt verilog_lowering_rec(exprt expr, lowering_cachet &cache);
+
+/// Lowers each distinct subexpression once. Expressions in transition
+/// relations are DAGs with much sharing; lowering them as trees can take
+/// time exponential in their depth.
+static exprt verilog_lowering_cached(const exprt &expr, lowering_cachet &cache)
+{
+  if(auto cached = cache.find(expr))
+    return *cached;
+  auto result = verilog_lowering_rec(expr, cache);
+  cache.insert(expr, result);
+  return result;
+}
+
 exprt verilog_lowering(exprt expr)
+{
+  lowering_cachet cache;
+  return verilog_lowering_cached(expr, cache);
+}
+
+static exprt verilog_lowering_rec(exprt expr, lowering_cachet &cache)
 {
   // lowered already
   PRECONDITION(expr.id() != ID_floatbv_typecast);
@@ -876,7 +899,7 @@ exprt verilog_lowering(exprt expr)
 
   // Do the operands recursively
   for(auto &op : expr.operands())
-    op = verilog_lowering(op);
+    op = verilog_lowering_cached(op, cache);
 
   if(expr.id() == ID_constant)
   {
