@@ -35,7 +35,10 @@ cost_tablet test_table()
     "mult w2 0 1 1 300 0 0 1 0 0.01\n"
     "bitand w 0 1 1 20 0 0 1 0 0.01\n"
     "bitor w 0 1 1 20 0 0 1 0 0.01\n"
-    "lshr wlogw 0 2 logw 0 30 0 1 0 0.01\n"};
+    "lshr wlogw 0 2 logw 0 30 0 1 0 0.01\n"
+    "index wn1 0 1 logn 0 25 0 1 0 0.01\n"
+    "with wn 0 1 1 60 0 0 1 0 0.01\n"
+    "if w 0 3 1 50 0 0 1 0 0.01\n"};
   return cost_tablet::from_stream(in, "test");
 }
 
@@ -230,6 +233,55 @@ SCENARIO("Constants")
     auto result = d.estimate();
     REQUIRE(result.register_bits == 0);
     REQUIRE(result.combinational_area_um2 == Approx(4 * 32));
+  }
+}
+
+SCENARIO("Selects, shifts and writes that synthesis simplifies")
+{
+  GIVEN("A multiplication by a power of two")
+  {
+    designt d;
+    auto a = d.input("a");
+    d.output("o", mult_exprt{a, from_integer(8, u32)});
+    REQUIRE(d.estimate().combinational_area_um2 == 0);
+  }
+
+  GIVEN("An aligned part select: data[sel * 8 +: 8]")
+  {
+    designt d;
+    const unsignedbv_typet u64{64}, u8{8};
+    auto data = d.input("data", u64), sel = d.input("sel", u64);
+    d.output(
+      "o",
+      extractbits_exprt{
+        lshr_exprt{data, mult_exprt{sel, from_integer(8, u64)}}, 0, u8});
+    auto result = d.estimate();
+    // an 8-bit wide mux of 8 inputs, not a 64-bit shifter
+    REQUIRE(result.combinational_area_um2 == Approx(8 * 7));
+    REQUIRE(result.critical_path_ps == Approx(25 * 3));
+  }
+
+  GIVEN("A shift by a multiple of 4")
+  {
+    designt d;
+    auto a = d.input("a"), s = d.input("s");
+    d.output("o", lshr_exprt{a, mult_exprt{s, from_integer(4, u32)}});
+    // three of the five stages of a 32-bit shifter
+    REQUIRE(
+      d.estimate().combinational_area_um2 == Approx(2 * 32 * 5 * 3 / 5.0));
+  }
+
+  GIVEN("A conditional write into an array of registers")
+  {
+    designt d;
+    const array_typet mem_type{u32, from_integer(16, u32)};
+    auto we = d.input("we", bool_typet{}), i = d.input("i"), v = d.input("v");
+    auto mem = d.reg("mem", mem_type);
+    d.next(mem, if_exprt{we, with_exprt{mem, i, v}, mem});
+    d.output("o", mem);
+    auto result = d.estimate();
+    // the write, plus one enable gate per element; no mux of 512 bits
+    REQUIRE(result.combinational_area_um2 == Approx(32 * 16 + 16));
   }
 }
 

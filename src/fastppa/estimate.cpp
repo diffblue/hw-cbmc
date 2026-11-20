@@ -48,6 +48,7 @@ Author: Kiro
 #include <algorithm>
 #include <cmath>
 #include <functional>
+#include <optional>
 #include <queue>
 #include <unordered_map>
 #include <unordered_set>
@@ -642,8 +643,120 @@ protected:
           if(absorbable(p, c))
             absorbed_cache[c] = 1;
       }
+      for(std::size_t p = 0; p < graph.nodes.size(); ++p)
+        if(live[p] && aligned_select(p).has_value())
+          absorbed_cache[graph.nodes[p].ops[0]] = 1;
     }
     return absorbed_cache[n] != 0;
+  }
+
+  /// Is node n a constant with exactly one bit set?
+  bool is_power_of_two(std::size_t n) const
+  {
+    const auto &node = graph.nodes[n];
+    if(node.id != ID_constant || !can_cast_type<bitvector_typet>(node.type))
+      return false;
+    const std::size_t w = to_bitvector_type(node.type).get_width();
+    const auto &value = to_constant_expr(node.value).get_value();
+    std::size_t ones = 0;
+    for(std::size_t i = 0; i < w; ++i)
+      ones += get_bvrep_bit(value, w, i) ? 1 : 0;
+    return ones == 1;
+  }
+
+  /// A lower bound for the number of low bits of node n that are zero.
+  std::size_t known_zero_low_bits(std::size_t n, unsigned depth = 0) const
+  {
+    const auto &node = graph.nodes[n];
+    if(depth > 8 || !can_cast_type<bitvector_typet>(node.type))
+      return 0;
+    const std::size_t w = to_bitvector_type(node.type).get_width();
+    if(node.id == ID_constant)
+    {
+      const auto &value = to_constant_expr(node.value).get_value();
+      std::size_t k = 0;
+      while(k < w && !get_bvrep_bit(value, w, k))
+        ++k;
+      return k;
+    }
+    else if(node.id == ID_mult)
+    {
+      std::size_t k = 0;
+      for(auto op : node.ops)
+        k += known_zero_low_bits(op, depth + 1);
+      return std::min(k, w);
+    }
+    else if(node.id == ID_shl && graph.is_constant(node.ops[1]))
+    {
+      auto s = numeric_cast<mp_integer>(graph.nodes[node.ops[1]].value);
+      if(!s.has_value())
+        return 0;
+      return std::min(
+        w,
+        known_zero_low_bits(node.ops[0], depth + 1) +
+          numeric_cast_v<std::size_t>(*s));
+    }
+    else if(
+      node.id == ID_plus || node.id == ID_minus || node.id == ID_bitor ||
+      node.id == ID_bitxor)
+    {
+      std::size_t k = w;
+      for(auto op : node.ops)
+        k = std::min(k, known_zero_low_bits(op, depth + 1));
+      return k;
+    }
+    else if(node.id == ID_bitand)
+    {
+      std::size_t k = 0;
+      for(auto op : node.ops)
+        k = std::max(k, known_zero_low_bits(op, depth + 1));
+      return k;
+    }
+    else if(node.id == ID_typecast || node.id == ID_zero_extend)
+      return std::min(w, known_zero_low_bits(node.ops[0], depth + 1));
+    return 0;
+  }
+
+  /// x[lo +: ow] of x >> d, where d is a multiple of 2^k and the
+  /// selected bits lie within one 2^k-bit slot: each output bit is a mux
+  /// of the w/2^k bits at its position in each slot. Returns the number
+  /// of slots.
+  std::optional<std::size_t> aligned_select(std::size_t n) const
+  {
+    const auto &node = graph.nodes[n];
+    if(node.id != ID_extractbits || !graph.is_constant(node.ops[1]))
+      return {};
+    const auto shift = node.ops[0];
+    const auto &s = graph.nodes[shift];
+    if(s.id != ID_lshr || graph.is_constant(s.ops[1]) || fanout[shift] != 1)
+      return {};
+    auto lo = numeric_cast<mp_integer>(graph.nodes[node.ops[1]].value);
+    if(!lo.has_value() || !can_cast_type<bitvector_typet>(node.type))
+      return {};
+    const std::size_t k = known_zero_low_bits(s.ops[1]);
+    if(k == 0 || k >= 8 * sizeof(std::size_t))
+      return {};
+    const std::size_t slot = std::size_t{1} << k;
+    const std::size_t ow = to_bitvector_type(node.type).get_width();
+    if(numeric_cast_v<std::size_t>(*lo) + ow > slot)
+      return {};
+    const std::size_t w = to_bitvector_type(s.type).get_width();
+    return (w + slot - 1) / slot;
+  }
+
+  /// Is node x the array m with some elements written, possibly under
+  /// conditions?
+  bool is_write_of(std::size_t x, std::size_t m, unsigned depth = 0) const
+  {
+    if(depth > 64)
+      return false;
+    const auto &node = graph.nodes[x];
+    if(node.id == ID_with && node.type.id() == ID_array)
+      return node.ops[0] == m || is_write_of(node.ops[0], m, depth + 1);
+    if(node.id == ID_if)
+      return (node.ops[1] == m && is_write_of(node.ops[2], m, depth + 1)) ||
+             (node.ops[2] == m && is_write_of(node.ops[1], m, depth + 1));
+    return false;
   }
 
   bool absorbable(std::size_t parent, std::size_t child) const
@@ -682,13 +795,14 @@ protected:
     const std::string &kind,
     std::size_t w,
     std::size_t n,
-    std::size_t count = 1)
+    std::size_t count = 1,
+    double fraction = 1)
   {
     const auto &f = table(kind);
-    const double area = count * f.area(w, n);
+    const double area = fraction * count * f.area(w, n);
     result.combinational_area_um2 += area;
-    result.data_energy_fj += count * f.energy(w, n);
-    result.leakage_uw += count * f.leakage(w, n);
+    result.data_energy_fj += fraction * count * f.energy(w, n);
+    result.leakage_uw += fraction * count * f.leakage(w, n);
     result.operator_count += count;
     auto &entry = area_by_kind[kind];
     entry.first += count;
@@ -784,7 +898,10 @@ protected:
     {
       const std::string kind = node.id == ID_plus ? "plus" : "mult";
       tree_node(n, kind, w, non_constant);
-      if(!constant.empty())
+      // multiplying by a power of two is wiring
+      const bool power_of_two = node.id == ID_mult && constant.size() == 1 &&
+                                is_power_of_two(constant[0]);
+      if(!constant.empty() && !power_of_two)
       {
         const auto &f = table(kind + "_c");
         add_cost(kind + "_c", w, 0);
@@ -880,6 +997,18 @@ protected:
       // a mux with a constant data input is an AND or OR gate per bit
       if(graph.is_constant(ops[1]) || graph.is_constant(ops[2]))
         return simple_node(n, "bitand", width(node.type), 0, ops);
+      // A conditional write c ? m WITH i:=v : m is a write whose enable
+      // is gated with c: one AND gate per element, not a mux over the
+      // whole array.
+      if(
+        node.type.id() == ID_array &&
+        (is_write_of(n, ops[2]) || is_write_of(n, ops[1])))
+      {
+        auto size = numeric_cast<mp_integer>(to_array_type(node.type).size());
+        if(size.has_value())
+          return simple_node(
+            n, "bitand", numeric_cast_v<std::size_t>(*size), 0, ops);
+      }
       return simple_node(n, "if", width(node.type), 0, ops);
     }
     else if(
@@ -891,7 +1020,20 @@ protected:
       const std::string kind = id == ID_rol   ? "shl"
                                : id == ID_ror ? "lshr"
                                               : id2string(id);
-      return simple_node(n, kind, op_width(0), 0, ops);
+      // A barrel shifter has one stage per bit of the distance that is
+      // not known to be zero.
+      const std::size_t w = op_width(0);
+      const std::size_t stages = static_cast<std::size_t>(
+        std::ceil(std::log2(std::max<std::size_t>(w, 2))));
+      const std::size_t k = std::min(known_zero_low_bits(ops[1]), stages - 1);
+      if(k == 0)
+        return simple_node(n, kind, w, 0, ops);
+      const double fraction = double(stages - k) / stages;
+      const auto &f = table(kind);
+      add_cost(kind, w, 0, 1, fraction);
+      arrival[n] = max_arrival(ops) + fraction * f.delay(w);
+      depth[n] = max_depth(ops) + 1;
+      return;
     }
     else if(id == ID_extractbit)
     {
@@ -901,6 +1043,17 @@ protected:
     }
     else if(id == ID_extractbits)
     {
+      if(auto slots = aligned_select(n))
+      {
+        // the operands of the absorbed shift
+        const auto &shift_ops = graph.nodes[ops[0]].ops;
+        return simple_node(
+          n,
+          "index",
+          to_bitvector_type(node.type).get_width(),
+          *slots,
+          shift_ops);
+      }
       if(graph.is_constant(ops[1]))
         return free_node(n, ops);
       return simple_node(n, "lshr", op_width(0), 0, ops);
