@@ -9,7 +9,7 @@ commercial software not available in this environment); those unverified
 files were removed (they survive in git history). `CALIBRATION.md` is gone
 for good; `COMPARISON.md` has since been re-created from scratch as a
 fully auditable comparison against the real PrimeTime report data
-(checked-in, checksum-verified inputs, script-generated numbers — see
+(checksum-verified inputs, script-generated numbers — see
 `benchmarking/rocket_core/compare_primetime.py`). This report is a real,
 reproducible run, and the cost model itself has since been fixed based on
 what it found.

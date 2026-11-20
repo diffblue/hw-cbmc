@@ -3,8 +3,7 @@ fastppa vs Synopsys PrimeTime (Rocket core)
 
 This file compares fastppa against a genuine Synopsys PrimeTime
 post-route report for a real RISC-V core. Every number below is
-produced by a checked-in script from checked-in, checksum-verified
-input data — nothing in this file is hand-transcribed.
+produced by a checked-in script from checksum-verified input data — nothing in this file is hand-transcribed.
 
 (An earlier revision of this file cited PrimeTime module delays and
 speed benchmarks that no script or artifact could reproduce; it was
@@ -24,21 +23,18 @@ switching activity:
 - repository commit: `206ff4078368c251d2fafaffcc648282c68316f1`
 - directory: `report_example/rpt_data/net/Rocket_TinyRocket_route_TYP_SAIF_SDF/`
 
-The relevant report files are checked into
-`benchmarking/rocket_core/primetime/` as unmodified byte-for-byte
-copies (`SHA256SUMS` records their checksums; `NOTICE` records the
-license). `fetch_reports.sh` in that directory re-downloads them from
-the pinned commit and verifies both the checksums and the checked-in
-copies, so the ground truth can be re-audited against upstream at any
-time. The per-module areas come from the hierarchical-cell rows of
-`Rocket.cell_pwr_area.rpt` (1 MB, not checked in; `fetch_reports.sh`
-regenerates the checked-in 7-line extract `Rocket.hier_cell_area.txt`
-from it and verifies its checksum too).
+`benchmarking/rocket_core/primetime/fetch_reports.sh` downloads the
+relevant report files from the pinned commit into that directory and
+verifies them against `SHA256SUMS` (`NOTICE` records the license). The
+per-module areas come from the hierarchical-cell rows of
+`Rocket.cell_pwr_area.rpt`, from which `fetch_reports.sh` generates the
+7-line extract `Rocket.hier_cell_area.txt` and verifies its checksum too.
 
 The RTL fastppa runs on (`benchmarking/rocket_core/rocket_full.v`) is
-the `Rocket` module and its submodules extracted from the same
-project's `chipyard.TestHarness.TinyRocketConfig.top.v` — the same
-design the PrimeTime reports describe.
+the `Rocket` module and its submodules, which
+`benchmarking/rocket_core/fetch_rtl.sh` extracts from the same project's
+`chipyard.TestHarness.TinyRocketConfig.top.v` (verifying checksums) — the
+same design the PrimeTime reports describe.
 
 Method
 ------
@@ -60,7 +56,8 @@ All comparisons are produced by
 To reproduce:
 
     $ make -C src/fastppa
-    $ benchmarking/rocket_core/primetime/fetch_reports.sh   # optional audit
+    $ benchmarking/rocket_core/fetch_rtl.sh
+    $ benchmarking/rocket_core/primetime/fetch_reports.sh
     $ benchmarking/rocket_core/compare_primetime.py
 
 Results

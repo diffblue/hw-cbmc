@@ -27,15 +27,22 @@ for the full comparison.
 Usage
 -----
 
+The RTL and the PrimeTime reports are not checked in. Download them from
+the pinned RTL-Timer commit, verifying their checksums, with
+
+    $ ./fetch_rtl.sh
+    $ primetime/fetch_reports.sh
+
+and then run
+
     $ fastppa rocket_full.v --top Rocket --process 45nm
 
 PrimeTime ground truth
 ----------------------
 
-The `primetime/` subdirectory contains unmodified, checksum-verified
-copies of the PrimeTime report files (see `primetime/NOTICE` for the
-license and `primetime/fetch_reports.sh` to re-verify them against the
-pinned upstream commit). Headline numbers, as parsed from those reports:
+`primetime/fetch_reports.sh` downloads the PrimeTime report files into the
+`primetime/` subdirectory and verifies them against `primetime/SHA256SUMS`
+(see `primetime/NOTICE` for the license). Headline numbers, as parsed from those reports:
 
 - Total cell area: 42014.97 um2 (`Rocket.total_area.rpt`)
 - Critical path (`CLK_clock`, max_delay/setup): 2.989 ns, 39 levels of
