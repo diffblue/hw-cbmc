@@ -17,6 +17,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <ebmc/ebmc_error.h>
 
 #include "aval_bval_encoding.h"
+#include "verilog_constant.h"
 #include "verilog_expr.h"
 #include "verilog_types.h"
 
@@ -141,7 +142,7 @@ static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
   {
     // recursive call
     op = verilog_simplifier_rec(op, ns);
-    if(!op.is_constant())
+    if(!is_verilog_constant(op))
       operands_are_constant = false;
   }
 
