@@ -104,7 +104,7 @@ def run_fastppa(binary, top):
         # the "Total:" under "Area:" carries a um2 unit, the one under
         # "Power" carries mW, so the unit disambiguates them
         "area_um2": grab(r"^\s*Total:\s+([0-9.]+) um2"),
-        "delay_ns": grab(r"^\s*Reg-to-reg delay:.*\(([0-9.]+) ns\)"),
+        "delay_ns": grab(r"^\s*Critical path:.*\(([0-9.]+) ns\)"),
         "power_mw": grab(r"^\s*Total:\s+([0-9.]+) mW"),
     }
 

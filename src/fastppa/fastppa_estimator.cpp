@@ -10,13 +10,14 @@ Author: Kiro
 
 #include <util/cmdline.h>
 #include <util/exit_codes.h>
-#include <util/format_expr.h>
 #include <util/message.h>
+#include <util/namespace.h>
 
 #include <ebmc/ebmc_error.h>
 #include <trans-netlist/netlist.h>
 #include <trans-netlist/trans_to_netlist.h>
 
+#include "cost_table.h"
 #include "estimate.h"
 #include "fastppa_frontend.h"
 #include "technology_db.h"
@@ -118,30 +119,6 @@ static estimation_resultt estimate_from_netlist(
   return result;
 }
 
-/// Heuristic wire delay: scales with the design's linear dimension
-/// (√area), the logic depth, and the average fan-out, capped at a
-/// process-dependent fraction of the gate delay.
-static double wire_delay_estimate(
-  const estimation_resultt &result,
-  const technology_dbt &tech)
-{
-  if(result.combinational_area_um2 <= 0 || result.combinational_depth == 0)
-    return 0;
-
-  double avg_dimension_um = std::sqrt(result.total_area_um2);
-  double wire_ps_per_um = 0.1 * tech.register_cost(1).delay_ps / 50.0;
-  double avg_fanout =
-    result.operator_count > 0
-      ? static_cast<double>(result.operator_count) / result.combinational_depth
-      : 1.0;
-  double wire_delay_ps = result.combinational_depth * avg_dimension_um *
-                         wire_ps_per_um * std::sqrt(avg_fanout) * 0.1;
-  double max_wire = result.critical_path_ps * tech.wire_delay_fraction();
-  if(wire_delay_ps > max_wire)
-    wire_delay_ps = max_wire;
-  return wire_delay_ps;
-}
-
 struct power_estimatet
 {
   double dynamic_mw = 0;
@@ -195,18 +172,19 @@ int run_fastppa_estimation(
   }
   else
   {
-    // Word-level path
-    for(const auto &[id, expr] : model.wl_trans->next_state_functions)
-    {
-      message.debug() << "NSF " << id << "' = " << format(expr)
-                      << messaget::eom;
-    }
-
+    const auto table =
+      cmdline.isset("cost-table")
+        ? cost_tablet::from_file(cmdline.get_value("cost-table"))
+        : cost_tablet::builtin("nangate45");
+    const namespacet ns{model.transition_system.symbol_table};
     result = estimate(
-      *model.wl_trans,
       model.transition_system.trans_expr,
       model.state_vars,
-      tech);
+      model.outputs,
+      ns,
+      table,
+      tech,
+      message_handler);
   }
 
   // Power parameters
@@ -229,13 +207,8 @@ int run_fastppa_estimation(
         << "--toggle-rate must be between 0 and 1";
   }
 
-  double effective_toggle = toggle_rate * result.activity_ratio;
+  double effective_toggle = toggle_rate;
   auto power = power_estimate(result, tech, clock_freq, effective_toggle);
-
-  // Timing: setup + wire delay
-  double setup_ps = tech.register_cost(1).delay_ps;
-  double wire_delay_ps = wire_delay_estimate(result, tech);
-  double reg_to_reg_ps = result.critical_path_ps + wire_delay_ps + setup_ps;
 
   // Output results
   std::ostringstream out;
@@ -262,12 +235,8 @@ int run_fastppa_estimation(
   out << " (" << std::setprecision(3) << result.critical_path_ps / 1000.0
       << " ns)\n";
   out << std::setprecision(1);
-  out << "  Setup time:          " << setup_ps << " ps\n";
-  out << "  Wire delay:          " << wire_delay_ps << " ps\n";
-  out << "  Reg-to-reg delay:    " << reg_to_reg_ps << " ps";
-  out << " (" << std::setprecision(3) << reg_to_reg_ps / 1000.0 << " ns)\n";
   double period_ps = 1e12 / clock_freq;
-  double slack = period_ps - reg_to_reg_ps;
+  double slack = period_ps - result.critical_path_ps;
   out << std::setprecision(1);
   out << "  Clock period:        " << period_ps << " ps";
   out << " (" << clock_freq / 1e6 << " MHz)\n";

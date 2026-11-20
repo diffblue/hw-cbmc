@@ -8,7 +8,7 @@ Usage:
                   [--set S] [--detail]
 
 A model SPEC is 'name|binary|delay label|extra arguments', e.g.
-  'current|src/fastppa/fastppa|Reg-to-reg delay|'
+  'graph|src/fastppa/fastppa|Critical path|'
 The delay label names the line of fastppa's output that holds the delay
 in ps. Several models (e.g., two fastppa binaries) can be compared.
 

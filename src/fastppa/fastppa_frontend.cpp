@@ -9,9 +9,11 @@ Author: Kiro
 #include "fastppa_frontend.h"
 
 #include <util/cmdline.h>
+#include <util/namespace.h>
 
 #include <ebmc/ebmc_error.h>
 #include <verilog/verilog_ebmc_language.h>
+#include <verilog/verilog_types.h>
 
 fastppa_modelt
 build_fastppa_model(const cmdlinet &cmdline, message_handlert &message_handler)
@@ -27,29 +29,20 @@ build_fastppa_model(const cmdlinet &cmdline, message_handlert &message_handler)
 
   model.transition_system = std::move(ts_opt.value());
 
-  // Build word-level next-state functions
-  const namespacet ns(model.transition_system.symbol_table);
-  model.wl_trans = std::make_unique<word_level_transt>(ns);
-  // A design without registers has the transition relation 'true', and
-  // no next-state functions. Anything else read_trans cannot handle is an
-  // error, not a combinational design.
-  if(!model.transition_system.trans_expr.trans().is_true())
-  {
-    try
-    {
-      model.wl_trans->read_trans(model.transition_system.trans_expr);
-    }
-    catch(const std::string &e)
-    {
-      throw ebmc_errort{} << e;
-    }
-    catch(const char *e)
-    {
-      throw ebmc_errort{} << e;
-    }
-  }
-
   model.state_vars = model.transition_system.state_variables();
+
+  const namespacet ns{model.transition_system.symbol_table};
+  for(auto &port :
+      to_module_type(model.transition_system.main_symbol->type).ports())
+  {
+    if(!port.output())
+      continue;
+    const symbolt *symbol;
+    if(ns.lookup(port.identifier(), symbol))
+      throw ebmc_errort{} << "output port " << port.identifier()
+                          << " has no symbol";
+    model.outputs.push_back(symbol->symbol_expr());
+  }
 
   return model;
 }

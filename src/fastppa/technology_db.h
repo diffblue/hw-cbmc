@@ -46,6 +46,11 @@ public:
   {
     return scale_area;
   }
+  double delay_scale() const
+  {
+    return scale_delay;
+  }
+
   double energy_scale() const
   {
     return scale_energy;

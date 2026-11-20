@@ -91,6 +91,7 @@ void fastppa_parse_optionst::help()
                " --clock-freq <hz>      target clock frequency in Hz\n"
                " --toggle-rate <alpha>  switching activity (0-1, default 0.1)\n"
                " --netlist              use AIG netlist (more accurate)\n"
+               " --cost-table <file>    read operator costs from a file\n"
                " --top <module>         set top module\n"
                " --verbosity <nr>       verbosity level (0-10)\n"
                " --version              show version\n"

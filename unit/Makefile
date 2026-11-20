@@ -48,6 +48,7 @@ OBJ += ../src/ebmc/bdd_model_checker$(OBJEXT) \
        ../src/ebmc/output_smv_word_level$(OBJEXT) \
        ../src/ebmc/transition_property$(OBJEXT) \
        ../src/ebmc/transition_system$(OBJEXT) \
+       ../src/fastppa/cost_table$(OBJEXT) \
        ../src/fastppa/estimate$(OBJEXT) \
        ../src/fastppa/technology_db$(OBJEXT) \
        ../src/smvlang/smvlang$(LIBEXT) \

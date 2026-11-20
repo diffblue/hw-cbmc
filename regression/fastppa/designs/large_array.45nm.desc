@@ -2,7 +2,5 @@ CORE
 large_array.sv
 --top large_array --process 45nm
 ^  Register bits:       8224$
-^  Register area:       8336\.6 um2$
-^  Total:               67782\.7 um2$
 ^EXIT=0$
 ^SIGNAL=0$

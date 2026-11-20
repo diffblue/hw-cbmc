@@ -1,7 +1,6 @@
 CORE
 counter.sv
 --top counter --process 45nm
-^  Register bits:       8$
-^  Total:               228\.2 um2$
+^  Register bits:       0$
 ^EXIT=0$
 ^SIGNAL=0$

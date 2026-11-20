@@ -2,6 +2,5 @@ CORE
 regfile.sv
 --top regfile --process 28nm
 ^  Register bits:       1088$
-^  Total:               6152\.5 um2$
 ^EXIT=0$
 ^SIGNAL=0$

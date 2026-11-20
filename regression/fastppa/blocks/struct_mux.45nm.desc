@@ -2,8 +2,5 @@ CORE
 struct_mux.sv
 --top struct_mux --process 45nm
 ^  Register bits:       192$
-^  Operators:           6$
-^  Comb. area:          704\.0 um2$
-^  Total:               1571\.8 um2$
 ^EXIT=0$
 ^SIGNAL=0$

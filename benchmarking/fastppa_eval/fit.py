@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+"""Fit the cost table of the graph estimator on the calibration set C.
+
+Inputs: params.tsv from gen_microbench.py and the ground truth of C from
+run_gt.sh. Output: a cost table for fastppa --cost-table.
+
+For every operator kind, area = a0 + a1*F and delay = d0 + d1*G, with
+F and G taken from a small set of candidate forms for that kind. The
+coefficients minimise the squared relative error (non-negative least
+squares); the form is the one with the smallest leave-one-out error, so
+only the data of C is used to choose it.
+
+Usage: fit.py <params.tsv> <gt_C.tsv> <cost_table.inc> [report.txt]
+
+The output is a C++ raw string literal, which src/fastppa/cost_table.cpp
+includes; the text inside it can also be given to fastppa --cost-table.
+"""
+
+import math
+import sys
+
+import numpy as np
+from scipy.optimize import nnls
+
+# kind -> (area forms, delay forms)
+LINEAR = (["w"], ["1", "logw", "w"])
+CANDIDATES = {
+    "plus": (["w", "wlogw"], ["logw", "w"]),
+    "minus": (["w", "wlogw"], ["logw", "w"]),
+    "plus_c": (["w", "wlogw"], ["logw", "w"]),
+    "unary_minus": (["w", "wlogw"], ["logw", "w"]),
+    "mult": (["w2", "wlogw"], ["logw", "w"]),
+    "mult_c": (["w2", "wlogw", "w"], ["logw", "w"]),
+    "div": (["w2"], ["w", "w2"]),
+    "mod": (["w2"], ["w", "w2"]),
+    "bitand": (["w"], ["1"]),
+    "bitor": (["w"], ["1"]),
+    "bitxor": (["w"], ["1"]),
+    "bitnot": (["w"], ["1"]),
+    "equal": LINEAR, "equal_c": LINEAR, "lt": LINEAR, "lt_c": LINEAR,
+    "reduction_and": LINEAR, "reduction_or": LINEAR,
+    "reduction_xor": LINEAR,
+    "shl": (["w", "wlogw"], ["logw", "w"]),
+    "lshr": (["w", "wlogw"], ["logw", "w"]),
+    "ashr": (["w", "wlogw"], ["logw", "w"]),
+    "if": (["w"], ["1"]),
+    "register": (["w"], ["1"]),
+    "index": (["wn1", "wn"], ["logn", "n"]),
+    "with": (["wn", "n"], ["logn", "1"]),
+}
+
+
+def form(f, w, n):
+    W, N = max(w, 1), max(n, 1)
+    return {"1": 1.0, "w": W, "logw": math.log2(W), "wlogw": W * math.log2(W),
+            "w2": W * W, "n": N, "logn": math.log2(N), "wn": W * N,
+            "wn1": W * (N - 1)}[f]
+
+
+def fit(f, xs, ys):
+    """Non-negative fit of y = c0 + c1*F(x), minimising relative error."""
+    if f == "1":
+        # a constant: the geometric mean minimises the mean log error
+        return [float(np.exp(np.mean(np.log(ys)))), 0.0]
+    A = np.array([[1.0 / y, form(f, w, n) / y] for (w, n), y in zip(xs, ys)])
+    c, _ = nnls(A, np.ones(len(ys)))
+    return [float(c[0]), float(c[1])]
+
+
+def predict(f, c, w, n):
+    return c[0] + c[1] * (form(f, w, n) if f != "1" else 0.0)
+
+
+def loo_error(f, xs, ys):
+    """Mean |log(prediction/truth)| in leave-one-out cross-validation."""
+    if len(ys) < 3:
+        return float("inf")
+    errs = []
+    for i in range(len(ys)):
+        c = fit(f, xs[:i] + xs[i + 1:], ys[:i] + ys[i + 1:])
+        p = predict(f, c, *xs[i])
+        errs.append(abs(math.log(max(p, 1e-9) / ys[i])))
+    return float(np.mean(errs))
+
+
+def choose(forms, xs, ys):
+    best = min(forms, key=lambda f: loo_error(f, xs, ys))
+    return best, fit(best, xs, ys), loo_error(best, xs, ys)
+
+
+def main():
+    params_file, gt_file, out_file = sys.argv[1:4]
+    report_file = sys.argv[4] if len(sys.argv) > 4 else None
+
+    params = {}
+    for line in open(params_file):
+        name, kind, w, n = line.rstrip("\n").split("\t")
+        params[name] = (kind, int(w), int(n))
+    gt = {}
+    for line in open(gt_file):
+        f = line.rstrip("\n").split("\t")
+        if f[1] == "ok":
+            gt[f[0]] = (float(f[2]), float(f[3]) * 1000.0)  # um2, ps
+    missing = sorted(set(params) - set(gt))
+    if missing:
+        sys.exit(f"no ground truth for: {' '.join(missing)}")
+
+    data = {}
+    for name, (kind, w, n) in params.items():
+        data.setdefault(kind, []).append(((w, n), gt[name]))
+
+    table, report = {}, []
+
+    def fit_kind(kind, subtract=None):
+        rows = sorted(data[kind])
+        xs = [x for x, _ in rows]
+        areas = [a - (subtract(*x) if subtract else 0) for x, (a, _) in rows]
+        delays = [d for _, (_, d) in rows]
+        af, ac, ae = choose(CANDIDATES[kind][0], xs, areas)
+        df, dc, de = choose(CANDIDATES[kind][1], xs, delays)
+        table[kind] = (af, ac, df, dc)
+        report.append(f"{kind:14s} area {af:6s} a0={ac[0]:9.3f} a1={ac[1]:9.4f}"
+                      f" loo={math.exp(ae):.3f}x   delay {df:5s}"
+                      f" d0={dc[0]:8.2f} d1={dc[1]:8.3f}"
+                      f" loo={math.exp(de):.3f}x")
+
+    fit_kind("register")
+    af, ac, _, _ = table["register"]
+
+    def register_area(w, n):
+        return predict(af, ac, w * n, 0)
+
+    for kind in CANDIDATES:
+        if kind == "register":
+            continue
+        # the 'with' benchmarks contain the n*w register bits they write to
+        fit_kind(kind, register_area if kind == "with" else None)
+
+    with open(out_file, "w") as out:
+        out.write("// Generated by benchmarking/fastppa_eval/fit.py; "
+                  "do not edit.\n"
+                  "R\"(# kind area_form a0 a1 delay_form d0 d1 (um2, ps)\n")
+        for kind, (af, ac, df, dc) in table.items():
+            out.write(f"{kind} {af} {ac[0]:.6g} {ac[1]:.6g} "
+                      f"{df} {dc[0]:.6g} {dc[1]:.6g}\n")
+        out.write(")\"\n")
+    text = "\n".join(report) + "\n"
+    if report_file:
+        open(report_file, "w").write(text)
+    sys.stdout.write(text)
+
+
+if __name__ == "__main__":
+    main()

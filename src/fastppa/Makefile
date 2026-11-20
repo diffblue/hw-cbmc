@@ -1,4 +1,5 @@
 SRC = \
+      cost_table.cpp \
       estimate.cpp \
       main.cpp \
       fastppa_estimator.cpp \
