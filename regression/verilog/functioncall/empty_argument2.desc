@@ -1,0 +1,12 @@
+KNOWNBUG
+empty_argument2.sv
+--module main --bound 0
+^file .* line 9: no argument for formal `a'$
+^EXIT=2$
+^SIGNAL=0$
+--
+--
+Empty positions in the argument list of a subroutine call
+(1800-2017 13.5.3, A.6.9 list_of_arguments) are not supported: a
+leading empty position is silently dropped by the parser, and any other
+empty position is a syntax error.
