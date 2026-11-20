@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
+#include <util/expr_identity_map.h>
 #include <util/mathematical_types.h>
 #include <util/simplify_expr.h>
 
@@ -21,7 +22,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "verilog_types.h"
 
 #include <algorithm>
-
 static constant_exprt
 countones(const constant_exprt &expr, const namespacet &ns)
 {
@@ -69,7 +69,35 @@ static constant_exprt onehot0(const constant_exprt &expr, const namespacet &ns)
     return false_exprt();
 }
 
-static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
+using simplifier_cachet = expr_identity_mapt<exprt>;
+
+static exprt
+verilog_simplifier_rec(exprt expr, const namespacet &, simplifier_cachet &);
+
+/// Simplifies each distinct subexpression once. The expressions built by
+/// RTL construction from loops are DAGs with much sharing; simplifying
+/// them as trees can take time exponential in the number of iterations.
+static exprt verilog_simplifier_cached(
+  const exprt &expr,
+  const namespacet &ns,
+  simplifier_cachet &cache)
+{
+  if(auto cached = cache.find(expr))
+    return *cached;
+  auto result = verilog_simplifier_rec(expr, ns, cache);
+  cache.insert(expr, result);
+  // The result is simplified already. The conditional operator simplifies
+  // its condition before its operands, and hence meets the results of
+  // this function again.
+  if(!cache.find(result))
+    cache.insert(result, result);
+  return result;
+}
+
+static exprt verilog_simplifier_rec(
+  exprt expr,
+  const namespacet &ns,
+  simplifier_cachet &cache)
 {
   // Remember the Verilog type.
   auto expr_verilog_type = expr.type().get(ID_C_verilog_type);
@@ -102,14 +130,14 @@ static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
   if(expr.id() == ID_if)
   {
     auto &if_expr = to_if_expr(expr);
-    if_expr.cond() = verilog_simplifier_rec(if_expr.cond(), ns);
+    if_expr.cond() = verilog_simplifier_cached(if_expr.cond(), ns, cache);
 
     if(if_expr.cond().is_true())
       return restore_annotations(
-        verilog_simplifier_rec(if_expr.true_case(), ns));
+        verilog_simplifier_cached(if_expr.true_case(), ns, cache));
     else if(if_expr.cond().is_false())
       return restore_annotations(
-        verilog_simplifier_rec(if_expr.false_case(), ns));
+        verilog_simplifier_cached(if_expr.false_case(), ns, cache));
   }
 
   // Operands of a concatenation that have zero width do not contribute
@@ -140,7 +168,7 @@ static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
   for(auto &op : expr.operands())
   {
     // recursive call
-    op = verilog_simplifier_rec(op, ns);
+    op = verilog_simplifier_cached(op, ns, cache);
     if(!op.is_constant())
       operands_are_constant = false;
   }
@@ -251,5 +279,6 @@ static exprt verilog_simplifier_rec(exprt expr, const namespacet &ns)
 
 exprt verilog_simplifier(exprt expr, const namespacet &ns)
 {
-  return verilog_simplifier_rec(expr, ns);
+  simplifier_cachet cache;
+  return verilog_simplifier_cached(expr, ns, cache);
 }
