@@ -1141,8 +1141,15 @@ expr2smvt::resultt expr2smvt::convert_rec(const exprt &src)
 
   else if(src.id() == ID_concatenation)
   {
-    return convert_binary_associative(
-      to_concatenation_expr(src), "::", precedencet::CONCAT);
+    // The operands of SMV's :: must be words. Use word1(...) to turn
+    // Boolean operands into a word.
+    auto concatenation = to_concatenation_expr(src);
+    for(auto &op : concatenation.operands())
+    {
+      if(op.type().id() == ID_bool)
+        op = smv_word1_exprt{op, unsignedbv_typet{1}};
+    }
+    return convert_binary_associative(concatenation, "::", precedencet::CONCAT);
   }
 
   else if(src.id() == ID_shl)

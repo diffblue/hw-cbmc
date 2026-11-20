@@ -1,0 +1,11 @@
+CORE
+concatenation_bool1.sv
+--smv-word-level
+^MODULE main$
+^INVAR y = word1\(s\) :: a$
+^INVAR w = extend\(signed\(0ud1_0 :: word1\(s\)\), 6\)$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The operands of SMV's concatenation operator must be words.
