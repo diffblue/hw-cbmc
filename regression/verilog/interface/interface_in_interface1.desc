@@ -1,0 +1,16 @@
+KNOWNBUG
+interface_in_interface1.sv
+--bound 0
+^\[main\.p0\] always \$bits\(main\.o\.i\.x\) == 16: PROVED up to bound 0$
+^\[main\.p1\] always main\.o\.i\.x == main\.in: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+An interface cannot instantiate another interface: inner #(W * 2) i();
+gives "syntax error, unexpected '#', expecting '.' before '#'", and
+inner i(); gives the same error before i. 1800-2017 A.1.4 places
+interface_instantiation in module_common_item, which interface items
+include via interface_or_generate_item; the parser instead accepts it
+only in module_or_generate_item.
