@@ -30,6 +30,8 @@ jobs:
           BASE_BRANCH: ${{ github.base_ref }}
           MERGE_BRANCH: ${{ github.ref }}
         run: |
+          set -e
+
           # Log information about the run of this check.
           echo "Pull request's base branch is: ${BASE_BRANCH}"
           echo "Pull request's merge branch is: ${MERGE_BRANCH}"

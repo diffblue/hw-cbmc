@@ -66,6 +66,8 @@
 * --property can now be given multiple times (unless --ic3 is used)
 * Verilog: parameter values passed on to module instances keep their
   Verilog type
+* --ic3 now selects the AIG-based IC3 engine (previously --new-ic3);
+  the previous IC3 engine is available as --old-ic3
 
 # EBMC 6.1
 
