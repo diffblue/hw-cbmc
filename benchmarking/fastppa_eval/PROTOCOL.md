@@ -12,6 +12,12 @@ model.
 - Held-out set E1: all benchmarks of the LogikBench groups `basic`,
   `arithmetic`, `memory` and `blocks`, at LogikBench commit
   `58539b81d9c622a6b55a4cabde5d6b1288b9fe1e`, with their default parameters.
+- Held-out set E3: all benchmarks of the LogikBench groups `epfl`,
+  `iscas85`, `iscas89`, `koios` and `large`, at the same commit and with
+  their default parameters. E3 was fixed on 2026-11-20, after decisions had
+  been made by looking at E1 results (keeping `--netlist`, and the rules
+  for conditional array writes and shifts by multiples of a constant), and
+  before any model was run on it.
 - Secondary set E2: the designs in `regression/fastppa/{blocks,designs}`.
   The model of PR #1927 was tuned on these designs, so for that model they
   are in sample, and are reported as such.
