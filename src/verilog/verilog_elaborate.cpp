@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/prefix.h>
 
 #include "aval_bval_encoding.h"
+#include "convert_literals.h"
 #include "verilog_bind.h"
 #include "verilog_bits.h"
 #include "verilog_typecheck.h"
@@ -448,6 +449,107 @@ static bool is_two_valued_type(const typet &type)
     return is_two_valued_type(to_type_with_subtype(type).subtype());
   else
     return false;
+}
+
+/// Returns true iff the given elaborated type is a two-valued data type.
+/// Elaborated packed vectors are two-valued bit-vector types, with the
+/// four-valued keyword (logic, reg, wire) recorded as an annotation.
+static bool is_two_valued_elaborated_type(const typet &type)
+{
+  if(type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
+    return false;
+  else if(!type.get(ID_C_verilog_vector_type).empty())
+    return false;
+  else if(
+    type.get(ID_C_verilog_type) == ID_verilog_logic ||
+    type.get(ID_C_verilog_type) == ID_integer ||
+    type.get(ID_C_verilog_type) == ID_verilog_time)
+  {
+    return false;
+  }
+  else if(type.id() == ID_verilog_packed_array)
+    return is_two_valued_elaborated_type(to_type_with_subtype(type).subtype());
+  else
+    return true;
+}
+
+/// Returns true iff the given (unconverted) value of an enumeration
+/// name evaluates to a constant that contains x or z.
+bool verilog_typecheckt::enum_name_value_has_xz(exprt value)
+{
+  convert_expr(value);
+  auto folded = elaborate_constant_expression_check(std::move(value));
+
+  return folded.is_constant() && is_four_valued(folded.type()) &&
+         aval_bval_has_xz(lower_to_aval_bval(to_constant_expr(folded)));
+}
+
+/// Checks the value of the enumeration name given by \p symbol,
+/// a member of the given enumeration type, against the rules in
+/// 1800-2017 6.19. The type of the enumeration names is given
+/// by \p elaborated_type.
+void verilog_typecheckt::check_enum_name_value(
+  const verilog_enum_typet &enum_type,
+  const symbolt &symbol,
+  const typet &elaborated_type)
+{
+  const auto &enum_names = enum_type.enum_names();
+
+  // find the enumeration name
+  std::size_t index = 0;
+  while(index < enum_names.size() &&
+        enum_names[index].base_name() != symbol.base_name)
+  {
+    index++;
+  }
+
+  if(index == enum_names.size())
+    return; // not an enumeration name, e.g., a parameter with an enum type
+
+  const auto &value = enum_names[index].value();
+
+  if(value.is_not_nil())
+  {
+    // 1800-2017 6.19: "If the integer value expression is a sized literal
+    // constant, it shall be an error if the size is different from the
+    // enum base type, even if the value is within the representable range."
+    if(value.id() == ID_constant && value.type().is_nil())
+    {
+      auto size = integral_literal_size(to_constant_expr(value).get_value());
+      if(size.has_value() && *size != get_width(elaborated_type))
+      {
+        throw errort().with_location(value.source_location())
+          << "size of enumeration value literal (" << *size
+          << ") differs from the size of the enumeration base type ("
+          << get_width(elaborated_type) << ')';
+      }
+    }
+
+    // 1800-2017 6.19: "An enumerated name with x or z assignments assigned
+    // to an enum with no explicit data type or an explicit 2-state
+    // declaration shall be a syntax error."
+    // The base type is elaborated, as it may be a typedef.
+    bool two_valued_base_type =
+      !enum_type.has_base_type() ||
+      is_two_valued_elaborated_type(elaborate_type(enum_type.base_type()));
+
+    if(two_valued_base_type && enum_name_value_has_xz(value))
+    {
+      throw errort().with_location(value.source_location())
+        << "enumeration value with x or z requires a four-valued base type";
+    }
+  }
+  else if(index != 0)
+  {
+    // 1800-2017 6.19: "An unassigned enumerated name that follows an enum
+    // name with x or z assignments shall be a syntax error."
+    const auto &previous_value = enum_names[index - 1].value();
+    if(previous_value.is_not_nil() && enum_name_value_has_xz(previous_value))
+    {
+      throw errort().with_location(symbol.location)
+        << "enumeration name without value follows a name with x or z";
+    }
+  }
 }
 
 void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
@@ -1619,6 +1721,14 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
       // No, elaborate the type.
       auto elaborated_type =
         elaborate_type(to_type_with_subtype(symbol.type).subtype());
+
+      // Enumeration names have additional constraints on their value.
+      const auto &declared_type = to_type_with_subtype(symbol.type).subtype();
+      if(declared_type.id() == ID_verilog_enum)
+      {
+        check_enum_name_value(
+          to_verilog_enum_type(declared_type), symbol, elaborated_type);
+      }
 
       // Now elaborate the value, possibly recursively, if any.
       if(symbol.value.is_not_nil())

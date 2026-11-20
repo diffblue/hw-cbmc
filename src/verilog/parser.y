@@ -2183,7 +2183,7 @@ enum_base_type_opt:
                 {
                   // The integer type is a subtype of the signing.
                   add_as_subtype(stack_type($2), stack_type($1));
-                  $$ = $1;
+                  $$ = $2;
                 }
         | integer_vector_type signing_opt packed_dimension_opt
                 {
