@@ -1,0 +1,10 @@
+CORE
+default_argument2.sv
+--module main --bound 0
+^\[main\.p0\] always main\.f\(1, 10, 20\) == 31: PROVED up to bound 0$
+^\[main\.p1\] always main\.f\(1, 2, 20\) == 23: PROVED up to bound 0$
+^\[main\.p2\] always main\.f\(1, 2, 3\) == 6: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

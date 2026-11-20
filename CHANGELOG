@@ -7,6 +7,8 @@
 * Verilog: variables connected to inout ports are rejected
 * Verilog: hierarchical references into named generate blocks
 * SystemVerilog: interface ports with a modport in non-ANSI port declarations
+* SystemVerilog: default values for function and task arguments
+* SystemVerilog: named arguments in task calls
 
 # EBMC 6.2
 

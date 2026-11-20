@@ -1,0 +1,8 @@
+CORE
+default_argument1.sv
+--top top --bound 0
+^\[top\.p0\] always top\.y == 4: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

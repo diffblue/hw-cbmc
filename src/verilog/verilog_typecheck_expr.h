@@ -220,8 +220,10 @@ protected:
   [[nodiscard]] exprt convert_expr_concatenation(concatenation_exprt);
   [[nodiscard]] exprt convert_expr_function_call(function_call_exprt);
   // Reorder a list of ordered and named arguments (1800-2017 13.5.4) into
-  // positional order, matching the names to the given formal parameters.
-  void resolve_arguments(
+  // positional order, matching the names to the given formal parameters,
+  // fill in default values (1800-2017 13.5.3), and convert the arguments
+  // to the types of the formal parameters.
+  void convert_arguments(
     exprt::operandst &arguments,
     const code_typet::parameterst &parameters,
     const source_locationt &);

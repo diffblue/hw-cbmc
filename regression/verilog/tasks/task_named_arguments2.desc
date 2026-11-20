@@ -1,0 +1,7 @@
+CORE
+task_named_arguments2.sv
+--module main --bound 0
+^file .* line 10: ordered arguments must precede named arguments$
+^EXIT=2$
+^SIGNAL=0$
+--

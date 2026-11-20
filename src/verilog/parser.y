@@ -3036,6 +3036,24 @@ tf_port_item:
                   stack_expr($4).id(ID_declarator);
                   mto($$, $4);
                 }
+        | attribute_instance_brace
+          tf_port_direction_opt
+          data_type_or_implicit
+          port_identifier
+          variable_dimension_brace
+          '=' expression
+                {
+                  // 1800-2017 A.2.7, default argument value
+                  // add to the scope
+                  PARSER.scopes.add_identifier(stack_expr($4).get(ID_base_name), verilog_scopet::VAR);
+                  init($$, ID_decl);
+                  add_attributes($$, $1);
+                  addswap($$, ID_class, $2);
+                  addswap($$, ID_type, $3);
+                  stack_expr($4).id(ID_declarator);
+                  addswap($4, ID_value, $7);
+                  mto($$, $4);
+                }
         ;
 
 tf_port_direction_opt:
@@ -5381,7 +5399,7 @@ named_argument:
                 // We reuse ID_verilog_named_port_connection as the marker
                 // for a named argument ".name(expr)"; both carry a name and
                 // a value. The type checker reorders these into positional
-                // order (see resolve_arguments).
+                // order (see convert_arguments).
                 { init($$, ID_verilog_named_port_connection);
                   stack_expr($$).set(
                     ID_base_name, stack_expr($2).get(ID_base_name));
