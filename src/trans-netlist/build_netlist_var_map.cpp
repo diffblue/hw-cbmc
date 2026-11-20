@@ -12,6 +12,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/std_types.h>
 
 #include <solvers/flattening/boolbv_width.h>
+#include <verilog/verilog_types.h>
 
 /// Whether the type is an array, possibly multi-dimensional, of module
 /// instances, e.g., of the instances of an interface, sif i[1:0]().
@@ -71,6 +72,10 @@ build_netlist_var_map(symbol_table_baset &symbol_table, const irep_idt &module)
     else if(symbol.type.id() == ID_named_block)
     {
       return; // ignore Verilog named blocks
+    }
+    else if(is_unbounded_array_type(symbol.type))
+    {
+      return; // not supported, and not part of the state
     }
     else if(symbol.is_type)
       return; // ignore types

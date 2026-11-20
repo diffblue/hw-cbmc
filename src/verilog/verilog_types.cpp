@@ -89,6 +89,22 @@ bool is_interface_array_type(const typet &type)
   return element_type->id() == ID_verilog_module_instance;
 }
 
+bool is_unbounded_array_type(const typet &type)
+{
+  if(
+    type.id() == ID_verilog_dynamic_array || type.id() == ID_verilog_queue ||
+    type.id() == ID_verilog_associative_array)
+  {
+    return true;
+  }
+
+  // e.g., an unpacked array of dynamic arrays
+  if(type.id() == ID_array)
+    return is_unbounded_array_type(to_array_type(type).element_type());
+
+  return false;
+}
+
 typet make_two_valued(typet src)
 {
   if(src.id() == ID_verilog_unsignedbv)

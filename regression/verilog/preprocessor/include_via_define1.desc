@@ -1,0 +1,10 @@
+CORE
+include_via_define1.sv
+--preprocess
+activate-multi-line-match
+^  `line 1 "include_via_define1_a\.svh" 1\nwire a;\n`line 7 "include_via_define1\.sv" 2\n `line 1 "include_via_define1_b\.svh" 1\nwire b;\n`line 7 "include_via_define1\.sv" 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+nonexistent
+^file .*: 

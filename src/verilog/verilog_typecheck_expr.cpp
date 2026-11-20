@@ -3813,6 +3813,16 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(
 
     expr.type() = array_type.element_type();
   }
+  else if(src.type().id() == ID_named_block)
+  {
+    // 1800-2017 27.6: a generate loop with a block name yields an array of
+    // generate blocks, the individual blocks being named block_name[0],
+    // block_name[1], and so on.  The parser has read the brackets as a bit
+    // select.  The index must be an elaboration-time constant.
+    auto index = convert_integer_constant_expression(expr.index());
+    return convert_array_element_symbol(
+      std::move(expr), index, "generate block");
+  }
   else
   {
     // extractbit works on bit vectors only
@@ -3858,21 +3868,7 @@ exprt verilog_typecheck_exprt::convert_interface_array_element(
   // separate symbols, named bus[0], bus[1], and so on. Hence the index
   // must be an elaboration-time constant, and the expression resolves to
   // the symbol for that element.
-  auto &src = expr.src();
-
-  const irep_idt &src_identifier = [](const exprt &src)
-  {
-    if(src.id() == ID_symbol)
-      return to_symbol_expr(src).identifier();
-    else
-    {
-      throw errort().with_location(src.source_location())
-        << "expected symbol or hierarchical identifier for an array of "
-           "interfaces";
-    }
-  }(src);
-
-  auto &array_type = to_verilog_array_type(src.type());
+  auto &array_type = to_verilog_array_type(expr.src().type());
   auto index = convert_integer_constant_expression(expr.index());
 
   auto size = array_type.size_int();
@@ -3887,14 +3883,46 @@ exprt verilog_typecheck_exprt::convert_interface_array_element(
       << largest << "] of the array of interfaces";
   }
 
+  return convert_array_element_symbol(
+    std::move(expr), index, "interface instance");
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::convert_array_element_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::convert_array_element_symbol(
+  verilog_bit_select_exprt expr,
+  const mp_integer &index,
+  const std::string &what)
+{
+  auto &src = expr.src();
+
+  if(src.id() != ID_symbol)
+  {
+    throw errort().with_location(src.source_location())
+      << "expected symbol or hierarchical identifier for an array of " << what
+      << 's';
+  }
+
   const irep_idt element_identifier =
-    id2string(src_identifier) + '[' + integer2string(index) + ']';
+    id2string(to_symbol_expr(src).identifier()) + '[' + integer2string(index) +
+    ']';
 
   const symbolt *symbol;
   if(ns.lookup(element_identifier, symbol))
   {
     throw errort().with_location(expr.source_location())
-      << "failed to find interface instance `" << element_identifier << '\'';
+      << "failed to find " << what << " `"
+      << strip_verilog_root_prefix(element_identifier) << '\'';
   }
 
   return symbol->symbol_expr().with_source_location(expr);

@@ -261,20 +261,39 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
   {
     return "string";
   }
-  else if(type.id() == ID_array)
+  else if(
+    type.id() == ID_array || type.id() == ID_verilog_dynamic_array ||
+    type.id() == ID_verilog_queue)
   {
     // Collect unpacked dimensions, then packed dimensions.
     // Emit as base_type[packed_dims][base_range]$[unpacked_dims]
-    // matching the declaration order.
+    // matching the declaration order. The unpacked dimension of a
+    // dynamic array is [], and that of a queue is [$].
     std::string unpacked_dimensions;
     auto *current = &type;
-    while(current->id() == ID_array &&
-          to_verilog_array_type(*current).is_unpacked())
+    while(true)
     {
-      unpacked_dimensions += '[' + integer2string(verilog_left(*current)) +
-                             ':' + integer2string(verilog_right(*current)) +
-                             ']';
-      current = &to_verilog_array_type(*current).element_type();
+      if(
+        current->id() == ID_array &&
+        to_verilog_array_type(*current).is_unpacked())
+      {
+        unpacked_dimensions += '[' + integer2string(verilog_left(*current)) +
+                               ':' + integer2string(verilog_right(*current)) +
+                               ']';
+        current = &to_verilog_array_type(*current).element_type();
+      }
+      else if(current->id() == ID_verilog_dynamic_array)
+      {
+        unpacked_dimensions += "[]";
+        current = &to_type_with_subtype(*current).subtype();
+      }
+      else if(current->id() == ID_verilog_queue)
+      {
+        unpacked_dimensions += "[$]";
+        current = &to_type_with_subtype(*current).subtype();
+      }
+      else
+        break;
     }
 
     std::string packed_dimensions;

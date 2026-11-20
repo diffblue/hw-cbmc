@@ -1,0 +1,17 @@
+CORE
+array_of_structs_copy1.sv
+
+^\[main\.p1\] .*: PROVED \(transition property\)$
+^\[main\.p2\] .*: PROVED \(transition property\)$
+^\[main\.p3\] .*: PROVED \(transition property\)$
+^\[main\.p4\] .*: PROVED \(transition property\)$
+^\[main\.p5\] .*: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A copy of an entire packed array of packed structs, after a loop has
+written its elements as a whole. The copy used to be wrong. The
+elements are compared one by one, as the SMT back-ends refute the
+equality of entire packed arrays (see array_of_structs_loop1).

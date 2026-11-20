@@ -1069,6 +1069,10 @@ public:
 /// Is the given type an array of instances of a Verilog interface,
 /// i.e., the type of an array of interface ports, 1800-2017 25.4?
 /// The array may have any number of dimensions.
+/// Whether the type is that of a dynamic array, a queue or an associative
+/// array, i.e., has no fixed number of elements, or an array of these.
+bool is_unbounded_array_type(const typet &);
+
 bool is_interface_array_type(const typet &);
 
 /// replaces all four-valued types by their corresponding two-valued type

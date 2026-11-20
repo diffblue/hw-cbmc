@@ -1165,6 +1165,22 @@ port_declaration:
                 { add_attributes($2, $1); $$=$2; }
         | attribute_instance_brace output_declaration
                 { add_attributes($2, $1); $$=$2; }
+          // 1800-2017 A.2.1.2: interface ports may also be declared in
+          // the module body, for a module with a non-ANSI header. Only the
+          // form with a modport is accepted here; the form without, e.g.,
+          // intf i;, cannot be told apart from a variable declaration
+          // before elaboration.
+        | attribute_instance_brace interface_identifier '.' non_type_identifier list_of_port_identifiers
+                {
+                  init($$, ID_decl);
+                  stack_expr($$).set(ID_class, ID_inout);
+                  auto interface_base_name = stack_expr($2).get(ID_base_name);
+                  stack_expr($$).type() = typet(ID_verilog_interface);
+                  stack_expr($$).type().set(ID_base_name, interface_base_name);
+                  stack_expr($$).type().set(ID_verilog_modport, stack_expr($4).get(ID_base_name));
+                  swapop($$, $5);
+                  add_attributes($$, $1);
+                }
         ;
 
 ansi_port_initializer_opt:
@@ -2756,6 +2772,10 @@ unpacked_dimension:
 
 variable_dimension:
           unsized_dimension
+                { // a dynamic array (1800-2017 7.5)
+                  init($$, ID_verilog_dynamic_array);
+                  stack_type($$).add_subtype().make_nil();
+                }
         | unpacked_dimension
         | associative_dimension
         | queue_dimension
@@ -4179,6 +4199,10 @@ generate_block:
                   init($$, ID_generate_block);
                   swapop($$, $5);
                   stack_expr($$).set(ID_base_name, stack_expr($3).get(ID_base_name));
+                  // Anchor the block's location to its label rather than
+                  // to the end of the block.
+                  stack_expr($$).add_source_location() =
+                    stack_expr($3).source_location();
                 }
         ;
 
@@ -5707,7 +5731,7 @@ attribute_instance: TOK_PARENASTERIC attr_spec_list TOK_ASTERICPAREN
 
 attr_spec_list:
           attr_spec
-                { init($$); }
+                { init($$); mts($$, $1); }
         | attr_spec_list ',' attr_spec
                 { $$=$1; mts($$, $3); }
         ;

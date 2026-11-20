@@ -1,0 +1,11 @@
+CORE
+unpacked_array_pipeline1.sv
+--aig --bound 12
+^\[main\.f1\] .*: ASSUMED$
+^\[main\.p0\] .*: REFUTED$
+^\[main\.p1\] .*: PROVED up to bound 12$
+^\[main\.p2\] .*: PROVED up to bound 12$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring

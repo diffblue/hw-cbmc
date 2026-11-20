@@ -1,0 +1,11 @@
+CORE
+netlist-conversion3.sv
+--bound 1 --aig
+^\[main\.p0\] always main\.w\[0\] == main\.x: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Regression test for a stack overflow when converting a long chain of
+combinational definitions to a netlist.

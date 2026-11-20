@@ -344,6 +344,18 @@ void verilog_typecheckt::elaborate_generate_for(
   // work out what the loop index is
   auto loop_index = generate_for_loop_index(for_statement.init());
 
+  // 1800-2017 27.6: a generate loop with a block name yields an array of
+  // generate blocks, the individual blocks being named block_name[0],
+  // block_name[1], and so on.  The array itself is a scope that
+  // hierarchical identifiers can select from, hence gets a symbol.
+  if(for_statement.body().id() == ID_generate_block)
+  {
+    auto &generate_block = to_verilog_generate_block(for_statement.body());
+    if(generate_block.is_named())
+      add_named_block_symbol(
+        generate_block.base_name(), generate_block.source_location());
+  }
+
   while(true)
   {
     mp_integer condition =

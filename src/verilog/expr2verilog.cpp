@@ -2372,6 +2372,12 @@ std::string expr2verilogt::convert(const typet &type)
     dest += convert(to_type_with_subtype(type).subtype());
     return dest;
   }
+  else if(type.id() == ID_verilog_dynamic_array)
+  {
+    std::string dest = "dynamic array of ";
+    dest += convert(to_type_with_subtype(type).subtype());
+    return dest;
+  }
   else if(type.id() == ID_struct)
   {
     if(type.get_bool(ID_packed))

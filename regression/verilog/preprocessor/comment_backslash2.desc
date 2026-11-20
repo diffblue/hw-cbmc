@@ -1,0 +1,7 @@
+CORE
+comment_backslash2.sv
+
+^file comment_backslash2\.sv line 5: syntax error, unexpected .* before 'on'$
+^EXIT=1$
+^SIGNAL=0$
+--

@@ -223,6 +223,10 @@ protected:
   void interface_block(const class verilog_blockt &);
   void interface_generate_block(const class verilog_generate_blockt &);
   void interface_statement(const class verilog_statementt &);
+  // Add the symbol for the scope introduced by a named block, which may be
+  // a block statement or a generate block.
+  void
+  add_named_block_symbol(const irep_idt &base_name, const source_locationt &);
 
   // type checking
 
@@ -291,6 +295,9 @@ protected:
   void typecheck_port_connection(exprt &op, const module_typet::portt &);
   void
   typecheck_interface_array_port_connection(exprt &op, const typet &port_type);
+
+  // 1800-2017 6.5: variables cannot be connected to an inout port.
+  void check_inout_connection(const exprt &op, const module_typet::portt &port);
 
   bool replace_symbols(const replace_mapt &what, exprt &dest);
   void replace_symbols(const std::string &target, exprt &dest);

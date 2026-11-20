@@ -153,10 +153,11 @@ protected:
     PRECONDITION(false);
   }
 
-  // to be overridden
-  virtual exprt var_value(const irep_idt &identifier)
+  // To be overridden. The value of the given variable during
+  // constant evaluation, or nil when it is not known.
+  virtual exprt var_value(const irep_idt &)
   {
-    PRECONDITION(false);
+    return nil_exprt{};
   }
 
   bool warn_implicit_nets = false;
@@ -227,6 +228,13 @@ protected:
   [[nodiscard]] exprt convert_system_function(function_call_exprt);
   [[nodiscard]] exprt convert_bit_select_expr(verilog_bit_select_exprt);
   [[nodiscard]] exprt convert_interface_array_element(verilog_bit_select_exprt);
+  /// The elements of an array of interface instances (1800-2017 25.4) and
+  /// the blocks of a generate loop (1800-2017 27.6) are separate symbols,
+  /// named src[0], src[1], and so on.  Resolve the select to that symbol.
+  [[nodiscard]] exprt convert_array_element_symbol(
+    verilog_bit_select_exprt,
+    const mp_integer &index,
+    const std::string &what);
   /// Convert a replication expression. Per 1800-2017 11.4.12.1, a
   /// replication with a zero replication constant is only allowed when it
   /// appears directly within a concatenation; zero_allowed states whether

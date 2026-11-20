@@ -1,0 +1,17 @@
+CORE
+struct_widening1.sv
+
+^\[main\.p1\] .*: PROVED \(transition property\)$
+^\[main\.p2\] .*: PROVED \(transition property\)$
+^\[main\.p3\] .*: PROVED \(transition property\)$
+^\[main\.p4\] .*: PROVED \(transition property\)$
+^\[main\.p5\] .*: PROVED \(transition property\)$
+^\[main\.p6\] .*: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Assigning a narrower part-select to a packed struct zero-extends it, also
+when the conversion to the struct takes the bits from the part-select's
+source; and conversions between packed aggregates.

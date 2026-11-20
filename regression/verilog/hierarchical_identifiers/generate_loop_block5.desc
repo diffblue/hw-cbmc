@@ -1,0 +1,11 @@
+CORE
+generate_loop_block5.sv
+--module main --bound 0
+^file .* line 12: failed to find generate block `main\.blk\[2\]'$
+^EXIT=2$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The index in a hierarchical reference into the blocks of a generate loop
+must select a block that the loop has generated.

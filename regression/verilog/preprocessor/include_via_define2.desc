@@ -1,0 +1,8 @@
+CORE
+include_via_define2.sv
+--preprocess
+activate-multi-line-match
+^`line 1 "include_via_define1_a\.svh" 1\nwire a;\n`line 6 "include_via_define2\.sv" 2\n wire trailing;$
+^EXIT=0$
+^SIGNAL=0$
+--
