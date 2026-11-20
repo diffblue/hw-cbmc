@@ -1,0 +1,10 @@
+KNOWNBUG
+assignment_pattern4.sv
+--bound 1
+^\[main\.p0\] always main\.v == 16'h1234: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+A struct assignment pattern that combines member keys with a default key is
+rejected by the parser (syntax error before default).
