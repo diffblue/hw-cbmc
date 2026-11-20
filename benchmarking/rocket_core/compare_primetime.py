@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compare fastppa estimates against the Synopsys PrimeTime post-route
 reports for the Rocket core published by RTL-Timer (see primetime/NOTICE
-for provenance and primetime/fetch_reports.sh for upstream verification).
+for provenance). Run fetch_rtl.sh and primetime/fetch_reports.sh first.
 
 Every number in src/fastppa/COMPARISON.md is produced by this script:
 
@@ -117,6 +117,11 @@ def main():
             "FASTPPA",
             os.path.join(HERE, "..", "..", "src", "fastppa", "fastppa")))
     args = ap.parse_args()
+
+    for path in [RTL, os.path.join(PT_DIR, "Rocket.total_area.rpt")]:
+        if not os.path.exists(path):
+            sys.exit(f"{path} not found; run fetch_rtl.sh and "
+                     "primetime/fetch_reports.sh first")
 
     pt_area = parse_pt_total_area()
     pt_delay_ns, pt_levels = parse_pt_critical_path()

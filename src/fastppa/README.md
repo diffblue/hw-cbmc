@@ -73,5 +73,8 @@ File Structure
     ├── fastppa_frontend.{h,cpp}      — Verilog → transition system
     ├── fastppa_estimator.{h,cpp}     — orchestration + output
     ├── estimate.{h,cpp}              — core DAG walker
-    ├── technology_db.{h,cpp}         — process cost tables
-    └── benchmark_openroad.sh, benchmark_scaling.sh
+    └── technology_db.{h,cpp}         — process cost tables
+
+The scripts that compare fastppa with Yosys, ABC and OpenSTA on
+calibration and held-out designs are in `benchmarking/fastppa_eval/`
+(see its `README.md`, `PROTOCOL.md` and `RESULTS.md`).

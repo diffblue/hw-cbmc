@@ -1,9 +1,8 @@
 #!/bin/sh
-# Re-download the PrimeTime reports from the pinned RTL-Timer commit and
-# verify that the copies checked into this directory match upstream
-# byte-for-byte. Also regenerates Rocket.hier_cell_area.txt (the
-# per-module area extract) from the full per-cell report, which is too
-# large (1 MB) to check in.
+# Download the PrimeTime reports from the pinned RTL-Timer commit into this
+# directory, verify them against SHA256SUMS, and generate
+# Rocket.hier_cell_area.txt (the per-module area extract) from the full
+# per-cell report. See NOTICE for the license.
 #
 # Usage: ./fetch_reports.sh
 # Requires: curl, shasum (or sha256sum).
@@ -19,8 +18,10 @@ FILES="Rocket.qor.rpt Rocket.total_area.rpt Rocket.report_power.rpt Rocket.repor
 mkdir -p downloads
 
 for f in $FILES; do
-  echo "fetching $f"
-  curl -sfL "$BASE/$f" -o "downloads/$f"
+  if [ ! -f "downloads/$f" ]; then
+    echo "fetching $f"
+    curl -sfL "$BASE/$f" -o "downloads/$f"
+  fi
 done
 
 # Regenerate the per-module area extract: the rows of the per-cell
@@ -44,15 +45,7 @@ else
 fi
 (cd downloads && $SHA -c ../SHA256SUMS)
 
-# Compare everything against the checked-in copies.
-status=0
-for f in Rocket.qor.rpt Rocket.total_area.rpt Rocket.report_power.rpt \
-         Rocket.report_power_hier.rpt Rocket.hier_cell_area.txt; do
-  if cmp -s "downloads/$f" "$f"; then
-    echo "OK: $f matches upstream"
-  else
-    echo "MISMATCH: $f differs from upstream" >&2
-    status=1
-  fi
-done
-exit $status
+# Install the reports next to this script.
+cp downloads/Rocket.qor.rpt downloads/Rocket.total_area.rpt \
+   downloads/Rocket.report_power.rpt downloads/Rocket.report_power_hier.rpt \
+   downloads/Rocket.hier_cell_area.txt .

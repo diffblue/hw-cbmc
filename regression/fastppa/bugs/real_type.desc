@@ -1,0 +1,8 @@
+CORE
+real_type.sv
+--top main
+^error: fastppa: cannot determine the width of type floatbv$
+^EXIT=6$
+^SIGNAL=0$
+--
+^  Total:
