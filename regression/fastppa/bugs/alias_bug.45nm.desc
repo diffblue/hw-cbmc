@@ -1,0 +1,9 @@
+CORE
+alias_bug.sv
+--top alias_bug --process 45nm
+^  Register bits:       32$
+^  Operators:           1$
+^  Comb. area:          192\.0 um2$
+^  Total:               336\.6 um2$
+^EXIT=0$
+^SIGNAL=0$

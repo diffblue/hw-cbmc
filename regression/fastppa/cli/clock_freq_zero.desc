@@ -1,0 +1,6 @@
+CORE
+../blocks/adder.sv
+--top adder --process 45nm --clock-freq 0
+^error: --clock-freq must be positive$
+^EXIT=1$
+^SIGNAL=0$
