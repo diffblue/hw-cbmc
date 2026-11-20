@@ -123,6 +123,10 @@ typet make_two_valued(typet src)
       irep_idt verilog_vector_type = src.get(ID_C_verilog_vector_type);
       if(verilog_vector_type != irep_idt{})
         result.set(ID_C_verilog_vector_type, verilog_vector_type);
+      // enum types are identified by name
+      irep_idt identifier = src.get(ID_C_identifier);
+      if(identifier != irep_idt{})
+        result.set(ID_C_identifier, identifier);
       return result;
     }
     else

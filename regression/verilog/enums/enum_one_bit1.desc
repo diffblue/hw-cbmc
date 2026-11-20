@@ -1,0 +1,9 @@
+CORE
+enum_one_bit1.sv
+
+^\[top\.p1\] always top\.g == 0 && top\.h == 1 && top\.j == 1 && top\.B == 1: PROVED .*$
+^\[top\.p2\] always top\.v1 == top\.h && top\.v2 == top\.j && top\.v3 == top\.B: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
