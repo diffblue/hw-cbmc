@@ -8,6 +8,8 @@ Author: Kiro
 
 #include "cost_table.h"
 
+#include <util/exit_codes.h>
+
 #include <ebmc/ebmc_error.h>
 
 #include <algorithm>
@@ -90,7 +92,8 @@ cost_tablet cost_tablet::from_stream(std::istream &in, const std::string &name)
     std::istringstream s{line};
     std::string kind, area_form, delay_form;
     cost_functiont f;
-    if(!(s >> kind >> area_form >> f.a0 >> f.a1 >> delay_form >> f.d0 >> f.d1))
+    if(!(s >> kind >> area_form >> f.a0 >> f.a1 >> delay_form >> f.d0 >> f.d1 >>
+         f.e0 >> f.e1 >> f.l0 >> f.l1))
     {
       throw ebmc_errort{} << name << ':' << line_no
                           << ": malformed cost table entry";
@@ -111,19 +114,117 @@ cost_tablet cost_tablet::from_file(const std::string &file_name)
   return from_stream(in, file_name);
 }
 
-cost_tablet cost_tablet::builtin(const std::string &name)
+namespace
 {
-  static const std::map<std::string, const char *> tables = {{
+struct builtin_tablet
+{
+  const char *name;
+  const char *description;
+  const char *table;
+};
+
+// See benchmarking/fastppa_eval/PROCESS_NODES.md for the sources.
+const builtin_tablet builtin_tables[] = {
+  {
+    "gf180",
+    "GF180MCU 9-track 5V, typical (measured)",
+#include "cost_table_gf180.inc"
+  },
+  {
+    "sky130",
+    "SkyWater sky130_fd_sc_hd, typical (measured)",
+#include "cost_table_sky130hd.inc"
+  },
+  {
+    "ihp-sg13g2",
+    "IHP SG13G2 130nm, typical (measured)",
+#include "cost_table_ihp_sg13g2.inc"
+  },
+  {
+    "90nm",
+    "derived from nangate45 with DeepScaleTool factors",
+#include "cost_table_90nm.inc"
+  },
+  {
+    "65nm",
+    "derived from nangate45 with DeepScaleTool factors",
+#include "cost_table_65nm.inc"
+  },
+  {
     "nangate45",
+    "Nangate Open Cell Library (FreePDK45), typical (measured)",
 #include "cost_table_nangate45.inc"
+  },
+  {
+    "28nm",
+    "derived from nangate45 with DeepScaleTool factors",
+#include "cost_table_28nm.inc"
+  },
+  {
+    "14nm",
+    "derived from nangate45 with DeepScaleTool factors",
+#include "cost_table_14nm.inc"
+  },
+  {
+    "asap7",
+    "ASAP7 predictive 7nm FinFET, RVT, typical (measured)",
+#include "cost_table_asap7.inc"
+  },
+  {
+    "5nm",
+    "derived from asap7 with TSMC's N7 to N5 figures",
+#include "cost_table_5nm.inc"
+  },
+  {
+    "3nm",
+    "derived from asap7 with TSMC's N7 to N3 figures",
+#include "cost_table_3nm.inc"
+  },
+  {
+    "gt2n",
+    "GT2N predictive 2nm nanosheet, LVT, typical (measured)",
+#include "cost_table_gt2n.inc"
   }};
 
-  auto it = tables.find(name);
-  if(it == tables.end())
-    throw ebmc_errort{} << "no cost table for " << name;
+// Node names for the measured tables.
+const std::map<std::string, std::string> aliases = {
+  {"180nm", "gf180"},
+  {"130nm", "sky130"},
+  {"45nm", "nangate45"},
+  {"7nm", "asap7"},
+  {"2nm", "gt2n"}};
+} // namespace
 
-  std::istringstream in{it->second};
-  return from_stream(in, name);
+const std::map<std::string, std::string> &cost_tablet::process_names()
+{
+  static const std::map<std::string, std::string> names = []
+  {
+    std::map<std::string, std::string> result;
+    for(auto &t : builtin_tables)
+      result[t.name] = t.description;
+    for(auto &[alias, name] : aliases)
+      result[alias] = "same as " + name;
+    return result;
+  }();
+  return names;
+}
+
+cost_tablet cost_tablet::builtin(const std::string &process)
+{
+  auto alias = aliases.find(process);
+  const std::string &name = alias == aliases.end() ? process : alias->second;
+
+  for(auto &t : builtin_tables)
+  {
+    if(name == t.name)
+    {
+      std::istringstream in{t.table};
+      return from_stream(in, name);
+    }
+  }
+
+  throw ebmc_errort{}.with_exit_code(CPROVER_EXIT_USAGE_ERROR)
+    << "unknown process node: " << process;
 }
 
 const cost_functiont &cost_tablet::operator()(const std::string &kind) const

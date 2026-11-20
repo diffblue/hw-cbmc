@@ -18,7 +18,6 @@ Author: Kiro
 #include <ebmc/ebmc_error.h>
 #include <fastppa/cost_table.h>
 #include <fastppa/estimate.h>
-#include <fastppa/technology_db.h>
 #include <testing-utils/use_catch.h>
 
 #include <sstream>
@@ -29,13 +28,14 @@ namespace
 cost_tablet test_table()
 {
   std::istringstream in{
-    "register w 0 5 1 50 0\n"
-    "plus w 0 10 1 100 0\n"
-    "plus_c w 0 4 1 40 0\n"
-    "mult w2 0 1 1 300 0\n"
-    "bitand w 0 1 1 20 0\n"
-    "bitor w 0 1 1 20 0\n"
-    "lshr wlogw 0 2 logw 0 30\n"};
+    "register w 0 5 1 50 0 0 2 0 0.1\n"
+    "clock w 0 0 1 0 0 0 3 0 0\n"
+    "plus w 0 10 1 100 0 0 4 0 0.2\n"
+    "plus_c w 0 4 1 40 0 0 1 0 0.1\n"
+    "mult w2 0 1 1 300 0 0 1 0 0.01\n"
+    "bitand w 0 1 1 20 0 0 1 0 0.01\n"
+    "bitor w 0 1 1 20 0 0 1 0 0.01\n"
+    "lshr wlogw 0 2 logw 0 30 0 1 0 0.01\n"};
   return cost_tablet::from_stream(in, "test");
 }
 
@@ -90,13 +90,7 @@ struct designt
     namespacet ns{symbol_table};
     null_message_handlert message_handler;
     return ::estimate(
-      t,
-      state_vars,
-      outputs,
-      ns,
-      test_table(),
-      technology_dbt{"45nm"},
-      message_handler);
+      t, state_vars, outputs, ns, test_table(), message_handler);
   }
 };
 } // namespace
@@ -116,6 +110,11 @@ SCENARIO("A register fed by an adder")
   REQUIRE(result.operator_count == 1);
   // inputs arrive at 0, the adder takes 100 ps
   REQUIRE(result.critical_path_ps == Approx(100));
+  // switching energy of the adder and the register, clock energy of the
+  // register, leakage of both
+  REQUIRE(result.data_energy_fj == Approx(4 * 32 + 2 * 32));
+  REQUIRE(result.clock_energy_fj == Approx(3 * 32));
+  REQUIRE(result.leakage_uw == Approx(0.2 * 32 + 0.1 * 32));
 }
 
 SCENARIO("Identical logic is costed once")
@@ -243,4 +242,65 @@ SCENARIO("Values without a hardware width are an error")
   auto a = d.input("a", f);
   d.output("o", a);
   REQUIRE_THROWS_AS(d.estimate(), ebmc_errort);
+}
+
+SCENARIO("Built-in cost tables")
+{
+  const std::vector<std::string> kinds = {
+    "register",      "clock", "plus",   "minus",         "plus_c",
+    "unary_minus",   "mult",  "mult_c", "div",           "mod",
+    "bitand",        "bitor", "bitxor", "bitnot",        "equal",
+    "equal_c",       "lt",    "lt_c",   "reduction_and", "reduction_or",
+    "reduction_xor", "shl",   "lshr",   "ashr",          "if",
+    "index",         "with"};
+
+  for(auto &[name, description] : cost_tablet::process_names())
+  {
+    auto table = cost_tablet::builtin(name);
+    for(auto &kind : kinds)
+    {
+      const auto &f = table(kind);
+      REQUIRE(f.area(32, 16) >= 0);
+      REQUIRE(f.delay(32, 16) >= 0);
+      REQUIRE(f.energy(32, 16) >= 0);
+      REQUIRE(f.leakage(32, 16) >= 0);
+    }
+    // operators other than the clock cost area
+    REQUIRE(table("plus").area(32) > 0);
+    REQUIRE(table("plus").delay(32) > 0);
+  }
+
+  REQUIRE_THROWS_AS(cost_tablet::builtin("4nm"), ebmc_errort);
+
+  THEN("Smaller nodes have smaller cells")
+  {
+    // The measured 2nm library (GT2N) is not denser than the 3nm table
+    // derived from ASAP7, so it is not part of this sequence.
+    const std::vector<std::string> nodes = {
+      "180nm",
+      "130nm",
+      "90nm",
+      "65nm",
+      "45nm",
+      "28nm",
+      "14nm",
+      "7nm",
+      "5nm",
+      "3nm"};
+    for(std::size_t i = 1; i < nodes.size(); ++i)
+    {
+      INFO(nodes[i - 1] << " vs " << nodes[i]);
+      REQUIRE(
+        cost_tablet::builtin(nodes[i])("register").area(1) <
+        cost_tablet::builtin(nodes[i - 1])("register").area(1));
+    }
+  }
+}
+
+SCENARIO("Malformed cost tables are rejected")
+{
+  std::istringstream short_line{"plus w 0 1 1 1 0\n"};
+  REQUIRE_THROWS_AS(cost_tablet::from_stream(short_line, "test"), ebmc_errort);
+  std::istringstream bad_form{"plus x 0 1 1 1 0 0 0 0 0\n"};
+  REQUIRE_THROWS_AS(cost_tablet::from_stream(bad_form, "test"), ebmc_errort);
 }

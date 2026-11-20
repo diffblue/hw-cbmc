@@ -20,21 +20,12 @@ Author: Kiro
 #include "cost_table.h"
 #include "estimate.h"
 #include "fastppa_frontend.h"
-#include "technology_db.h"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <set>
 #include <sstream>
-
-// Leakage power: ~0.1 mW per 1000 µm² at the 45nm baseline.
-static constexpr double LEAKAGE_MW_PER_UM2 = 0.0001;
-
-// Clock tree power as a fraction of dynamic power: ~30-35% for advanced
-// nodes (which have a high wire-delay fraction), ~25% otherwise.
-static constexpr double CLOCK_TREE_FRACTION_ADVANCED = 0.35;
-static constexpr double CLOCK_TREE_FRACTION_MATURE = 0.25;
 
 /// Parse a floating-point command-line option, rejecting values with
 /// trailing garbage (std::stod would silently accept, e.g., "1GHz" as 1).
@@ -65,7 +56,7 @@ static double parse_double_option(const cmdlinet &cmdline, const char *option)
 /// structurally-distinct AND gates. No timing information.
 static estimation_resultt estimate_from_netlist(
   fastppa_modelt &model,
-  const technology_dbt &tech,
+  const cost_tablet &table,
   message_handlert &message_handler)
 {
   netlistt netlist;
@@ -103,10 +94,10 @@ static estimation_resultt estimate_from_netlist(
   estimation_resultt result;
   result.register_bits = latches;
   result.register_area_um2 =
-    static_cast<double>(latches) * tech.register_cost(1).area_um2;
+    static_cast<double>(latches) * table("register").area(1);
   result.operator_count = and_gates;
   result.combinational_area_um2 =
-    static_cast<double>(and_gates) * tech.operator_cost(ID_bitand, 1).area_um2;
+    static_cast<double>(and_gates) * table("bitand").area(1);
   result.total_area_um2 =
     result.register_area_um2 + result.combinational_area_um2;
   result.combinational_depth = 0;
@@ -122,30 +113,28 @@ static estimation_resultt estimate_from_netlist(
 struct power_estimatet
 {
   double dynamic_mw = 0;
-  double clock_tree_mw = 0;
+  double clock_mw = 0;
   double leakage_mw = 0;
 
   double total_mw() const
   {
-    return dynamic_mw + clock_tree_mw + leakage_mw;
+    return dynamic_mw + clock_mw + leakage_mw;
   }
 };
 
+/// Dynamic power is the switching energy per cycle at the given toggle
+/// rate; clock power is the energy of the registers' clock pins, which
+/// toggle every cycle whatever the data do. There is no clock tree.
 static power_estimatet power_estimate(
   const estimation_resultt &result,
-  const technology_dbt &tech,
   double clock_freq,
-  double effective_toggle)
+  double toggle_rate)
 {
+  // fJ * Hz = 1e-15 W = 1e-12 mW
   power_estimatet power;
-  power.dynamic_mw =
-    result.total_energy_fj * clock_freq * effective_toggle / 1e9;
-  power.leakage_mw =
-    result.total_area_um2 * LEAKAGE_MW_PER_UM2 * tech.leakage_scale();
-  double clock_tree_fraction = tech.wire_delay_fraction() > 0.3
-                                 ? CLOCK_TREE_FRACTION_ADVANCED
-                                 : CLOCK_TREE_FRACTION_MATURE;
-  power.clock_tree_mw = power.dynamic_mw * clock_tree_fraction;
+  power.dynamic_mw = result.data_energy_fj * toggle_rate * clock_freq * 1e-12;
+  power.clock_mw = result.clock_energy_fj * clock_freq * 1e-12;
+  power.leakage_mw = result.leakage_uw * 1e-3;
   return power;
 }
 
@@ -158,7 +147,9 @@ int run_fastppa_estimation(
   if(cmdline.isset("process"))
     process = cmdline.get_value("process");
 
-  technology_dbt tech(process);
+  const auto table = cmdline.isset("cost-table")
+                       ? cost_tablet::from_file(cmdline.get_value("cost-table"))
+                       : cost_tablet::builtin(process);
 
   // Build model from Verilog
   auto model = build_fastppa_model(cmdline, message_handler);
@@ -168,14 +159,10 @@ int run_fastppa_estimation(
 
   if(cmdline.isset("netlist"))
   {
-    result = estimate_from_netlist(model, tech, message_handler);
+    result = estimate_from_netlist(model, table, message_handler);
   }
   else
   {
-    const auto table =
-      cmdline.isset("cost-table")
-        ? cost_tablet::from_file(cmdline.get_value("cost-table"))
-        : cost_tablet::builtin("nangate45");
     const namespacet ns{model.transition_system.symbol_table};
     result = estimate(
       model.transition_system.trans_expr,
@@ -183,7 +170,6 @@ int run_fastppa_estimation(
       model.outputs,
       ns,
       table,
-      tech,
       message_handler);
   }
 
@@ -207,8 +193,7 @@ int run_fastppa_estimation(
         << "--toggle-rate must be between 0 and 1";
   }
 
-  double effective_toggle = toggle_rate;
-  auto power = power_estimate(result, tech, clock_freq, effective_toggle);
+  auto power = power_estimate(result, clock_freq, toggle_rate);
 
   // Output results
   std::ostringstream out;
@@ -249,11 +234,11 @@ int run_fastppa_estimation(
   out << "  Total:               " << result.total_area_um2 << " um2\n";
   out << "\n";
 
-  out << "Power (estimated, alpha=" << std::setprecision(2) << effective_toggle
+  out << "Power (estimated, alpha=" << std::setprecision(2) << toggle_rate
       << "):\n";
-  out << "  Dynamic:             " << std::setprecision(3) << power.dynamic_mw
+  out << "  Dynamic:             " << std::setprecision(6) << power.dynamic_mw
       << " mW\n";
-  out << "  Clock tree:          " << power.clock_tree_mw << " mW\n";
+  out << "  Clock:               " << power.clock_mw << " mW\n";
   out << "  Leakage:             " << power.leakage_mw << " mW\n";
   out << "  Total:               " << power.total_mw() << " mW\n";
   out << "\n";

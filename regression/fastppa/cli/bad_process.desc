@@ -1,6 +1,6 @@
 CORE
 ../blocks/adder.sv
---top adder --process 2nm
-^error: unknown process node: 2nm$
+--top adder --process 4nm
+^error: unknown process node: 4nm$
 ^EXIT=1$
 ^SIGNAL=0$

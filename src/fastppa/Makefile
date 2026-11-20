@@ -5,7 +5,6 @@ SRC = \
       fastppa_estimator.cpp \
       fastppa_frontend.cpp \
       fastppa_parse_options.cpp \
-      technology_db.cpp \
       #empty line
 
 OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \

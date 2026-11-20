@@ -44,7 +44,6 @@ Author: Kiro
 #include <solvers/flattening/boolbv_width.h>
 
 #include "cost_table.h"
-#include "technology_db.h"
 
 #include <algorithm>
 #include <cmath>
@@ -501,9 +500,8 @@ public:
   costert(
     const grapht &_graph,
     const cost_tablet &_table,
-    const technology_dbt &_tech,
     const namespacet &_ns)
-    : graph(_graph), table(_table), tech(_tech), boolbv_width(_ns)
+    : graph(_graph), table(_table), boolbv_width(_ns)
   {
   }
 
@@ -538,8 +536,11 @@ public:
         continue;
       auto w = width(graph.nodes[reg].type);
       result.register_bits += w;
-      result.register_area_um2 += table("register").area(w, 0);
-      result.total_energy_fj += tech.register_cost(w).energy_fj;
+      const auto &r = table("register");
+      result.register_area_um2 += r.area(w);
+      result.data_energy_fj += r.energy(w);
+      result.leakage_uw += r.leakage(w);
+      result.clock_energy_fj += table("clock").energy(w);
     }
 
     // endpoints
@@ -558,9 +559,6 @@ public:
         endpoint(n);
     }
 
-    result.register_area_um2 *= tech.area_scale();
-    result.combinational_area_um2 *= tech.area_scale();
-    result.critical_path_ps *= tech.delay_scale();
     result.total_area_um2 =
       result.register_area_um2 + result.combinational_area_um2;
     return result;
@@ -572,7 +570,6 @@ public:
 protected:
   const grapht &graph;
   const cost_tablet &table;
-  const technology_dbt &tech;
   boolbv_widtht boolbv_width;
 
   std::vector<bool> live;
@@ -680,18 +677,22 @@ protected:
     return d;
   }
 
-  void add_area(const std::string &kind, double area, std::size_t count = 1)
+  // count operators of the given kind
+  void add_cost(
+    const std::string &kind,
+    std::size_t w,
+    std::size_t n,
+    std::size_t count = 1)
   {
+    const auto &f = table(kind);
+    const double area = count * f.area(w, n);
     result.combinational_area_um2 += area;
+    result.data_energy_fj += count * f.energy(w, n);
+    result.leakage_uw += count * f.leakage(w, n);
     result.operator_count += count;
     auto &entry = area_by_kind[kind];
     entry.first += count;
     entry.second += area;
-  }
-
-  void add_energy(const irep_idt &op, std::size_t w, std::size_t count = 1)
-  {
-    result.total_energy_fj += count * tech.operator_cost(op, w).energy_fj;
   }
 
   // n is a free node (wiring)
@@ -705,14 +706,12 @@ protected:
   void simple_node(
     std::size_t n,
     const std::string &kind,
-    const irep_idt &energy_op,
     std::size_t w,
     std::size_t size,
     const std::vector<std::size_t> &ops)
   {
     const auto &f = table(kind);
-    add_area(kind, f.area(w, size));
-    add_energy(energy_op, w);
+    add_cost(kind, w, size);
     arrival[n] = max_arrival(ops) + f.delay(w, size);
     depth[n] = max_depth(ops) + 1;
   }
@@ -721,7 +720,6 @@ protected:
   void tree_node(
     std::size_t n,
     const std::string &kind,
-    const irep_idt &energy_op,
     std::size_t w,
     const std::vector<std::size_t> &ops)
   {
@@ -731,8 +729,7 @@ protected:
       return;
     }
     const auto &f = table(kind);
-    add_area(kind, (ops.size() - 1) * f.area(w, 0), ops.size() - 1);
-    add_energy(energy_op, w, ops.size() - 1);
+    add_cost(kind, w, 0, ops.size() - 1);
     const double d = f.delay(w, 0);
     using itemt = std::pair<double, std::size_t>; // arrival, depth
     std::priority_queue<itemt, std::vector<itemt>, std::greater<itemt>> q;
@@ -786,12 +783,11 @@ protected:
     if(node.id == ID_plus || node.id == ID_mult)
     {
       const std::string kind = node.id == ID_plus ? "plus" : "mult";
-      tree_node(n, kind, node.id, w, non_constant);
+      tree_node(n, kind, w, non_constant);
       if(!constant.empty())
       {
         const auto &f = table(kind + "_c");
-        add_area(kind + "_c", f.area(w, 0));
-        add_energy(node.id, w);
+        add_cost(kind + "_c", w, 0);
         arrival[n] += f.delay(w, 0);
         depth[n] += 1;
       }
@@ -806,7 +802,7 @@ protected:
     for(auto c : constant)
       effective =
         std::min(effective, undecided_bits(node.id, graph.nodes[c].value, w));
-    tree_node(n, id2string(bit_id), bit_id, effective, non_constant);
+    tree_node(n, id2string(bit_id), effective, non_constant);
     if((node.id == ID_bitxor || node.id == ID_xor) && !constant.empty())
     {
       // inverters for the one bits of the constant
@@ -815,7 +811,7 @@ protected:
         ones += w - undecided_bits(ID_bitor, graph.nodes[c].value, w);
       if(ones != 0)
       {
-        add_area("bitnot", table("bitnot").area(ones, 0));
+        add_cost("bitnot", ones, 0);
         arrival[n] += table("bitnot").delay(ones, 0);
       }
     }
@@ -843,48 +839,48 @@ protected:
     if(id == ID_minus)
     {
       if(any_constant())
-        return simple_node(n, "plus_c", id, width(node.type), 0, ops);
-      return simple_node(n, "minus", id, width(node.type), 0, ops);
+        return simple_node(n, "plus_c", width(node.type), 0, ops);
+      return simple_node(n, "minus", width(node.type), 0, ops);
     }
     else if(id == ID_unary_minus)
-      return simple_node(n, "unary_minus", id, width(node.type), 0, ops);
+      return simple_node(n, "unary_minus", width(node.type), 0, ops);
     else if(id == ID_div || id == ID_mod)
       return simple_node(
-        n, id == ID_div ? "div" : "mod", id, width(node.type), 0, ops);
+        n, id == ID_div ? "div" : "mod", width(node.type), 0, ops);
     else if(id == ID_bitnot || id == ID_not)
-      return simple_node(n, "bitnot", ID_bitnot, width(node.type), 0, ops);
+      return simple_node(n, "bitnot", width(node.type), 0, ops);
     else if(id == ID_bitnand || id == ID_bitnor || id == ID_bitxnor)
     {
       const std::string kind = id == ID_bitnand  ? "bitand"
                                : id == ID_bitnor ? "bitor"
                                                  : "bitxor";
-      return simple_node(n, kind, id, width(node.type), 0, ops);
+      return simple_node(n, kind, width(node.type), 0, ops);
     }
     else if(id == ID_nand || id == ID_nor || id == ID_xnor)
     {
       const irep_idt bit_id = id == ID_nand  ? ID_bitand
                               : id == ID_nor ? ID_bitor
                                              : ID_bitxor;
-      return tree_node(n, id2string(bit_id), bit_id, 1, ops);
+      return tree_node(n, id2string(bit_id), 1, ops);
     }
     else if(id == ID_implies)
-      return simple_node(n, "bitor", ID_bitor, 1, 0, ops);
+      return simple_node(n, "bitor", 1, 0, ops);
     else if(id == ID_equal || id == ID_notequal)
     {
       if(graph.nodes[ops[0]].type.id() == ID_bool)
-        return simple_node(n, "bitxor", ID_bitxor, 1, 0, ops);
+        return simple_node(n, "bitxor", 1, 0, ops);
       return simple_node(
-        n, any_constant() ? "equal_c" : "equal", ID_equal, op_width(0), 0, ops);
+        n, any_constant() ? "equal_c" : "equal", op_width(0), 0, ops);
     }
     else if(id == ID_lt || id == ID_le || id == ID_gt || id == ID_ge)
       return simple_node(
-        n, any_constant() ? "lt_c" : "lt", ID_lt, op_width(0), 0, ops);
+        n, any_constant() ? "lt_c" : "lt", op_width(0), 0, ops);
     else if(id == ID_if)
     {
       // a mux with a constant data input is an AND or OR gate per bit
       if(graph.is_constant(ops[1]) || graph.is_constant(ops[2]))
-        return simple_node(n, "bitand", ID_bitand, width(node.type), 0, ops);
-      return simple_node(n, "if", ID_if, width(node.type), 0, ops);
+        return simple_node(n, "bitand", width(node.type), 0, ops);
+      return simple_node(n, "if", width(node.type), 0, ops);
     }
     else if(
       id == ID_shl || id == ID_lshr || id == ID_ashr || id == ID_rol ||
@@ -895,19 +891,19 @@ protected:
       const std::string kind = id == ID_rol   ? "shl"
                                : id == ID_ror ? "lshr"
                                               : id2string(id);
-      return simple_node(n, kind, ID_shl, op_width(0), 0, ops);
+      return simple_node(n, kind, op_width(0), 0, ops);
     }
     else if(id == ID_extractbit)
     {
       if(graph.is_constant(ops[1]))
         return free_node(n, ops);
-      return simple_node(n, "index", ID_index, 1, op_width(0), ops);
+      return simple_node(n, "index", 1, op_width(0), ops);
     }
     else if(id == ID_extractbits)
     {
       if(graph.is_constant(ops[1]))
         return free_node(n, ops);
-      return simple_node(n, "lshr", ID_shl, op_width(0), 0, ops);
+      return simple_node(n, "lshr", op_width(0), 0, ops);
     }
     else if(id == ID_index)
     {
@@ -920,7 +916,6 @@ protected:
       return simple_node(
         n,
         "index",
-        ID_index,
         width(array_type.element_type()),
         numeric_cast_v<std::size_t>(*size),
         ops);
@@ -944,8 +939,7 @@ protected:
         if(graph.is_constant(ops[i]))
           continue;
         const auto &f = table("with");
-        add_area("with", f.area(w, s));
-        add_energy(ID_with, w * s);
+        add_cost("with", w, s);
         extra = std::max(extra, f.delay(w, s));
       }
       arrival[n] += extra;
@@ -955,8 +949,7 @@ protected:
     else if(id == ID_typecast)
     {
       if(node.type.id() == ID_bool && graph.nodes[ops[0]].type.id() != ID_bool)
-        return simple_node(
-          n, "reduction_or", ID_reduction_or, op_width(0), 0, ops);
+        return simple_node(n, "reduction_or", op_width(0), 0, ops);
       return free_node(n, ops);
     }
     else if(
@@ -968,7 +961,7 @@ protected:
         (id == ID_reduction_and || id == ID_reduction_nand) ? "reduction_and"
         : (id == ID_reduction_or || id == ID_reduction_nor) ? "reduction_or"
                                                             : "reduction_xor";
-      return simple_node(n, kind, id, op_width(0), 0, ops);
+      return simple_node(n, kind, op_width(0), 0, ops);
     }
     else if(
       id == ID_concatenation || id == ID_zero_extend ||
@@ -990,7 +983,6 @@ estimation_resultt estimate(
   const std::vector<symbol_exprt> &outputs,
   const namespacet &ns,
   const cost_tablet &table,
-  const technology_dbt &tech,
   message_handlert &message_handler)
 {
   messaget message{message_handler};
@@ -1033,7 +1025,7 @@ estimation_resultt estimate(
                         << " undriven signals treated as constants"
                         << messaget::eom;
 
-    costert coster{graph, table, tech, ns};
+    costert coster{graph, table, ns};
     auto result = coster.run();
 
     message.statistics() << "Graph: " << graph.nodes.size() << " nodes, "

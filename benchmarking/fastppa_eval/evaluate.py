@@ -26,6 +26,9 @@ import resource
 import subprocess
 
 
+PROCESS = "45nm"
+
+
 def limit_memory():
     # 4 GiB address space per fastppa process
     resource.setrlimit(resource.RLIMIT_AS, (4 << 30, 4 << 30))
@@ -43,7 +46,7 @@ def parse_model(spec):
 def run_one(model, row):
     s, name, top, sources, incdirs, defines = row[:6]
     cmd = [model["binary"]] + sources.split() + ["--top", top,
-                                                 "--process", "45nm"]
+                                                 "--process", PROCESS]
     for i in incdirs.split():
         cmd += ["-I", i]
     for d in defines.split():
@@ -59,15 +62,36 @@ def run_one(model, row):
     if p.returncode != 0:
         err = [l for l in out.splitlines() if "error" in l.lower()]
         reason = (err[-1] if err else f"exit {p.returncode}")[:200]
-        return (s, name, m, "failed: " + reason.replace("\t", " "), "", "")
+        return (s, name, m, "failed: " + reason.replace("\t", " "), "", "",
+                "", "", "")
     area = re.search(r"^Area:\n\s+Total:\s+([0-9.]+)", out, re.M)
     delay = re.search(re.escape(model["delay"]) + r":\s+([0-9.]+) ps", out)
     if not area or not delay:
-        return (s, name, m, "failed: no result in output", "", "")
-    return (s, name, m, "ok", area.group(1), delay.group(1))
+        return (s, name, m, "failed: no result in output", "", "", "", "",
+                "")
+
+    # Power at fastppa's defaults (1 GHz, toggle rate 0.1), converted to
+    # the quantities of gt_flow.sh: clock and data energy per cycle (fJ),
+    # the latter per unit of toggle rate, and leakage (uW).
+    def mw(label):
+        m = re.search(r"^\s+" + label + r":\s+([0-9.]+) mW", out, re.M)
+        return float(m.group(1)) if m else None
+    # PR #1927's estimator calls the clock power "Clock tree"
+    clk = mw("Clock")
+    if clk is None:
+        clk = mw("Clock tree")
+    dyn, leak = mw("Dynamic"), mw("Leakage")
+    if None in (dyn, clk, leak):
+        power = ("", "", "")
+    else:
+        power = (f"{clk * 1e3:.6g}", f"{dyn * 1e3 / 0.1:.6g}",
+                 f"{leak * 1e3:.6g}")
+    return (s, name, m, "ok", area.group(1), delay.group(1)) + power
 
 
 def cmd_run(args):
+    global PROCESS
+    PROCESS = args.process
     rows = [l.rstrip("\n").split("\t") for l in open(args.manifest)]
     rows = [r for r in rows if r[2] and not (len(r) > 6 and r[6])]
     with concurrent.futures.ThreadPoolExecutor(args.jobs) as ex:
@@ -133,12 +157,15 @@ def num(x, scale=1.0):
 def cmd_report(args):
     est, models = {}, []
     for l in open(args.estimates):
-        s, name, model, status, area, delay = l.rstrip("\n").split("\t")
+        f = l.rstrip("\n").split("\t")
+        s, name, model, status, area, delay = f[:6]
+        power = (f + ["", "", ""])[6:9]
         if model not in models:
             models.append(model)
         if args.set and s != args.set:
             continue
-        est.setdefault(name, {})[model] = (status, area, delay)
+        est.setdefault(name, {})[model] = (status, area, delay) + \
+            tuple(power)
     gt = {}
     for l in open(args.gt):
         f = l.rstrip("\n").split("\t")
@@ -180,6 +207,7 @@ def cmd_report(args):
               f"{'rho':>6s}")
         for m in models:
             ns = [n for n in common if truth_of(n) is not None]
+            ns = [n for n in ns if est[n][m][field]]
             r = metrics([float(est[n][m][field]) for n in ns],
                         [truth_of(n) for n in ns])
             if r is None:
@@ -194,6 +222,18 @@ def cmd_report(args):
           lambda n: float(gt[n][2]) if gt[n][2] else None, 1)
     table("Delay vs G1 (OpenSTA data arrival)",
           lambda n: float(gt[n][3]) * 1000 if gt[n][3] else None, 2)
+    def gt_field(i, scale=1.0):
+        def get(n):
+            g = gt[n]
+            return float(g[i]) * scale if len(g) > i and g[i] else None
+        return get
+
+    if any(len(gt[n]) > 8 for n in common):
+        table("Clock energy per cycle vs G1 (OpenSTA, clock pins)",
+              gt_field(6), 3)
+        table("Data energy per cycle and unit of toggle rate vs G1 (OpenSTA)",
+              gt_field(7), 4)
+        table("Leakage vs G1 (OpenSTA)", gt_field(8), 5)
     if args.g2:
         table("Area vs G2 (LogikBench yosys_freepdk45)",
               lambda n: g2_area.get(n), 1)
@@ -222,6 +262,7 @@ def main():
     r.add_argument("--model", type=parse_model, action="append",
                    required=True)
     r.add_argument("--jobs", type=int, default=16)
+    r.add_argument("--process", default="45nm")
     p = sub.add_parser("report")
     p.add_argument("estimates")
     p.add_argument("gt")
