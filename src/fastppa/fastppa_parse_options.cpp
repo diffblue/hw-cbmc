@@ -37,6 +37,8 @@ int fastppa_parse_optionst::doit()
   if(cmdline.isset("verbosity"))
     ui_message_handler.set_verbosity(
       unsafe_string2unsigned(cmdline.get_value("verbosity")));
+  else if(cmdline.isset("json"))
+    ui_message_handler.set_verbosity(messaget::M_WARNING);
   else
     ui_message_handler.set_verbosity(messaget::M_STATUS);
 
@@ -94,6 +96,8 @@ void fastppa_parse_optionst::help()
                " --toggle-rate <alpha>  switching activity (0-1, default 0.1)\n"
                " --netlist              use AIG netlist (more accurate)\n"
                " --cost-table <file>    read operator costs from a file\n"
+               " --paths <n>            show the n slowest paths (default 3)\n"
+               " --json                 print the results in JSON\n"
                " --top <module>         set top module\n"
                " --verbosity <nr>       verbosity level (0-10)\n"
                " --version              show version\n"

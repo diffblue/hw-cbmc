@@ -11,6 +11,7 @@ Author: Kiro
 #include <util/cmdline.h>
 #include <util/exit_codes.h>
 #include <util/expr_iterator.h>
+#include <util/json.h>
 #include <util/message.h>
 #include <util/namespace.h>
 
@@ -253,6 +254,34 @@ static estimation_resultt estimate_from_netlist(
   return result;
 }
 
+/// Symbol names without the language prefix and the $root module.
+static std::string display_name(const irep_idt &identifier)
+{
+  std::string s = id2string(identifier);
+  for(const std::string prefix : {"Verilog::", "$root."})
+    if(s.rfind(prefix, 0) == 0)
+      s = s.substr(prefix.size());
+  return s;
+}
+
+static json_numbert number(double value)
+{
+  std::ostringstream s;
+  s << value;
+  return json_numbert{s.str()};
+}
+
+static std::size_t
+parse_unsigned_option(const cmdlinet &cmdline, const char *option)
+{
+  const auto value = cmdline.get_value(option);
+  if(
+    value.empty() || value.find_first_not_of("0123456789") != std::string::npos)
+    throw ebmc_errort{}.with_exit_code(CPROVER_EXIT_USAGE_ERROR)
+      << "invalid --" << option << " value: " << value;
+  return std::stoul(value);
+}
+
 struct power_estimatet
 {
   double dynamic_mw = 0;
@@ -338,6 +367,60 @@ int run_fastppa_estimation(
 
   auto power = power_estimate(result, clock_freq, toggle_rate);
 
+  std::size_t number_of_paths = 3;
+  if(cmdline.isset("paths"))
+    number_of_paths = parse_unsigned_option(cmdline, "paths");
+
+  if(cmdline.isset("json"))
+  {
+    json_objectt json;
+    json["process"] = json_stringt{process};
+    json["register_bits"] = json_numbert{std::to_string(result.register_bits)};
+    json["area_um2"] = json_objectt{
+      {"total", number(result.total_area_um2)},
+      {"registers", number(result.register_area_um2)},
+      {"combinational", number(result.combinational_area_um2)}};
+    json["critical_path_ps"] = number(result.critical_path_ps);
+    json["clock_frequency_hz"] = number(clock_freq);
+    json["toggle_rate"] = number(toggle_rate);
+    json["power_mw"] = json_objectt{
+      {"dynamic", number(power.dynamic_mw)},
+      {"clock", number(power.clock_mw)},
+      {"leakage", number(power.leakage_mw)},
+      {"total", number(power.total_mw())}};
+    json_arrayt paths;
+    for(std::size_t i = 0;
+        i < number_of_paths && i < result.critical_paths.size();
+        ++i)
+    {
+      const auto &path = result.critical_paths[i];
+      json_arrayt steps;
+      for(auto &step : path.steps)
+      {
+        json_objectt j{
+          {"operation", json_stringt{step.operation}},
+          {"name", json_stringt{display_name(step.name)}},
+          {"width", json_numbert{std::to_string(step.width)}},
+          {"arrival_ps", number(step.arrival_ps)}};
+        if(!step.source_location.get_file().empty())
+        {
+          j["file"] = json_stringt{step.source_location.get_file()};
+          j["line"] = json_stringt{step.source_location.get_line()};
+        }
+        steps.push_back(std::move(j));
+      }
+      paths.push_back(json_objectt{
+        {"endpoint", json_stringt{display_name(path.endpoint)}},
+        {"endpoint_kind",
+         json_stringt{path.endpoint_is_register ? "register" : "output"}},
+        {"arrival_ps", number(path.arrival_ps)},
+        {"steps", std::move(steps)}});
+    }
+    json["critical_paths"] = std::move(paths);
+    std::cout << json << '\n';
+    return 0;
+  }
+
   // Output results
   std::ostringstream out;
   out << std::fixed << std::setprecision(1);
@@ -372,6 +455,36 @@ int run_fastppa_estimation(
   if(slack < 0)
     out << " [TIMING VIOLATION]";
   out << "\n\n";
+
+  if(number_of_paths != 0 && !result.critical_paths.empty())
+  {
+    out << "Critical paths:\n";
+    for(std::size_t i = 0;
+        i < number_of_paths && i < result.critical_paths.size();
+        ++i)
+    {
+      const auto &path = result.critical_paths[i];
+      out << "  " << i + 1 << ". " << path.arrival_ps << " ps to "
+          << (path.endpoint_is_register ? "register " : "output ")
+          << display_name(path.endpoint) << "\n";
+      for(auto &step : path.steps)
+      {
+        std::ostringstream what;
+        what << step.operation;
+        if(!step.name.empty())
+          what << ' ' << display_name(step.name);
+        if(step.width != 0)
+          what << " (" << step.width << " bits)";
+        out << "       " << std::left << std::setw(32) << what.str()
+            << std::right << std::setw(9) << step.arrival_ps << " ps";
+        if(!step.source_location.get_line().empty())
+          out << "  " << step.source_location.get_file() << ':'
+              << step.source_location.get_line();
+        out << "\n";
+      }
+    }
+    out << "\n";
+  }
 
   out << "Area:\n";
   out << "  Total:               " << result.total_area_um2 << " um2\n";

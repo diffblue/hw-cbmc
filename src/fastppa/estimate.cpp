@@ -72,6 +72,7 @@ struct gnodet
   typet type;
   std::vector<std::size_t> ops;
   exprt value; // constants: the constant; leaves: the symbol
+  source_locationt source_location = {};
 };
 
 struct keyt
@@ -148,8 +149,9 @@ public:
   /// register name -> its leaf node
   std::unordered_map<irep_idt, std::size_t> register_node;
 
-  /// top-level output port nodes
+  /// top-level output port nodes, and their names
   std::vector<std::size_t> outputs;
+  std::vector<irep_idt> output_names;
 
   std::size_t undriven_symbols = 0;
 
@@ -160,7 +162,10 @@ public:
         next_state[name] = build_rec(rhs);
 
     for(auto &output : output_symbols)
+    {
       outputs.push_back(build_rec(output));
+      output_names.push_back(output.get_identifier());
+    }
   }
 
   bool is_constant(std::size_t n) const
@@ -488,6 +493,7 @@ protected:
 
     keyt key{shell, ops};
     gnodet node{expr.id(), expr.type(), ops, nil_exprt{}};
+    node.source_location = expr.source_location();
     if(expr.id() == ID_with || expr.id() == ID_member)
       node.value = shell; // keeps designators
     return add_node(std::move(node), key);
@@ -545,20 +551,37 @@ public:
     }
 
     // endpoints
-    auto endpoint = [this](std::size_t n)
+    std::vector<std::pair<double, critical_patht>> paths;
+    auto endpoint =
+      [this, &paths](std::size_t n, const irep_idt &name, bool is_register)
     {
       result.critical_path_ps = std::max(result.critical_path_ps, arrival[n]);
       result.combinational_depth =
         std::max(result.combinational_depth, depth[n]);
+      paths.emplace_back(
+        arrival[n], critical_patht{name, is_register, arrival[n], {}});
+      trace(n, paths.back().second.steps);
     };
-    for(auto n : graph.outputs)
-      endpoint(n);
+    for(std::size_t i = 0; i < graph.outputs.size(); ++i)
+    {
+      // an output that is a register is reported as that register
+      if(graph.nodes[graph.outputs[i]].id == ID_fastppa_register)
+        continue;
+      endpoint(graph.outputs[i], graph.output_names[i], false);
+    }
     for(auto &[name, n] : graph.next_state)
     {
       auto r_it = graph.register_node.find(name);
       if(r_it != graph.register_node.end() && live[r_it->second])
-        endpoint(n);
+        endpoint(n, name, true);
     }
+    std::stable_sort(
+      paths.begin(),
+      paths.end(),
+      [](const auto &a, const auto &b) { return a.first > b.first; });
+    for(auto &path : paths)
+      if(path.first > 0)
+        result.critical_paths.push_back(std::move(path.second));
 
     result.total_area_um2 =
       result.register_area_um2 + result.combinational_area_um2;
@@ -585,6 +608,59 @@ protected:
     if(!w.has_value() || *w == 0)
       throw ebmc_errort{} << "cannot determine the width of type " << type.id();
     return *w;
+  }
+
+  /// The operands of n as costed: the leaves of a balanced chain, the
+  /// operands of an absorbed shift.
+  std::vector<std::size_t> inputs_of(std::size_t n) const
+  {
+    const auto &node = graph.nodes[n];
+    if(is_associative(node.id))
+    {
+      std::vector<std::size_t> result;
+      leaves(n, result);
+      return result;
+    }
+    if(aligned_select(n).has_value())
+      return graph.nodes[node.ops[0]].ops;
+    return node.ops;
+  }
+
+  /// The steps of the latest-arriving path to n, from its start.
+  void trace(std::size_t n, std::vector<critical_patht::stept> &steps) const
+  {
+    std::vector<critical_patht::stept> reversed;
+    for(std::size_t guard = 0; guard < graph.nodes.size(); ++guard)
+    {
+      const auto &node = graph.nodes[n];
+      const auto ops = inputs_of(n);
+      double latest = 0;
+      std::optional<std::size_t> pred;
+      for(auto op : ops)
+        if(!pred.has_value() || arrival[op] > latest)
+        {
+          latest = arrival[op];
+          pred = op;
+        }
+      // only steps that add delay
+      if(arrival[n] > latest || !pred.has_value())
+      {
+        const auto w = boolbv_width.get_width_opt(node.type);
+        irep_idt operation = node.id, name;
+        if(node.id == ID_fastppa_register || node.id == ID_fastppa_input)
+        {
+          operation = node.id == ID_fastppa_register ? "register" : "input";
+          if(node.value.id() == ID_symbol)
+            name = to_symbol_expr(node.value).get_identifier();
+        }
+        reversed.push_back(
+          {operation, name, w.value_or(0), arrival[n], node.source_location});
+      }
+      if(!pred.has_value())
+        break;
+      n = *pred;
+    }
+    steps.assign(reversed.rbegin(), reversed.rend());
   }
 
   void mark_live()

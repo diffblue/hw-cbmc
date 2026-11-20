@@ -10,6 +10,7 @@ Author: Kiro
 #define CPROVER_FASTPPA_ESTIMATE_H
 
 #include <util/mathematical_expr.h>
+#include <util/source_location.h>
 #include <util/std_expr.h>
 
 #include <vector>
@@ -17,6 +18,26 @@ Author: Kiro
 class cost_tablet;
 class message_handlert;
 class namespacet;
+
+/// A path through the logic, from a register or input to a register or
+/// output, ordered from start to end.
+struct critical_patht
+{
+  irep_idt endpoint;
+  bool endpoint_is_register = false;
+  double arrival_ps = 0;
+
+  struct stept
+  {
+    irep_idt operation; // e.g. "+"; "input" or "register" at the start
+    irep_idt name;      // the input or register at the start
+    std::size_t width = 0;
+    double arrival_ps = 0;
+    source_locationt source_location;
+  };
+
+  std::vector<stept> steps;
+};
 
 struct estimation_resultt
 {
@@ -32,6 +53,8 @@ struct estimation_resultt
   std::size_t register_bits = 0;
   std::size_t combinational_depth = 0;
   std::size_t operator_count = 0;
+  /// the paths to each register and output, the slowest first
+  std::vector<critical_patht> critical_paths;
 };
 
 /// Estimates area and delay of the hardware described by a transition

@@ -118,6 +118,16 @@ SCENARIO("A register fed by an adder")
   REQUIRE(result.data_energy_fj == Approx(4 * 32 + 2 * 32));
   REQUIRE(result.clock_energy_fj == Approx(3 * 32));
   REQUIRE(result.leakage_uw == Approx(0.2 * 32 + 0.1 * 32));
+
+  // the path to the register: an input, then the adder
+  REQUIRE(!result.critical_paths.empty());
+  const auto &path = result.critical_paths.front();
+  REQUIRE(path.endpoint == "r");
+  REQUIRE(path.endpoint_is_register);
+  REQUIRE(path.steps.size() == 2);
+  REQUIRE(path.steps[0].operation == "input");
+  REQUIRE(path.steps[1].operation == ID_plus);
+  REQUIRE(path.steps[1].arrival_ps == Approx(100));
 }
 
 SCENARIO("Identical logic is costed once")

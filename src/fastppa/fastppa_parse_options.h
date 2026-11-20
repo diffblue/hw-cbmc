@@ -18,6 +18,7 @@ Author: Kiro
   "(toggle-rate):"                                                             \
   "(netlist)"                                                                  \
   "(cost-table):"                                                              \
+  "(paths):(json)"                                                             \
   "(top):"                                                                     \
   "(verbosity):"                                                               \
   "(version)"                                                                  \
