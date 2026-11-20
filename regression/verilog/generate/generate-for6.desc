@@ -1,0 +1,11 @@
+KNOWNBUG
+generate-for6.sv
+--bound 1
+^\[main\.p0\] always main\.x == ~main\.y: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Two unnamed generate loops in one module are given the same scope, so their
+local declarations clash ("symbol t is already declared"); 1800-2017 27.6
+names them genblk1 and genblk2.
