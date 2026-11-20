@@ -1,6 +1,6 @@
 CORE
 register_alias_netlist1.sv
---ic3 --property main.p1
+--old-ic3 --property main.p1
 ^\[main\.p1\] .*: REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
