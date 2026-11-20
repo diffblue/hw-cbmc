@@ -30,6 +30,7 @@ SRC += ebmc/bdd_model_checker.cpp \
        verilog/verilog_lowering.cpp \
        verilog/verilog_rtl.cpp \
        verilog/verilog_simplifier.cpp \
+       verilog/vl_simulator_state.cpp \
        # Empty last line
 
 INCLUDES= -I ../src/ -I . -I $(CPROVER_DIR)/unit -I $(CPROVER_DIR)/src

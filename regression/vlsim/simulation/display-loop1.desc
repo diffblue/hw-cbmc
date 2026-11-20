@@ -1,0 +1,10 @@
+CORE
+display-loop1.v
+
+^i = 0$
+^i = 1$
+^i = 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^i = 3$
