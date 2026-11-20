@@ -437,7 +437,23 @@ protected:
     return *w;
   }
 
+  /// Each distinct expression is built once; expressions are DAGs with
+  /// much sharing, and walking them as trees can take exponential time.
+  std::unordered_map<exprt, std::size_t, irep_hash> built;
+
   std::size_t build_rec(const exprt &expr)
+  {
+    if(expr.id() == ID_symbol || expr.is_constant())
+      return build_rec_uncached(expr);
+    auto it = built.find(expr);
+    if(it != built.end())
+      return it->second;
+    auto n = build_rec_uncached(expr);
+    built.emplace(expr, n);
+    return n;
+  }
+
+  std::size_t build_rec_uncached(const exprt &expr)
   {
     if(auto selected = select_from_definition(expr))
       return *selected;
