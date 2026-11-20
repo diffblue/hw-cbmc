@@ -1,0 +1,9 @@
+KNOWNBUG
+package_typedef3.sv
+--bound 1
+^\[main\.p0\] always main\.y == p::C: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+A cast to a type declared in a package, p::e_t'(...), is a syntax error.
