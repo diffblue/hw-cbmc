@@ -1,0 +1,6 @@
+CORE
+interface_task1.sv
+--bound 1
+^\[main\.p1\] always main\.bus\.data == 255: PROVED up to bound 1
+^EXIT=0$
+^SIGNAL=0$
