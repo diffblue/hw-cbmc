@@ -1,0 +1,8 @@
+CORE
+task_automatic2.sv
+--top top --bound 1
+^no properties$
+^EXIT=10$
+^SIGNAL=0$
+--
+^syntax error

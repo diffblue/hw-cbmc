@@ -9,6 +9,7 @@
 * SystemVerilog: interface ports with a modport in non-ANSI port declarations
 * SystemVerilog: default values for function and task arguments
 * SystemVerilog: named arguments in task calls
+* SystemVerilog: task lifetimes (task automatic, task static)
 
 # EBMC 6.2
 

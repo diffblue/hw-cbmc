@@ -1,0 +1,9 @@
+CORE
+class_task_lifetime1.sv
+--show-symbol-table
+^  Verilog::myClass::set_x$
+^  Verilog::myClass::set_x2$
+^  Verilog::myClass::set_x3$
+^EXIT=0$
+^SIGNAL=0$
+--
