@@ -47,6 +47,11 @@ bool aval_bval_has_xz(const constant_exprt &);
 exprt aval(const exprt &);
 exprt bval(const exprt &);
 
+/// the aval, as a value of the two-valued type corresponding to the
+/// four-valued type of the given aval/bval-encoded expression;
+/// two-valued expressions are returned as is
+exprt aval_underlying(const exprt &);
+
 /// Return true iff 'expr' contains an x or z bit, i.e. a nonzero bval.
 /// For a two-valued operand the result is 'false'.
 exprt has_xz(const exprt &);

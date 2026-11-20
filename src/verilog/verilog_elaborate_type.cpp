@@ -151,14 +151,6 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
   {
     // we have a bit-vector type, not an array
 
-    verilog_vector_typet dest(
-      subtype.id() == ID_signed ? ID_signedbv : ID_unsignedbv);
-
-    dest.add_source_location() = source_location;
-    dest.set_width(width.to_ulong());
-    dest.increasing(range.increasing());
-    dest.offset(offset);
-
     irep_idt element_type;
 
     if(subtype.id() == ID_signed || subtype.id() == ID_unsigned)
@@ -169,6 +161,21 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
     }
     else
       element_type = subtype.id();
+
+    // 1800-2017 6.11: bit is two-valued; logic, reg and the implicit
+    // element type of a packed dimension are four-valued.
+    const bool is_two_valued = element_type == ID_verilog_bit;
+    const bool is_signed = subtype.id() == ID_signed;
+
+    verilog_vector_typet dest(
+      is_two_valued
+        ? (is_signed ? ID_signedbv : ID_unsignedbv)
+        : (is_signed ? ID_verilog_signedbv : ID_verilog_unsignedbv));
+
+    dest.add_source_location() = source_location;
+    dest.set_width(width.to_ulong());
+    dest.increasing(range.increasing());
+    dest.offset(offset);
 
     if(
       element_type == ID_verilog_logic || element_type == ID_reg ||
@@ -309,6 +316,10 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
         if(verilog_type != irep_idt{})
           dest.set(ID_C_verilog_type, verilog_type);
 
+        auto verilog_vector_type = rec.get(ID_C_verilog_vector_type);
+        if(verilog_vector_type != irep_idt{})
+          dest.set(ID_C_verilog_vector_type, verilog_vector_type);
+
         return dest;
       }
       else
@@ -321,8 +332,11 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     auto &subtype = to_type_with_subtype(src).subtype();
     if(subtype.is_nil())
     {
-      // one bit, unsigned
-      return unsignedbv_typet{1}.with_source_location(source_location);
+      // one bit, unsigned, four-valued
+      auto result =
+        verilog_unsignedbv_typet{1}.with_source_location(source_location);
+      result.set(ID_C_verilog_type, ID_verilog_logic);
+      return result;
     }
     else
     {
@@ -351,6 +365,10 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
         auto verilog_type = rec.get(ID_C_verilog_type);
         if(verilog_type != irep_idt{})
           dest.set(ID_C_verilog_type, verilog_type);
+
+        auto verilog_vector_type = rec.get(ID_C_verilog_vector_type);
+        if(verilog_vector_type != irep_idt{})
+          dest.set(ID_C_verilog_vector_type, verilog_vector_type);
 
         return dest;
       }
@@ -402,12 +420,15 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   else if(src.id() == ID_verilog_bit)
   {
     // two-valued type
-    return unsignedbv_typet{1}.with_source_location(source_location);
+    auto result = unsignedbv_typet{1}.with_source_location(source_location);
+    result.set(ID_C_verilog_type, ID_verilog_bit);
+    return result;
   }
   else if(src.id() == ID_verilog_logic)
   {
     // four-valued type
-    auto result = unsignedbv_typet{1}.with_source_location(source_location);
+    auto result =
+      verilog_unsignedbv_typet{1}.with_source_location(source_location);
     result.set(ID_C_verilog_type, ID_verilog_logic);
     return result;
   }

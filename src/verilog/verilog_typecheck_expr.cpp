@@ -993,18 +993,11 @@ exprt verilog_typecheck_exprt::convert_expr_concatenation(
     }
   }
 
+  // The concatenation is four-valued if any of the operands is. The
+  // operands are not converted; the lowering encodes a four-valued
+  // concatenation with two-valued operands.
   expr.type() = typet(has_verilogbv ? ID_verilog_unsignedbv : ID_unsignedbv);
   expr.type().set(ID_width, integer2string(width));
-
-  if(has_verilogbv)
-  {
-    Forall_operands(it, expr)
-      if(it->type().id() != ID_verilog_unsignedbv)
-      {
-        auto width_int = numeric_cast_v<std::size_t>(get_width(*it));
-        *it = typecast_exprt{*it, verilog_unsignedbv_typet{width_int}};
-      }
-  }
 
   return std::move(expr);
 }
@@ -1685,7 +1678,9 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
 
     exprt &argument=arguments.front();
 
-    if(argument.type().id()==ID_signedbv)
+    if(
+      argument.type().id() == ID_signedbv ||
+      argument.type().id() == ID_verilog_signedbv)
     {
       expr.type() = argument.type();
       return std::move(expr);
@@ -1694,6 +1689,13 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
     {
       typet new_type = argument.type();
       new_type.id(ID_signedbv);
+      expr.type() = new_type;
+      return std::move(expr);
+    }
+    else if(argument.type().id() == ID_verilog_unsignedbv)
+    {
+      typet new_type = argument.type();
+      new_type.id(ID_verilog_signedbv);
       expr.type() = new_type;
       return std::move(expr);
     }
@@ -1720,7 +1722,9 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
 
     exprt &argument=arguments.front();
 
-    if(argument.type().id()==ID_unsignedbv)
+    if(
+      argument.type().id() == ID_unsignedbv ||
+      argument.type().id() == ID_verilog_unsignedbv)
     {
       expr.type() = argument.type();
       return std::move(expr);
@@ -1729,6 +1733,13 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
     {
       typet new_type = argument.type();
       new_type.id(ID_unsignedbv);
+      expr.type() = new_type;
+      return std::move(expr);
+    }
+    else if(argument.type().id() == ID_verilog_signedbv)
+    {
+      typet new_type = argument.type();
+      new_type.id(ID_verilog_unsignedbv);
       expr.type() = new_type;
       return std::move(expr);
     }
@@ -2105,7 +2116,7 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
   else if(expr.id() == ID_type)
   {
     // Used, e.g., for $bits
-    expr.type() = make_two_valued(elaborate_type(expr.type()));
+    expr.type() = elaborate_type(expr.type());
     return std::move(expr);
   }
   else if(expr.id() == ID_this)
@@ -3610,7 +3621,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     // SystemVerilog has got type'(expr). This is an explicit
     // type cast. These are assignment contexts.
     convert_expr(expr.op());
-    expr.type() = make_two_valued(elaborate_type(expr.type()));
+    expr.type() = elaborate_type(expr.type());
 
     // In contrast to assignments, these can turn integers into enums
     // (1800-2017 6.19.3).
@@ -3680,7 +3691,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   else if(expr.id() == ID_verilog_implicit_typecast)
   {
     // We generate implict casts during elaboration.
-    expr.type() = make_two_valued(elaborate_type(expr.type()));
+    expr.type() = elaborate_type(expr.type());
     convert_expr(expr.op());
     expr.id(ID_typecast);
   }
@@ -3707,9 +3718,16 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     convert_expr(expr.op());
     expr.type() = expr.op().type();
 
-    // Boolean?
-    if(expr.type().id() == ID_bool)
+    // Boolean, or a single four-valued bit? On a single bit, bit-wise
+    // negation is logical negation.
+    if(
+      expr.type().id() == ID_bool ||
+      (expr.type().id() == ID_verilog_unsignedbv &&
+       to_verilog_unsignedbv_type(expr.type()).width() == 1 &&
+       expr.type().get(ID_C_offset).empty()))
+    {
       expr.id(ID_not);
+    }
   }
   else if(expr.id() == ID_posedge || expr.id() == ID_negedge)
   {

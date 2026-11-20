@@ -28,9 +28,18 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <algorithm>
 #include <optional>
 
-/// Lowers
-/// * the three Verilog real types to floatbv;
-/// * Verilog integer to signedbv[32]
+/// The type of the lowered representation of a variable or net of the
+/// given Verilog type, which is also the type of lowered expressions
+/// that are not operands of operators, e.g. symbols and array elements:
+/// * the three Verilog real types become floatbv;
+/// * Verilog integer becomes signedbv[32];
+/// * four-valued vector types are modelled two-valued, as unsignedbv or
+///   signedbv of the same width; the x/z values are dropped. An unsigned
+///   single bit without a declared range becomes bool (make_two_valued).
+///   Aggregate types are lowered member-wise.
+/// * chandle and event become their encoding.
+/// Four-valued values that do contain x/z, e.g. literals, are lowered to
+/// the aval/bval encoding, see aval_bval_encoding.h.
 typet verilog_lowering(typet type)
 {
   if(type.id() == ID_verilog_real || type.id() == ID_verilog_realtime)
@@ -46,9 +55,11 @@ typet verilog_lowering(typet type)
     return signedbv_typet{32};
   }
   else if(
-    type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
+    type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv ||
+    type.id() == ID_unsignedbv || type.id() == ID_array ||
+    type.id() == ID_struct || type.id() == ID_union)
   {
-    return lower_to_aval_bval(type);
+    return make_two_valued(type);
   }
   else if(type.id() == ID_verilog_chandle)
   {
@@ -84,6 +95,34 @@ void verilog_lower_symbol_types(symbol_table_baset &symbol_table)
       auto lowered = verilog_lowering(type);
       lowered.set(ID_C_verilog_type, type.id());
       it.get_writeable_symbol().type = std::move(lowered);
+    }
+    else if(
+      type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
+      type.id() == ID_unsignedbv || type.id() == ID_array ||
+      type.id() == ID_struct || type.id() == ID_union)
+    {
+      // The two-valued modelling retains the attributes of the type,
+      // e.g. the Verilog type and the declared range.
+      it.get_writeable_symbol().type = verilog_lowering(type);
+    }
+  }
+
+  // The ports of a module carry the types of the port symbols; use the
+  // lowered types.
+  for(auto it = symbol_table.begin(); it != symbol_table.end(); it++)
+  {
+    const auto &symbol = it->second;
+
+    if(symbol.mode != ID_Verilog || symbol.type.id() != ID_module)
+      continue;
+
+    auto &ports = to_module_type(it.get_writeable_symbol().type).ports();
+
+    for(auto &port : ports)
+    {
+      auto port_symbol = symbol_table.lookup(port.identifier());
+      if(port_symbol != nullptr)
+        port.type() = port_symbol->type;
     }
   }
 }
@@ -535,10 +574,23 @@ exprt verilog_lowering_system_function(const function_call_exprt &call)
 
   if(base_name == "$signed" || base_name == "$unsigned")
   {
-    // lower to typecast
     DATA_INVARIANT(
       arguments.size() == 1, id2string(base_name) + " takes one argument");
-    return typecast_exprt{arguments[0], call.type()};
+
+    if(is_aval_bval(arguments[0]))
+    {
+      // Change the signedness annotation in the aval/bval type.
+      auto result = arguments[0];
+      result.type().set(
+        ID_C_verilog_aval_bval,
+        base_name == "$signed" ? ID_verilog_signedbv : ID_verilog_unsignedbv);
+      return result;
+    }
+    else
+    {
+      // lower to typecast
+      return typecast_exprt{arguments[0], two_valued_vector_type(call.type())};
+    }
   }
   else if(base_name == "$value$plusargs" || base_name == "$test$plusargs")
   {
@@ -605,11 +657,17 @@ exprt verilog_lowering_system_function(const function_call_exprt &call)
       typecast_exprt{arguments[0], bv_typet{32}}, call.type()};
   }
   else
-    return call;
+  {
+    // Left for later, e.g. $past; the type is lowered.
+    auto result = call;
+    result.type() = verilog_lowering(call.type());
+    return std::move(result);
+  }
 }
 
 exprt verilog_lowering_cast(typecast_exprt expr)
 {
+  // The operand is lowered already; the type is the Verilog type.
   auto &src_type = expr.op().type();
   auto &dest_type = expr.type();
 
@@ -629,7 +687,7 @@ exprt verilog_lowering_cast(typecast_exprt expr)
      src_type.id() == ID_verilog_shortreal ||
      src_type.id() == ID_verilog_realtime || src_type.id() == ID_floatbv) &&
     (dest_type.id() == ID_signedbv || dest_type.id() == ID_unsignedbv ||
-     dest_type.id() == ID_bool))
+     dest_type.id() == ID_bool || is_four_valued(dest_type)))
   {
     // 1800-2017 6.12.2 requires rounding away from zero when converting
     // to integers.
@@ -641,7 +699,7 @@ exprt verilog_lowering_cast(typecast_exprt expr)
       rti,
       ieee_floatt::rounding_mode_expr(
         ieee_floatt::rounding_modet::ROUND_TO_ZERO),
-      verilog_lowering(dest_type)};
+      two_valued_vector_type(dest_type)};
     return std::move(new_cast);
   }
 
@@ -669,44 +727,72 @@ exprt verilog_lowering_cast(typecast_exprt expr)
   {
     // When casting a four-valued scalar to bool,
     // 'true' is defined as a "nonzero known value" (1800-2017 12.4).
-    return aval_bval(expr);
+    if(
+      dest_type.id() == ID_bool || dest_type.id() == ID_unsignedbv ||
+      dest_type.id() == ID_signedbv || is_four_valued(dest_type))
+    {
+      return aval_bval(expr);
+    }
+    else
+    {
+      // e.g. to an aggregate: use the aval
+      expr.op() = aval_underlying(expr.op());
+    }
+  }
+
+  if(is_four_valued(dest_type))
+  {
+    // The operand is two-valued, and so is the result, which gets the
+    // type of the two-valued modelling of the four-valued type.
+    auto two_valued_dest_type = verilog_lowering(dest_type);
+
+    if(
+      src_type.id() == ID_struct || src_type.id() == ID_union ||
+      src_type.id() == ID_array)
+    {
+      return extract(to_bitvector(expr.op()), 0, two_valued_dest_type);
+    }
+    else if(
+      two_valued_dest_type.id() == ID_bool && src_type.id() != ID_bool &&
+      verilog_bits_opt(src_type).value_or(1) != 1)
+    {
+      // A cast to a single bit truncates (1800-2017 10.7), unlike a cast
+      // to bool.
+      return extractbit_exprt{expr.op(), from_integer(0, integer_typet{})};
+    }
+    else
+      return typecast_exprt::conditional_cast(expr.op(), two_valued_dest_type);
+  }
+  else if(
+    dest_type.id() == ID_struct || dest_type.id() == ID_union ||
+    dest_type.id() == ID_array)
+  {
+    auto lowered_dest_type = verilog_lowering(dest_type);
+
+    // from_bitvector requires a bit-vector source; a packed aggregate
+    // operand must be flattened first (1800-2017 7.2.1/7.4.1).
+    if(
+      src_type.id() == ID_struct || src_type.id() == ID_union ||
+      src_type.id() == ID_array)
+    {
+      return from_bitvector(to_bitvector(expr.op()), 0, lowered_dest_type);
+    }
+    else
+      return from_bitvector(expr.op(), 0, lowered_dest_type);
   }
   else
   {
     if(
-      dest_type.id() == ID_verilog_unsignedbv ||
-      dest_type.id() == ID_verilog_signedbv)
+      src_type.id() == ID_struct || src_type.id() == ID_union ||
+      src_type.id() == ID_array)
     {
-      auto aval_bval_type = lower_to_aval_bval(dest_type);
-      return aval_bval_conversion(expr.op(), aval_bval_type);
-    }
-    else if(
-      dest_type.id() == ID_struct || dest_type.id() == ID_union ||
-      dest_type.id() == ID_array)
-    {
-      // from_bitvector requires a bit-vector source; a packed aggregate
-      // operand must be flattened first (1800-2017 7.2.1/7.4.1).
-      if(
-        src_type.id() == ID_struct || src_type.id() == ID_union ||
-        src_type.id() == ID_array)
-      {
-        return from_bitvector(to_bitvector(expr.op()), 0, dest_type);
-      }
-      else
-        return from_bitvector(expr.op(), 0, dest_type);
-    }
-    else
-    {
-      if(
-        src_type.id() == ID_struct || src_type.id() == ID_union ||
-        src_type.id() == ID_array)
-      {
-        return extract(to_bitvector(expr.op()), 0, dest_type);
-      }
+      return extract(to_bitvector(expr.op()), 0, dest_type);
     }
   }
 
-  return std::move(expr);
+  // A cast that does not change the (lowered) type is dropped, and so is
+  // a cast that undoes a cast of the same width.
+  return typecast_exprt::conditional_cast(expr.op(), dest_type);
 }
 
 /// The elements lsb..msb (declared indices) of the packed array \p src,
@@ -847,6 +933,116 @@ static exprt lower_real_arithmetic(const multi_ary_exprt &expr)
   return result;
 }
 
+/// True iff the type is one of the types that a lowered two-valued
+/// operand may have.
+static bool is_two_valued_vector_or_bool(const typet &type)
+{
+  return type.id() == ID_bool || type.id() == ID_unsignedbv ||
+         type.id() == ID_signedbv;
+}
+
+/// The type of a lowered operand of an operator with the given Verilog
+/// type, when it is not aval/bval encoded: a four-valued vector type
+/// becomes the two-valued vector type of the same width.
+static typet two_valued_operand_type(const typet &verilog_type)
+{
+  if(is_four_valued(verilog_type))
+    return two_valued_vector_type(verilog_type);
+  else
+    return verilog_type;
+}
+
+/// Cast the lowered expression \p op to the lowered type \p type, if both
+/// are Booleans or two-valued vectors of the same width. A cast that
+/// undoes a cast of the same width is dropped.
+static exprt coerce_to_type(exprt op, const typet &type)
+{
+  if(op.type() == type)
+    return op;
+
+  if(op.id() == ID_typecast)
+  {
+    auto &inner = to_typecast_expr(op).op();
+    if(
+      inner.type() == type && is_two_valued_vector_or_bool(op.type()) &&
+      verilog_bits_opt(op.type()) == verilog_bits_opt(type))
+    {
+      return inner;
+    }
+  }
+
+  if(
+    !is_two_valued_vector_or_bool(type) ||
+    (!is_two_valued_vector_or_bool(op.type()) && op.type().id() != ID_bv))
+  {
+    return op;
+  }
+
+  return typecast_exprt::conditional_cast(std::move(op), type);
+}
+
+/// The lowering of a symbol of a single-bit type yields a Boolean, and the
+/// lowering of an operator yields a vector. The type checker inserts casts
+/// between these only when it sees both; it now sees the four-valued
+/// vector type on both. Hence, cast the lowered operand \p op to the
+/// two-valued type of its Verilog type \p verilog_type, if needed.
+static exprt coerce_two_valued(exprt op, const typet &verilog_type)
+{
+  if(is_aval_bval(op))
+    return op;
+
+  auto target = two_valued_operand_type(verilog_type);
+
+  if(!is_two_valued_vector_or_bool(target))
+    return op;
+
+  if(!is_two_valued_vector_or_bool(op.type()) && op.type().id() != ID_bv)
+    return op;
+
+  if(op.type() == target)
+    return op;
+
+  DATA_INVARIANT(
+    verilog_bits_opt(op.type()).value_or(0) ==
+        verilog_bits_opt(target).value_or(0) ||
+      op.type().id() == ID_bv,
+    "lowered operand must have the width of its Verilog type");
+
+  return coerce_to_type(std::move(op), target);
+}
+
+/// The aval/bval encoding of the lowered operand \p op, whose Verilog type
+/// is \p verilog_type.
+static exprt to_aval_bval(exprt op, const typet &verilog_type)
+{
+  if(is_aval_bval(op))
+    return op;
+  else if(is_four_valued(verilog_type))
+  {
+    return aval_bval_conversion(
+      coerce_two_valued(std::move(op), verilog_type),
+      lower_to_aval_bval(verilog_type));
+  }
+  else
+    return op;
+}
+
+/// The two-valued constant for the given four-valued constant, which must
+/// not contain x/z.
+static constant_exprt
+two_valued_constant(const constant_exprt &aval_bval_constant, const typet &type)
+{
+  PRECONDITION(is_four_valued(type));
+  PRECONDITION(!aval_bval_has_xz(aval_bval_constant));
+  auto width = to_bitvector_type(type).get_width();
+  auto aval = bvrep2integer(aval_bval_constant.get_value(), 2 * width, false) %
+              power(2, width);
+  // interpret as signed if the type is signed
+  if(type.id() == ID_verilog_signedbv && aval >= power(2, width - 1))
+    aval -= power(2, width);
+  return from_integer(aval, two_valued_vector_type(type));
+}
+
 exprt verilog_lowering(exprt expr)
 {
   // lowered already
@@ -874,20 +1070,85 @@ exprt verilog_lowering(exprt expr)
     }
   }
 
+  // The Verilog types of the expression and of the operands are needed
+  // after lowering the operands. This is a shallow copy.
+  const exprt verilog_expr = expr;
+  const typet &verilog_type = verilog_expr.type();
+
   // Do the operands recursively
   for(auto &op : expr.operands())
     op = verilog_lowering(op);
+
+  // Helpers for the operands. The lowering of a four-valued operator is
+  // the aval/bval encoding if any of its lowered operands is aval/bval
+  // encoded, i.e., may hold x/z. Otherwise, the operator is lowered to the
+  // two-valued operator on the two-valued operands.
+  auto verilog_operand_type = [&verilog_expr](std::size_t i) -> const typet &
+  { return verilog_expr.operands()[i].type(); };
+
+  auto any_aval_bval = [&expr]() -> bool
+  {
+    return std::any_of(
+      expr.operands().begin(),
+      expr.operands().end(),
+      [](const exprt &op) { return is_aval_bval(op); });
+  };
+
+  auto all_bool = [&expr]() -> bool
+  {
+    return std::all_of(
+      expr.operands().begin(),
+      expr.operands().end(),
+      [](const exprt &op) { return op.type().id() == ID_bool; });
+  };
+
+  auto coerce_operands = [&expr, &verilog_operand_type]()
+  {
+    auto &operands = expr.operands();
+    for(std::size_t i = 0; i < operands.size(); i++)
+      operands[i] = coerce_two_valued(operands[i], verilog_operand_type(i));
+  };
+
+  auto aval_bval_operands = [&expr, &verilog_operand_type]()
+  {
+    auto &operands = expr.operands();
+    for(std::size_t i = 0; i < operands.size(); i++)
+      operands[i] = to_aval_bval(operands[i], verilog_operand_type(i));
+  };
+
+  // the two-valued form of a four-valued operator on vectors
+  auto two_valued_operator = [&expr, &coerce_operands]() -> exprt
+  {
+    coerce_operands();
+    expr.type() = two_valued_vector_type(expr.type());
+    return expr;
+  };
+
+  // whether the expression is a single bit without declared range
+  auto is_single_bit = [&verilog_type]() -> bool
+  {
+    return is_four_valued(verilog_type) &&
+           to_bitvector_type(verilog_type).get_width() == 1 &&
+           verilog_type.get(ID_C_offset).empty();
+  };
 
   if(expr.id() == ID_constant)
   {
     auto &constant_expr = to_constant_expr(expr);
 
-    if(
-      expr.type().id() == ID_verilog_unsignedbv ||
-      expr.type().id() == ID_verilog_signedbv)
+    if(is_four_valued(expr.type()))
     {
       // encode into aval/bval
-      return lower_to_aval_bval(constant_expr);
+      auto aval_bval_constant = lower_to_aval_bval(constant_expr);
+
+      // A four-valued constant without x/z is two-valued.
+      if(aval_bval_has_xz(aval_bval_constant))
+        return std::move(aval_bval_constant);
+      else
+      {
+        return two_valued_constant(aval_bval_constant, expr.type())
+          .with_source_location(expr.source_location());
+      }
     }
     else if(
       expr.type().id() == ID_verilog_real ||
@@ -917,51 +1178,62 @@ exprt verilog_lowering(exprt expr)
 
     return expr;
   }
-  else if(expr.id() == ID_symbol)
+  else if(
+    expr.id() == ID_symbol || expr.id() == ID_nondet_symbol ||
+    expr.id() == ID_next_symbol)
   {
-    auto &symbol_expr = to_symbol_expr(expr);
-    if(expr.type().id() == ID_verilog_chandle)
-    {
-      auto &chandle_type = to_verilog_chandle_type(expr.type());
-      return symbol_exprt{symbol_expr.identifier(), chandle_type.encoding()};
-    }
-    else if(expr.type().id() == ID_verilog_event)
-    {
-      auto &event_type = to_verilog_event_type(expr.type());
-      return symbol_exprt{symbol_expr.identifier(), event_type.encoding()};
-    }
-    else if(
-      expr.type().id() == ID_verilog_real ||
-      expr.type().id() == ID_verilog_shortreal ||
-      expr.type().id() == ID_verilog_realtime)
-    {
-      // The symbol table keeps the Verilog type; turn into floatbv.
-      expr.type() = verilog_lowering(expr.type());
-      return expr;
-    }
-    else
-      return expr;
+    // The symbol table keeps the Verilog type; the symbols in the lowered
+    // expressions have the lowered type.
+    expr.type() = verilog_lowering(expr.type());
+    return expr;
   }
   else if(
     expr.id() == ID_le || expr.id() == ID_ge || expr.id() == ID_lt ||
     expr.id() == ID_gt)
   {
-    if(is_four_valued(expr))
+    if(is_four_valued(expr.type()))
     {
-      return aval_bval(to_binary_relation_expr(expr));
+      if(any_aval_bval())
+      {
+        aval_bval_operands();
+        return aval_bval(to_binary_relation_expr(expr));
+      }
+      else
+      {
+        coerce_operands();
+        expr.type() = bool_typet{};
+        return expr;
+      }
     }
     else
+    {
+      coerce_operands();
       return expr;
+    }
   }
   else if(expr.id() == ID_concatenation)
   {
-    if(
-      expr.type().id() == ID_verilog_unsignedbv ||
-      expr.type().id() == ID_verilog_signedbv)
+    if(is_four_valued(expr.type()))
     {
-      return aval_bval_concatenation(
-        to_concatenation_expr(expr).operands(),
-        lower_to_aval_bval(expr.type()));
+      if(any_aval_bval())
+      {
+        // The operands that are two-valued must be vectors.
+        coerce_operands();
+        for(auto &op : expr.operands())
+          if(op.type().id() == ID_bool)
+            op = typecast_exprt{op, unsignedbv_typet{1}};
+
+        return aval_bval_concatenation(
+          to_concatenation_expr(expr).operands(),
+          lower_to_aval_bval(expr.type()));
+      }
+      else
+      {
+        // Operands of any bit-vector type, and Booleans, may be
+        // concatenated.
+        expr.type() = two_valued_vector_type(expr.type());
+        return expr;
+      }
     }
 
     return expr;
@@ -971,10 +1243,18 @@ exprt verilog_lowering(exprt expr)
     auto &power_expr = to_power_expr(expr);
 
     // encode into aval/bval
-    if(is_four_valued(expr.type()))
+    if(is_four_valued(expr.type()) && any_aval_bval())
+    {
+      aval_bval_operands();
       return aval_bval(power_expr);
+    }
     else
     {
+      if(is_four_valued(expr.type()))
+        two_valued_operator();
+      else
+        coerce_operands();
+
       DATA_INVARIANT(
         power_expr.base().type() == power_expr.type(),
         "power expression type consistency");
@@ -1006,10 +1286,7 @@ exprt verilog_lowering(exprt expr)
     // These act like an assignment, and hence, the type checker
     // has already converted the argument to the target type.
     auto &type_cast = to_verilog_explicit_type_cast_expr(expr);
-    expr.type() = verilog_lowering(expr.type());
-    DATA_INVARIANT(
-      type_cast.op().type() == type_cast.type(), "type cast type consistency");
-    return type_cast.op();
+    return coerce_two_valued(type_cast.op(), verilog_type);
   }
   else if(expr.id() == ID_verilog_explicit_signing_cast)
   {
@@ -1024,17 +1301,17 @@ exprt verilog_lowering(exprt expr)
       return result;
     }
     else
-      return signing_cast.lower();
+    {
+      return typecast_exprt::conditional_cast(
+        signing_cast.op(), two_valued_operand_type(signing_cast.type()));
+    }
   }
   else if(expr.id() == ID_verilog_explicit_size_cast)
   {
     // These act like an assignment, and hence, the type checker
     // has already converted the argument to the target type.
     auto &size_cast = to_verilog_explicit_size_cast_expr(expr);
-    expr.type() = verilog_lowering(expr.type());
-    DATA_INVARIANT(
-      size_cast.op().type() == size_cast.type(), "size cast type consistency");
-    return size_cast.op();
+    return coerce_two_valued(size_cast.op(), verilog_type);
   }
   else if(
     expr.id() == ID_verilog_streaming_concatenation_left_to_right ||
@@ -1042,6 +1319,25 @@ exprt verilog_lowering(exprt expr)
   {
     auto &streaming_concatenation =
       to_verilog_streaming_concatenation_expr(expr);
+
+    // The stream expressions are the operands of the braced list, and
+    // must be bit-vectors.
+    auto &stream_expressions = streaming_concatenation.has_slice_size()
+                                 ? expr.operands()[1].operands()
+                                 : expr.operands()[0].operands();
+    auto &verilog_stream_expressions =
+      streaming_concatenation.has_slice_size()
+        ? verilog_expr.operands()[1].operands()
+        : verilog_expr.operands()[0].operands();
+
+    for(std::size_t i = 0; i < stream_expressions.size(); i++)
+    {
+      auto &op = stream_expressions[i];
+      op = coerce_two_valued(op, verilog_stream_expressions[i].type());
+      if(op.type().id() == ID_bool)
+        op = typecast_exprt{op, unsignedbv_typet{1}};
+    }
+
     return streaming_concatenation.lower();
   }
   else if(expr.id() == ID_verilog_non_indexed_part_select)
@@ -1062,7 +1358,8 @@ exprt verilog_lowering(exprt expr)
       auto lsb =
         numeric_cast_v<mp_integer>(to_constant_expr(part_select.lsb()));
 
-      return lower_packed_array_slice(src, lsb, msb, part_select.type());
+      return lower_packed_array_slice(
+        src, lsb, msb, verilog_lowering(part_select.type()));
     }
 
     // A non-indexed part-select on an unpacked array selects a range of
@@ -1081,8 +1378,13 @@ exprt verilog_lowering(exprt expr)
         numeric_cast_v<mp_integer>(to_constant_expr(part_select.lsb()));
 
       return lower_unpacked_array_slice(
-        src, src_array_type, lsb, msb, part_select.type());
+        src, src_array_type, lsb, msb, verilog_lowering(part_select.type()));
     }
+
+    // The source must be a vector.
+    src = coerce_two_valued(src, verilog_operand_type(0));
+    if(src.type().id() == ID_bool)
+      src = typecast_exprt{src, unsignedbv_typet{1}};
 
     return part_select.lower();
   }
@@ -1106,7 +1408,8 @@ exprt verilog_lowering(exprt expr)
       auto lsb = result_array_type.offset();
       auto msb = lsb + result_array_type.size_int() - 1;
 
-      return lower_packed_array_slice(src, lsb, msb, part_select.type());
+      return lower_packed_array_slice(
+        src, lsb, msb, verilog_lowering(part_select.type()));
     }
 
     // An indexed part-select on an unpacked array selects a range of
@@ -1124,35 +1427,62 @@ exprt verilog_lowering(exprt expr)
       auto msb = lsb + result_array_type.size_int() - 1;
 
       return lower_unpacked_array_slice(
-        src, src_array_type, lsb, msb, part_select.type());
+        src, src_array_type, lsb, msb, verilog_lowering(part_select.type()));
     }
+
+    // The source must be a vector, and so must be the index.
+    coerce_operands();
+    if(src.type().id() == ID_bool)
+      src = typecast_exprt{src, unsignedbv_typet{1}};
 
     return part_select.lower();
   }
-  else if(expr.id() == ID_verilog_case_equality)
+  else if(
+    expr.id() == ID_verilog_case_equality ||
+    expr.id() == ID_verilog_case_inequality)
   {
     // Result is two-valued, comparing x/z as given.
-    return to_verilog_case_equality_expr(expr).lower();
+    if(any_aval_bval())
+      aval_bval_operands();
+    else
+      coerce_operands();
+
+    if(expr.id() == ID_verilog_case_equality)
+      return to_verilog_case_equality_expr(expr).lower();
+    else
+      return to_verilog_case_inequality_expr(expr).lower();
   }
-  else if(expr.id() == ID_verilog_case_inequality)
+  else if(
+    expr.id() == ID_verilog_logical_equality ||
+    expr.id() == ID_verilog_logical_inequality)
   {
-    // Result is two-valued, comparing x/z as given.
-    return to_verilog_case_inequality_expr(expr).lower();
-  }
-  else if(expr.id() == ID_verilog_logical_equality)
-  {
-    return aval_bval(to_verilog_logical_equality_expr(expr));
-  }
-  else if(expr.id() == ID_verilog_logical_inequality)
-  {
-    return aval_bval(to_verilog_logical_inequality_expr(expr));
+    if(any_aval_bval())
+    {
+      aval_bval_operands();
+      if(expr.id() == ID_verilog_logical_equality)
+        return aval_bval(to_verilog_logical_equality_expr(expr));
+      else
+        return aval_bval(to_verilog_logical_inequality_expr(expr));
+    }
+    else
+    {
+      // On two-valued operands, it's the same as proper equality.
+      coerce_operands();
+      auto &binary_expr = to_binary_expr(expr);
+      if(expr.id() == ID_verilog_logical_equality)
+        return equal_exprt{binary_expr.lhs(), binary_expr.rhs()};
+      else
+        return notequal_exprt{binary_expr.lhs(), binary_expr.rhs()};
+    }
   }
   else if(expr.id() == ID_verilog_wildcard_equality)
   {
+    coerce_operands();
     return aval_bval(to_verilog_wildcard_equality_expr(expr));
   }
   else if(expr.id() == ID_verilog_wildcard_inequality)
   {
+    coerce_operands();
     return aval_bval(to_verilog_wildcard_inequality_expr(expr));
   }
   else if(expr.id() == ID_equal || expr.id() == ID_notequal)
@@ -1198,15 +1528,35 @@ exprt verilog_lowering(exprt expr)
       return result;
     }
 
+    // The operands must have the same type.
+    if(binary_expr.lhs().type() != binary_expr.rhs().type())
+    {
+      if(any_aval_bval())
+        aval_bval_operands();
+      else
+        coerce_operands();
+    }
+
     return expr; // leave as is
   }
   else if(expr.id() == ID_not)
   {
     auto &not_expr = to_not_expr(expr);
 
-    // encode into aval/bval
     if(is_four_valued(expr.type()))
-      return aval_bval(not_expr);
+    {
+      // encode into aval/bval
+      if(any_aval_bval())
+      {
+        aval_bval_operands();
+        return aval_bval(not_expr);
+      }
+      else
+      {
+        return not_exprt{
+          typecast_exprt::conditional_cast(not_expr.op(), bool_typet{})};
+      }
+    }
     else
       return expr; // leave as is
   }
@@ -1214,35 +1564,61 @@ exprt verilog_lowering(exprt expr)
   {
     auto &bitnot_expr = to_bitnot_expr(expr);
 
-    // encode into aval/bval
     if(is_four_valued(expr.type()))
-      return aval_bval(bitnot_expr);
+    {
+      // encode into aval/bval
+      if(any_aval_bval())
+      {
+        aval_bval_operands();
+        return aval_bval(bitnot_expr);
+      }
+      else if(is_single_bit() && all_bool())
+        return not_exprt{bitnot_expr.op()};
+      else
+        return two_valued_operator();
+    }
     else
+    {
+      coerce_operands();
       return expr; // leave as is
+    }
   }
-  else if(expr.id() == ID_bitand)
+  else if(
+    expr.id() == ID_bitand || expr.id() == ID_bitor || expr.id() == ID_bitxor ||
+    expr.id() == ID_bitxnor)
   {
-    // encode into aval/bval
-    if(is_four_valued(expr.type()))
-      return aval_bval_bitand(to_bitand_expr(expr));
+    if(is_four_valued(expr.type()) && any_aval_bval())
+    {
+      // encode into aval/bval
+      aval_bval_operands();
+      if(expr.id() == ID_bitand)
+        return aval_bval_bitand(to_bitand_expr(expr));
+      else if(expr.id() == ID_bitor)
+        return aval_bval_bitor(to_bitor_expr(expr));
+      else
+        return aval_bval_xor_xnor(to_multi_ary_expr(expr));
+    }
+    else if(
+      all_bool() && verilog_bits_opt(expr.type()).value_or(0) == 1 &&
+      (expr.operands().size() == 2 || expr.id() != ID_bitxnor))
+    {
+      // Single bits: use the Boolean operators.
+      if(expr.id() == ID_bitand)
+        return and_exprt{expr.operands()};
+      else if(expr.id() == ID_bitor)
+        return or_exprt{expr.operands()};
+      else if(expr.id() == ID_bitxor)
+        return xor_exprt{expr.operands()};
+      else // bitxnor
+        return equal_exprt{expr.operands()[0], expr.operands()[1]};
+    }
+    else if(is_four_valued(expr.type()))
+      return two_valued_operator();
     else
+    {
+      coerce_operands();
       return expr; // leave as is
-  }
-  else if(expr.id() == ID_bitor)
-  {
-    // encode into aval/bval
-    if(is_four_valued(expr.type()))
-      return aval_bval_bitor(to_bitor_expr(expr));
-    else
-      return expr; // leave as is
-  }
-  else if(expr.id() == ID_bitxor || expr.id() == ID_bitxnor)
-  {
-    // encode into aval/bval
-    if(is_four_valued(expr.type()))
-      return aval_bval_xor_xnor(to_multi_ary_expr(expr));
-    else
-      return expr; // leave as is
+    }
   }
   else if(expr.id() == ID_replication)
   {
@@ -1250,9 +1626,20 @@ exprt verilog_lowering(exprt expr)
 
     // encode into aval/bval
     if(is_four_valued(expr.type()))
-      return aval_bval_replication(replication_expr);
+    {
+      if(any_aval_bval())
+      {
+        aval_bval_operands();
+        return aval_bval_replication(replication_expr);
+      }
+      else
+        return two_valued_operator();
+    }
     else
+    {
+      coerce_operands();
       return expr; // leave as is
+    }
   }
   else if(
     expr.id() == ID_reduction_or || expr.id() == ID_reduction_and ||
@@ -1261,9 +1648,24 @@ exprt verilog_lowering(exprt expr)
   {
     // encode into aval/bval
     if(is_four_valued(expr.type()))
-      return aval_bval_reduction(to_unary_expr(expr));
+    {
+      if(any_aval_bval())
+      {
+        aval_bval_operands();
+        return aval_bval_reduction(to_unary_expr(expr));
+      }
+      else
+      {
+        coerce_operands();
+        expr.type() = bool_typet{};
+        return expr;
+      }
+    }
     else
+    {
+      coerce_operands();
       return expr; // leave as is
+    }
   }
   else if(expr.id() == ID_and || expr.id() == ID_or)
   {
@@ -1273,10 +1675,21 @@ exprt verilog_lowering(exprt expr)
     if(is_four_valued(expr.type()))
     {
       PRECONDITION(expr.operands().size() == 2);
-      if(expr.id() == ID_and)
-        return aval_bval_logical_and(to_and_expr(expr));
+      if(any_aval_bval())
+      {
+        aval_bval_operands();
+        if(expr.id() == ID_and)
+          return aval_bval_logical_and(to_and_expr(expr));
+        else
+          return aval_bval_logical_or(to_or_expr(expr));
+      }
       else
-        return aval_bval_logical_or(to_or_expr(expr));
+      {
+        for(auto &op : expr.operands())
+          op = typecast_exprt::conditional_cast(op, bool_typet{});
+        expr.type() = bool_typet{};
+        return expr;
+      }
     }
     else
       return expr; // leave as is
@@ -1285,9 +1698,10 @@ exprt verilog_lowering(exprt expr)
   {
     auto &iff = to_verilog_iff_expr(expr);
 
-    if(is_four_valued(iff.type()))
+    if(is_four_valued(iff.type()) && any_aval_bval())
     {
       // encode into aval/bval
+      aval_bval_operands();
       return aval_bval(iff);
     }
     else
@@ -1303,9 +1717,10 @@ exprt verilog_lowering(exprt expr)
   {
     auto &implies = to_verilog_implies_expr(expr);
 
-    if(is_four_valued(implies.type()))
+    if(is_four_valued(implies.type()) && any_aval_bval())
     {
       // encode into aval/bval
+      aval_bval_operands();
       return aval_bval(implies);
     }
     else
@@ -1336,42 +1751,109 @@ exprt verilog_lowering(exprt expr)
     }
     else if(is_four_valued(expr))
     {
-      return default_aval_bval_lowering(expr);
+      if(any_aval_bval())
+      {
+        aval_bval_operands();
+        return default_aval_bval_lowering(expr);
+      }
+      else
+        return two_valued_operator();
     }
     else
+    {
+      coerce_operands();
       return expr;
+    }
   }
   else if(expr.id() == ID_plus || expr.id() == ID_minus || expr.id() == ID_mult)
   {
     if(is_verilog_real(expr.type()))
       return lower_real_arithmetic(to_multi_ary_expr(expr));
     else if(is_four_valued(expr))
-      return default_aval_bval_lowering(expr);
+    {
+      if(any_aval_bval())
+      {
+        aval_bval_operands();
+        return default_aval_bval_lowering(expr);
+      }
+      else
+        return two_valued_operator();
+    }
     else
+    {
+      coerce_operands();
       return expr;
+    }
   }
   else if(expr.id() == ID_div || expr.id() == ID_mod)
   {
     if(expr.id() == ID_div && is_verilog_real(expr.type()))
       return lower_real_arithmetic(to_multi_ary_expr(expr));
     else if(is_four_valued(expr))
-      return aval_bval_div_mod(to_binary_expr(expr));
+    {
+      // Division by zero yields x (1800-2017 11.4.3), even when the
+      // operands are two-valued. This is only encoded when the divisor
+      // is a constant zero; otherwise, the two-valued modelling applies.
+      // The lowering of the divisor may have cast a constant.
+      const exprt *divisor = &to_binary_expr(expr).rhs();
+      while(divisor->id() == ID_typecast)
+        divisor = &to_typecast_expr(*divisor).op();
+
+      bool divisor_is_zero =
+        divisor->is_constant() && !is_aval_bval(*divisor) &&
+        numeric_cast<mp_integer>(to_constant_expr(*divisor)) == mp_integer{0};
+
+      if(any_aval_bval() || divisor_is_zero)
+      {
+        aval_bval_operands();
+        return aval_bval_div_mod(to_binary_expr(expr));
+      }
+      else
+        return two_valued_operator();
+    }
     else
+    {
+      coerce_operands();
       return expr;
+    }
   }
   else if(expr.id() == ID_lshr || expr.id() == ID_ashr || expr.id() == ID_shl)
   {
     if(is_four_valued(expr.type()))
-      return aval_bval(to_shift_expr(expr));
+    {
+      if(any_aval_bval())
+      {
+        // The distance is self-determined, and may be two-valued.
+        coerce_operands();
+        aval_bval_operands();
+        return aval_bval(to_shift_expr(expr));
+      }
+      else
+        return two_valued_operator();
+    }
     else
+    {
+      coerce_operands();
       return expr;
+    }
   }
   else if(expr.id() == ID_zero_extend)
   {
     if(is_four_valued(expr.type()))
-      return aval_bval(to_zero_extend_expr(expr));
+    {
+      if(any_aval_bval())
+      {
+        aval_bval_operands();
+        return aval_bval(to_zero_extend_expr(expr));
+      }
+      else
+        return two_valued_operator();
+    }
     else
+    {
+      coerce_operands();
       return expr;
+    }
   }
   else if(expr.id() == ID_verilog_bit_select)
   {
@@ -1539,11 +2021,18 @@ exprt verilog_lowering(exprt expr)
     }
     else
     {
-      // Lower to extractbit
+      // Lower to extractbit. The source and the index must be vectors.
+      coerce_operands();
+      if(src.type().id() == ID_bool)
+        src = typecast_exprt{src, unsignedbv_typet{1}};
+
       auto width = verilog_bits(src.type());
       auto offset = to_verilog_vector_type(src.type()).offset();
 
       auto index = bit_select.index();
+
+      if(index.type().id() == ID_bool)
+        index = typecast_exprt{index, unsignedbv_typet{1}};
 
       if(offset != 0)
         index = minus_exprt{index, from_integer(offset, index.type())};
@@ -1563,15 +2052,37 @@ exprt verilog_lowering(exprt expr)
     if(compound_type.id() == ID_union)
     {
       auto bv = to_bitvector(member_expr.compound());
-      return from_bitvector(bv, 0, member_expr.type());
+      return from_bitvector(bv, 0, verilog_lowering(member_expr.type()));
+    }
+    else if(compound_type.id() == ID_struct)
+    {
+      // The member has the type of the component of the lowered compound.
+      auto &component = to_struct_type(compound_type)
+                          .get_component(member_expr.get_component_name());
+      if(component.is_not_nil())
+        expr.type() = component.type();
+      return expr;
     }
     else
-      return expr; // leave as is
+      return expr;
+  }
+  else if(expr.id() == ID_index)
+  {
+    // The element has the element type of the lowered array.
+    auto &index_expr = to_index_expr(expr);
+    if(index_expr.array().type().id() == ID_array)
+      expr.type() = to_array_type(index_expr.array().type()).element_type();
+    return expr;
   }
   else if(expr.id() == ID_if)
   {
-    if(is_four_valued(expr.type()))
-      return aval_bval(to_if_expr(expr));
+    auto &if_expr = to_if_expr(expr);
+
+    if(is_four_valued(expr.type()) && any_aval_bval())
+    {
+      aval_bval_operands();
+      return aval_bval(if_expr);
+    }
     else if(is_verilog_real(expr.type()))
     {
       // The operands are floatbv already; the result must be, too.
@@ -1579,7 +2090,23 @@ exprt verilog_lowering(exprt expr)
       return expr;
     }
     else
-      return expr; // leave as is
+    {
+      // The condition is Boolean.
+      if_expr.cond() =
+        typecast_exprt::conditional_cast(if_expr.cond(), bool_typet{});
+
+      // The cases must have the same type.
+      if(if_expr.true_case().type() != if_expr.false_case().type())
+      {
+        if_expr.true_case() =
+          coerce_two_valued(if_expr.true_case(), verilog_operand_type(1));
+        if_expr.false_case() =
+          coerce_two_valued(if_expr.false_case(), verilog_operand_type(2));
+      }
+
+      expr.type() = if_expr.true_case().type();
+      return expr;
+    }
   }
   else if(expr.id() == ID_verilog_unbased_unsized_literal)
   {
@@ -1592,8 +2119,63 @@ exprt verilog_lowering(exprt expr)
     return verilog_lowering(
       to_verilog_based_unsized_literal_expr(expr).expand());
   }
+  else if(expr.id() == ID_struct || expr.id() == ID_array)
+  {
+    // Aggregate constructors: the operands must have the types of the
+    // members of the lowered aggregate type.
+    expr.type() = verilog_lowering(expr.type());
+
+    if(expr.id() == ID_struct)
+    {
+      auto &components = to_struct_type(expr.type()).components();
+      auto &operands = expr.operands();
+      DATA_INVARIANT(
+        components.size() == operands.size(),
+        "struct constructor must have one operand per component");
+      for(std::size_t i = 0; i < operands.size(); i++)
+        operands[i] = coerce_to_type(operands[i], components[i].type());
+    }
+    else
+    {
+      auto &element_type = to_array_type(expr.type()).element_type();
+      for(auto &op : expr.operands())
+        op = coerce_to_type(op, element_type);
+    }
+
+    return expr;
+  }
+  else if(expr.id() == ID_array_of)
+  {
+    expr.type() = verilog_lowering(expr.type());
+    auto &element_type = to_array_type(expr.type()).element_type();
+    auto &what = to_array_of_expr(expr).what();
+    what = coerce_to_type(what, element_type);
+    return expr;
+  }
+  else if(expr.id() == ID_extractbit || expr.id() == ID_extractbits)
+  {
+    // The source must be a vector.
+    auto &src = to_binary_expr(expr).op0();
+    if(src.type().id() == ID_bool)
+      src = typecast_exprt{src, unsignedbv_typet{1}};
+
+    if(is_four_valued(expr.type()))
+      expr.type() = two_valued_vector_type(expr.type());
+
+    return expr;
+  }
   else
-    return expr; // leave as is
+  {
+    // Leave as is, but lower the type.
+    if(
+      is_four_valued(expr.type()) || expr.type().id() == ID_array ||
+      expr.type().id() == ID_struct || expr.type().id() == ID_union)
+    {
+      expr.type() = verilog_lowering(expr.type());
+    }
+
+    return expr;
+  }
 
   UNREACHABLE;
 }

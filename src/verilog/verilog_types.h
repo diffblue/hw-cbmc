@@ -1075,11 +1075,23 @@ bool is_unbounded_array_type(const typet &);
 
 bool is_interface_array_type(const typet &);
 
-/// replaces all four-valued types by their corresponding two-valued type
+/// The two-valued modelling of a variable or net of the given type: all
+/// four-valued vector types are replaced by their corresponding two-valued
+/// type, and unsigned vectors with a single bit and no declared range by
+/// bool. This recurses into arrays, structs and unions. Any attributes of
+/// the type, e.g. the Verilog type, are retained.
 typet make_two_valued(typet);
 
-/// the inverse of make_two_valued: restores the four-valued (x/z-capable)
-/// type for the corresponding two-valued bit-vector type
-typet make_four_valued(typet);
+/// A constant of the given type with the given value. Like from_integer,
+/// but also for the four-valued vector types, whose constants are strings
+/// of 0/1/x/z digits.
+class constant_exprt;
+constant_exprt verilog_from_integer(const mp_integer &, const typet &);
+
+/// The two-valued vector type with the same width, signedness and
+/// attributes as the given four-valued vector type. Unlike
+/// make_two_valued, a single bit stays a vector. Other types are returned
+/// as given.
+typet two_valued_vector_type(typet);
 
 #endif

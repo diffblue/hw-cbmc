@@ -11,10 +11,16 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/arith_tools.h>
 #include <util/std_expr.h>
 
+#include "verilog_types.h"
+
 std::optional<exprt> verilog_default_initializer(const typet &type)
 {
-  if(type.id() == ID_signedbv || type.id() == ID_unsignedbv)
-    return from_integer(0, type);
+  if(
+    type.id() == ID_signedbv || type.id() == ID_unsignedbv ||
+    type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
+  {
+    return verilog_from_integer(0, type);
+  }
   else if(type.id() == ID_bool)
     return false_exprt{};
   else if(type.id() == ID_array)

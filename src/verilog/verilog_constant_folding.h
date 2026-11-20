@@ -18,8 +18,10 @@ class namespacet;
 /// The expression returned is lowered, with the exception of
 /// constants, which are lifted back to the Verilog type of the
 /// given expression:
-/// * constants of four-valued type get the four-valued Verilog type,
-///   with a value that is a string of 0/1/x/z digits;
+/// * constants of four-valued type that contain x/z get the four-valued
+///   Verilog type, with a value that is a string of 0/1/x/z digits;
+///   those without x/z get the corresponding two-valued vector type, in
+///   line with the typing of literals;
 /// * constants of the real types get the Verilog real type;
 /// * other constants whose type is not changed by the lowering get
 ///   the Verilog type, which may carry attributes, e.g. of an enum.

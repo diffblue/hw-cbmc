@@ -43,10 +43,19 @@ static constant_exprt l1(const std::string &bit)
 }
 
 /// helper: the aval/bval encoding of a four-valued constant, which is
-/// what the simplifier produces for four-valued expressions
+/// what the simplifier produces for four-valued expressions with x or z
 static constant_exprt encoded(const constant_exprt &expr)
 {
   return lower_to_aval_bval(expr);
+}
+
+/// helper: build a two-valued 4-bit unsigned constant from a bit string;
+/// the lowering turns four-valued operands without x or z into
+/// two-valued operands, and the result is then two-valued
+static constant_exprt u4(const std::string &bits)
+{
+  PRECONDITION(bits.size() == 4);
+  return from_integer(string2integer(bits, 2), unsignedbv_typet{4});
 }
 
 /// helper: a four-valued relational expression; the result type is
@@ -221,23 +230,18 @@ SCENARIO("verilog_simplifier folds four-valued arithmetic")
   GIVEN("operands without x or z")
   {
     REQUIRE(
-      lower_and_simplify(plus_exprt{l4("0011"), l4("0001")}, ns) ==
-      encoded(l4("0100")));
+      lower_and_simplify(plus_exprt{l4("0011"), l4("0001")}, ns) == u4("0100"));
     REQUIRE(
       lower_and_simplify(minus_exprt{l4("0011"), l4("0001")}, ns) ==
-      encoded(l4("0010")));
+      u4("0010"));
     REQUIRE(
-      lower_and_simplify(mult_exprt{l4("0011"), l4("0010")}, ns) ==
-      encoded(l4("0110")));
+      lower_and_simplify(mult_exprt{l4("0011"), l4("0010")}, ns) == u4("0110"));
     REQUIRE(
-      lower_and_simplify(div_exprt{l4("0110"), l4("0010")}, ns) ==
-      encoded(l4("0011")));
+      lower_and_simplify(div_exprt{l4("0110"), l4("0010")}, ns) == u4("0011"));
     REQUIRE(
-      lower_and_simplify(mod_exprt{l4("0111"), l4("0010")}, ns) ==
-      encoded(l4("0001")));
+      lower_and_simplify(mod_exprt{l4("0111"), l4("0010")}, ns) == u4("0001"));
     REQUIRE(
-      lower_and_simplify(unary_minus_exprt{l4("0001")}, ns) ==
-      encoded(l4("1111")));
+      lower_and_simplify(unary_minus_exprt{l4("0001")}, ns) == u4("1111"));
   }
 
   GIVEN("operands with x or z")
@@ -266,15 +270,15 @@ SCENARIO("verilog_simplifier folds four-valued relational operators")
     REQUIRE(
       lower_and_simplify(
         l4_relation(ID_verilog_logical_equality, l4("0011"), l4("0011")), ns) ==
-      encoded(l1("1")));
+      true_exprt{});
     REQUIRE(
       lower_and_simplify(
         l4_relation(ID_verilog_logical_equality, l4("0011"), l4("0001")), ns) ==
-      encoded(l1("0")));
+      false_exprt{});
     REQUIRE(
       lower_and_simplify(
         l4_relation(ID_verilog_logical_inequality, l4("0011"), l4("0001")),
-        ns) == encoded(l1("1")));
+        ns) == true_exprt{});
 
     // IEEE 1800-2017 11.4.5: x if either operand contains x or z
     REQUIRE(
@@ -291,25 +295,25 @@ SCENARIO("verilog_simplifier folds four-valued relational operators")
   {
     REQUIRE(
       lower_and_simplify(l4_relation(ID_lt, l4("0011"), l4("0100")), ns) ==
-      encoded(l1("1")));
+      true_exprt{});
     REQUIRE(
       lower_and_simplify(l4_relation(ID_lt, l4("0100"), l4("0011")), ns) ==
-      encoded(l1("0")));
+      false_exprt{});
     REQUIRE(
       lower_and_simplify(l4_relation(ID_le, l4("0011"), l4("0011")), ns) ==
-      encoded(l1("1")));
+      true_exprt{});
     REQUIRE(
       lower_and_simplify(l4_relation(ID_ge, l4("0011"), l4("0011")), ns) ==
-      encoded(l1("1")));
+      true_exprt{});
     REQUIRE(
       lower_and_simplify(l4_relation(ID_ge, l4("0011"), l4("0100")), ns) ==
-      encoded(l1("0")));
+      false_exprt{});
     REQUIRE(
       lower_and_simplify(l4_relation(ID_gt, l4("0100"), l4("0011")), ns) ==
-      encoded(l1("1")));
+      true_exprt{});
     REQUIRE(
       lower_and_simplify(l4_relation(ID_gt, l4("0011"), l4("0011")), ns) ==
-      encoded(l1("0")));
+      false_exprt{});
 
     // IEEE 1800-2017 11.4.4: x if either operand contains x or z
     REQUIRE(
@@ -330,15 +334,14 @@ SCENARIO("verilog_simplifier folds four-valued bit-wise operators")
   {
     REQUIRE(
       lower_and_simplify(bitand_exprt{l4("0011"), l4("0101")}, ns) ==
-      encoded(l4("0001")));
+      u4("0001"));
     REQUIRE(
       lower_and_simplify(bitor_exprt{l4("0011"), l4("0101")}, ns) ==
-      encoded(l4("0111")));
+      u4("0111"));
     REQUIRE(
       lower_and_simplify(bitxor_exprt{l4("0011"), l4("0101")}, ns) ==
-      encoded(l4("0110")));
-    REQUIRE(
-      lower_and_simplify(bitnot_exprt{l4("0011")}, ns) == encoded(l4("1100")));
+      u4("0110"));
+    REQUIRE(lower_and_simplify(bitnot_exprt{l4("0011")}, ns) == u4("1100"));
   }
 
   GIVEN("operands with x or z, IEEE 1800-2017 11.4.8")
@@ -370,12 +373,8 @@ SCENARIO("verilog_simplifier folds four-valued bit-wise operators")
   GIVEN("shifts")
   {
     auto dist = from_integer(1, unsignedbv_typet{32});
-    REQUIRE(
-      lower_and_simplify(shl_exprt{l4("0011"), dist}, ns) ==
-      encoded(l4("0110")));
-    REQUIRE(
-      lower_and_simplify(lshr_exprt{l4("0011"), dist}, ns) ==
-      encoded(l4("0001")));
+    REQUIRE(lower_and_simplify(shl_exprt{l4("0011"), dist}, ns) == u4("0110"));
+    REQUIRE(lower_and_simplify(lshr_exprt{l4("0011"), dist}, ns) == u4("0001"));
     // x and z bits are shifted along unchanged
     REQUIRE(
       lower_and_simplify(shl_exprt{l4("0x1z"), dist}, ns) ==

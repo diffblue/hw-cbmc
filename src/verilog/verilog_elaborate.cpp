@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "aval_bval_encoding.h"
 #include "verilog_bind.h"
+#include "verilog_bits.h"
 #include "verilog_typecheck.h"
 #include "verilog_types.h"
 
@@ -21,8 +22,9 @@ Author: Daniel Kroening, kroening@kroening.com
 /// no declared type) and its constant-folded value. Constant folding
 /// yields a constant of the Verilog type of the value, which may lack
 /// attributes of the declared type, e.g. its range. In line with the
-/// typing of literals, a four-valued value that does not actually contain
-/// x/z is given the two-valued type.
+/// typing of literals, constant folding gives a four-valued value that
+/// does not actually contain x/z the two-valued type; the parameter then
+/// gets the two-valued modelling of the declared type.
 std::pair<typet, exprt>
 verilog_typecheckt::parameter_type_and_value(const typet &type, exprt folded)
 {
@@ -32,26 +34,16 @@ verilog_typecheckt::parameter_type_and_value(const typet &type, exprt folded)
   // The types are equal up to attributes; use the declared one.
   if(folded.type() == type)
     folded.type() = type;
-
-  if(is_four_valued(folded.type()))
+  else if(is_four_valued(type) && !is_four_valued(folded.type()))
   {
-    auto lowered = lower_to_aval_bval(to_constant_expr(folded));
-
-    if(!aval_bval_has_xz(lowered))
+    // The value has no x/z, and hence has the two-valued type.
+    auto two_valued_type = make_two_valued(type);
+    auto value_opt = numeric_cast<mp_integer>(folded);
+    if(
+      value_opt.has_value() &&
+      verilog_bits_opt(two_valued_type) == verilog_bits_opt(folded.type()))
     {
-      // No x/z: the parameter is two-valued, like a literal without x/z.
-      auto width = to_bitvector_type(folded.type()).get_width();
-      auto two_valued_type = make_two_valued(folded.type());
-      auto aval =
-        bvrep2integer(lowered.get_value(), 2 * width, false) % power(2, width);
-      // interpret as signed if the type is signed
-      if(
-        folded.type().id() == ID_verilog_signedbv &&
-        aval >= power(2, width - 1))
-      {
-        aval -= power(2, width);
-      }
-      auto value = from_integer(aval, two_valued_type);
+      auto value = from_integer(*value_opt, two_valued_type);
       value.add_source_location() = folded.source_location();
       return {two_valued_type, std::move(value)};
     }
@@ -64,12 +56,13 @@ verilog_typecheckt::parameter_type_and_value(const typet &type, exprt folded)
 /// elaborated type, so that $typename can reproduce it per
 /// IEEE 1800-2017 20.6.1.  The kind is stored in C_verilog_vector_type,
 /// which already carries this information for packed vectors; here we
-/// also cover the scalar case.  Only four-valued bit-vector types that
+/// also cover the scalar case.  Only bit-vector types that
 /// do not already carry the attribute are annotated.
 static void set_verilog_net_kind(typet &type, const irep_idt &kind)
 {
   if(
     (type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
+     type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
      type.id() == ID_bool) &&
     type.get(ID_C_verilog_vector_type).empty())
   {
@@ -104,8 +97,7 @@ void verilog_typecheckt::collect_port_symbols(const verilog_declt &decl)
   else
   {
     // add the symbol
-    typet type =
-      make_two_valued(elaborate_type(declarator.merged_type(decl.type())));
+    typet type = elaborate_type(declarator.merged_type(decl.type()));
 
     symbolt new_symbol{identifier, type, mode};
 
@@ -531,8 +523,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
         symbol.base_name = declarator.base_name();
         symbol.location = declarator.source_location();
-        symbol.type =
-          make_two_valued(elaborate_type(declarator.merged_type(decl.type())));
+        symbol.type = elaborate_type(declarator.merged_type(decl.type()));
 
         if(symbol.base_name.empty())
         {
@@ -659,8 +650,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
             << "empty symbol name";
         }
 
-        symbol.type =
-          make_two_valued(elaborate_type(declarator.merged_type(decl.type())));
+        symbol.type = elaborate_type(declarator.merged_type(decl.type()));
         symbol.name = hierarchical_identifier(symbol.base_name);
         symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
         symbol.location = declarator.source_location();
@@ -750,8 +740,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
       symbol.base_name = declarator.base_name();
       symbol.location = declarator.source_location();
-      symbol.type =
-        make_two_valued(elaborate_type(declarator.merged_type(decl.type())));
+      symbol.type = elaborate_type(declarator.merged_type(decl.type()));
       set_verilog_net_kind(symbol.type, ID_wire);
 
       if(symbol.base_name.empty())
@@ -819,8 +808,7 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
       symbol.base_name = declarator.base_name();
       symbol.location = declarator.source_location();
-      symbol.type =
-        make_two_valued(elaborate_type(declarator.merged_type(decl.type())));
+      symbol.type = elaborate_type(declarator.merged_type(decl.type()));
 
       if(symbol.base_name.empty())
       {
@@ -907,7 +895,7 @@ void verilog_typecheckt::collect_symbols(
     if(is_class_constructor(decl))
       return_type = typet{ID_verilog_void};
     else
-      return_type = make_two_valued(elaborate_type(decl.type()));
+      return_type = elaborate_type(decl.type());
   }
   else
     return_type = empty_typet();
@@ -1639,38 +1627,26 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
 
         if(symbol.is_macro)
         {
-          // A parameter may hold x/z values (1800-2017 6.20.2). Packed
-          // vector types elaborate to their two-valued form, and hence
-          // the value is converted in the four-valued form of the
-          // declared type, so that x/z are retained. The parameter is then
-          // given the two-valued type unless the value does contain x/z,
-          // see parameter_type_and_value. Enumeration constants are excluded;
-          // their values are checked as given (1800-2017 6.19).
-          auto four_valued_type = make_four_valued(elaborated_type);
-
-          bool four_state_capable =
-            four_valued_type != make_two_valued(elaborated_type) &&
-            elaborated_type.get(ID_C_verilog_type) != ID_verilog_enum;
-
-          auto &conversion_type =
-            four_state_capable ? four_valued_type : elaborated_type;
-
+          // A parameter may hold x/z values (1800-2017 6.20.2); the value
+          // is converted to the declared type, which retains x/z if it is
+          // four-valued. The parameter is then given the two-valued type
+          // unless the value does contain x/z, see
+          // parameter_type_and_value.
           // Convert to the given type. These are assignment contexts.
-          assignment_conversion(symbol.value, conversion_type);
+          assignment_conversion(symbol.value, elaborated_type);
 
           if(is_let)
-            symbol.type = conversion_type;
+            symbol.type = elaborated_type;
           else
           {
             auto folded = elaborate_constant_expression_check(symbol.value);
             std::tie(symbol.type, symbol.value) =
-              parameter_type_and_value(conversion_type, std::move(folded));
+              parameter_type_and_value(elaborated_type, std::move(folded));
           }
         }
         else
         {
-          // Non-parameter symbols are modelled with a two-valued type.
-          symbol.type = make_two_valued(elaborated_type);
+          symbol.type = elaborated_type;
 
           // Convert to the given type. These are assignment contexts.
           assignment_conversion(symbol.value, symbol.type);
@@ -1682,8 +1658,7 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
       else
       {
         // No value.
-        symbol.type =
-          symbol.is_macro ? elaborated_type : make_two_valued(elaborated_type);
+        symbol.type = elaborated_type;
       }
     }
   }

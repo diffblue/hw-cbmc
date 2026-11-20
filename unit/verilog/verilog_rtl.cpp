@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <util/cout_message.h>
+#include <util/expr_util.h>
 #include <util/std_expr.h>
 #include <util/symbol_table.h>
 
@@ -15,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <verilog/verilog_parser.h>
 #include <verilog/verilog_rtl.h>
 #include <verilog/verilog_typecheck.h>
+#include <verilog/verilog_types.h>
 
 #include <sstream>
 
@@ -75,6 +77,44 @@ static std::string rtl_text_of(const std::string &source)
   auto rtl = verilog_rtl(
     symbol_table, "Verilog::main", verilog_standardt::SV2023, message_handler);
   return rtl.as_string(namespacet{symbol_table});
+}
+
+SCENARIO("the type checker keeps the Verilog types of variables and nets")
+{
+  auto symbol_table = compile(
+    "module main(input clk, input [3:0] in);\n"
+    "  reg [7:0] r;\n"
+    "  logic l;\n"
+    "  wire signed [3:0] w = in;\n"
+    "  integer i;\n"
+    "  bit b;\n"
+    "  bit [1:0] bv;\n"
+    "  int n;\n"
+    "endmodule\n");
+
+  auto type_of = [&symbol_table](const std::string &name) -> const typet &
+  { return symbol_table.lookup_ref("Verilog::$root.main." + name).type; };
+
+  THEN("four-state declarations have four-valued vector types")
+  {
+    REQUIRE(type_of("in").id() == ID_verilog_unsignedbv);
+    REQUIRE(type_of("r") == verilog_unsignedbv_typet{8});
+    REQUIRE(type_of("r").get(ID_C_verilog_vector_type) == ID_reg);
+    REQUIRE(type_of("l") == verilog_unsignedbv_typet{1});
+    REQUIRE(type_of("l").get(ID_C_verilog_type) == ID_verilog_logic);
+    REQUIRE(type_of("w") == verilog_signedbv_typet{4});
+    REQUIRE(type_of("i") == verilog_signedbv_typet{32});
+    REQUIRE(type_of("i").get(ID_C_verilog_type) == ID_integer);
+  }
+
+  THEN("two-state declarations have two-valued vector types")
+  {
+    REQUIRE(type_of("clk") == verilog_unsignedbv_typet{1});
+    REQUIRE(type_of("b") == unsignedbv_typet{1});
+    REQUIRE(type_of("b").get(ID_C_verilog_type) == ID_verilog_bit);
+    REQUIRE(type_of("bv") == unsignedbv_typet{2});
+    REQUIRE(type_of("n") == signedbv_typet{32});
+  }
 }
 
 SCENARIO("RTL slices")
@@ -187,7 +227,8 @@ SCENARIO("RTL construction for a wire")
       REQUIRE(slice == verilog_rtl_slicet{0, 0});
       REQUIRE(definition.is_wire());
       REQUIRE(!definition.is_state_holding());
-      REQUIRE(definition.value.id() == ID_and);
+      // the nets are four-valued; the RTL is not lowered
+      REQUIRE(definition.value.id() == ID_bitand);
     }
   }
 }
@@ -213,7 +254,8 @@ SCENARIO("RTL construction with part selects")
       auto slice_it = q_it->second.begin();
       REQUIRE(slice_it->first == verilog_rtl_slicet{0, 3});
       REQUIRE(slice_it->second.is_state_holding());
-      REQUIRE(slice_it->second.value.id() == ID_symbol);
+      // the part select is two-valued, and d is four-valued
+      REQUIRE(skip_typecast(slice_it->second.value).id() == ID_symbol);
 
       ++slice_it;
       REQUIRE(slice_it->first == verilog_rtl_slicet{4, 7});
@@ -638,7 +680,8 @@ SCENARIO("RTL construction with net declarations")
       auto w_it = rtl.identifier_map.find("Verilog::$root.main.w");
       REQUIRE(w_it != rtl.identifier_map.end());
       REQUIRE(w_it->second.begin()->second.is_wire());
-      REQUIRE(w_it->second.begin()->second.value.id() == ID_xor);
+      // the nets are four-valued; the RTL is not lowered
+      REQUIRE(w_it->second.begin()->second.value.id() == ID_bitxor);
     }
   }
 }
@@ -704,7 +747,11 @@ SCENARIO("RTL construction with properties")
       REQUIRE(rtl.properties.size() == 1);
       REQUIRE(rtl.properties[0].is_assert());
       REQUIRE(rtl.properties[0].label == "p1");
-      REQUIRE(rtl.properties[0].condition.id() == ID_equal);
+      // a is four-valued, and the RTL is not lowered; the condition is the
+      // four-valued equality, made Boolean
+      REQUIRE(
+        skip_typecast(rtl.properties[0].condition).id() ==
+        ID_verilog_logical_equality);
     }
   }
 }

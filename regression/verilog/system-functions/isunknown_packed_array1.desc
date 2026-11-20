@@ -9,4 +9,6 @@ isunknown_packed_array1.sv
 --
 ^Invariant check failed$
 --
-The initializer with a z fails a precondition in aval_bval.
+The z in the initializer is dropped: variables and nets are modelled
+two-valued by the lowering (see verilog_lowering(typet)), so $isunknown
+on them is always 0. Compare expressions/four_valued_variable1.

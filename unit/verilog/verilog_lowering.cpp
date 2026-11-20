@@ -6,8 +6,10 @@ Author: Daniel Kroening, Amazon, dkr@amazon.com
 
 \*******************************************************************/
 
+#include <util/arith_tools.h>
 #include <util/floatbv_expr.h>
 #include <util/ieee_float.h>
+#include <util/mathematical_types.h>
 #include <util/std_expr.h>
 #include <util/symbol_table.h>
 
@@ -135,6 +137,20 @@ SCENARIO("verilog_lower_symbol_types lowers the Verilog-specific types")
   add("e", verilog_event_typet{});
   // an unsignedbv is a lowered type already, and is left unchanged
   add("b", unsignedbv_typet{8});
+  // four-valued vectors, as given by the type checker
+  {
+    auto reg_type = verilog_unsignedbv_typet{8};
+    reg_type.set(ID_C_verilog_vector_type, ID_reg);
+    add("v", reg_type);
+    add("w", verilog_signedbv_typet{4});
+    auto logic_type = verilog_unsignedbv_typet{1};
+    logic_type.set(ID_C_verilog_type, ID_verilog_logic);
+    add("l", logic_type);
+    add(
+      "a",
+      array_typet{
+        verilog_unsignedbv_typet{2}, from_integer(3, integer_typet{})});
+  }
 
   // a parameter: substituted by its value, and left unchanged
   {
@@ -173,5 +189,24 @@ SCENARIO("verilog_lower_symbol_types lowers the Verilog-specific types")
   {
     REQUIRE(symbol_table.lookup_ref("b").type == unsignedbv_typet{8});
     REQUIRE(symbol_table.lookup_ref("p").type == verilog_real_typet{});
+  }
+
+  THEN("four-valued vectors are modelled two-valued, keeping attributes")
+  {
+    auto &v_type = symbol_table.lookup_ref("v").type;
+    REQUIRE(v_type == unsignedbv_typet{8});
+    REQUIRE(v_type.get(ID_C_verilog_vector_type) == ID_reg);
+
+    REQUIRE(symbol_table.lookup_ref("w").type == signedbv_typet{4});
+
+    // a single bit becomes bool
+    auto &l_type = symbol_table.lookup_ref("l").type;
+    REQUIRE(l_type == bool_typet{});
+    REQUIRE(l_type.get(ID_C_verilog_type) == ID_verilog_logic);
+
+    // the element type of an array is lowered
+    auto &a_type = symbol_table.lookup_ref("a").type;
+    REQUIRE(a_type.id() == ID_array);
+    REQUIRE(to_array_type(a_type).element_type() == unsignedbv_typet{2});
   }
 }

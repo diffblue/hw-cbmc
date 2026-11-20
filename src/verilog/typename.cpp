@@ -12,6 +12,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/namespace.h>
 #include <util/symbol.h>
 
+#include "aval_bval_encoding.h"
 #include "verilog_bits.h"
 #include "verilog_types.h"
 
@@ -87,6 +88,8 @@ static std::string verilog_bitvector_keyword(const typet &type)
     return "wire";
   else if(vector_type == ID_verilog_logic)
     return "logic";
+  else if(is_four_valued(type))
+    return "logic";
   else
     return "bit";
 }
@@ -135,7 +138,7 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
     result += '}';
     return result;
   }
-  else if(type.id() == ID_unsignedbv)
+  else if(type.id() == ID_unsignedbv || type.id() == ID_verilog_unsignedbv)
   {
     if(verilog_type == ID_verilog_byte)
       return "byte unsigned";
@@ -147,7 +150,7 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
       return "shortint unsigned";
     else if(verilog_type == ID_verilog_time)
     {
-      // 'time' is a 64-bit unsigned integral type.
+      // 'time' is a four-valued, 64-bit unsigned integral type.
       // Per 1800-2017 20.6.1, $typename(time) yields "time".
       return "time";
     }
@@ -161,20 +164,16 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
       else
         return "logic";
     }
+    else if(verilog_type == ID_verilog_bit)
+    {
+      // scalar two-valued type
+      return "bit";
+    }
     else
     {
       auto suffix = "[" + left(type) + ":" + right(type) + "]";
       return verilog_bitvector_keyword(type) + suffix;
     }
-  }
-  else if(type.id() == ID_verilog_unsignedbv)
-  {
-    // 'time' is a four-valued, 64-bit unsigned integral type.
-    // Per 1800-2017 20.6.1, $typename(time) yields "time".
-    if(verilog_type == ID_verilog_time)
-      return "time";
-    else
-      return "logic[" + left(type) + ":" + right(type) + "]";
   }
   else if(type.id() == ID_bool)
   {
@@ -187,7 +186,7 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
     else
       return "bit";
   }
-  else if(type.id() == ID_signedbv)
+  else if(type.id() == ID_signedbv || type.id() == ID_verilog_signedbv)
   {
     if(verilog_type == ID_verilog_byte)
       return "byte";
@@ -197,6 +196,8 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
       return "longint";
     else if(verilog_type == ID_verilog_shortint)
       return "shortint";
+    else if(verilog_type == ID_integer)
+      return "integer";
     else if(verilog_type == ID_verilog_logic)
     {
       // scalar four-valued type: reg, wire or logic
@@ -232,10 +233,6 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
   else if(type.id() == ID_verilog_shortint)
   {
     return "shortint";
-  }
-  else if(type.id() == ID_verilog_signedbv)
-  {
-    return "logic signed[" + left(type) + ":" + right(type) + "]";
   }
   else if(type.id() == ID_verilog_realtime)
   {

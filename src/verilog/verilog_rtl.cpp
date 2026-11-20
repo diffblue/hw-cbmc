@@ -491,8 +491,16 @@ protected:
   exprt fold_system_functions(exprt) const;
 
   /// Folds the system functions in the given expression, and then
-  /// simplifies it, when the simplifier supports its types.
-  exprt fold_and_simplify(exprt) const;
+  /// simplifies it, when the simplifier supports its types. The result is
+  /// a constant of the Verilog type of the expression if the expression
+  /// folds to a constant, and the given expression otherwise. Unless
+  /// \p thorough is set, an expression that refers to a variable or net
+  /// is not simplified; this saves the lowering of the right-hand sides of
+  /// assignments, which are rarely constants.
+  exprt fold_and_simplify(const exprt &, bool thorough = false) const;
+
+  /// the results of fold_and_simplify, for both values of 'thorough'
+  mutable std::unordered_map<exprt, exprt, irep_hash> fold_cache[2];
 
   /// the current value of the given slice of the given symbol
   exprt slice_of(const symbol_exprt &, const verilog_rtl_slicet &);
@@ -629,20 +637,53 @@ Function: verilog_rtl_buildert::fold_and_simplify
 
 \*******************************************************************/
 
-exprt verilog_rtl_buildert::fold_and_simplify(exprt expr) const
+exprt verilog_rtl_buildert::fold_and_simplify(const exprt &expr, bool thorough)
+  const
 {
-  auto folded = fold_system_functions(std::move(expr));
+  // Constants and symbols cannot be folded any further.
+  if(expr.is_constant() || expr.id() == ID_symbol)
+    return expr;
 
-  // The expression is not lowered yet. verilog_constant_folding lowers it,
-  // simplifies it, and lifts a constant result back to the Verilog type.
-  // A result that is not constant is lowered, and is not used, since the
-  // RTL construction works on Verilog expressions.
-  auto result = verilog_constant_folding(folded, ns);
+  // The same expression, e.g. an index, is folded many times.
+  auto &cache = fold_cache[thorough ? 1 : 0];
+  auto cache_it = cache.find(expr);
+  if(cache_it != cache.end())
+    return cache_it->second;
 
-  if(result.is_constant())
-    return result;
+  auto folded = fold_system_functions(expr);
+
+  // Elaboration-time constants have been substituted; an expression that
+  // still refers to a variable or net is a constant only in degenerate
+  // cases, e.g. x & 0.
+  auto has_symbol = [](const exprt &expr) -> bool
+  {
+    for(auto it = expr.depth_begin(); it != expr.depth_end(); ++it)
+      if(it->id() == ID_symbol || it->id() == ID_nondet_symbol)
+        return true;
+    return false;
+  };
+
+  exprt result;
+
+  if(!thorough && has_symbol(folded))
+    result = std::move(folded);
   else
-    return folded;
+  {
+    // The expression is not lowered yet. verilog_constant_folding lowers
+    // it, simplifies it, and lifts a constant result back to the Verilog
+    // type. A result that is not constant is lowered, and is not used,
+    // since the RTL construction works on Verilog expressions.
+    auto simplified = verilog_constant_folding(folded, ns);
+
+    if(simplified.is_constant())
+      result = std::move(simplified);
+    else
+      result = std::move(folded);
+  }
+
+  cache.emplace(expr, result);
+
+  return result;
 }
 
 /*******************************************************************\
@@ -666,8 +707,7 @@ verilog_rtl_buildert::constant_index(const exprt &expr, statet &state)
 std::optional<mp_integer>
 verilog_rtl_buildert::constant_index(const exprt &expr) const
 {
-  auto simplified = fold_and_simplify(expr);
-  return numeric_cast<mp_integer>(simplified);
+  return numeric_cast<mp_integer>(fold_and_simplify(expr, true));
 }
 
 /*******************************************************************\
@@ -1199,10 +1239,11 @@ verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
       auto offset = to_verilog_vector_type(src.type()).offset();
 
       if(offset != 0)
-        index = minus_exprt{index, from_integer(offset, index.type())};
+        index = minus_exprt{index, verilog_from_integer(offset, index.type())};
 
       if(src.type().get_bool(ID_C_increasing))
-        index = minus_exprt{from_integer(width - 1, index.type()), index};
+        index =
+          minus_exprt{verilog_from_integer(width - 1, index.type()), index};
     }
 
     with_exprt new_value{
@@ -1394,11 +1435,13 @@ verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
         {
           // src_width - sel_width + offset - index
           lsb_internal = minus_exprt{
-            from_integer(src_width - sel_width + offset, index.type()), index};
+            verilog_from_integer(src_width - sel_width + offset, index.type()),
+            index};
         }
         else
         {
-          lsb_internal = minus_exprt{index, from_integer(offset, index.type())};
+          lsb_internal =
+            minus_exprt{index, verilog_from_integer(offset, index.type())};
         }
       }
       else // ID_verilog_indexed_part_select_minus
@@ -1406,12 +1449,12 @@ verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
         if(increasing)
         {
           lsb_internal = minus_exprt{
-            from_integer(src_width - 1 + offset, index.type()), index};
+            verilog_from_integer(src_width - 1 + offset, index.type()), index};
         }
         else
         {
           lsb_internal = minus_exprt{
-            index, from_integer(offset + sel_width - 1, index.type())};
+            index, verilog_from_integer(offset + sel_width - 1, index.type())};
         }
       }
 
@@ -1544,19 +1587,23 @@ extract_bits(const exprt &value, const mp_integer &offset, std::size_t width)
 
   const auto value_width_opt = verilog_bits_opt(type);
 
-  // All bits of a bit-vector or Boolean: the value itself.
+  // All bits of a bit-vector or Boolean: the value itself, cast to the
+  // result type if needed. The cast from a four-valued vector type is
+  // resolved by the lowering.
   if(offset == 0 && value_width_opt.has_value() && *value_width_opt == width)
   {
+    const bool is_vector = type.id() == ID_unsignedbv ||
+                           type.id() == ID_signedbv || type.id() == ID_bv ||
+                           is_four_valued(type);
+
     if(width == 1 && type.id() == ID_bool)
       return value;
+    if(width == 1 && is_vector)
+      return typecast_exprt{value, bool_typet{}};
     if(width != 1 && type == unsignedbv_typet{width})
       return value;
-    if(
-      width != 1 && (type.id() == ID_signedbv || type.id() == ID_bv) &&
-      to_bitvector_type(type).get_width() == width)
-    {
+    if(width != 1 && is_vector)
       return typecast_exprt{value, unsignedbv_typet{width}};
-    }
   }
 
   // The parts of the value, with the position of their least
@@ -2852,7 +2899,7 @@ void verilog_rtl_buildert::merge_guards(
     // c || !c, which arise when neither branch of an if statement
     // alters the path condition.
     auto disjunction_simplified =
-      fold_and_simplify(disjunction(std::move(disjuncts)));
+      fold_and_simplify(disjunction(std::move(disjuncts)), true);
 
     if(!disjunction_simplified.is_true())
       result.push_back(std::move(disjunction_simplified));
@@ -2884,7 +2931,7 @@ void verilog_rtl_buildert::build_if(
   // Constant conditions do not branch; the path condition
   // of break, continue and return statements in the branch
   // that is taken becomes the path condition of the if statement.
-  auto cond_simplified = fold_and_simplify(cond);
+  auto cond_simplified = fold_and_simplify(cond, true);
 
   if(cond_simplified.is_true())
   {
@@ -3372,7 +3419,7 @@ void verilog_rtl_buildert::build_incdec(
 
   // Per 1800-2017 11.4.2, the increment and decrement operators
   // behave as blocking assignments.
-  auto one = from_integer(1, op.type());
+  auto one = verilog_from_integer(1, op.type());
 
   exprt rhs;
 
@@ -3458,7 +3505,10 @@ void verilog_rtl_buildert::build_for(
     if(is_dead(state))
       break;
 
-    auto guard = fold_and_simplify(substitute(statement.condition(), state));
+    auto guard = fold_and_simplify(
+      typecast_exprt::conditional_cast(
+        substitute(statement.condition(), state), bool_typet{}),
+      true);
 
     if(guard.is_false())
       break;
@@ -4296,20 +4346,20 @@ exprt verilog_rtl_buildert::supply_value(
     auto element = supply_value(decl_class, array_type.element_type());
     return array_of_exprt{std::move(element), array_type};
   }
-  else if(type.id() == ID_unsignedbv)
+  else if(type.id() == ID_unsignedbv || type.id() == ID_verilog_unsignedbv)
   {
     if(decl_class == ID_supply0)
-      return from_integer(0, type);
+      return verilog_from_integer(0, type);
     else
-      return from_integer(
-        power(2, to_unsignedbv_type(type).get_width()) - 1, type);
+      return verilog_from_integer(
+        power(2, to_bitvector_type(type).get_width()) - 1, type);
   }
-  else if(type.id() == ID_signedbv)
+  else if(type.id() == ID_signedbv || type.id() == ID_verilog_signedbv)
   {
     if(decl_class == ID_supply0)
-      return from_integer(0, type);
+      return verilog_from_integer(0, type);
     else
-      return from_integer(-1, type);
+      return verilog_from_integer(-1, type);
   }
   else if(type.id() == ID_bool)
   {

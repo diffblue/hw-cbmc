@@ -2288,19 +2288,40 @@ std::string expr2verilogt::convert(const typet &type)
     return "time";
   else if(type.id() == ID_bool)
     return "bit"; // 2-state
-  else if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
+  else if(
+    type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
+    type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv)
   {
     auto &verilog_vector_type = to_verilog_vector_type(type);
     auto width = verilog_vector_type.get_width();
     bool increasing = verilog_vector_type.increasing();
     auto offset = verilog_vector_type.offset();
+    auto verilog_type = type.get(ID_C_verilog_type);
+    auto vector_type = type.get(ID_C_verilog_vector_type);
+
+    // scalars and integer atoms, by their keyword
+    if(verilog_type == ID_verilog_bit)
+      return "bit";
+    else if(verilog_type == ID_verilog_logic)
+    {
+      if(vector_type == ID_reg)
+        return "reg";
+      else if(vector_type == ID_wire)
+        return "wire";
+      else
+        return "logic";
+    }
+    else if(verilog_type == ID_integer)
+      return "integer";
+    else if(verilog_type == ID_verilog_time)
+      return "time";
 
     if(width!=0)
     {
       std::string dest;
-      if(type.id()==ID_unsignedbv)
+      if(type.id() == ID_unsignedbv || type.id() == ID_verilog_unsignedbv)
         dest="";
-      else if(type.id()==ID_signedbv)
+      else
         dest="signed ";
 
       dest+='[';
