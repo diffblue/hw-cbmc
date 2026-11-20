@@ -112,6 +112,11 @@ protected:
   verilog_module_exprt elaborate(const verilog_module_sourcet &);
   module_itemst elaborate_level(const module_itemst &);
   void elaborate_symbol_rec(irep_idt) override;
+  void check_enum_name_value(
+    const class verilog_enum_typet &,
+    const symbolt &,
+    const typet &elaborated_type);
+  bool enum_name_value_has_xz(exprt);
   static std::pair<typet, exprt>
   parameter_type_and_value(const typet &, exprt folded);
   void add_symbol(symbolt);
