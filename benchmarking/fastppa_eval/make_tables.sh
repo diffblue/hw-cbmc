@@ -1,12 +1,13 @@
 #!/bin/sh
 # Regenerate the cost tables compiled into fastppa.
 # Usage: make_tables.sh <C/params.tsv> <dir with gt_C_<platform>.tsv>
+#          <netlist_counts.tsv of C>
 set -eu
 here=$(cd "$(dirname "$0")" && pwd)
 src=$here/../../src/fastppa
-params=$1; gt=$2
+params=$1; gt=$2; counts=$3
 for p in nangate45 sky130hd gf180 ihp-sg13g2 asap7 gt2n; do
-  "$here/fit.py" "$params" "$gt/gt_C_$p.tsv" \
+  "$here/fit.py" "$params" "$gt/gt_C_$p.tsv" "$counts" \
     "$src/cost_table_$(echo $p | tr - _).inc" "$here/results/fit_$p.txt" \
     > /dev/null
 done

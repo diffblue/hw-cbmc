@@ -10,6 +10,7 @@ Author: Kiro
 
 #include <util/cmdline.h>
 #include <util/exit_codes.h>
+#include <util/expr_iterator.h>
 #include <util/message.h>
 #include <util/namespace.h>
 
@@ -21,10 +22,10 @@ Author: Kiro
 #include "estimate.h"
 #include "fastppa_frontend.h"
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <set>
 #include <sstream>
 
 /// Parse a floating-point command-line option, rejecting values with
@@ -51,61 +52,203 @@ static double parse_double_option(const cmdlinet &cmdline, const char *option)
   return result;
 }
 
-/// Estimate by converting to an AIG netlist and counting its structure:
-/// registers from the latch count, combinational area from the number of
-/// structurally-distinct AND gates. No timing information.
+/// Estimate by converting to an AIG netlist. Area, energy and leakage
+/// count the AND gates and latches that reach an output, directly or
+/// through latches; the delay is the longest path in AND gates. The cost
+/// of an AND gate ('aig_and') and its delay per level are fitted on the
+/// calibration designs (benchmarking/fastppa_eval/fit.py).
 static estimation_resultt estimate_from_netlist(
   fastppa_modelt &model,
   const cost_tablet &table,
   message_handlert &message_handler)
 {
+  // Put the operands of commutative operators into a canonical order, so
+  // that a*b and b*a become the same gates. Equalities are left alone:
+  // the definitions of wires and next states are equalities.
+  transt trans = model.transition_system.trans_expr;
+  for(auto it = trans.depth_begin(); it != trans.depth_end(); ++it)
+  {
+    const auto &id = it->id();
+    if(
+      id == ID_plus || id == ID_mult || id == ID_bitand || id == ID_bitor ||
+      id == ID_bitxor || id == ID_and || id == ID_or)
+    {
+      if(std::is_sorted(it->operands().begin(), it->operands().end()))
+        continue;
+      auto &operands = it.mutate().operands();
+      std::sort(operands.begin(), operands.end());
+    }
+  }
+
   netlistt netlist;
   std::map<irep_idt, exprt> no_properties;
   convert_trans_to_netlist(
     model.transition_system.symbol_table,
     model.transition_system.main_symbol->name,
-    model.transition_system.trans_expr,
+    trans,
     no_properties,
     netlist,
     message_handler);
 
-  // Structural hashing: deduplicate AND gates
-  std::set<std::pair<unsigned, unsigned>> unique_ands;
+  const std::size_t n_nodes = netlist.nodes.size();
 
-  for(const auto &node : netlist.nodes)
+  // latch variable -> next-state literal
+  std::map<std::size_t, literalt> latch_next;
+  for(const auto &[id, var] : netlist.var_map.map)
+    if(var.is_latch())
+      for(const auto &bit : var.bits)
+        latch_next[bit.current.var_no()] = bit.next;
+
+  // the bits of the top-level output ports, which may be latches
+  std::vector<literalt> outputs;
+  for(const auto &output : model.outputs)
   {
-    if(!node.is_and())
-      continue;
-    if(node.a.is_constant() || node.b.is_constant())
-      continue;
-    if(node.a.var_no() == node.b.var_no())
-      continue;
-
-    unsigned key_a = node.a.var_no() * 2 + (node.a.sign() ? 1 : 0);
-    unsigned key_b = node.b.var_no() * 2 + (node.b.sign() ? 1 : 0);
-    if(key_a > key_b)
-      std::swap(key_a, key_b);
-    unique_ands.insert({key_a, key_b});
+    auto it = netlist.var_map.map.find(output.get_identifier());
+    if(it == netlist.var_map.map.end())
+      throw ebmc_errort{} << "output " << output.get_identifier()
+                          << " is not in the netlist";
+    for(const auto &bit : it->second.bits)
+      outputs.push_back(bit.current);
   }
 
-  std::size_t and_gates = unique_ands.size();
-  std::size_t latches = netlist.var_map.latches.size();
+  // Cone of influence of the outputs. The bit-blaster encodes some
+  // operators (e.g., division, and array accesses) relationally: their
+  // results are fresh variables, constrained by netlist.constraints and
+  // netlist.equivalences. When such a variable is reached, the
+  // constraints are part of the cone. This counts the gates of the
+  // checking circuit, not those of the operator.
+  std::vector<bool> is_nondet(n_nodes, false);
+  for(const auto &[id, var] : netlist.var_map.map)
+    if(var.is_nondet())
+      for(const auto &bit : var.bits)
+        if(bit.current.var_no() < n_nodes)
+          is_nondet[bit.current.var_no()] = true;
+
+  std::vector<bool> live(n_nodes, false);
+  std::vector<std::size_t> stack;
+  auto push = [&](literalt l)
+  {
+    if(!l.is_constant() && l.var_no() < n_nodes && !live[l.var_no()])
+      stack.push_back(l.var_no());
+  };
+  for(auto l : outputs)
+    push(l);
+  bool constraints_added = false;
+  while(!stack.empty())
+  {
+    auto v = stack.back();
+    stack.pop_back();
+    if(live[v])
+      continue;
+    live[v] = true;
+    const auto &node = netlist.nodes[v];
+    if(node.is_and())
+    {
+      push(node.a);
+      push(node.b);
+    }
+    else if(auto it = latch_next.find(v); it != latch_next.end())
+      push(it->second);
+    else if(is_nondet[v] && !constraints_added)
+    {
+      constraints_added = true;
+      for(auto l : netlist.constraints)
+        push(l);
+      for(auto &[a, b] : netlist.equivalences)
+      {
+        push(a);
+        push(b);
+      }
+    }
+  }
+
+  std::size_t and_gates = 0, latches = 0;
+  for(std::size_t v = 0; v < n_nodes; ++v)
+  {
+    if(!live[v])
+      continue;
+    if(netlist.nodes[v].is_and())
+      ++and_gates;
+    else if(latch_next.count(v) != 0)
+      ++latches;
+  }
+
+  std::vector<literalt> endpoints = outputs;
+  for(auto &[v, next] : latch_next)
+    if(live[v])
+      endpoints.push_back(next);
+
+  // Longest paths, in a given delay per AND gate, starting at a given
+  // time at the latches. The nodes are in dependency order, except that
+  // a relationally encoded result (a nondet variable) only becomes
+  // available when its constraints do; this needs a second pass.
+  auto longest = [&](double and_delay, double latch_start)
+  {
+    std::vector<double> t(n_nodes, 0);
+    auto t_of = [&](literalt l)
+    { return l.is_constant() ? 0.0 : t[l.var_no()]; };
+    double nondet_start = 0;
+    for(int pass = 0; pass < 2; ++pass)
+    {
+      for(std::size_t v = 0; v < n_nodes; ++v)
+      {
+        if(!live[v])
+          continue;
+        const auto &node = netlist.nodes[v];
+        if(node.is_and())
+          t[v] = std::max(t_of(node.a), t_of(node.b)) + and_delay;
+        else if(latch_next.count(v) != 0)
+          t[v] = latch_start;
+        else if(is_nondet[v])
+          t[v] = nondet_start;
+      }
+      if(!constraints_added)
+        break;
+      for(auto l : netlist.constraints)
+        nondet_start = std::max(nondet_start, t_of(l));
+    }
+    double worst = 0;
+    for(auto l : endpoints)
+      worst = std::max(worst, t_of(l));
+    return worst;
+  };
+
+  const auto levels = static_cast<std::size_t>(longest(1, 0));
+
+  {
+    std::size_t all_ands = 0;
+    for(const auto &node : netlist.nodes)
+      if(node.is_and())
+        ++all_ands;
+    messaget{message_handler}.statistics()
+      << "Netlist before cone of influence: " << all_ands << " AND gates, "
+      << latch_next.size() << " latches; " << outputs.size() << " output bits"
+      << messaget::eom;
+  }
+
+  // Printed before the costs are looked up, so that fit.py can use it
+  // with a table that has no 'aig_and' entry yet.
+  messaget message(message_handler);
+  message.status() << "Netlist: " << and_gates << " AND gates, " << latches
+                   << " latches, " << levels << " levels" << messaget::eom;
+
+  const auto &aig_and = table("aig_and");
+  const auto &reg = table("register");
 
   estimation_resultt result;
+  result.critical_path_ps = longest(aig_and.delay(1), reg.delay(1));
+
   result.register_bits = latches;
-  result.register_area_um2 =
-    static_cast<double>(latches) * table("register").area(1);
+  result.register_area_um2 = latches * reg.area(1);
   result.operator_count = and_gates;
-  result.combinational_area_um2 =
-    static_cast<double>(and_gates) * table("bitand").area(1);
+  result.combinational_area_um2 = and_gates * aig_and.area(1);
   result.total_area_um2 =
     result.register_area_um2 + result.combinational_area_um2;
-  result.combinational_depth = 0;
-  result.critical_path_ps = 0;
-
-  messaget message(message_handler);
-  message.status() << "Netlist: " << and_gates << " unique AND gates, "
-                   << latches << " latches" << messaget::eom;
+  result.combinational_depth = levels;
+  result.data_energy_fj =
+    and_gates * aig_and.energy(1) + latches * reg.energy(1);
+  result.clock_energy_fj = latches * table("clock").energy(1);
+  result.leakage_uw = and_gates * aig_and.leakage(1) + latches * reg.leakage(1);
 
   return result;
 }
