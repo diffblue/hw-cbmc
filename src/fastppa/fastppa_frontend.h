@@ -12,9 +12,7 @@ Author: Kiro
 #include <util/std_expr.h>
 
 #include <ebmc/transition_system.h>
-#include <trans-word-level/word_level_trans.h>
 
-#include <memory>
 #include <vector>
 
 class cmdlinet;
@@ -23,8 +21,8 @@ class message_handlert;
 struct fastppa_modelt
 {
   transition_systemt transition_system;
-  std::unique_ptr<word_level_transt> wl_trans;
   std::vector<symbol_exprt> state_vars;
+  std::vector<symbol_exprt> outputs; // top-level output ports
 };
 
 fastppa_modelt build_fastppa_model(const cmdlinet &, message_handlert &);

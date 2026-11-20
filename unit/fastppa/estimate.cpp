@@ -10,374 +10,359 @@ Author: Kiro
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
 #include <util/mathematical_expr.h>
+#include <util/message.h>
+#include <util/namespace.h>
 #include <util/std_expr.h>
 #include <util/symbol_table.h>
 
+#include <ebmc/ebmc_error.h>
+#include <fastppa/cost_table.h>
 #include <fastppa/estimate.h>
-#include <fastppa/technology_db.h>
 #include <testing-utils/use_catch.h>
 
-/// A transition system whose invariant is `invar` and whose init and
-/// transition relation are trivial.
-static transt make_trans(exprt invar = true_exprt{})
+#include <sstream>
+
+namespace
 {
-  return transt{
-    ID_trans, std::move(invar), true_exprt{}, true_exprt{}, typet{}};
+/// Costs chosen so that every expected value can be computed by hand.
+cost_tablet test_table()
+{
+  std::istringstream in{
+    "register w 0 5 1 50 0 0 2 0 0.1\n"
+    "clock w 0 0 1 0 0 0 3 0 0\n"
+    "plus w 0 10 1 100 0 0 4 0 0.2\n"
+    "plus_c w 0 4 1 40 0 0 1 0 0.1\n"
+    "mult w2 0 1 1 300 0 0 1 0 0.01\n"
+    "bitand w 0 1 1 20 0 0 1 0 0.01\n"
+    "bitor w 0 1 1 20 0 0 1 0 0.01\n"
+    "lshr wlogw 0 2 logw 0 30 0 1 0 0.01\n"
+    "index wn1 0 1 logn 0 25 0 1 0 0.01\n"
+    "with wn 0 1 1 60 0 0 1 0 0.01\n"
+    "if w 0 3 1 50 0 0 1 0 0.01\n"};
+  return cost_tablet::from_stream(in, "test");
 }
 
-SCENARIO("Estimation of simple next-state functions")
+const unsignedbv_typet u32{32};
+
+/// A design built from wire definitions, next-state functions, inputs and
+/// outputs.
+struct designt
 {
-  const unsignedbv_typet u8(8);
-  const unsignedbv_typet u32(32);
-  technology_dbt tech("45nm");
-
-  GIVEN("A single adder: reg' = a + b")
-  {
-    symbol_tablet symbol_table;
-    namespacet ns(symbol_table);
-
-    word_level_transt wl_trans(ns);
-    auto a = symbol_exprt{"a", u32};
-    auto b = symbol_exprt{"b", u32};
-    auto add = plus_exprt{a, b};
-    wl_trans.next_state_functions[irep_idt("reg")] = add;
-
-    auto reg_var = symbol_exprt{"reg", u32};
-    std::vector<symbol_exprt> state_vars = {reg_var};
-
-    // Empty transt (no invar needed for this test)
-    transt trans_expr(
-      ID_trans, true_exprt(), true_exprt(), true_exprt(), typet());
-
-    auto result = estimate(wl_trans, trans_expr, state_vars, tech);
-
-    THEN("Register bits are counted")
-    {
-      REQUIRE(result.register_bits == 32);
-      REQUIRE(result.register_area_um2 > 0);
-    }
-
-    THEN("One operator is found")
-    {
-      REQUIRE(result.operator_count == 1);
-    }
-
-    THEN("Critical path includes the adder delay")
-    {
-      REQUIRE(result.critical_path_ps > 0);
-    }
-
-    THEN("Total area includes both register and combinational")
-    {
-      REQUIRE(
-        result.total_area_um2 ==
-        Approx(result.register_area_um2 + result.combinational_area_um2));
-    }
-  }
-
-  GIVEN("A chain: reg' = (a + b) * c")
-  {
-    symbol_tablet symbol_table;
-    namespacet ns(symbol_table);
-
-    word_level_transt wl_trans(ns);
-    auto a = symbol_exprt{"a", u32};
-    auto b = symbol_exprt{"b", u32};
-    auto c = symbol_exprt{"c", u32};
-    auto add = plus_exprt{a, b};
-    auto mul = mult_exprt{add, c};
-    wl_trans.next_state_functions[irep_idt("reg")] = mul;
-
-    auto reg_var = symbol_exprt{"reg", u32};
-    std::vector<symbol_exprt> state_vars = {reg_var};
-
-    transt trans_expr(
-      ID_trans, true_exprt(), true_exprt(), true_exprt(), typet());
-
-    auto result = estimate(wl_trans, trans_expr, state_vars, tech);
-
-    THEN("Two operators are found")
-    {
-      REQUIRE(result.operator_count == 2);
-    }
-
-    THEN("Depth is 2")
-    {
-      REQUIRE(result.combinational_depth == 2);
-    }
-
-    THEN("Critical path is sum of adder + multiplier delay")
-    {
-      auto add_cost = tech.operator_cost(ID_plus, 32);
-      auto mul_cost = tech.operator_cost(ID_mult, 32);
-      REQUIRE(
-        result.critical_path_ps ==
-        Approx(add_cost.delay_ps + mul_cost.delay_ps));
-    }
-  }
-
-  GIVEN("No next-state functions (pure registers)")
-  {
-    symbol_tablet symbol_table;
-    namespacet ns(symbol_table);
-
-    word_level_transt wl_trans(ns);
-    auto reg_var = symbol_exprt{"reg", u8};
-    std::vector<symbol_exprt> state_vars = {reg_var};
-
-    auto result = estimate(wl_trans, make_trans(), state_vars, tech);
-
-    THEN("Only register area is reported")
-    {
-      REQUIRE(result.register_bits == 8);
-      REQUIRE(result.combinational_area_um2 == 0);
-      REQUIRE(result.operator_count == 0);
-      REQUIRE(result.critical_path_ps == 0);
-    }
-  }
-}
-
-SCENARIO("Zero-cost expression patterns")
-{
-  const unsignedbv_typet u32(32);
-  technology_dbt tech("45nm");
-
   symbol_tablet symbol_table;
-  namespacet ns(symbol_table);
+  std::vector<exprt> invar, trans;
+  std::vector<symbol_exprt> state_vars, outputs;
 
-  auto a = symbol_exprt{"a", u32};
-  auto d = symbol_exprt{"d", u32};
-  auto c = symbol_exprt{"c", bool_typet{}};
-  std::vector<symbol_exprt> state_vars = {symbol_exprt{"reg", u32}};
-
-  auto estimate_nsf = [&](exprt nsf)
+  symbol_exprt input(const irep_idt &name, const typet &type = u32)
   {
-    word_level_transt wl_trans(ns);
-    wl_trans.next_state_functions[irep_idt("reg")] = std::move(nsf);
-    return estimate(wl_trans, make_trans(), state_vars, tech);
+    symbolt symbol{name, type, ID_Verilog};
+    symbol.is_input = true;
+    symbol_table.add(symbol);
+    return symbol.symbol_expr();
+  }
+
+  symbol_exprt wire(const irep_idt &name, exprt value)
+  {
+    symbol_exprt w{name, value.type()};
+    invar.push_back(equal_exprt{w, std::move(value)});
+    return w;
+  }
+
+  symbol_exprt reg(const irep_idt &name, const typet &type = u32)
+  {
+    symbol_exprt r{name, type};
+    state_vars.push_back(r);
+    return r;
+  }
+
+  void next(const symbol_exprt &r, exprt value)
+  {
+    exprt next_symbol{ID_next_symbol, r.type()};
+    next_symbol.set(ID_identifier, r.get_identifier());
+    trans.push_back(equal_exprt{std::move(next_symbol), std::move(value)});
+  }
+
+  void output(const irep_idt &name, exprt value)
+  {
+    outputs.push_back(wire(name, std::move(value)));
+  }
+
+  estimation_resultt estimate()
+  {
+    transt t{
+      ID_trans, conjunction(invar), true_exprt{}, conjunction(trans), typet{}};
+    namespacet ns{symbol_table};
+    null_message_handlert message_handler;
+    return ::estimate(
+      t, state_vars, outputs, ns, test_table(), message_handler);
+  }
+};
+} // namespace
+
+SCENARIO("A register fed by an adder")
+{
+  designt d;
+  auto a = d.input("a"), b = d.input("b");
+  auto r = d.reg("r");
+  d.next(r, plus_exprt{a, b});
+  d.output("o", r);
+  auto result = d.estimate();
+
+  REQUIRE(result.register_bits == 32);
+  REQUIRE(result.register_area_um2 == Approx(5 * 32));
+  REQUIRE(result.combinational_area_um2 == Approx(10 * 32));
+  REQUIRE(result.operator_count == 1);
+  // inputs arrive at 0, the adder takes 100 ps
+  REQUIRE(result.critical_path_ps == Approx(100));
+  // switching energy of the adder and the register, clock energy of the
+  // register, leakage of both
+  REQUIRE(result.data_energy_fj == Approx(4 * 32 + 2 * 32));
+  REQUIRE(result.clock_energy_fj == Approx(3 * 32));
+  REQUIRE(result.leakage_uw == Approx(0.2 * 32 + 0.1 * 32));
+
+  // the path to the register: an input, then the adder
+  REQUIRE(!result.critical_paths.empty());
+  const auto &path = result.critical_paths.front();
+  REQUIRE(path.endpoint == "r");
+  REQUIRE(path.endpoint_is_register);
+  REQUIRE(path.steps.size() == 2);
+  REQUIRE(path.steps[0].operation == "input");
+  REQUIRE(path.steps[1].operation == ID_plus);
+  REQUIRE(path.steps[1].arrival_ps == Approx(100));
+}
+
+SCENARIO("Identical logic is costed once")
+{
+  GIVEN("Two registers with the same next-state function")
+  {
+    designt d;
+    auto a = d.input("a"), b = d.input("b");
+    auto r1 = d.reg("r1"), r2 = d.reg("r2");
+    d.next(r1, plus_exprt{a, b});
+    d.next(r2, plus_exprt{b, a});
+    d.output("o1", r1);
+    d.output("o2", r2);
+    auto result = d.estimate();
+    REQUIRE(result.operator_count == 1);
+    REQUIRE(result.register_bits == 64);
+  }
+
+  GIVEN("Two registers reading one wire")
+  {
+    designt d;
+    auto a = d.input("a"), b = d.input("b");
+    auto w = d.wire("w", plus_exprt{a, b});
+    auto r1 = d.reg("r1"), r2 = d.reg("r2");
+    d.next(r1, w);
+    d.next(r2, w);
+    d.output("o1", r1);
+    d.output("o2", r2);
+    REQUIRE(d.estimate().operator_count == 1);
+  }
+}
+
+SCENARIO("Chains of an associative operator are balanced")
+{
+  auto chain = [](bool via_wires)
+  {
+    designt d;
+    auto a = d.input("a"), b = d.input("b"), c = d.input("c"), e = d.input("e");
+    auto r = d.reg("r");
+    if(via_wires)
+    {
+      auto t1 = d.wire("t1", plus_exprt{a, b});
+      auto t2 = d.wire("t2", plus_exprt{t1, c});
+      d.next(r, plus_exprt{t2, e});
+    }
+    else
+      d.next(r, plus_exprt{plus_exprt{plus_exprt{a, b}, c}, e});
+    d.output("o", r);
+    return d.estimate();
   };
 
-  GIVEN("An absorbing multiplication: reg' = a * 0")
-  {
-    auto result = estimate_nsf(mult_exprt{a, from_integer(0, u32)});
+  auto direct = chain(false), wires = chain(true);
+  REQUIRE(direct.operator_count == 3);
+  // two levels of adders, not three
+  REQUIRE(direct.critical_path_ps == Approx(200));
+  REQUIRE(wires.combinational_area_um2 == direct.combinational_area_um2);
+  REQUIRE(wires.critical_path_ps == direct.critical_path_ps);
+}
 
-    THEN("The result is a constant: no logic, no path through a")
-    {
-      REQUIRE(result.operator_count == 0);
-      REQUIRE(result.combinational_area_um2 == 0);
-      REQUIRE(result.critical_path_ps == 0);
-    }
+SCENARIO("Only logic that reaches an output is costed")
+{
+  GIVEN("A register whose value is never observed")
+  {
+    designt d;
+    auto a = d.input("a"), b = d.input("b");
+    auto r = d.reg("r");
+    d.next(r, mult_exprt{a, b});
+    d.output("o", a);
+    auto result = d.estimate();
+    REQUIRE(result.register_bits == 0);
+    REQUIRE(result.combinational_area_um2 == 0);
   }
 
-  GIVEN("An identity multiplication: reg' = a * 1")
+  GIVEN("Logic between a register and an output")
   {
-    auto result = estimate_nsf(mult_exprt{a, from_integer(1, u32)});
+    designt d;
+    auto a = d.input("a"), b = d.input("b");
+    auto r = d.reg("r");
+    d.next(r, a);
+    d.output("o", mult_exprt{r, b});
+    auto result = d.estimate();
+    REQUIRE(result.combinational_area_um2 == Approx(32 * 32));
+    // clock-to-Q of 50 ps, then the multiplier
+    REQUIRE(result.critical_path_ps == Approx(350));
+  }
+}
 
-    THEN("It synthesizes to a plain wire")
-    {
-      REQUIRE(result.operator_count == 0);
-      REQUIRE(result.combinational_area_um2 == 0);
-    }
+SCENARIO("Constants")
+{
+  GIVEN("A bitwise AND with zero")
+  {
+    designt d;
+    auto a = d.input("a");
+    d.output("o", bitand_exprt{a, from_integer(0, u32)});
+    REQUIRE(d.estimate().combinational_area_um2 == 0);
   }
 
-  GIVEN("An identity addition: reg' = a + 0")
+  GIVEN("A shift by a constant")
   {
-    auto result = estimate_nsf(plus_exprt{a, from_integer(0, u32)});
-
-    THEN("It synthesizes to a plain wire")
-    {
-      REQUIRE(result.operator_count == 0);
-      REQUIRE(result.combinational_area_um2 == 0);
-    }
+    designt d;
+    auto a = d.input("a");
+    d.output("o", lshr_exprt{a, from_integer(3, u32)});
+    REQUIRE(d.estimate().combinational_area_um2 == 0);
   }
 
-  GIVEN("A constant expression: reg' = 1 + 2")
+  GIVEN("A constant that reaches an adder through a register")
   {
-    auto result =
-      estimate_nsf(plus_exprt{from_integer(1, u32), from_integer(2, u32)});
+    designt d;
+    auto a = d.input("a");
+    auto r = d.reg("r");
+    d.next(r, from_integer(1, u32));
+    d.output("o", plus_exprt{a, r});
+    auto result = d.estimate();
+    REQUIRE(result.register_bits == 0);
+    REQUIRE(result.combinational_area_um2 == Approx(4 * 32));
+  }
+}
 
-    THEN("It folds away entirely")
-    {
-      REQUIRE(result.operator_count == 0);
-      REQUIRE(result.combinational_area_um2 == 0);
-      REQUIRE(result.critical_path_ps == 0);
-    }
+SCENARIO("Selects, shifts and writes that synthesis simplifies")
+{
+  GIVEN("A multiplication by a power of two")
+  {
+    designt d;
+    auto a = d.input("a");
+    d.output("o", mult_exprt{a, from_integer(8, u32)});
+    REQUIRE(d.estimate().combinational_area_um2 == 0);
   }
 
-  GIVEN("A dead mux inside an expression: reg' = (c ? a : a) | d")
+  GIVEN("An aligned part select: data[sel * 8 +: 8]")
   {
-    auto result = estimate_nsf(bitor_exprt{if_exprt{c, a, a}, d});
+    designt d;
+    const unsignedbv_typet u64{64}, u8{8};
+    auto data = d.input("data", u64), sel = d.input("sel", u64);
+    d.output(
+      "o",
+      extractbits_exprt{
+        lshr_exprt{data, mult_exprt{sel, from_integer(8, u64)}}, 0, u8});
+    auto result = d.estimate();
+    // an 8-bit wide mux of 8 inputs, not a 64-bit shifter
+    REQUIRE(result.combinational_area_um2 == Approx(8 * 7));
+    REQUIRE(result.critical_path_ps == Approx(25 * 3));
+  }
 
-    THEN("Only the OR is costed, not the mux")
+  GIVEN("A shift by a multiple of 4")
+  {
+    designt d;
+    auto a = d.input("a"), s = d.input("s");
+    d.output("o", lshr_exprt{a, mult_exprt{s, from_integer(4, u32)}});
+    // three of the five stages of a 32-bit shifter
+    REQUIRE(
+      d.estimate().combinational_area_um2 == Approx(2 * 32 * 5 * 3 / 5.0));
+  }
+
+  GIVEN("A conditional write into an array of registers")
+  {
+    designt d;
+    const array_typet mem_type{u32, from_integer(16, u32)};
+    auto we = d.input("we", bool_typet{}), i = d.input("i"), v = d.input("v");
+    auto mem = d.reg("mem", mem_type);
+    d.next(mem, if_exprt{we, with_exprt{mem, i, v}, mem});
+    d.output("o", mem);
+    auto result = d.estimate();
+    // the write, plus one enable gate per element; no mux of 512 bits
+    REQUIRE(result.combinational_area_um2 == Approx(32 * 16 + 16));
+  }
+}
+
+SCENARIO("Values without a hardware width are an error")
+{
+  designt d;
+  floatbv_typet f;
+  f.set_width(64);
+  f.set_f(52);
+  auto a = d.input("a", f);
+  d.output("o", a);
+  REQUIRE_THROWS_AS(d.estimate(), ebmc_errort);
+}
+
+SCENARIO("Built-in cost tables")
+{
+  const std::vector<std::string> kinds = {
+    "register",      "clock", "plus",   "minus",         "plus_c",
+    "unary_minus",   "mult",  "mult_c", "div",           "mod",
+    "bitand",        "bitor", "bitxor", "bitnot",        "equal",
+    "equal_c",       "lt",    "lt_c",   "reduction_and", "reduction_or",
+    "reduction_xor", "shl",   "lshr",   "ashr",          "if",
+    "index",         "with"};
+
+  for(auto &[name, description] : cost_tablet::process_names())
+  {
+    auto table = cost_tablet::builtin(name);
+    for(auto &kind : kinds)
     {
-      REQUIRE(result.operator_count == 1);
+      const auto &f = table(kind);
+      REQUIRE(f.area(32, 16) >= 0);
+      REQUIRE(f.delay(32, 16) >= 0);
+      REQUIRE(f.energy(32, 16) >= 0);
+      REQUIRE(f.leakage(32, 16) >= 0);
+    }
+    // operators other than the clock cost area
+    REQUIRE(table("plus").area(32) > 0);
+    REQUIRE(table("plus").delay(32) > 0);
+  }
+
+  REQUIRE_THROWS_AS(cost_tablet::builtin("4nm"), ebmc_errort);
+
+  THEN("Smaller nodes have smaller cells")
+  {
+    // The measured 2nm library (GT2N) is not denser than the 3nm table
+    // derived from ASAP7, so it is not part of this sequence.
+    const std::vector<std::string> nodes = {
+      "180nm",
+      "130nm",
+      "90nm",
+      "65nm",
+      "45nm",
+      "28nm",
+      "14nm",
+      "7nm",
+      "5nm",
+      "3nm"};
+    for(std::size_t i = 1; i < nodes.size(); ++i)
+    {
+      INFO(nodes[i - 1] << " vs " << nodes[i]);
       REQUIRE(
-        result.combinational_area_um2 ==
-        Approx(tech.operator_cost(ID_bitor, 32).area_um2));
+        cost_tablet::builtin(nodes[i])("register").area(1) <
+        cost_tablet::builtin(nodes[i - 1])("register").area(1));
     }
   }
 }
 
-SCENARIO("Mux costing inside expressions")
+SCENARIO("Malformed cost tables are rejected")
 {
-  const unsignedbv_typet u32(32);
-  technology_dbt tech("45nm");
-
-  symbol_tablet symbol_table;
-  namespacet ns(symbol_table);
-
-  GIVEN("A mux feeding an adder: reg' = (c ? a : b) + d")
-  {
-    auto c = symbol_exprt{"c", bool_typet{}};
-    auto a = symbol_exprt{"a", u32};
-    auto b = symbol_exprt{"b", u32};
-    auto d = symbol_exprt{"d", u32};
-
-    word_level_transt wl_trans(ns);
-    wl_trans.next_state_functions[irep_idt("reg")] =
-      plus_exprt{if_exprt{c, a, b}, d};
-    std::vector<symbol_exprt> state_vars = {symbol_exprt{"reg", u32}};
-
-    auto result = estimate(wl_trans, make_trans(), state_vars, tech);
-
-    THEN(
-      "The mux is costed at its full base cost: no multi-input-gate "
-      "discount for its three operands")
-    {
-      REQUIRE(
-        result.combinational_area_um2 ==
-        Approx(
-          tech.operator_cost(ID_if, 32).area_um2 +
-          tech.operator_cost(ID_plus, 32).area_um2));
-    }
-
-    THEN("The critical path passes through mux and adder")
-    {
-      REQUIRE(
-        result.critical_path_ps == Approx(
-                                     tech.operator_cost(ID_if, 32).delay_ps +
-                                     tech.operator_cost(ID_plus, 32).delay_ps));
-    }
-  }
-}
-
-SCENARIO("Associative-chain delay balancing")
-{
-  const unsignedbv_typet u32(32);
-  technology_dbt tech("45nm");
-
-  symbol_tablet symbol_table;
-  namespacet ns(symbol_table);
-
-  GIVEN("A literal chain of four terms: reg' = ((a+b)+c)+d")
-  {
-    auto a = symbol_exprt{"a", u32};
-    auto b = symbol_exprt{"b", u32};
-    auto c = symbol_exprt{"c", u32};
-    auto d = symbol_exprt{"d", u32};
-
-    word_level_transt wl_trans(ns);
-    wl_trans.next_state_functions[irep_idt("reg")] =
-      plus_exprt{plus_exprt{plus_exprt{a, b}, c}, d};
-    std::vector<symbol_exprt> state_vars = {symbol_exprt{"reg", u32}};
-
-    auto result = estimate(wl_trans, make_trans(), state_vars, tech);
-
-    THEN(
-      "Delay is that of a balanced tree: log2(4) = 2 adder stages, "
-      "not 3")
-    {
-      REQUIRE(
-        result.critical_path_ps ==
-        Approx(2.0 * tech.operator_cost(ID_plus, 32).delay_ps));
-    }
-
-    THEN("All three adders' area is still paid")
-    {
-      REQUIRE(result.operator_count == 3);
-    }
-  }
-}
-
-SCENARIO("Wires shared between registers")
-{
-  const unsignedbv_typet u32(32);
-  technology_dbt tech("45nm");
-
-  symbol_tablet symbol_table;
-  namespacet ns(symbol_table);
-
-  GIVEN(
-    "Two registers reading one invariant-defined wire: "
-    "w = a + b; reg1' = w; reg2' = w")
-  {
-    auto w = symbol_exprt{"w", u32};
-    auto a = symbol_exprt{"a", u32};
-    auto b = symbol_exprt{"b", u32};
-
-    word_level_transt wl_trans(ns);
-    wl_trans.next_state_functions[irep_idt("reg1")] = w;
-    wl_trans.next_state_functions[irep_idt("reg2")] = w;
-    std::vector<symbol_exprt> state_vars = {
-      symbol_exprt{"reg1", u32}, symbol_exprt{"reg2", u32}};
-
-    auto result = estimate(
-      wl_trans, make_trans(equal_exprt{w, plus_exprt{a, b}}), state_vars, tech);
-
-    THEN("The wire's adder is one piece of hardware, costed once")
-    {
-      REQUIRE(result.operator_count == 1);
-      REQUIRE(
-        result.combinational_area_um2 ==
-        Approx(tech.operator_cost(ID_plus, 32).area_um2));
-    }
-
-    THEN("Both registers still see the adder's delay")
-    {
-      REQUIRE(
-        result.critical_path_ps ==
-        Approx(tech.operator_cost(ID_plus, 32).delay_ps));
-    }
-  }
-}
-
-SCENARIO("Register array costing")
-{
-  const unsignedbv_typet u32(32);
-  technology_dbt tech("45nm");
-
-  symbol_tablet symbol_table;
-  namespacet ns(symbol_table);
-  word_level_transt wl_trans(ns);
-
-  GIVEN("An array above the SRAM threshold: 256 x 32 = 8192 bits")
-  {
-    auto mem =
-      symbol_exprt{"mem", array_typet{u32, from_integer(256, integer_typet{})}};
-    std::vector<symbol_exprt> state_vars = {mem};
-
-    auto result = estimate(wl_trans, make_trans(), state_vars, tech);
-
-    THEN("It is costed at SRAM density, 1 um2/bit")
-    {
-      REQUIRE(result.register_bits == 8192);
-      REQUIRE(result.register_area_um2 == Approx(8192.0));
-    }
-  }
-
-  GIVEN("An array below the SRAM threshold: 32 x 32 = 1024 bits")
-  {
-    auto mem =
-      symbol_exprt{"mem", array_typet{u32, from_integer(32, integer_typet{})}};
-    std::vector<symbol_exprt> state_vars = {mem};
-
-    auto result = estimate(wl_trans, make_trans(), state_vars, tech);
-
-    THEN("It is costed as flip-flops")
-    {
-      REQUIRE(result.register_bits == 1024);
-      REQUIRE(
-        result.register_area_um2 == Approx(tech.register_cost(1024).area_um2));
-    }
-  }
+  std::istringstream short_line{"plus w 0 1 1 1 0\n"};
+  REQUIRE_THROWS_AS(cost_tablet::from_stream(short_line, "test"), ebmc_errort);
+  std::istringstream bad_form{"plus x 0 1 1 1 0 0 0 0 0\n"};
+  REQUIRE_THROWS_AS(cost_tablet::from_stream(bad_form, "test"), ebmc_errort);
 }

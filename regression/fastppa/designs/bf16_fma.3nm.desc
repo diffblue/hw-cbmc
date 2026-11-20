@@ -2,6 +2,5 @@ CORE
 bf16_fma.sv
 --top bf16_fma --process 3nm
 ^  Register bits:       16$
-^  Total:               13\.9 um2$
 ^EXIT=0$
 ^SIGNAL=0$

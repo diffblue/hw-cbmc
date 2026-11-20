@@ -5,3 +5,5 @@ gt-work*/
 /manifest.tsv
 /gt_*.tsv
 /est_*.tsv
+/gt/
+/netlist_counts_C.tsv

@@ -17,6 +17,8 @@ Author: Kiro
   "(clock-freq):"                                                              \
   "(toggle-rate):"                                                             \
   "(netlist)"                                                                  \
+  "(cost-table):"                                                              \
+  "(paths):(json)"                                                             \
   "(top):"                                                                     \
   "(verbosity):"                                                               \
   "(version)"                                                                  \

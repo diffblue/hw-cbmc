@@ -1,7 +1,7 @@
 CORE
 real_type.sv
 --top main
-^error: fastppa: cannot determine the width of type floatbv$
+^error: unsupported type floatbv
 ^EXIT=6$
 ^SIGNAL=0$
 --

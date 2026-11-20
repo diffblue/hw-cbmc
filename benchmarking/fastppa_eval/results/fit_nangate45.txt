@@ -1,0 +1,28 @@
+register       area w      a0=    0.000 a1=   4.5220 loo=1.000x   delay 1     d0=   81.50 d1=   0.000 loo=1.000x   energy e1=9.268   leakage l1=0.07911
+clock          energy per bit e0=0 e1=3.626
+plus           area w      a0=    0.000 a1=   5.1628 loo=1.100x   delay w     d0=    0.00 d1=  32.052 loo=1.088x   energy e1=25.03   leakage l1=0.1223
+minus          area w      a0=    0.000 a1=   5.5971 loo=1.149x   delay w     d0=    4.98 d1=  36.458 loo=1.027x   energy e1=27.43   leakage l1=0.1333
+plus_c         area w      a0=    0.000 a1=   2.3019 loo=1.202x   delay w     d0=    1.47 d1=  20.955 loo=1.070x   energy e1=7.935   leakage l1=0.05409
+unary_minus    area wlogw  a0=    2.836 a1=   0.5280 loo=1.225x   delay w     d0=    0.00 d1=  28.865 loo=1.193x   energy e1=0.6876   leakage l1=0.01196
+mult           area w2     a0=    0.000 a1=   2.2441 loo=1.418x   delay w     d0=   33.37 d1=  51.563 loo=1.261x   energy e1=9.483   leakage l1=0.05061
+mult_c         area w2     a0=    0.000 a1=   0.5022 loo=2.327x   delay w     d0=    0.00 d1=  31.775 loo=1.672x   energy e1=2.046   leakage l1=0.01114
+div            area w2     a0=    0.000 a1=   3.0292 loo=1.338x   delay w2    d0=    0.00 d1=  24.820 loo=1.292x   energy e1=13.4   leakage l1=0.07168
+mod            area w2     a0=    0.000 a1=   3.6351 loo=1.151x   delay w2    d0=    0.00 d1=  29.200 loo=1.314x   energy e1=19.29   leakage l1=0.08347
+bitand         area w      a0=    0.000 a1=   1.0640 loo=1.000x   delay 1     d0=   22.60 d1=   0.000 loo=1.000x   energy e1=2.203   leakage l1=0.02507
+bitor          area w      a0=    0.000 a1=   1.0640 loo=1.000x   delay 1     d0=   40.80 d1=   0.000 loo=1.000x   energy e1=2.263   leakage l1=0.02269
+bitxor         area w      a0=    0.000 a1=   1.5960 loo=1.000x   delay 1     d0=   47.70 d1=   0.000 loo=1.000x   energy e1=5.42   leakage l1=0.03616
+bitnot         area w      a0=    0.000 a1=   0.5320 loo=1.000x   delay 1     d0=    4.10 d1=   0.000 loo=1.000x   energy e1=0.9246   leakage l1=0.01435
+equal          area w      a0=    0.000 a1=   2.0842 loo=1.059x   delay logw  d0=    0.79 d1=  40.024 loo=1.346x   energy e1=7.974   leakage l1=0.04762
+equal_c        area w      a0=    0.000 a1=   0.4963 loo=1.141x   delay logw  d0=    0.00 d1=  30.335 loo=1.325x   energy e1=0.4624   leakage l1=0.009764
+lt             area w      a0=    0.000 a1=   2.8134 loo=1.160x   delay logw  d0=    0.00 d1=  66.530 loo=1.168x   energy e1=10.94   leakage l1=0.07048
+lt_c           area w      a0=    0.000 a1=   0.6981 loo=1.291x   delay logw  d0=    0.00 d1=  38.778 loo=1.232x   energy e1=1.958   leakage l1=0.01693
+reduction_and  area w      a0=    0.000 a1=   0.4257 loo=1.049x   delay logw  d0=    0.00 d1=  21.540 loo=1.225x   energy e1=0.3516   leakage l1=0.007826
+reduction_or   area w      a0=    0.000 a1=   0.4372 loo=1.059x   delay w     d0=   87.02 d1=   2.338 loo=1.237x   energy e1=0.3555   leakage l1=0.008342
+reduction_xor  area w      a0=    0.000 a1=   1.4121 loo=1.116x   delay logw  d0=    0.00 d1=  43.509 loo=1.003x   energy e1=8.602   leakage l1=0.03216
+shl            area wlogw  a0=    0.000 a1=   1.6582 loo=1.011x   delay logw  d0=    0.00 d1=  58.689 loo=1.110x   energy e1=5.879   leakage l1=0.03535
+lshr           area wlogw  a0=    0.024 a1=   1.6436 loo=1.024x   delay logw  d0=    0.00 d1=  56.538 loo=1.026x   energy e1=5.768   leakage l1=0.03546
+ashr           area wlogw  a0=    0.000 a1=   1.6261 loo=1.096x   delay logw  d0=    0.00 d1=  56.457 loo=1.029x   energy e1=5.533   leakage l1=0.0324
+if             area w      a0=    0.000 a1=   1.8620 loo=1.000x   delay 1     d0=   49.20 d1=   0.000 loo=1.000x   energy e1=4.335   leakage l1=0.03593
+index          area wn     a0=    2.325 a1=   1.0712 loo=1.225x   delay logn  d0=   27.47 d1=  52.332 loo=1.617x   energy e1=1.893   leakage l1=0.02342
+with           area wn     a0=    2.143 a1=   1.9373 loo=1.040x   delay 1     d0=  360.92 d1=   0.000 loo=1.689x   energy e1=36.56   leakage l1=0.03755
+aig_and        area 0.3945 delay/level 5.483 energy 0.6416 leakage 0.008531

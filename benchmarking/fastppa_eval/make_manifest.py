@@ -6,6 +6,7 @@ Each line of the manifest is tab-separated:
 with space-separated lists. Sets:
   E1  LogikBench groups basic, arithmetic, memory, blocks (see PROTOCOL.md)
   E2  regression/fastppa/{blocks,designs} of PR #1927
+  E3  LogikBench groups epfl, iscas85, iscas89, koios, large
 
 Usage: make_manifest.py --logikbench <dir> --lambdalib <dir> --repo <dir> out.tsv
 """
@@ -16,6 +17,7 @@ import sys
 from pathlib import Path
 
 E1_GROUPS = ["basic", "arithmetic", "memory", "blocks"]
+E3_GROUPS = ["epfl", "iscas85", "iscas89", "koios", "large"]
 
 
 def load_resolver(repo):
@@ -42,7 +44,8 @@ def logikbench_designs(r, lb_root, ll_root):
     r.Design.set_topmodule = set_topmodule
 
     bench_root = Path(lb_root) / "logikbench" / "benchmarks"
-    for group in E1_GROUPS:
+    for group in E1_GROUPS + E3_GROUPS:
+        set_name = "E1" if group in E1_GROUPS else "E3"
         for bench in sorted((bench_root / group).iterdir()):
             py = bench / f"{bench.name}.py"
             if not (bench / "rtl").is_dir() or not py.is_file():
@@ -51,13 +54,13 @@ def logikbench_designs(r, lb_root, ll_root):
                 design = r.load_design_class(py.resolve())()
                 files, idirs, defines = r.collect_fileset(design, "rtl")
             except Exception as e:  # recorded, not silently dropped
-                yield ("E1", f"{group}/{bench.name}", "", [], [], [],
+                yield (set_name, f"{group}/{bench.name}", "", [], [], [],
                        f"resolve: {e}")
                 continue
             idirs = r.ordered_unique(idirs + [f.parent for f in files])
             top = tops.get(id(design), bench.name)
-            yield ("E1", f"{group}/{bench.name}", top, files, idirs, defines,
-                   "")
+            yield (set_name, f"{group}/{bench.name}", top, files, idirs,
+                   defines, "")
 
 
 def regression_designs(repo):

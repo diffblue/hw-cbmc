@@ -1,0 +1,29 @@
+# Synthesis results (Yosys+ABC, NanGate45 typical; OpenSTA data arrival in ns)
+# for the designs in blocks/ and designs/, from
+# benchmarking/fastppa_eval/results/gt_E.tsv. Columns: file, top, area, delay.
+blocks/adder.sv adder 323.988000 1.1121
+blocks/aes_round.sv aes_round 1817.312000 0.3559
+blocks/divider.sv divider 4325.160000 27.6574
+blocks/multiplier.sv multiplier 1775.816000 1.4681
+blocks/mux.sv mux_tree 77.406000 0.1388
+blocks/parity.sv parity 53.998000 0.2154
+blocks/shifter.sv shifter 414.960000 0.2934
+blocks/struct_mux.sv struct_mux 987.392000 0.1321
+designs/alu.sv alu 1218.812000 1.2799
+designs/array_sorter.sv array_sorter 1138.746000 2.3165
+designs/bf16_fma.sv bf16_fma 983.402000 2.0687
+designs/comb_mux.sv comb_mux 44.688000 0.1050
+designs/fir16.sv fir16 6379.478000 2.0109
+designs/fir4.sv fir4 1299.676000 1.3469
+designs/float_to_int.sv float_to_int 1174.922000 1.4483
+designs/fp_adder.sv adder 2951.270000 1.2011
+designs/fp_divider.sv divider 3428.474000 2.5004
+designs/fp_multiplier.sv multiplier 6352.612000 2.1731
+designs/fsm_datapath.sv fsm_datapath 318.136000 0.8593
+designs/fsm_shared_mult.sv fsm_shared_mult 3867.108000 1.4550
+designs/int_to_float.sv int_to_float 1482.684000 1.4081
+designs/large_array.sv large_array 66644.438000 7.4462
+designs/pipe_mult.sv pipe_mult 2065.224000 1.6362
+designs/regfile.sv regfile 10238.074000 0.8360
+designs/riscv_pipe.sv riscv_pipe 10684.688000 2.3426
+designs/struct_packet.sv struct_packet 884.716000 0.1353

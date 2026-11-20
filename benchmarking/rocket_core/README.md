@@ -18,11 +18,10 @@ its submodules ultimately originate from the BSD/Apache-2.0-licensed
 
 Why this design: unlike the small, hand-written designs in
 `regression/fastppa/`, this is a real, deep (39 levels of logic per
-PrimeTime), multi-thousand-line RISC-V core with genuine commercial EDA
-ground truth, letting `fastppa`'s estimates be checked against more than
-just an open-source synthesis proxy. See
-`src/fastppa/DOCKER_VALIDATION.md` ("Real-world validation: Rocket core")
-for the full comparison.
+PrimeTime), multi-thousand-line RISC-V core with commercial post-route
+results, letting `fastppa`'s estimates be checked against more than an
+open-source synthesis flow. The comparison is in
+`benchmarking/fastppa_eval/RESULTS.md`.
 
 Usage
 -----
@@ -51,9 +50,5 @@ PrimeTime ground truth
 
 `compare_primetime.py` parses these reports, runs fastppa on the whole
 core and on each hierarchical submodule, and prints the comparison
-tables shown in `src/fastppa/COMPARISON.md`.
-
-(`fastppa`'s own delay number is closer to what a single-pass open-source
-synthesis flow, Yosys+ABC+OpenSTA, produces on the same RTL than to this
-post-route, timing-closed PrimeTime number -- see DOCKER_VALIDATION.md for
-why.)
+tables. PrimeTime's numbers are post-route and timing-closed, so a
+pre-synthesis estimate is not expected to match them exactly.

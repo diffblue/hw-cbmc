@@ -1,0 +1,834 @@
+E1	arithmetic/abs	graph	ok	89.3	511.0	0	191.11	1.972
+E1	arithmetic/abs	netlist	ok	40.2	93.2	0	65.44	0.87
+E1	arithmetic/abs	pr1927	ok	174.4	619.3	1224	48960	17
+E1	arithmetic/absdiff	graph	ok	253.9	637.5	0	1122.14	5.967
+E1	arithmetic/absdiff	netlist	ok	180.7	274.1	0	293.84	3.907
+E1	arithmetic/absdiff	pr1927	ok	286.4	619.5	3024	120960	29
+E1	arithmetic/absdiffs	graph	ok	189.2	1164.7	0	665.49	4.339
+E1	arithmetic/absdiffs	netlist	ok	110.9	285.1	0	180.28	2.397
+E1	arithmetic/absdiffs	pr1927	ok	283.5	1231.6	2550	102020	28
+E1	arithmetic/add	graph	ok	175.5	1089.8	0	850.9	4.159
+E1	arithmetic/add	netlist	ok	93.1	263.2	0	151.41	2.013
+E1	arithmetic/add	pr1927	ok	178.5	1206.3	2231	89250	18
+E1	arithmetic/addmod	graph	ok	3242.0	17661.3	0	14590.5	74.887
+E1	arithmetic/addmod	netlist	ok	2521.3	4243.6	0	4100.29	54.521
+E1	arithmetic/addmod	pr1927	ok	3621.6	17552.8	42134	1.68536e+06	362
+E1	arithmetic/addsub	graph	ok	202.0	637.5	0	908.63	4.664
+E1	arithmetic/addsub	netlist	ok	149.1	268.6	0	242.51	3.225
+E1	arithmetic/addsub	pr1927	ok	225.6	619.4	2624	104960	23
+E1	arithmetic/addtree	graph	failed: error: combinational loop through Verilog::$root.addtree.node					
+E1	arithmetic/addtree	netlist	ok	4481.9	455.1	0	7288.91	96.919
+E1	arithmetic/addtree	pr1927	ok	2642028.9	12049.2	8.59261e+06	3.43704e+08	264203
+E1	arithmetic/argmax	graph	failed: error: combinational loop through Verilog::$root.argmax.g_argmax[1].sel					
+E1	arithmetic/argmax	netlist	ok	510.5	334.4	0	830.2	11.039
+E1	arithmetic/argmax	pr1927	ok	20553.2	2471.5	86551	3.46203e+06	2055
+E1	arithmetic/argmin	graph	failed: error: combinational loop through Verilog::$root.argmin.g_argmin[1].sel					
+E1	arithmetic/argmin	netlist	ok	510.5	334.4	0	830.2	11.039
+E1	arithmetic/argmin	pr1927	ok	20553.2	2471.5	86551	3.46203e+06	2055
+E1	arithmetic/atan	graph	ok	5698.5	8100.9	0	23579.5	130.175
+E1	arithmetic/atan	netlist	ok	4078.7	1924.4	0	6633.22	88.201
+E1	arithmetic/atan	pr1927	ok	52338.6	1942.5	174542	6.98168e+06	5234
+E1	arithmetic/avgn	graph	failed: error: combinational loop through Verilog::$root.avgn.acc					
+E1	arithmetic/avgn	netlist	ok	796.5	531.8	0	1295.34	17.224
+E1	arithmetic/avgn	pr1927	ok	25693.0	29333.3	165591	6.62366e+06	2569
+E1	arithmetic/clamp	graph	ok	149.6	364.5	0	488.91	3.405
+E1	arithmetic/clamp	netlist	ok	104.1	296.1	0	169.38	2.252
+E1	arithmetic/clamp	pr1927	ok	188.8	370.5	1248	49920	19
+E1	arithmetic/clz	graph	ok	459.8	1078.7	0	2094.58	10.911
+E1	arithmetic/clz	netlist	ok	128.6	202.9	0	209.15	2.781
+E1	arithmetic/clz	pr1927	ok	4147.8	2701.5	49451	1.97805e+06	415
+E1	arithmetic/cmp	graph	ok	123.4	266.1	0	477.76	3.017
+E1	arithmetic/cmp	netlist	ok	86.4	263.2	0	140.5	1.868
+E1	arithmetic/cmp	pr1927	ok	182.4	320.2	1200	48000	18
+E1	arithmetic/cos	graph	ok	6125.8	8762.1	0	25557	140.196
+E1	arithmetic/cos	netlist	ok	4076.8	2088.9	0	6630.02	88.158
+E1	arithmetic/cos	pr1927	ok	52334.5	2875.5	174485	6.97939e+06	5233
+E1	arithmetic/counter	graph	ok	192.8	825.3	58.012	506.81	3.972
+E1	arithmetic/counter	netlist	ok	120.9	185.7	58.012	227.2	2.315
+E1	arithmetic/counter	pr1927	ok	360.3	1188.4	3840	153600	36
+E1	arithmetic/csa32	graph	ok	136.2	104.2	0	351.61	3.087
+E1	arithmetic/csa32	netlist	ok	69.4	21.9	0	112.92	1.501
+E1	arithmetic/csa32	pr1927	ok	156.0	95.6	780	31200	16
+E1	arithmetic/csa42	graph	ok	272.4	208.4	0	703.22	6.173
+E1	arithmetic/csa42	netlist	ok	138.9	43.9	0	225.83	3.003
+E1	arithmetic/csa42	pr1927	ok	312.0	141.6	1560	62400	31
+E1	arithmetic/ctz	graph	ok	459.8	1078.7	0	2094.58	10.911
+E1	arithmetic/ctz	netlist	ok	109.7	191.9	0	178.36	2.372
+E1	arithmetic/ctz	pr1927	ok	883.8	512.7	8651	346050	88
+E1	arithmetic/dec	graph	ok	36.8	336.7	0	126.96	0.865
+E1	arithmetic/dec	netlist	ok	34.3	241.2	0	55.82	0.742
+E1	arithmetic/dec	pr1927	ok	96.0	594.1	1200	48000	10
+E1	arithmetic/div	graph	ok	725.2	849.9	203.044	1902.04	14.736
+E1	arithmetic/div	netlist	ok	514.6	388.5	199.418	942.15	10.101
+E1	arithmetic/div	pr1927	ok	1385.0	1021.6	9765	390600	138
+E1	arithmetic/divs	graph	ok	1042.3	849.9	210.295	2783.53	21.732
+E1	arithmetic/divs	netlist	ok	694.5	388.5	206.669	1238.49	13.953
+E1	arithmetic/divs	pr1927	ok	1657.6	1022.5	12702	508060	166
+E1	arithmetic/dotprod	graph	ok	23257.2	5203.5	0	99065.3	525.945
+E1	arithmetic/dotprod	netlist	ok	9761.1	975.9	0	15874.4	211.08
+E1	arithmetic/dotprod	pr1927	ok	41436.0	7103.8	410706	1.64282e+07	4144
+E1	arithmetic/exp	graph	ok	3447.8	5678.6	0	13470.3	76.472
+E1	arithmetic/exp	netlist	ok	1579.6	1239.1	0	2568.86	34.158
+E1	arithmetic/exp	pr1927	ok	4579.9	6775.4	48184	1.92737e+06	458
+E1	arithmetic/fmadd16	graph	ok	6805.5	14232.6	0	23853.4	150.531
+E1	arithmetic/fmadd16	netlist	ok	3081.8	2713.9	0	5011.97	66.643
+E1	arithmetic/fmadd16	pr1927	ok	13732.3	13604.0	100851	4.03406e+06	1373
+E1	arithmetic/fmadd32	graph	ok	18869.5	17445.4	0	68614.6	414.021
+E1	arithmetic/fmadd32	netlist	ok	9171.4	5422.3	0	14915.3	198.326
+E1	arithmetic/fmadd32	pr1927	ok	39903.9	15929.3	238364	9.53458e+06	3990
+E1	arithmetic/fmadd8	graph	ok	4481.1	12842.7	0	15700.9	100.269
+E1	arithmetic/fmadd8	netlist	ok	1837.2	2012.1	0	2987.81	39.728
+E1	arithmetic/fmadd8	pr1927	ok	8698.8	12899.7	75157	3.00629e+06	870
+E1	arithmetic/gelu	graph	ok	3826.0	6294.0	0	14698.6	85.761
+E1	arithmetic/gelu	netlist	ok	2431.3	1891.5	0	3954.01	52.576
+E1	arithmetic/gelu	pr1927	ok	5367.8	6538.8	64029	2.56114e+06	537
+E1	arithmetic/hswish	graph	ok	5902.4	29555.0	0	25391.2	136.703
+E1	arithmetic/hswish	netlist	ok	3256.6	2017.6	0	5296.19	70.422
+E1	arithmetic/hswish	pr1927	ok	6814.8	31054.6	117799	4.71195e+06	681
+E1	arithmetic/inc	graph	ok	36.8	336.7	0	126.96	0.865
+E1	arithmetic/inc	netlist	ok	23.3	87.7	0	37.85	0.503
+E1	arithmetic/inc	pr1927	ok	96.0	594.1	1200	48000	10
+E1	arithmetic/ln	graph	ok	3471.9	7916.3	0	13679.7	78.266
+E1	arithmetic/ln	netlist	ok	1759.9	2346.6	0	2862.06	38.056
+E1	arithmetic/ln	pr1927	ok	4527.6	8186.1	52634	2.10538e+06	453
+E1	arithmetic/log2	graph	ok	79.8	339.0	0	165.22	1.88
+E1	arithmetic/log2	netlist	ok	28.8	115.1	0	46.83	0.623
+E1	arithmetic/log2	pr1927	ok	97.6	426.5	650	26020	10
+E1	arithmetic/lrelu	graph	ok	52.1	243.1	0	132.03	1.117
+E1	arithmetic/lrelu	netlist	ok	43.8	197.4	0	71.21	0.947
+E1	arithmetic/lrelu	pr1927	ok	191.9	412.8	824	32960	19
+E1	arithmetic/mac	graph	ok	4095.0	3449.8	145.031	16806.2	91.473
+E1	arithmetic/mac	netlist	ok	1490.6	888.2	145.031	2500.73	31.487
+E1	arithmetic/mac	pr1927	ok	3220.8	3156.2	66600	2.664e+06	322
+E1	arithmetic/macc	graph	ok	10545.1	4208.9	290.062	43787.6	236.471
+E1	arithmetic/macc	netlist	ok	10876.8	1370.7	290.062	17841.9	233.711
+E1	arithmetic/macc	pr1927	ok	8259.2	3952.3	171600	6.864e+06	826
+E1	arithmetic/macs	graph	ok	2701.5	2780.9	116.025	11017.3	60.222
+E1	arithmetic/macs	netlist	ok	2762.2	1228.1	116.025	4553.41	59.134
+E1	arithmetic/macs	pr1927	ok	2167.0	2588.0	43680	1.7472e+06	217
+E1	arithmetic/max	graph	ok	74.8	315.3	0	244.45	1.703
+E1	arithmetic/max	netlist	ok	49.7	274.1	0	80.84	1.075
+E1	arithmetic/max	pr1927	ok	94.4	345.2	624	24960	9
+E1	arithmetic/maxn	graph	failed: error: combinational loop through Verilog::$root.maxn.acc					
+E1	arithmetic/maxn	netlist	ok	549.5	2050.5	0	893.71	11.884
+E1	arithmetic/maxn	pr1927	ok	20319.4	2512.5	84948	3.39794e+06	2032
+E1	arithmetic/min	graph	ok	74.8	315.3	0	244.45	1.703
+E1	arithmetic/min	netlist	ok	49.7	274.1	0	80.84	1.075
+E1	arithmetic/min	pr1927	ok	94.4	345.2	624	24960	9
+E1	arithmetic/mod	graph	ok	725.2	849.9	203.044	1902.04	14.736
+E1	arithmetic/mod	netlist	ok	514.6	388.5	199.418	942.15	10.101
+E1	arithmetic/mod	pr1927	ok	1385.0	1021.6	9765	390600	138
+E1	arithmetic/msub	graph	ok	2477.1	2855.0	0	10588.3	56.089
+E1	arithmetic/msub	netlist	ok	1233.2	816.9	0	2005.56	26.668
+E1	arithmetic/msub	pr1927	ok	1830.4	2537.4	40800	1.632e+06	183
+E1	arithmetic/mul	graph	ok	2298.0	1683.4	0	9710.63	51.824
+E1	arithmetic/mul	netlist	ok	1098.3	784.0	0	1786.14	23.75
+E1	arithmetic/mul	pr1927	ok	1638.4	1449.0	38400	1.536e+06	164
+E1	arithmetic/muladd	graph	ok	2463.2	2709.1	0	10511.5	55.739
+E1	arithmetic/muladd	netlist	ok	1232.4	816.9	0	2004.27	26.651
+E1	arithmetic/muladd	pr1927	ok	1830.4	2537.4	40800	1.632e+06	183
+E1	arithmetic/muladdc	graph	ok	9949.2	4137.1	0	42523.2	225.262
+E1	arithmetic/muladdc	netlist	ok	10388.8	1354.2	0	16895.2	224.652
+E1	arithmetic/muladdc	pr1927	ok	7417.6	3900.8	164400	6.576e+06	742
+E1	arithmetic/muladds	graph	ok	2463.2	2709.1	0	10511.5	55.739
+E1	arithmetic/muladds	netlist	ok	2579.6	1211.7	0	4195.25	55.783
+E1	arithmetic/muladds	pr1927	ok	1830.4	2537.4	40800	1.632e+06	183
+E1	arithmetic/mulc	graph	ok	9536.2	2855.0	0	40521.1	215.475
+E1	arithmetic/mulc	netlist	ok	10051.1	1211.7	0	16346	217.35
+E1	arithmetic/mulc	pr1927	ok	6937.6	2539.5	158400	6.336e+06	694
+E1	arithmetic/mulreg	graph	ok	2587.4	1764.9	232.05	10303.8	56.887
+E1	arithmetic/mulreg	netlist	ok	2734.9	1271.2	232.05	4570.25	57.946
+E1	arithmetic/mulreg	pr1927	ok	1927.7	1449.0	41600	1.664e+06	193
+E1	arithmetic/muls	graph	ok	2298.0	1683.4	0	9710.63	51.824
+E1	arithmetic/muls	netlist	ok	2445.5	1189.7	0	3977.11	52.883
+E1	arithmetic/muls	pr1927	ok	1638.4	1449.0	38400	1.536e+06	164
+E1	arithmetic/mulsu	graph	ok	2298.0	1683.4	0	9710.63	51.824
+E1	arithmetic/mulsu	netlist	ok	1802.9	849.8	0	2931.99	38.986
+E1	arithmetic/mulsu	pr1927	ok	1638.4	1449.0	38400	1.536e+06	164
+E1	arithmetic/multconst	graph	ok	514.2	1016.8	0	2095.12	11.405
+E1	arithmetic/multconst	netlist	ok	667.1	603.1	0	1084.9	14.426
+E1	arithmetic/multconst	pr1927	ok	960.0	650.3	7200	288000	96
+E1	arithmetic/popcount	graph	ok	413.0	801.3	0	2002.11	9.787
+E1	arithmetic/popcount	netlist	ok	98.2	186.4	0	159.75	2.124
+E1	arithmetic/popcount	pr1927	ok	748.0	432.4	7862	314500	75
+E1	arithmetic/premul	graph	ok	2614.2	2792.7	0	11152.9	59.151
+E1	arithmetic/premul	netlist	ok	2751.2	1743.5	0	4474.33	59.494
+E1	arithmetic/premul	pr1927	ok	1940.4	2609.0	43312	1.7325e+06	194
+E1	arithmetic/recip	graph	ok	788.8	849.9	206.669	2113.81	16.385
+E1	arithmetic/recip	netlist	ok	521.9	388.5	203.044	955.91	10.24
+E1	arithmetic/recip	pr1927	ok	1409.3	1025.3	9889	395560	141
+E1	arithmetic/relu	graph	ok	56.4	216.5	0	133.16	1.344
+E1	arithmetic/relu	netlist	ok	19.7	186.4	0	32.08	0.427
+E1	arithmetic/relu	pr1927	ok	128.0	412.7	848	33920	13
+E1	arithmetic/requant	graph	ok	7318.3	4770.3	0	29583.1	163.778
+E1	arithmetic/requant	netlist	ok	6832.4	2171.1	0	11111.4	147.746
+E1	arithmetic/requant	pr1927	ok	6465.6	4568.6	102708	4.10832e+06	647
+E1	arithmetic/rotl	graph	ok	389.3	1862.7	0	1159.69	8.615
+E1	arithmetic/rotl	netlist	ok	145.2	54.8	0	236.1	3.139
+E1	arithmetic/rotl	pr1927	ok	411.0	1390.5	2920	116800	41
+E1	arithmetic/rotr	graph	ok	389.3	1871.3	0	1159.69	8.615
+E1	arithmetic/rotr	netlist	ok	145.2	54.8	0	236.1	3.139
+E1	arithmetic/rotr	pr1927	ok	411.0	1390.5	2920	116800	41
+E1	arithmetic/round	graph	ok	87.8	679.6	0	407.38	2.064
+E1	arithmetic/round	netlist	ok	30.4	137.1	0	49.4	0.657
+E1	arithmetic/round	pr1927	ok	238.2	1702.8	2817	112700	24
+E1	arithmetic/rsqrt	graph	ok	1678.5	1352.8	355.326	4573.51	34.42
+E1	arithmetic/rsqrt	netlist	ok	1188.2	410.5	351.701	2117.96	23.883
+E1	arithmetic/rsqrt	pr1927	ok	2354.5	1220.9	15611	624450	235
+E1	arithmetic/shiftar	graph	ok	104.1	225.8	0	354.13	2.074
+E1	arithmetic/shiftar	netlist	ok	71.0	43.9	0	115.48	1.536
+E1	arithmetic/shiftar	pr1927	ok	97.5	286.9	200	8000	10
+E1	arithmetic/shiftb	graph	ok	376.0	324.6	0	1242.52	7.794
+E1	arithmetic/shiftb	netlist	ok	236.7	65.8	0	384.94	5.119
+E1	arithmetic/shiftb	pr1927	ok	363.6	337.7	1073	42920	36
+E1	arithmetic/shiftl	graph	ok	106.1	234.8	0	376.22	2.262
+E1	arithmetic/shiftl	netlist	ok	63.9	43.9	0	103.93	1.382
+E1	arithmetic/shiftl	pr1927	ok	97.5	286.9	200	8000	10
+E1	arithmetic/shiftr	graph	ok	105.2	226.2	0	369.17	2.269
+E1	arithmetic/shiftr	netlist	ok	63.9	43.9	0	103.93	1.382
+E1	arithmetic/shiftr	pr1927	ok	97.5	286.9	200	8000	10
+E1	arithmetic/sigmoid	graph	ok	415.9	1916.2	0	1095.56	9.224
+E1	arithmetic/sigmoid	netlist	ok	228.0	263.2	0	370.83	4.931
+E1	arithmetic/sigmoid	pr1927	ok	865.6	2155.4	5786	231430	87
+E1	arithmetic/simdmul	graph	ok	4595.9	858.4	0	19421.3	103.648
+E1	arithmetic/simdmul	netlist	ok	4039.7	531.8	0	6569.71	87.356
+E1	arithmetic/simdmul	pr1927	ok	15083.2	1639.8	105200	4.208e+06	1508
+E1	arithmetic/sine	graph	ok	2342.3	891.4	29.006	4252.38	51.209
+E1	arithmetic/sine	netlist	ok	1563.3	81.5	29.006	2557.67	33.656
+E1	arithmetic/sine	pr1927	ok	15269175.5	12992.4	7.84259e+06	3.13703e+08	1.52692e+06
+E1	arithmetic/sqdiff	graph	ok	2393.1	2308.2	0	10176.9	54.09
+E1	arithmetic/sqdiff	netlist	ok	2430.1	1431.0	0	3952.09	52.55
+E1	arithmetic/sqdiff	pr1927	ok	1740.4	2027.4	39675	1.587e+06	174
+E1	arithmetic/sqrt	graph	ok	1649.1	2449.0	355.326	5202.23	34.816
+E1	arithmetic/sqrt	netlist	ok	1262.1	662.7	355.326	2240.15	25.463
+E1	arithmetic/sqrt	pr1927	ok	2723.9	2305.8	20971	838860	272
+E1	arithmetic/sub	graph	ok	95.2	624.8	0	466.27	2.266
+E1	arithmetic/sub	netlist	ok	67.5	263.2	0	109.71	1.459
+E1	arithmetic/sub	pr1927	ok	102.0	628.1	1275	51000	10
+E1	arithmetic/sum	graph	ok	686.7	1827.0	0	3328.51	16.271
+E1	arithmetic/sum	netlist	ok	488.8	400.2	0	794.91	10.57
+E1	arithmetic/sum	pr1927	ok	13014.2	3393.3	22906	916250	1301
+E1	arithmetic/tanh	graph	ok	483.0	2394.5	0	1303.21	10.766
+E1	arithmetic/tanh	netlist	ok	233.2	329.0	0	379.17	5.042
+E1	arithmetic/tanh	pr1927	ok	1526.4	3374.6	10710	428410	153
+E1	basic/arbiter	graph	ok	38.8	971.7	0	78.6	0.909
+E1	basic/arbiter	netlist	ok	32.0	159.0	0	51.97	0.691
+E1	basic/arbiter	pr1927	ok	82.4	1015.0	496	19850	8
+E1	basic/band	graph	ok	27.2	129.2	0	22.5	0.501
+E1	basic/band	netlist	ok	24.9	345.4	0	40.42	0.537
+E1	basic/band	pr1927	ok	64.0	110.1	480	19200	6
+E1	basic/bin2gray	graph	ok	102.1	47.7	0	346.9	2.314
+E1	basic/bin2gray	netlist	ok	74.6	11.0	0	121.26	1.612
+E1	basic/bin2gray	pr1927	ok	703.9	472.7	1280	51200	70
+E1	basic/bin2prio	graph	timeout		
+E1	basic/bin2prio	netlist	timeout		
+E1	basic/bin2prio	pr1927	timeout		
+E1	basic/binv	graph	ok	34.0	4.1	0	59.17	0.919
+E1	basic/binv	netlist	ok	0.0	0.0	0	0	0
+E1	basic/binv	pr1927	ok	96.0	65.1	480	19200	10
+E1	basic/bnand	graph	ok	27.2	129.2	0	22.5	0.501
+E1	basic/bnand	netlist	ok	24.9	345.4	0	40.42	0.537
+E1	basic/bnand	pr1927	ok	2.0	70.0	13	500	0
+E1	basic/bnor	graph	ok	28.0	236.7	0	22.76	0.534
+E1	basic/bnor	netlist	ok	24.9	345.4	0	40.42	0.537
+E1	basic/bnor	pr1927	ok	2.0	70.0	13	500	0
+E1	basic/bor	graph	ok	28.0	236.7	0	22.76	0.534
+E1	basic/bor	netlist	ok	24.9	345.4	0	40.42	0.537
+E1	basic/bor	pr1927	ok	64.0	110.1	480	19200	6
+E1	basic/bxnor	graph	ok	90.4	261.1	0	550.51	2.058
+E1	basic/bxnor	netlist	ok	74.6	690.8	0	121.26	1.612
+E1	basic/bxnor	pr1927	ok	2.0	70.0	13	500	0
+E1	basic/bxor	graph	ok	90.4	261.1	0	550.51	2.058
+E1	basic/bxor	netlist	ok	74.6	690.8	0	121.26	1.612
+E1	basic/bxor	pr1927	ok	64.0	110.1	480	19200	6
+E1	basic/crossbar	graph	ok	29689.9	760.6	0	68844.2	577.528
+E1	basic/crossbar	netlist	ok	18582.6	170.0	0	30220.6	401.839
+E1	basic/crossbar	pr1927	ok	456386.1	3069.4	374491	1.49796e+07	45639
+E1	basic/dffasync	graph	ok	358.0	26.7	232.05	735.05	6.682
+E1	basic/dffasync	netlist	ok	314.7	81.5	232.05	634.2	5.609
+E1	basic/dffasync	pr1927	ok	482.8	90.4	4487	179500	48
+E1	basic/dffsync	graph	ok	357.5	22.6	232.05	734.13	6.667
+E1	basic/dffsync	netlist	ok	314.7	81.5	232.05	634.2	5.609
+E1	basic/dffsync	pr1927	ok	481.3	75.2	4480	179200	48
+E1	basic/fsm	graph	ok	1451.9	2307.1	261.056	5431.4	31.767
+E1	basic/fsm	netlist	ok	621.9	718.2	261.056	1149.1	12.103
+E1	basic/fsm	pr1927	ok	7383.7	28344.2	158633	6.34533e+06	738
+E1	basic/gray2bin	graph	ok	100.5	3005.1	0	341.48	2.278
+E1	basic/gray2bin	netlist	ok	2385.9	690.8	0	3880.23	51.595
+E1	basic/gray2bin	pr1927	ok	126.0	1317.1	787	31500	13
+E1	basic/icg	graph	ok	289.4	0.0	232.05	593.14	5.063
+E1	basic/icg	netlist	ok	289.4	81.5	232.05	593.14	5.063
+E1	basic/icg	pr1927	ok	289.3	50.0	3200	128000	29
+E1	basic/latch	graph	ok	119.2	49.2	0	277.45	2.299
+E1	basic/latch	netlist	ok	177.5	367.3	0	288.71	3.839
+E1	basic/latch	pr1927	ok	134.4	75.1	896	35840	13
+E1	basic/mux	graph	ok	1099.3	236.8	0	1952.16	24.01
+E1	basic/mux	netlist	ok	1136.2	43.9	0	1847.73	24.569
+E1	basic/mux	pr1927	ok	23779.4	2124.3	14000	560000	2378
+E1	basic/muxcase	graph	ok	934.0	458.0	0	2126.1	18.403
+E1	basic/muxcase	netlist	ok	577.5	120.6	0	939.26	12.489
+E1	basic/muxcase	pr1927	ok	76580.1	1442.3	57168	2.28672e+06	7658
+E1	basic/muxhot	graph	ok	2111.0	185.8	0	4428.39	47.455
+E1	basic/muxhot	netlist	ok	783.9	98.7	0	1274.81	16.951
+E1	basic/muxhot	pr1927	ok	389032.7	5786.2	297880	1.19152e+07	38903
+E1	basic/muxpri	graph	ok	1895.5	1020.9	0	4383.62	37.027
+E1	basic/muxpri	netlist	ok	1180.3	257.7	0	1919.59	25.524
+E1	basic/muxpri	pr1927	ok	379007.5	2898.7	212192	8.48767e+06	37901
+E1	basic/onehot	graph	ok	190.6	78.4	0	284.38	4.375
+E1	basic/onehot	netlist	ok	126.2	27.4	0	205.3	2.73
+E1	basic/onehot	pr1927	ok	1593.6	255.9	10496	419840	159
+E1	basic/pipeline	graph	ok	8564.1	179.9	3770.81	18623.4	156.863
+E1	basic/pipeline	netlist	ok	7253.7	437.9	3770.81	13786.9	137.438
+E1	basic/pipeline	pr1927	ok	30532.6	1810.1	150295	6.0118e+06	3053
+E1	basic/shiftreg	graph	ok	408.6	130.7	232.05	870.59	7.363
+E1	basic/shiftreg	netlist	ok	365.2	92.5	232.05	716.32	6.701
+E1	basic/shiftreg	pr1927	ok	664.3	77.1	6336	253440	66
+E1	basic/tff	graph	ok	511.3	157.4	232.05	1071.68	9.9
+E1	basic/tff	netlist	ok	390.4	97.9	232.05	757.38	7.247
+E1	basic/tff	pr1927	ok	770.8	115.7	6247	249900	77
+E1	basic/tmr	graph	ok	340.5	104.2	0	712.64	7.718
+E1	basic/tmr	netlist	ok	126.2	16.4	0	205.3	2.73
+E1	basic/tmr	pr1927	ok	456.0	95.8	2280	91200	46
+E1	blocks/apbregs	graph	ok	7992.3	634.1	3828.82	49501.4	149.169
+E1	blocks/apbregs	netlist	ok	8882.4	273.4	3828.82	16466.2	172.358
+E1	blocks/apbregs	pr1927	ok	12580.0	1384.5	104903	4.19614e+06	1258
+E1	blocks/axiram	graph	ok	37095.4	3453.9	7559.75	340102	731.164
+E1	blocks/axiram	netlist	ok	48543.9	437.9	7559.75	82936.6	1010.8
+E1	blocks/axiram	pr1927	ok	79386.0	8492.6	552880	2.21152e+07	7939
+E1	blocks/beamformer	graph	failed: exit 6					
+E1	blocks/beamformer	netlist	failed: exit 6					
+E1	blocks/beamformer	pr1927	failed: exit 6					
+E1	blocks/chiplink	graph	failed: error: combinational loop through Verilog::$root.chiplink.u_rx.u_fifo.do_wr					
+E1	blocks/chiplink	netlist	ok	3919.6	849.1	1736.75	7291.06	75.815
+E1	blocks/chiplink	pr1927	ok	10503.7	4782.5	120108	4.80432e+06	1050
+E1	blocks/codec8b10b	graph	ok	1187.9	1682.8	76.141	3063.44	27.137
+E1	blocks/codec8b10b	netlist	ok	662.3	531.8	76.141	1117.21	13.929
+E1	blocks/codec8b10b	pr1927	ok	2220.6	2004.8	24803	992120	222
+E1	blocks/colorconv	graph	ok	13659.6	4799.3	188.541	56545.3	307.826
+E1	blocks/colorconv	netlist	ok	196.5	120.6	94.27	369.28	3.763
+E1	blocks/colorconv	pr1927	ok	251.8	4651.4	113	4500	25
+E1	blocks/conv2d	graph	ok	268187.7	7817.2	30532.7	2.68619e+06	5362.58
+E1	blocks/conv2d	netlist	ok	315776.9	997.1	30532.7	529660	6671.27
+E1	blocks/conv2d	pr1927	ok	427196.5	109757.3	3.00168e+06	1.20067e+08	42720
+E1	blocks/crc32	graph	failed: exit 6					
+E1	blocks/crc32	netlist	failed: exit 6					
+E1	blocks/crc32	pr1927	failed: exit 6					
+E1	blocks/ddc	graph	ok	32875.7	18385.5	4169.65	98722.4	723.769
+E1	blocks/ddc	netlist	ok	0.0	0.0	0	0	0
+E1	blocks/ddc	pr1927	ok	242247.4	9712.5	2.22692e+06	8.90769e+07	24225
+E1	blocks/dds	graph	ok	17789.6	6779.0	177.663	34403.5	411.412
+E1	blocks/dds	netlist	ok	9945.6	2401.4	90.645	16222.3	214.602
+E1	blocks/dds	pr1927	ok	587.5	916.9	5725	229000	59
+E1	blocks/dma	graph	ok	25250.1	1474.2	9528.55	120951	478.558
+E1	blocks/dma	netlist	ok	1507.2	421.4	529.364	2730.55	29.866
+E1	blocks/dma	pr1927	ok	18482.5	1482.5	93208	3.72833e+06	1848
+E1	blocks/ethmac	graph	ok	6334.7	1506.9	652.64	28422.2	137.279
+E1	blocks/ethmac	netlist	ok	2121.8	432.4	536.615	3733.9	43.119
+E1	blocks/ethmac	pr1927	ok	11242.1	1704.5	70669	2.82675e+06	1124
+E1	blocks/fft	graph	failed: error: unsupported state constraint with left-hand side if					
+E1	blocks/fft	netlist	ok	110859.9	3465.0	8103.62	184567	2355.55
+E1	blocks/fft	pr1927	ok	314776.7	14002.0	2.9213e+06	1.16852e+08	31478
+E1	blocks/firfix	graph	ok	12851.1	5272.8	1044.22	50086.8	281.548
+E1	blocks/firfix	netlist	ok	8382.4	1057.4	1044.22	14183.4	175.888
+E1	blocks/firfix	pr1927	ok	137268.1	8154.1	884846	3.53938e+07	13727
+E1	blocks/firprog	graph	ok	41390.7	5939.4	1044.22	171935	928.257
+E1	blocks/firprog	netlist	ok	42921.8	1709.8	1044.22	70354.4	922.785
+E1	blocks/firprog	pr1927	ok	137268.1	8154.1	884846	3.53938e+07	13727
+E1	blocks/fpu64	graph	ok	81394.5	4854.0	2527.17	197346	1707.19
+E1	blocks/fpu64	netlist	ok	37533.4	2384.2	2527.17	62374	798.625
+E1	blocks/fpu64	pr1927	ok	62369.7	5525.6	644691	2.57876e+07	6237
+E1	blocks/gearbox66	graph	timeout		
+E1	blocks/gearbox66	netlist	ok	696.5	256.9	333.572	1308.8	13.344
+E1	blocks/gearbox66	pr1927	ok	23899.8	1362.2	144903	5.79613e+06	2390
+E1	blocks/hamming	graph	failed: exit 6					
+E1	blocks/hamming	netlist	failed: exit 6					
+E1	blocks/hamming	pr1927	failed: exit 6					
+E1	blocks/hft	graph	ok	395504.3	2991.0	185723	2.44635e+06	7400.23
+E1	blocks/hft	netlist	ok	2343.9	81.5	1860.03	4793.51	41.105
+E1	blocks/hft	pr1927	ok	435278.6	13880.2	3.31041e+06	1.32416e+08	43528
+E1	blocks/hmac	graph	failed: file logikbench/logikbench/benchmarks/blocks/hmac/rtl/hmac.sv line 9611: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'action_mask_t'					
+E1	blocks/hmac	netlist	failed: file logikbench/logikbench/benchmarks/blocks/hmac/rtl/hmac.sv line 9611: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'action_mask_t'					
+E1	blocks/hmac	pr1927	failed: file logikbench/logikbench/benchmarks/blocks/hmac/rtl/hmac.sv line 9611: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'action_mask_t'					
+E1	blocks/huffman	graph	ok	12095.9	7270.2	380.707	25715.6	276.19
+E1	blocks/huffman	netlist	ok	4311.5	2538.5	290.062	7164.85	91.74
+E1	blocks/huffman	pr1927	ok	9592.4	8415.3	50961	2.03844e+06	959
+E1	blocks/i2c	graph	failed: file logikbench/logikbench/benchmarks/blocks/i2c/rtl/i2c.sv line 7630: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'					
+E1	blocks/i2c	netlist	failed: file logikbench/logikbench/benchmarks/blocks/i2c/rtl/i2c.sv line 7630: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'					
+E1	blocks/i2c	pr1927	failed: file logikbench/logikbench/benchmarks/blocks/i2c/rtl/i2c.sv line 7630: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'					
+E1	blocks/ialu	graph	ok	4189.5	4709.8	0	13896.1	92.482
+E1	blocks/ialu	netlist	ok	1834.8	1436.5	0	2983.96	39.677
+E1	blocks/ialu	pr1927	ok	144.6	50.0	1600	64000	14
+E1	blocks/jesd204b	graph	failed: error: combinational loop through Verilog::$root.jesd204b.u_tx.g_lane[0].u_scr.st[1]					
+E1	blocks/jesd204b	netlist	ok	10750.7	755.9	3216.07	19181.2	215.914
+E1	blocks/jesd204b	pr1927	ok	28268.2	3624.7	199819	7.99277e+06	2827
+E1	blocks/lfsr	graph	ok	1707.2	230.0	0	10399.5	38.876
+E1	blocks/lfsr	netlist	ok	37.9	21.9	0	61.59	0.819
+E1	blocks/lfsr	pr1927	ok	3802.5	125.6	22815	912600	380
+E1	blocks/linkmap	graph	ok	2860.6	26.7	1856.4	5873.96	53.354
+E1	blocks/linkmap	netlist	ok	2517.2	81.5	1856.4	5073.59	44.873
+E1	blocks/linkmap	pr1927	ok	3851.7	91.5	71695	2.8678e+06	385
+E1	blocks/lpddr5	graph	timeout		
+E1	blocks/lpddr5	netlist	timeout		
+E1	blocks/lpddr5	pr1927	timeout		
+E1	blocks/median3x3	graph	ok	262791.0	7817.2	30532.7	2.66132e+06	5238.94
+E1	blocks/median3x3	netlist	ok	311642.9	1501.5	30532.7	522937	6581.87
+E1	blocks/median3x3	pr1927	ok	414194.9	109792.3	2.87634e+06	1.15054e+08	41419
+E1	blocks/openpiton	graph	ok	26094.4	1420.4	8139.88	123783	519.822
+E1	blocks/openpiton	netlist	ok	1207.1	454.3	76.141	2003.22	25.71
+E1	blocks/openpiton	pr1927	ok	25886.9	1974.4	125721	5.02886e+06	2589
+E1	blocks/padring	graph	failed: error: unsupported state constraint: verilog-primitive-module					
+E1	blocks/padring	netlist	failed: exit -6					
+E1	blocks/padring	pr1927	ok	53121385.1	32696.3	1.13298e+07	4.53192e+08	5.31214e+06
+E1	blocks/picorv32	graph	ok	40686.8	3414.9	7675.78	146005	830.641
+E1	blocks/picorv32	netlist	ok	33402.7	2499.3	7570.63	58318.4	683.327
+E1	blocks/picorv32	pr1927	ok	55597.2	3196.0	427293	1.70917e+07	5560
+E1	blocks/reedsolomon	graph	ok	108540.1	2925.9	28484.1	264831	2186.51
+E1	blocks/reedsolomon	netlist	ok	124288.1	2088.1	28447.9	217143	2541.15
+E1	blocks/reedsolomon	pr1927	ok	1272729.8	18607.0	3.205e+06	1.282e+08	127273
+E1	blocks/sad8x8	graph	ok	12763.2	3060.8	54.387	58154.7	300.422
+E1	blocks/sad8x8	netlist	ok	10214.4	1716.1	54.387	16640.3	220.601
+E1	blocks/sad8x8	pr1927	ok	1255800.9	6590.7	2.32648e+06	9.30593e+07	125580
+E1	blocks/serv	graph	ok	1760.8	998.0	591.002	4073.68	34.967
+E1	blocks/serv	netlist	ok	781.0	196.6	406.087	1484.53	14.798
+E1	blocks/serv	pr1927	ok	2419.9	805.3	21121	844840	242
+E1	blocks/sha256	graph	ok	27419.7	5405.2	6548.16	82505.2	560.81
+E1	blocks/sha256	netlist	ok	21806.2	3985.1	6548.16	38919.4	437.824
+E1	blocks/sha256	pr1927	ok	41206.6	7065.3	330394	1.32158e+07	4121
+E1	blocks/sobel3x3	graph	ok	262151.6	7817.2	30532.7	2.66056e+06	5226.15
+E1	blocks/sobel3x3	netlist	ok	311166.0	651.7	30532.7	522161	6571.56
+E1	blocks/sobel3x3	pr1927	ok	414055.9	109719.3	2.87913e+06	1.15165e+08	41406
+E1	blocks/spi	graph	failed: file logikbench/logikbench/benchmarks/blocks/spi/rtl/spi.sv line 8347: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'					
+E1	blocks/spi	netlist	failed: file logikbench/logikbench/benchmarks/blocks/spi/rtl/spi.sv line 8347: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'					
+E1	blocks/spi	pr1927	failed: file logikbench/logikbench/benchmarks/blocks/spi/rtl/spi.sv line 8347: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'					
+E1	blocks/uart	graph	failed: file logikbench/logikbench/benchmarks/blocks/uart/rtl/uart.sv line 6211: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'					
+E1	blocks/uart	netlist	failed: file logikbench/logikbench/benchmarks/blocks/uart/rtl/uart.sv line 6211: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'					
+E1	blocks/uart	pr1927	failed: file logikbench/logikbench/benchmarks/blocks/uart/rtl/uart.sv line 6211: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'					
+E1	blocks/umicross	graph	ok	2749.7	437.1	14.503	5735.44	62.662
+E1	blocks/umicross	netlist	ok	4.7	16.4	0	7.7	0.102
+E1	blocks/umicross	pr1927	ok	465.7	476.0	3211	128440	47
+E1	blocks/umidev	graph	ok	3259.0	466.9	1515.58	6905.58	61.723
+E1	blocks/umidev	netlist	ok	2925.0	114.4	1515.58	5556.78	55.445
+E1	blocks/umidev	pr1927	ok	9403.6	350.4	79298	3.17192e+06	940
+E1	blocks/umiregs	graph	ok	9315.4	634.1	4532.23	52325.9	173.242
+E1	blocks/umiregs	netlist	ok	10004.2	284.4	4532.23	18661.9	192.995
+E1	blocks/umiregs	pr1927	ok	14162.8	1416.2	119299	4.77197e+06	1416
+E1	blocks/viterbi	graph	timeout		
+E1	blocks/viterbi	netlist	timeout		
+E1	blocks/viterbi	pr1927	timeout		
+E1	blocks/wordalign	graph	ok	1820.2	1658.4	315.443	4768.35	37.891
+E1	blocks/wordalign	netlist	ok	1207.3	443.4	315.443	2129.86	24.482
+E1	blocks/wordalign	pr1927	ok	3323.6	2261.2	29410	1.17641e+06	332
+E1	memory/cache	graph	ok	234952.1	806.0	112787	1.48201e+06	4374.96
+E1	memory/cache	netlist	ok	264321.8	766.8	112787	489394	5134.94
+E1	memory/cache	pr1927	ok	256623.0	7360.5	1.8781e+06	7.51242e+07	25662
+E1	memory/cam	graph	ok	9234.4	1028.2	3850.58	56092.2	178.314
+E1	memory/cam	netlist	ok	9107.9	531.1	3850.58	16844.5	177.123
+E1	memory/cam	pr1927	ok	13523.8	574.4	110300	4.412e+06	1352
+E1	memory/fifoasync	graph	ok	8648.7	873.0	3973.86	51226.3	163.076
+E1	memory/fifoasync	netlist	ok	10608.9	202.1	3973.86	19350.6	208.946
+E1	memory/fifoasync	pr1927	ok	8388.3	1950.2	41107	1.64428e+06	839
+E1	memory/fifosync	graph	ok	8506.2	874.5	3843.33	50926.5	160.593
+E1	memory/fifosync	netlist	ok	10428.8	207.6	3843.33	18988.7	205.723
+E1	memory/fifosync	pr1927	ok	7833.5	1949.1	37772	1.51088e+06	783
+E1	memory/ramasync	graph	ok	31231.8	868.8	14851.2	196344	582.838
+E1	memory/ramasync	netlist	ok	35400.0	185.7	14851.2	65409.3	689.021
+E1	memory/ramasync	pr1927	ok	36613.1	646.7	323520	1.29408e+07	3661
+E1	memory/rambit	graph	failed: exit 6					
+E1	memory/rambit	netlist	failed: exit 6					
+E1	memory/rambit	pr1927	failed: exit 6					
+E1	memory/rambyte	graph	ok	51611.6	2235.3	14909.2	372521	989.176
+E1	memory/rambyte	netlist	ok	56651.6	262.4	14909.2	100001	1148.28
+E1	memory/rambyte	pr1927	ok	86816.6	14535.3	654137	2.61655e+07	8682
+E1	memory/raminit	graph	ok	125798.0	1122.3	59462.8	786994	2351.35
+E1	memory/raminit	netlist	ok	187304.9	196.6	59462.8	335997	3744.13
+E1	memory/raminit	pr1927	ok	163426.3	27504.0	1.17703e+06	4.70811e+07	16343
+E1	memory/ramsdp	graph	failed: exit 6					
+E1	memory/ramsdp	netlist	failed: exit 6					
+E1	memory/ramsdp	pr1927	failed: exit 6					
+E1	memory/ramsp	graph	failed: exit 6					
+E1	memory/ramsp	netlist	failed: exit 6					
+E1	memory/ramsp	pr1927	failed: exit 6					
+E1	memory/ramspnc	graph	ok	125827.8	1171.5	59462.8	787064	2351.92
+E1	memory/ramspnc	netlist	ok	161873.8	207.6	59462.8	294638	3194.19
+E1	memory/ramspnc	pr1927	ok	163305.4	27533.5	1.17559e+06	4.70235e+07	16331
+E1	memory/ramsprf	graph	ok	125798.0	1122.3	59462.8	786994	2351.35
+E1	memory/ramsprf	netlist	ok	161854.8	196.6	59462.8	294608	3193.78
+E1	memory/ramsprf	pr1927	ok	163281.7	27504.0	1.17543e+06	4.70171e+07	16328
+E1	memory/ramspwf	graph	ok	125827.8	1171.5	59462.8	787064	2351.92
+E1	memory/ramspwf	netlist	ok	161873.8	207.6	59462.8	294638	3194.19
+E1	memory/ramspwf	pr1927	ok	163305.4	27533.5	1.17559e+06	4.70235e+07	16331
+E1	memory/ramtdp	graph	failed: CONVERSION ERROR					
+E1	memory/ramtdp	netlist	failed: CONVERSION ERROR					
+E1	memory/ramtdp	pr1927	failed: CONVERSION ERROR					
+E1	memory/ramtdpdc	graph	failed: CONVERSION ERROR					
+E1	memory/ramtdpdc	netlist	failed: CONVERSION ERROR					
+E1	memory/ramtdpdc	pr1927	failed: CONVERSION ERROR					
+E1	memory/regfile	graph	ok	26729.8	1067.4	7425.6	186101	525.435
+E1	memory/regfile	netlist	ok	32967.0	300.8	7425.6	57533.2	674.652
+E1	memory/regfile	pr1927	ok	32227.9	999.3	247504	9.90017e+06	3223
+E1	memory/rom	graph	ok	17787.6	1122.3	58.012	31581.3	388.621
+E1	memory/rom	netlist	ok	129133.3	196.6	59462.8	241393	2486.2
+E1	memory/rom	pr1927	ok	63148.0	27487.1	517503	2.07001e+07	6315
+E2	blocks/adder	graph	ok	309.9	1025.7	116.025	1097.41	6.446
+E2	blocks/adder	netlist	ok	278.8	509.9	116.025	514.7	5.432
+E2	blocks/adder	pr1927	ok	336.6	1138.2	4000	160000	34
+E2	blocks/aes_round	graph	ok	2383.4	312.9	464.1	7077.8	51.285
+E2	blocks/aes_round	netlist	ok	1696.0	87.7	464.1	3003.21	34.286
+E2	blocks/aes_round	pr1927	ok	2286.0	198.2	15303	612130	229
+E2	blocks/const_index	graph	ok	325.6	81.5	261.056	667.28	5.696
+E2	blocks/const_index	netlist	ok	72.4	81.5	58.012	148.28	1.266
+E2	blocks/const_index	pr1927	ok	415.0	70.2	4160	166400	42
+E2	blocks/counter	graph	ok	0.0	0.0	0	0	0
+E2	blocks/counter	netlist	ok	0.0	0.0	0	0	0
+E2	blocks/counter	pr1927	ok	228.2	1138.2	2800	112000	23
+E2	blocks/divider	graph	ok	7113.7	29901.0	232.05	34075.7	163.937
+E2	blocks/divider	netlist	ok	5980.5	1189.7	232.05	9848.47	128.13
+E2	blocks/divider	pr1927	ok	9177.6	26838.9	141440	5.6576e+06	918
+E2	blocks/multiplier	graph	ok	2442.7	1683.4	116.025	10007.2	54.356
+E2	blocks/multiplier	netlist	ok	1243.0	784.0	116.025	2082.71	26.282
+E2	blocks/multiplier	pr1927	ok	1783.0	1449.0	40000	1.6e+06	178
+E2	blocks/mux	graph	ok	99.7	278.3	29.006	223.24	1.9
+E2	blocks/mux	netlist	ok	75.6	125.4	29.006	138.3	1.486
+E2	blocks/mux	pr1927	ok	123.4	192.9	980	39200	12
+E2	blocks/parity	graph	ok	49.7	217.5	3.626	284.52	1.108
+E2	blocks/parity	netlist	ok	41.2	339.9	3.626	68.93	0.872
+E2	blocks/parity	pr1927	ok	36.5	100.1	290	11600	4
+E2	blocks/shifter	graph	ok	410.0	293.4	116.025	1237.13	8.187
+E2	blocks/shifter	netlist	ok	309.6	81.5	116.025	564.75	6.098
+E2	blocks/shifter	pr1927	ok	388.1	361.8	2000	80000	39
+E2	blocks/struct_mux	graph	ok	987.4	130.7	696.15	2056.87	17.489
+E2	blocks/struct_mux	netlist	ok	944.0	92.5	696.15	1902.6	16.827
+E2	blocks/struct_mux	pr1927	ok	1571.8	116.7	28160	1.1264e+06	157
+E2	designs/alu	graph	ok	1771.1	1270.0	119.651	5738.18	37.728
+E2	designs/alu	netlist	ok	1170.6	614.1	119.651	1966.87	24.697
+E2	designs/alu	pr1927	ok	885.1	1239.9	7324	292960	89
+E2	designs/array_sorter	graph	ok	1020.1	1823.0	290.062	4810.3	20.906
+E2	designs/array_sorter	netlist	ok	874.2	1128.7	290.062	1574.83	17.411
+E2	designs/array_sorter	pr1927	ok	2646.8	2096.2	21850	874000	265
+E2	designs/bf16_fma	graph	ok	1589.8	3973.6	58.012	5919.45	35.533
+E2	designs/bf16_fma	netlist	ok	944.6	740.2	58.012	1566.8	20.128
+E2	designs/bf16_fma	pr1927	ok	1155.4	3509.8	18668	746700	116
+E2	designs/comb_mux	graph	ok	44.7	98.4	0	104.04	0.862
+E2	designs/comb_mux	netlist	ok	28.4	21.9	0	46.19	0.614
+E2	designs/comb_mux	pr1927	ok	50.4	100.2	336	13440	5
+E2	designs/fir16	graph	ok	10979.9	5201.0	1044.22	44013.5	241.172
+E2	designs/fir16	netlist	ok	9620.0	947.8	1044.22	16196	202.65
+E2	designs/fir16	pr1927	ok	11189.8	5025.6	99600	3.984e+06	1119
+E2	designs/fir4	graph	ok	2914.4	3149.6	290.062	11524.5	63.692
+E2	designs/fir4	netlist	ok	2162.3	706.5	290.062	3669.56	45.264
+E2	designs/fir4	pr1927	ok	2441.6	2628.6	22000	880000	244
+E2	designs/float_to_int	graph	ok	2298.3	1323.0	518.487	5176.47	45.013
+E2	designs/float_to_int	netlist	ok	1629.7	618.8	518.487	2924.09	32.572
+E2	designs/float_to_int	pr1927	ok	1128.5	1294.3	4559	182380	113
+E2	designs/fp_adder	graph	ok	7610.9	1500.9	1004.34	19307.2	152.316
+E2	designs/fp_adder	netlist	ok	5296.6	618.8	1004.34	9143.94	109.364
+E2	designs/fp_adder	pr1927	ok	2680.6	1502.6	7535	301400	268
+E2	designs/fp_divider	graph	ok	11404.4	2411.2	1642.48	27436.5	224.345
+E2	designs/fp_divider	netlist	ok	7610.9	1030.0	1555.46	13198.5	156.571
+E2	designs/fp_divider	pr1927	ok	3174.9	2084.9	7463	298520	317
+E2	designs/fp_multiplier	graph	ok	12423.2	2934.3	1055.1	39227.4	259.648
+E2	designs/fp_multiplier	netlist	ok	7346.2	1380.9	1055.1	12504	153.425
+E2	designs/fp_multiplier	pr1927	ok	2466.4	2362.9	7126	285040	247
+E2	designs/fsm_datapath	graph	ok	511.2	692.7	123.277	1391.27	10.255
+E2	designs/fsm_datapath	netlist	ok	386.1	350.1	123.277	692.99	7.715
+E2	designs/fsm_datapath	pr1927	ok	329.0	669.7	2005	80190	33
+E2	designs/fsm_shared_mult	graph	ok	5244.7	2807.5	239.301	21265	116.397
+E2	designs/fsm_shared_mult	netlist	ok	2744.0	838.8	239.301	4588.79	58.104
+E2	designs/fsm_shared_mult	pr1927	ok	2042.8	2588.9	27784	1.11135e+06	204
+E2	designs/int_to_float	graph	ok	3024.7	1202.0	641.763	6968.76	58.944
+E2	designs/int_to_float	netlist	ok	2074.2	295.3	641.763	3712.04	41.549
+E2	designs/int_to_float	pr1927	ok	1369.1	1299.3	5221	208830	137
+E2	designs/large_array	graph	ok	62161.3	550.2	29818.4	391943	1157.71
+E2	designs/large_array	netlist	ok	70938.9	273.4	29818.4	131106	1380.45
+E2	designs/large_array	pr1927	ok	67782.7	6908.5	495118	1.98047e+07	6778
+E2	designs/pipe_mult	graph	ok	2732.1	1764.9	348.075	10600.3	59.419
+E2	designs/pipe_mult	netlist	ok	1532.4	865.5	348.075	2675.85	31.345
+E2	designs/pipe_mult	pr1927	ok	2072.3	1449.0	43200	1.728e+06	207
+E2	designs/regfile	graph	ok	9229.3	465.0	3944.85	51701.4	175.557
+E2	designs/regfile	netlist	ok	10759.3	273.4	3944.85	19579.9	212.348
+E2	designs/regfile	pr1927	ok	15775.6	1043.6	126087	5.04348e+06	1578
+E2	designs/riscv_pipe	graph	ok	12203.8	1156.4	4974.57	59696.5	234.651
+E2	designs/riscv_pipe	netlist	ok	13009.4	651.7	4945.56	23767.4	255.852
+E2	designs/riscv_pipe	pr1927	ok	18301.4	1251.0	151264	6.05058e+06	1830
+E2	designs/struct_packet	graph	ok	898.3	129.2	699.776	1875.41	15.847
+E2	designs/struct_packet	netlist	ok	887.2	92.5	696.15	1810.21	15.599
+E2	designs/struct_packet	pr1927	ok	1722.4	107.8	16310	652400	172
+E3	epfl/adder	graph	ok	1692.8	6822.6	0	3303.09	41.952
+E3	epfl/adder	netlist	ok	402.4	1398.1	0	654.4	8.702
+E3	epfl/adder	pr1927	ok	3753.0	9618.3	21315	852600	375
+E3	epfl/arbiter	graph	ok	18658.3	2322.9	0	36615.8	460.294
+E3	epfl/arbiter	netlist	ok	4670.5	477.0	0	7595.58	100.997
+E3	epfl/arbiter	pr1927	ok	40769.0	3704.0	233443	9.3377e+06	4077
+E3	epfl/bar	graph	ok	4574.7	318.1	0	9138.49	110.975
+E3	epfl/bar	netlist	ok	1316.1	65.8	0	2140.29	28.459
+E3	epfl/bar	pr1927	ok	9562.5	464.0	56152	2.2461e+06	956
+E3	epfl/cavlc	graph	ok	1049.1	427.2	0	2068.65	25.775
+E3	epfl/cavlc	netlist	ok	273.4	87.7	0	444.61	5.912
+E3	epfl/cavlc	pr1927	ok	2265.0	706.3	13058	522300	227
+E3	epfl/dec	graph	ok	327.7	71.9	0	677.1	7.735
+E3	epfl/dec	netlist	ok	119.9	16.4	0	195.04	2.593
+E3	epfl/dec	pr1927	ok	620.0	133.8	3860	154400	62
+E3	epfl/div	graph	ok	84508.2	116874.8	0	167130	2071.38
+E3	epfl/div	netlist	ok	22584.0	23970.1	0	36728.1	488.368
+E3	epfl/div	pr1927	ok	181028.0	182432.0	1.04826e+06	4.19303e+07	18103
+E3	epfl/hyp	graph	ok	337738.6	631083.2	0	662810	8331.52
+E3	epfl/hyp	netlist	ok	84555.4	135975.2	0	137512	1828.47
+E3	epfl/hyp	pr1927	ok	737935.5	895922.0	4.22552e+06	1.69021e+08	73794
+E3	epfl/i2c	graph	ok	1871.6	463.9	0	3729.42	45.533
+E3	epfl/i2c	netlist	ok	529.4	109.7	0	860.99	11.448
+E3	epfl/i2c	pr1927	ok	3935.0	818.0	23030	921200	394
+E3	epfl/int2float	graph	ok	374.0	410.5	0	742.33	9.13
+E3	epfl/int2float	netlist	ok	102.6	87.7	0	166.81	2.218
+E3	epfl/int2float	pr1927	ok	794.5	596.9	4623	184900	79
+E3	epfl/log2	graph	ok	46032.4	10702.8	0	91345.1	1125.21
+E3	epfl/log2	netlist	ok	12647.7	2434.3	0	20568.8	273.5
+E3	epfl/log2	pr1927	ok	97730.5	16916.0	568802	2.27521e+07	9773
+E3	epfl/max	graph	ok	4387.9	6038.2	0	8647.32	107.652
+E3	epfl/max	netlist	ok	1130.2	1573.5	0	1838.11	24.441
+E3	epfl/max	pr1927	ok	9507.0	10468.4	54697	2.1879e+06	951
+E3	epfl/memctrl	graph	ok	68681.7	2920.8	0	135967	1681.26
+E3	epfl/memctrl	netlist	ok	18476.8	625.0	0	30048.7	399.553
+E3	epfl/memctrl	pr1927	ok	146815.5	4298.0	851167	3.40467e+07	14682
+E3	epfl/multiplier	graph	ok	41265.1	7089.9	0	81291	1014.8
+E3	epfl/multiplier	netlist	ok	10676.0	1502.2	0	17362.2	230.863
+E3	epfl/multiplier	pr1927	ok	89287.0	11306.0	514090	2.05636e+07	8929
+E3	epfl/priority	graph	ok	1534.8	6644.2	0	3013.81	37.834
+E3	epfl/priority	netlist	ok	385.8	1370.7	0	627.46	8.343
+E3	epfl/priority	pr1927	ok	3349.5	9334.0	19192	767700	335
+E3	epfl/router	graph	ok	380.9	661.4	0	752.99	9.339
+E3	epfl/router	netlist	ok	101.4	296.1	0	164.88	2.192
+E3	epfl/router	pr1927	ok	817.0	1452.0	4728	189100	82
+E3	epfl/sin	graph	ok	7615.0	4734.3	0	15152	185.683
+E3	epfl/sin	netlist	ok	2136.6	1233.6	0	3474.76	46.203
+E3	epfl/sin	pr1927	ok	16055.0	7700.0	93815	3.7526e+06	1606
+E3	epfl/sqrt	graph	ok	34931.1	131764.9	0	69422.1	852.66
+E3	epfl/sqrt	netlist	ok	9711.8	27731.2	0	15794.2	210.013
+E3	epfl/sqrt	pr1927	ok	73872.0	192956.0	430905	1.72362e+07	7387
+E3	epfl/square	graph	ok	28715.2	6668.6	0	56446.5	707.382
+E3	epfl/square	netlist	ok	7292.0	1370.7	0	11858.8	157.685
+E3	epfl/square	pr1927	ok	62480.0	10478.0	358610	1.43444e+07	6248
+E3	epfl/voter	graph	ok	21533.2	1862.6	0	42291.2	530.873
+E3	epfl/voter	netlist	ok	5427.5	383.8	0	8826.76	117.368
+E3	epfl/voter	pr1927	ok	46956.0	2882.0	269175	1.0767e+07	4696
+E3	iscas85/c1355	graph	ok	572.4	587.0	0	1178.49	13.544
+E3	iscas85/c1355	netlist	ok	204.4	142.5	0	332.33	4.419
+E3	iscas85/c1355	pr1927	ok	997.2	555.1	6158	246300	100
+E3	iscas85/c17	graph	ok	6.4	67.8	0	13.22	0.15
+E3	iscas85/c17	netlist	ok	2.4	16.4	0	3.85	0.051
+E3	iscas85/c17	pr1927	ok	12.0	110.1	75	3000	1
+E3	iscas85/c1908	graph	ok	648.0	647.1	0	1313.72	15.55
+E3	iscas85/c1908	netlist	ok	241.8	180.9	0	393.28	5.229
+E3	iscas85/c1908	pr1927	ok	1240.7	745.4	7246	289850	124
+E3	iscas85/c2670	graph	ok	894.3	734.6	0	1819.48	21.185
+E3	iscas85/c2670	netlist	ok	345.6	137.1	0	562.02	7.473
+E3	iscas85/c2670	pr1927	ok	1733.9	644.4	10243	409700	173
+E3	iscas85/c3540	graph	ok	1318.8	1038.4	0	2715.17	30.63
+E3	iscas85/c3540	netlist	ok	478.5	219.3	0	778.23	10.348
+E3	iscas85/c3540	pr1927	ok	2120.5	889.3	12726	509050	212
+E3	iscas85/c432	graph	ok	215.5	604.6	0	479.14	5.069
+E3	iscas85/c432	netlist	ok	83.6	230.3	0	136.01	1.809
+E3	iscas85/c432	pr1927	ok	281.1	373.6	1691	67650	28
+E3	iscas85/c499	graph	ok	278.8	414.6	0	796.18	6.418
+E3	iscas85/c499	netlist	ok	163.3	109.7	0	265.61	3.532
+E3	iscas85/c499	pr1927	ok	325.2	272.8	2017	80700	33
+E3	iscas85/c5315	graph	ok	2272.2	994.0	0	4660.77	53.224
+E3	iscas85/c5315	netlist	ok	794.9	191.9	0	1292.77	17.19
+E3	iscas85/c5315	pr1927	ok	3306.7	1094.0	19593	783700	331
+E3	iscas85/c6288	graph	ok	2553.6	4967.6	0	5409.34	55.171
+E3	iscas85/c6288	netlist	ok	927.9	657.9	0	1508.98	20.065
+E3	iscas85/c6288	pr1927	ok	4816.0	2899.8	30040	1.2016e+06	482
+E3	iscas85/c7552	graph	ok	2600.9	773.3	0	5308.43	61.366
+E3	iscas85/c7552	netlist	ok	994.1	159.0	0	1616.76	21.498
+E3	iscas85/c7552	pr1927	ok	5181.8	932.0	30755	1.2302e+06	518
+E3	iscas85/c880	graph	ok	392.1	610.2	0	806.23	9.142
+E3	iscas85/c880	netlist	ok	133.3	131.6	0	216.85	2.883
+E3	iscas85/c880	pr1927	ok	644.2	507.7	3910	156400	64
+E3	iscas89/s1196	graph	ok	658.6	587.0	65.264	1350.52	14.828
+E3	iscas89/s1196	netlist	ok	232.9	169.2	65.264	413.18	4.7
+E3	iscas89/s1196	pr1927	ok	607.5	495.2	4062	162500	61
+E3	iscas89/s1238	graph	ok	687.9	601.7	65.264	1421.44	15.372
+E3	iscas89/s1238	netlist	ok	252.2	180.2	65.264	444.62	5.118
+E3	iscas89/s1238	pr1927	ok	608.8	479.3	4095	163800	61
+E3	iscas89/s13207	graph	ok	7934.5	1096.6	2273.36	15691	175.339
+E3	iscas89/s13207	netlist	ok	1692.7	251.5	1055.1	3309.63	31.169
+E3	iscas89/s13207	pr1927	ok	14229.7	1286.0	94459	3.77835e+06	1423
+E3	iscas89/s1423	graph	ok	880.5	1650.3	268.308	1814.9	18.321
+E3	iscas89/s1423	netlist	ok	309.8	350.1	206.669	612.95	5.635
+E3	iscas89/s1423	pr1927	ok	1521.9	1285.5	10836	433450	152
+E3	iscas89/s1488	graph	ok	825.7	482.1	21.755	1705.85	18.898
+E3	iscas89/s1488	netlist	ok	176.3	147.3	21.755	298.12	3.699
+E3	iscas89/s1488	pr1927	ok	600.2	362.5	3786	151450	60
+E3	iscas89/s15850	graph	ok	8707.0	1376.2	1910.79	17221.2	196.72
+E3	iscas89/s15850	netlist	ok	1059.7	235.0	605.505	2043.02	19.798
+E3	iscas89/s15850	pr1927	ok	16529.2	1766.0	105316	4.21265e+06	1653
+E3	iscas89/s27	graph	ok	23.1	267.3	10.877	47.64	0.452
+E3	iscas89/s27	netlist	ok	15.9	103.4	10.877	31.65	0.289
+E3	iscas89/s27	pr1927	ok	31.1	165.4	258	10300	3
+E3	iscas89/s298	graph	ok	203.8	325.1	50.761	418.48	4.343
+E3	iscas89/s298	netlist	ok	27.1	81.5	21.755	55.61	0.475
+E3	iscas89/s298	pr1927	ok	239.4	224.8	1743	69700	24
+E3	iscas89/s344	graph	ok	207.7	509.1	54.387	423.33	4.463
+E3	iscas89/s344	netlist	ok	52.1	92.5	39.884	105.8	0.921
+E3	iscas89/s344	pr1927	ok	343.0	425.3	2365	94600	34
+E3	iscas89/s349	graph	ok	209.9	509.1	54.387	428.21	4.505
+E3	iscas89/s349	netlist	ok	52.1	92.5	39.884	105.8	0.921
+E3	iscas89/s349	pr1927	ok	346.0	425.4	2387	95500	35
+E3	iscas89/s35932	graph	ok	21914.7	598.3	6265.35	44817.4	470.911
+E3	iscas89/s35932	netlist	ok	2316.2	158.3	1624.35	4624.17	41.721
+E3	iscas89/s35932	pr1927	ok	37534.6	686.0	265530	1.06212e+07	3753
+E3	iscas89/s382	graph	ok	278.5	434.6	76.141	571.8	5.844
+E3	iscas89/s382	netlist	ok	27.1	81.5	21.755	55.61	0.475
+E3	iscas89/s382	pr1927	ok	337.6	231.6	2483	99300	34
+E3	iscas89/s38417	graph	ok	21737.0	974.2	5670.72	43425.8	478.675
+E3	iscas89/s38417	netlist	ok	850.0	158.3	609.131	1703.91	15.244
+E3	iscas89/s38417	pr1927	ok	43826.3	1064.0	284935	1.13974e+07	4383
+E3	iscas89/s38584	graph	ok	22321.1	941.6	5170.36	45581.7	484.711
+E3	iscas89/s38584	netlist	ok	3121.9	256.9	1925.29	6093.35	57.595
+E3	iscas89/s38584	pr1927	ok	36395.3	1196.0	247776	9.91105e+06	3640
+E3	iscas89/s386	graph	ok	240.5	347.4	21.755	492.21	5.49
+E3	iscas89/s386	netlist	ok	59.1	136.3	21.755	107.57	1.166
+E3	iscas89/s386	pr1927	ok	186.0	259.4	1246	49850	19
+E3	iscas89/s400	graph	ok	287.5	434.6	76.141	591.11	6.05
+E3	iscas89/s400	netlist	ok	27.1	81.5	21.755	55.61	0.475
+E3	iscas89/s400	pr1927	ok	345.3	231.8	2536	101450	35
+E3	iscas89/s420	graph	ok	272.4	402.6	58.012	558.94	5.869
+E3	iscas89/s420	netlist	ok	105.5	141.8	58.012	202.18	1.982
+E3	iscas89/s420	pr1927	ok	262.7	265.6	1919	76750	26
+E3	iscas89/s444	graph	ok	304.6	443.1	76.141	624.64	6.488
+E3	iscas89/s444	netlist	ok	27.1	81.5	21.755	55.61	0.475
+E3	iscas89/s444	pr1927	ok	386.3	268.5	2774	110950	39
+E3	iscas89/s510	graph	ok	270.8	402.9	21.755	560.02	6.053
+E3	iscas89/s510	netlist	ok	55.9	125.4	21.755	102.44	1.097
+E3	iscas89/s510	pr1927	ok	344.8	283.5	2231	89250	34
+E3	iscas89/s526	graph	ok	371.6	325.1	76.141	767.4	7.982
+E3	iscas89/s526	netlist	ok	27.1	81.5	21.755	55.61	0.475
+E3	iscas89/s526	pr1927	ok	388.6	227.9	2816	112650	39
+E3	iscas89/s5378	graph	ok	3024.2	750.9	649.015	6099.83	65.317
+E3	iscas89/s5378	netlist	ok	961.2	185.7	474.977	1813.95	18.34
+E3	iscas89/s5378	pr1927	ok	4046.9	512.0	26797	1.0719e+06	405
+E3	iscas89/s641	graph	ok	374.3	786.7	68.89	732.43	8.672
+E3	iscas89/s641	netlist	ok	124.2	207.6	68.89	238.32	2.331
+E3	iscas89/s641	pr1927	ok	511.6	1221.4	3237	129500	51
+E3	iscas89/s713	graph	ok	405.1	934.7	68.89	799.74	9.357
+E3	iscas89/s713	netlist	ok	123.8	207.6	68.89	237.68	2.322
+E3	iscas89/s713	pr1927	ok	542.5	1252.8	3462	138500	54
+E3	iscas89/s820	graph	ok	489.2	402.6	18.129	1020.48	10.937
+E3	iscas89/s820	netlist	ok	75.5	136.3	18.129	132.31	1.539
+E3	iscas89/s820	pr1927	ok	377.2	254.0	2410	96400	38
+E3	iscas89/s832	graph	ok	500.9	402.6	18.129	1045.72	11.194
+E3	iscas89/s832	netlist	ok	75.5	136.3	18.129	132.31	1.539
+E3	iscas89/s832	pr1927	ok	377.8	254.0	2425	97000	38
+E3	iscas89/s838	graph	ok	557.5	493.0	116.025	1144.62	12.026
+E3	iscas89/s838	netlist	ok	214.1	163.7	116.025	409.49	4.033
+E3	iscas89/s838	pr1927	ok	531.8	353.2	3874	154950	53
+E3	iscas89/s9234	graph	ok	2627.8	860.9	525.738	5185.75	59.851
+E3	iscas89/s9234	netlist	ok	166.6	174.7	105.148	326.51	3.062
+E3	iscas89/s9234	pr1927	ok	9564.3	1268.0	58486	2.33945e+06	956
+E3	iscas89/s953	graph	ok	545.6	492.4	105.148	1122.12	11.815
+E3	iscas89/s953	netlist	ok	104.0	81.5	83.393	213.16	1.82
+E3	iscas89/s953	pr1927	ok	858.1	368.3	5836	233450	86
+E3	koios/attention_layer	graph	failed: CONVERSION ERROR					
+E3	koios/attention_layer	netlist	failed: CONVERSION ERROR					
+E3	koios/attention_layer	pr1927	failed: CONVERSION ERROR					
+E3	koios/bwave_like_fixed_small	graph	failed: CONVERSION ERROR					
+E3	koios/bwave_like_fixed_small	netlist	failed: CONVERSION ERROR					
+E3	koios/bwave_like_fixed_small	pr1927	failed: CONVERSION ERROR					
+E3	koios/bwave_like_float_small	graph	failed: CONVERSION ERROR					
+E3	koios/bwave_like_float_small	netlist	failed: CONVERSION ERROR					
+E3	koios/bwave_like_float_small	pr1927	failed: CONVERSION ERROR					
+E3	koios/clstm_like_medium	graph	failed: CONVERSION ERROR					
+E3	koios/clstm_like_medium	netlist	failed: CONVERSION ERROR					
+E3	koios/clstm_like_medium	pr1927	failed: CONVERSION ERROR					
+E3	koios/clstm_like_small	graph	failed: CONVERSION ERROR					
+E3	koios/clstm_like_small	netlist	failed: CONVERSION ERROR					
+E3	koios/clstm_like_small	pr1927	failed: CONVERSION ERROR					
+E3	koios/conv_layer	graph	failed: CONVERSION ERROR					
+E3	koios/conv_layer	netlist	failed: CONVERSION ERROR					
+E3	koios/conv_layer	pr1927	failed: CONVERSION ERROR					
+E3	koios/conv_layer_hls	graph	failed: CONVERSION ERROR					
+E3	koios/conv_layer_hls	netlist	failed: CONVERSION ERROR					
+E3	koios/conv_layer_hls	pr1927	failed: CONVERSION ERROR					
+E3	koios/dla_like_medium	graph	failed: CONVERSION ERROR					
+E3	koios/dla_like_medium	netlist	failed: CONVERSION ERROR					
+E3	koios/dla_like_medium	pr1927	failed: CONVERSION ERROR					
+E3	koios/dla_like_small	graph	failed: CONVERSION ERROR					
+E3	koios/dla_like_small	netlist	failed: CONVERSION ERROR					
+E3	koios/dla_like_small	pr1927	failed: CONVERSION ERROR					
+E3	koios/dnnweaver	graph	failed: CONVERSION ERROR					
+E3	koios/dnnweaver	netlist	failed: CONVERSION ERROR					
+E3	koios/dnnweaver	pr1927	failed: CONVERSION ERROR					
+E3	koios/eltwise_layer	graph	failed: CONVERSION ERROR					
+E3	koios/eltwise_layer	netlist	failed: CONVERSION ERROR					
+E3	koios/eltwise_layer	pr1927	failed: CONVERSION ERROR					
+E3	koios/gemm_layer	graph	ok	2842441.2	2297.9	779691	7.87239e+06	58185.3
+E3	koios/gemm_layer	netlist	ok	61383.2	322.7	24463.1	112739	1201.39
+E3	koios/gemm_layer	pr1927	ok	3622233.7	3060.2	5.22111e+07	2.08845e+09	362223
+E3	koios/lstm	graph	ok	8349929.3	3837.5	3.16249e+06	4.5891e+07	162001
+E3	koios/lstm	netlist	ok	1572.4	794.2	264.682	2696.86	32.639
+E3	koios/lstm	pr1927	ok	79291978.7	5224.1	1.18061e+08	4.72243e+09	7.9292e+06
+E3	koios/reduction_layer	graph	ok	568868.2	794.3	254381	3.34977e+06	10751.1
+E3	koios/reduction_layer	netlist	ok	623608.0	11479.9	254381	1.14843e+06	12175.1
+E3	koios/reduction_layer	pr1927	ok	566319.5	1641.6	4.08926e+06	1.6357e+08	56632
+E3	koios/robot_rl	graph	ok	370600.4	2712.5	132747	1.73628e+06	7271.97
+E3	koios/robot_rl	netlist	ok	23577.0	849.1	4829.54	40892.1	484.968
+E3	koios/robot_rl	pr1927	ok	505299.1	3204.8	4.97201e+06	1.98881e+08	50530
+E3	koios/softmax	graph	ok	242880.7	3404.6	48534.7	664998	5156.32
+E3	koios/softmax	netlist	ok	1142.2	240.5	598.254	2173.32	21.619
+E3	koios/softmax	pr1927	ok	339048.9	5392.5	4.7528e+06	1.90112e+08	33905
+E3	koios/spmv	graph	failed: CONVERSION ERROR					
+E3	koios/spmv	netlist	failed: CONVERSION ERROR					
+E3	koios/spmv	pr1927	failed: CONVERSION ERROR					
+E3	koios/tpu_like_small_os	graph	failed: CONVERSION ERROR					
+E3	koios/tpu_like_small_os	netlist	failed: CONVERSION ERROR					
+E3	koios/tpu_like_small_os	pr1927	failed: CONVERSION ERROR					
+E3	koios/tpu_like_small_ws	graph	failed: CONVERSION ERROR					
+E3	koios/tpu_like_small_ws	netlist	failed: CONVERSION ERROR					
+E3	koios/tpu_like_small_ws	pr1927	failed: CONVERSION ERROR					
+E3	large/aes	graph	failed: file logikbench/logikbench/benchmarks/large/aes/rtl/aes.sv line 5160: syntax error, unexpected TOK_NON_TYPE_IDENTIFIER before 'LfsrIdxDw'					
+E3	large/aes	netlist	failed: file logikbench/logikbench/benchmarks/large/aes/rtl/aes.sv line 5160: syntax error, unexpected TOK_NON_TYPE_IDENTIFIER before 'LfsrIdxDw'					
+E3	large/aes	pr1927	failed: file logikbench/logikbench/benchmarks/large/aes/rtl/aes.sv line 5160: syntax error, unexpected TOK_NON_TYPE_IDENTIFIER before 'LfsrIdxDw'					
+E3	large/axicrossbar	graph	failed: error: combinational loop through Verilog::$root.axi_crossbar.axi_crossbar_wr_inst.s_ifaces[0].b_arb_inst.priority_encoder_inst.stage_valid					
+E3	large/axicrossbar	netlist	ok	1895.7	114.4	1044.22	3634.05	35.615
+E3	large/axicrossbar	pr1927	ok	79205739.9	5937.7	6.38445e+07	2.55378e+09	7.92057e+06
+E3	large/bitcoin	graph	ok	4853675.6	6352.5	989461	1.17441e+07	97651.5
+E3	large/bitcoin	netlist	ok	4204006.1	4292.2	989461	7.35918e+06	85813.6
+E3	large/bitcoin	pr1927	ok	11197552.6	8039.6	2.88587e+07	1.15435e+09	1.11976e+06
+E3	large/blackparrot	graph	failed: CONVERSION ERROR					
+E3	large/blackparrot	netlist	failed: CONVERSION ERROR					
+E3	large/blackparrot	pr1927	failed: CONVERSION ERROR					
+E3	large/coralnpu	graph	failed: file logikbench/logikbench/benchmarks/large/coralnpu/rtl/coralnpu.sv line 31961: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'fp_form					
+E3	large/coralnpu	netlist	failed: file logikbench/logikbench/benchmarks/large/coralnpu/rtl/coralnpu.sv line 31961: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'fp_form					
+E3	large/coralnpu	pr1927	failed: file logikbench/logikbench/benchmarks/large/coralnpu/rtl/coralnpu.sv line 31961: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'fp_form					
+E3	large/cva6	graph	failed: file logikbench/logikbench/benchmarks/large/cva6/rtl/cva6.sv line 8567: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'fp_format_e'					
+E3	large/cva6	netlist	failed: file logikbench/logikbench/benchmarks/large/cva6/rtl/cva6.sv line 8567: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'fp_format_e'					
+E3	large/cva6	pr1927	failed: file logikbench/logikbench/benchmarks/large/cva6/rtl/cva6.sv line 8567: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'fp_format_e'					
+E3	large/lz77	graph	failed: exit 6					
+E3	large/lz77	netlist	failed: exit 6					
+E3	large/lz77	pr1927	failed: exit 6					
+E3	large/nvdlafull	graph	failed: exit -6					
+E3	large/nvdlafull	netlist	failed: exit -6					
+E3	large/nvdlafull	pr1927	failed: exit -6					
+E3	large/nvdlasmall	graph	ok	9895675.8	13047.8	4.48834e+06	5.78626e+07	185954
+E3	large/nvdlasmall	netlist	ok	3244.5	147.3	1860.03	6258.22	60.581
+E3	large/nvdlasmall	pr1927	ok	11536656.6	34304.6	8.76453e+07	3.50581e+09	1.15367e+06
+E3	large/ofdm	graph	failed: error: unsupported state constraint with left-hand side if					
+E3	large/ofdm	netlist	ok	327991.3	3574.7	49662.3	559621	6836.88
+E3	large/ofdm	pr1927	ok	327016.1	14002.0	756946	3.02778e+07	32702
+E3	large/qr	graph	timeout		
+E3	large/qr	netlist	timeout		
+E3	large/qr	pr1927	timeout		
+E3	large/rocket	graph	failed: exit 6					
+E3	large/rocket	netlist	failed: exit 6					
+E3	large/rocket	pr1927	failed: exit 6					
+E3	large/sonicboom	graph	failed: exit 6					
+E3	large/sonicboom	netlist	failed: exit 6					
+E3	large/sonicboom	pr1927	failed: exit 6					
+E3	large/tpu	graph	failed: error: unsupported state constraint with left-hand side index					
+E3	large/tpu	netlist	ok	88276.7	1683.2	15253.7	151615	1830.38
+E3	large/tpu	pr1927	ok	705116.5	6015.5	6.00219e+06	2.40087e+08	70512
+E3	large/vortex	graph	failed: CONVERSION ERROR					
+E3	large/vortex	netlist	failed: CONVERSION ERROR					
+E3	large/vortex	pr1927	failed: CONVERSION ERROR					
+E3	large/wally	graph	failed: file logikbench/logikbench/benchmarks/large/wally/rtl/lambda.v line 2: syntax error, unexpected TOK_NON_TYPE_IDENTIFIER, expecting ')' or ',' before 'CLK'					
+E3	large/wally	netlist	failed: file logikbench/logikbench/benchmarks/large/wally/rtl/lambda.v line 2: syntax error, unexpected TOK_NON_TYPE_IDENTIFIER, expecting ')' or ',' before 'CLK'					
+E3	large/wally	pr1927	failed: file logikbench/logikbench/benchmarks/large/wally/rtl/lambda.v line 2: syntax error, unexpected TOK_NON_TYPE_IDENTIFIER, expecting ')' or ',' before 'CLK'					

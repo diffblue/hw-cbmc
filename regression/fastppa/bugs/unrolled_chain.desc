@@ -1,0 +1,8 @@
+CORE
+unrolled_chain.sv
+--top main
+^  Operators:           3$
+^EXIT=0$
+^SIGNAL=0$
+--
+combinational loop

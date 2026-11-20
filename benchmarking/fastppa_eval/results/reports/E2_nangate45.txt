@@ -1,0 +1,66 @@
+designs: 28, compared: 28, excluded: 0
+  graph handles 28/28
+  netlist handles 28/28
+  pr1927 handles 28/28
+
+Area vs G1 (Yosys+ABC, NanGate45)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph        26    0     1.39     1.34     2.14     62%    85%   0.97
+  netlist      26    0     1.05     1.31     1.62     81%    96%   0.97
+  pr1927       26    0     1.14     1.32     2.03     58%    88%   0.92
+
+Delay vs G1 (OpenSTA data arrival)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph        26    2     0.99     1.16     2.18     69%    81%   0.79
+  netlist      26    2     0.38     2.15     4.78     12%    38%   0.81
+  pr1927       26    2     1.02     1.22     1.91     73%    92%   0.87
+
+Clock energy per cycle vs G1 (OpenSTA, clock pins)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph        25    3     0.84     1.13     1.61     80%   100%   0.98
+  netlist      25    3     0.84     1.13     1.61     80%   100%   0.98
+  pr1927       25    3    33.05    32.97   241.33      0%     0%   0.50
+
+Data energy per cycle and unit of toggle rate vs G1 (OpenSTA)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph        26    2     0.94     1.41     2.55     62%    77%   0.93
+  netlist      26    2     0.37     2.85     6.29     27%    35%   0.88
+  pr1927       26    2    72.21    76.27   198.38      0%     0%   0.87
+
+Leakage vs G1 (OpenSTA)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph        26    2     1.39     1.32     2.19     62%    77%   0.97
+  netlist      26    2     1.04     1.31     1.57     73%    96%   0.96
+  pr1927       26    2     5.58     5.22     9.19      0%     4%   0.92
+
+Per design: G1 area, graph, netlist, pr1927 | G1 delay, graph, netlist, pr1927
+  blocks/adder                            324.0      309.9      278.8      336.6 |     1112     1026      510     1138
+  blocks/aes_round                       1817.3     2383.4     1696.0     2286.0 |      356      313       88      198
+  blocks/const_index                        nan      325.6       72.4      415.0 |        0       82       82       70
+  blocks/counter                            nan        0.0        0.0      228.2 |        0        0        0     1138
+  blocks/divider                         4325.2     7113.7     5980.5     9177.6 |    27657    29901     1190    26839
+  blocks/multiplier                      1775.8     2442.7     1243.0     1783.0 |     1468     1683      784     1449
+  blocks/mux                               77.4       99.7       75.6      123.4 |      139      278      125      193
+  blocks/parity                            54.0       49.7       41.2       36.5 |      215      218      340      100
+  blocks/shifter                          415.0      410.0      309.6      388.1 |      293      293       82      362
+  blocks/struct_mux                       987.4      987.4      944.0     1571.8 |      132      131       92      117
+  designs/alu                            1218.8     1771.1     1170.6      885.1 |     1280     1270      614     1240
+  designs/array_sorter                   1138.7     1020.1      874.2     2646.8 |     2316     1823     1129     2096
+  designs/bf16_fma                        983.4     1589.8      944.6     1155.4 |     2069     3974      740     3510
+  designs/comb_mux                         44.7       44.7       28.4       50.4 |      105       98       22      100
+  designs/fir16                          6379.5    10979.9     9620.0    11189.8 |     2011     5201      948     5026
+  designs/fir4                           1299.7     2914.4     2162.3     2441.6 |     1347     3150      706     2629
+  designs/float_to_int                   1174.9     2298.3     1629.7     1128.5 |     1448     1323      619     1294
+  designs/fp_adder                       2951.3     7610.9     5296.6     2680.6 |     1201     1501      619     1503
+  designs/fp_divider                     3428.5    11404.4     7610.9     3174.9 |     2500     2411     1030     2085
+  designs/fp_multiplier                  6352.6    12423.2     7346.2     2466.4 |     2173     2934     1381     2363
+  designs/fsm_datapath                    318.1      511.2      386.1      329.0 |      859      693      350      670
+  designs/fsm_shared_mult                3867.1     5244.7     2744.0     2042.8 |     1455     2808      839     2589
+  designs/int_to_float                   1482.7     3024.7     2074.2     1369.1 |     1408     1202      295     1299
+  designs/large_array                   66644.4    62161.3    70938.9    67782.7 |     7446      550      273     6908
+  designs/pipe_mult                      2065.2     2732.1     1532.4     2072.3 |     1636     1765      866     1449
+  designs/regfile                       10238.1     9229.3    10759.3    15775.6 |      836      465      273     1044
+  designs/riscv_pipe                    10684.7    12203.8    13009.4    18301.4 |     2343     1156      652     1251
+  designs/struct_packet                   884.7      898.3      887.2     1722.4 |      135      129       92      108
+
+Excluded:

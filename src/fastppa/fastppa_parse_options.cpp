@@ -14,8 +14,10 @@ Author: Kiro
 
 #include <ebmc/ebmc_error.h>
 
+#include "cost_table.h"
 #include "fastppa_estimator.h"
 
+#include <iomanip>
 #include <iostream>
 
 /*******************************************************************\
@@ -35,6 +37,8 @@ int fastppa_parse_optionst::doit()
   if(cmdline.isset("verbosity"))
     ui_message_handler.set_verbosity(
       unsafe_string2unsigned(cmdline.get_value("verbosity")));
+  else if(cmdline.isset("json"))
+    ui_message_handler.set_verbosity(messaget::M_WARNING);
   else
     ui_message_handler.set_verbosity(messaget::M_STATUS);
 
@@ -86,11 +90,14 @@ void fastppa_parse_optionst::help()
                " fastppa [options] file.sv\n"
                "\n"
                "Options:\n"
-               " --process <name>       target process node (3nm, 7nm, 14nm, "
-               "28nm, 45nm, ...)\n"
+               " --process <name>       process node or cell library (default "
+               "45nm)\n"
                " --clock-freq <hz>      target clock frequency in Hz\n"
                " --toggle-rate <alpha>  switching activity (0-1, default 0.1)\n"
-               " --netlist              use AIG netlist (more accurate)\n"
+               " --netlist              estimate from the bit-level AIG\n"
+               " --cost-table <file>    read operator costs from a file\n"
+               " --paths <n>            show the n slowest paths (default 3)\n"
+               " --json                 print the results in JSON\n"
                " --top <module>         set top module\n"
                " --verbosity <nr>       verbosity level (0-10)\n"
                " --version              show version\n"
@@ -100,9 +107,11 @@ void fastppa_parse_optionst::help()
                " -D <var>[=<value>]     set preprocessor define\n"
                " --systemverilog        force SystemVerilog\n"
                "\n"
-               "Supported process nodes: 3nm 7nm 14nm 28nm 45nm 65nm 90nm "
-               "130nm\n"
-               "\n";
+               "Process nodes and cell libraries:\n";
+  for(auto &[name, description] : cost_tablet::process_names())
+    std::cout << "  " << std::left << std::setw(12) << name << description
+              << '\n';
+  std::cout << "\n";
 }
 
 /*******************************************************************\
