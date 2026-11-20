@@ -1315,15 +1315,16 @@ expr2verilogt::convert_constant(const constant_exprt &src)
 
   if(type.get(ID_C_verilog_type) == ID_verilog_enum)
   {
-    // Get the numerical value.
-    auto int_value = numeric_cast_v<mp_integer>(src);
-
     // Look up the enum type symbol.
     auto enum_type_identifier = type.get(ID_C_identifier);
     auto &symbol = ns.lookup(enum_type_identifier);
     auto &enum_type = to_verilog_enum_type(symbol.type);
 
-    // Find the enum name with the matching value.
+    // Find the enum name with the matching value. The values of
+    // four-valued enums may contain x/z, and are then compared
+    // by their representation.
+    const auto int_value = numeric_cast<mp_integer>(src);
+
     for(auto &enum_name : enum_type.enum_names())
     {
       const auto identifier = enum_name.identifier();
@@ -1331,15 +1332,24 @@ expr2verilogt::convert_constant(const constant_exprt &src)
       DATA_INVARIANT(
         enum_symbol.value.id() == ID_constant,
         "enum name value must be constant");
-      auto enum_int_value =
-        numeric_cast_v<mp_integer>(to_constant_expr(enum_symbol.value));
-      if(enum_int_value == int_value)
+      const auto &enum_value = to_constant_expr(enum_symbol.value);
+      const auto enum_int_value = numeric_cast<mp_integer>(enum_value);
+
+      bool match = int_value.has_value() && enum_int_value.has_value()
+                     ? *int_value == *enum_int_value
+                     : enum_value.type().id() == type.id() &&
+                         enum_value.get_value() == src.get_value();
+
+      if(match)
         return {precedence, id2string(enum_symbol.display_name())};
     }
 
-    return {precedence, integer2string(int_value)};
+    // No match. Print the number, or the bits when there are x/z.
+    if(int_value.has_value())
+      return {precedence, integer2string(*int_value)};
   }
-  else if(type.id() == ID_bool)
+
+  if(type.id() == ID_bool)
   {
     if(src.is_true())
       dest+='1';
