@@ -402,6 +402,25 @@ expr2smvt::resultt expr2smvt::convert_typecast(const typecast_exprt &expr)
     else
       return convert_norep(expr);
   }
+  else if(src_type.id() == ID_bool && dest_type.id() == ID_unsignedbv)
+  {
+    // Boolean to unsigned word: word1(...) yields unsigned word[1],
+    // which is then zero-extended as needed.
+    auto dest_width = to_unsignedbv_type(dest_type).get_width();
+    smv_word1_exprt word1{expr.op(), unsignedbv_typet{1}};
+    if(dest_width == 1)
+      return convert_rec(word1);
+    else
+      return convert_rec(
+        smv_extend_exprt{std::move(word1), dest_width - 1, dest_type});
+  }
+  else if(src_type.id() == ID_bool && dest_type.id() == ID_signedbv)
+  {
+    // Boolean to signed word: zero-extend word1(...), then go signed.
+    auto dest_width = to_signedbv_type(dest_type).get_width();
+    return convert_rec(smv_signed_cast_exprt{
+      typecast_exprt{expr.op(), unsignedbv_typet{dest_width}}, dest_type});
+  }
   else if(
     src_type.id() == ID_smv_enumeration && dest_type.id() == ID_smv_enumeration)
   {

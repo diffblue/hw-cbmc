@@ -1,0 +1,11 @@
+CORE
+packed_array_index1.sv
+--smv-word-level
+^MODULE main$
+^INVAR y = a\[word1\(s\)\]$
+^EXIT=0$
+^SIGNAL=0$
+--
+typecast
+--
+A one-bit index into a packed array is a Boolean that is cast to a word.

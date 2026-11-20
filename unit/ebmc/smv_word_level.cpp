@@ -228,3 +228,27 @@ SCENARIO("SMV word-level output: concatenation with Boolean operands")
     }
   }
 }
+
+SCENARIO("SMV word-level output: typecasts from Boolean")
+{
+  auto u8 = unsignedbv_typet{8};
+  auto a = symbol_exprt{"a", array_typet{u8, from_integer(2, integer_typet{})}};
+  auto s = symbol_exprt{"s", bool_typet{}};
+
+  GIVEN("Boolean-to-word typecasts, including one used as an array index")
+  {
+    auto lines = invar_lines(
+      {a, s},
+      {{"y", index_exprt{a, typecast_exprt{s, unsignedbv_typet{1}}}},
+       {"z", typecast_exprt{s, u8}},
+       {"w", typecast_exprt{s, signedbv_typet{8}}}});
+
+    THEN("they are printed using word1")
+    {
+      REQUIRE(lines.size() == 3);
+      REQUIRE(lines[0] == "y = a[word1(s)]");
+      REQUIRE(lines[1] == "z = extend(word1(s), 7)");
+      REQUIRE(lines[2] == "w = signed(extend(word1(s), 7))");
+    }
+  }
+}
