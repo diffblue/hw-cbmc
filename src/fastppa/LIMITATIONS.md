@@ -53,16 +53,19 @@ Unsupported designs
 -------------------
 
 Of the 250 LogikBench designs (E1 and E3), the word-level estimator fails
-on 53:
+on 46:
 
-- 26 in EBMC's front end: 18 "CONVERSION ERROR", 8 syntax errors;
-- 12 in fastppa: 8 combinational loops through wires whose parts depend
-  on other parts in ways the graph does not resolve, 4 state constraints
-  it does not understand (conditional or indexed left-hand sides, a
-  primitive module);
-- 10 end with an internal error (exit code 6) or a failed assertion, not
-  yet attributed to the front end or to fastppa;
-- 5 time out after 120 s.
+- 26 in EBMC's front end: 18 "CONVERSION ERROR" (13 of them memories
+  with two write ports), 8 syntax errors (assignment patterns with
+  `default:` for structs, casts to package-scoped types, streaming
+  operators with a parameter as slice size, and others);
+- 10 end with an internal error in EBMC's front end: 9 run out of memory
+  because shared expressions are walked as trees, 1 fails an assertion;
+- 4 time out after 120 s, for the same reason;
+- 6 in fastppa: a genuine combinational loop (`blocks/chiplink`), a loop
+  through a priority encoder it does not resolve (`large/axicrossbar`),
+  and 4 state constraints it does not understand (conditional or indexed
+  left-hand sides, a primitive module).
 
 The reports in `benchmarking/fastppa_eval/results/` list every design and
 the reason.
