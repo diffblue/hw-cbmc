@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
 #include <util/c_types.h>
+#include <util/expr_identity_map.h>
 #include <util/expr_util.h>
 #include <util/floatbv_expr.h>
 #include <util/ieee_float.h>
@@ -28,6 +29,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <algorithm>
 #include <optional>
+#include <utility>
 
 /// The type of the lowered representation of a variable or net of the
 /// given Verilog type, which is also the type of lowered expressions
@@ -1048,7 +1050,29 @@ two_valued_constant(const constant_exprt &aval_bval_constant, const typet &type)
   return from_integer(aval, two_valued_vector_type(type));
 }
 
+using lowering_cachet = expr_identity_mapt<exprt>;
+
+static exprt verilog_lowering_rec(exprt expr, lowering_cachet &cache);
+
+/// Lowers each distinct subexpression once. Expressions in transition
+/// relations are DAGs with much sharing; lowering them as trees can take
+/// time exponential in their depth.
+static exprt verilog_lowering_cached(const exprt &expr, lowering_cachet &cache)
+{
+  if(auto cached = cache.find(expr))
+    return *cached;
+  auto result = verilog_lowering_rec(expr, cache);
+  cache.insert(expr, result);
+  return result;
+}
+
 exprt verilog_lowering(exprt expr)
+{
+  lowering_cachet cache;
+  return verilog_lowering_cached(expr, cache);
+}
+
+static exprt verilog_lowering_rec(exprt expr, lowering_cachet &cache)
 {
   // lowered already
   PRECONDITION(expr.id() != ID_floatbv_typecast);
@@ -1082,7 +1106,9 @@ exprt verilog_lowering(exprt expr)
 
   for(auto &op : expr.operands())
   {
-    if(op.type().id() == ID_verilog_enum)
+    // The test reads the type only. Writing to the operand would unshare
+    // it, and the cache of lowered subexpressions is keyed by node.
+    if(std::as_const(op).type().id() == ID_verilog_enum)
       op.type() = to_verilog_enum_type(op.type()).annotated_base_type();
   }
 
@@ -1093,7 +1119,7 @@ exprt verilog_lowering(exprt expr)
 
   // Do the operands recursively
   for(auto &op : expr.operands())
-    op = verilog_lowering(op);
+    op = verilog_lowering_cached(op, cache);
 
   // Helpers for the operands. The lowering of a four-valued operator is
   // the aval/bval encoding if any of its lowered operands is aval/bval
