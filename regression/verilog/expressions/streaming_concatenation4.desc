@@ -1,0 +1,10 @@
+KNOWNBUG
+streaming_concatenation4.sv
+--bound 1
+^\[main\.p0\] always main\.y == \{ main\.x\[1:0\], main\.x\[3:2\], main\.x\[5:4\], main\.x\[7:6\] \}: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+A streaming operator whose slice size is a parameter, {<<W{x}}, is a syntax
+error; a literal slice size works.
