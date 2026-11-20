@@ -1,0 +1,10 @@
+KNOWNBUG
+assignment_pattern5.sv
+--bound 1
+^\[main\.p0\] always main\.v == 16'h5656: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+A struct assignment pattern with only a default key is rejected: "number of
+expressions does not match number of struct members".
