@@ -282,6 +282,32 @@ parse_unsigned_option(const cmdlinet &cmdline, const char *option)
   return std::stoul(value);
 }
 
+/// The 10th and 90th percentile of estimate / synthesis, measured on the
+/// LogikBench designs of the held-out sets E1 and E3 with NanGate45
+/// (benchmarking/fastppa_eval/RESULTS.md).
+struct accuracyt
+{
+  const char *quantity;
+  double p10, p90;
+};
+
+static const std::vector<accuracyt> &accuracy(bool netlist)
+{
+  static const std::vector<accuracyt> graph = {
+    {"area", 0.99, 3.94},
+    {"delay", 0.28, 2.31},
+    {"dynamic power", 0.47, 5.84},
+    {"clock power", 0.54, 1.00},
+    {"leakage", 1.00, 3.79}};
+  static const std::vector<accuracyt> aig = {
+    {"area", 0.37, 1.97},
+    {"delay", 0.06, 0.81},
+    {"dynamic power", 0.12, 1.76},
+    {"clock power", 0.16, 0.95},
+    {"leakage", 0.32, 1.91}};
+  return netlist ? aig : graph;
+}
+
 struct power_estimatet
 {
   double dynamic_mw = 0;
@@ -417,6 +443,11 @@ int run_fastppa_estimation(
         {"steps", std::move(steps)}});
     }
     json["critical_paths"] = std::move(paths);
+    json_objectt accuracy_json;
+    for(auto &a : accuracy(cmdline.isset("netlist")))
+      accuracy_json[a.quantity] =
+        json_objectt{{"p10", number(a.p10)}, {"p90", number(a.p90)}};
+    json["accuracy_estimate_over_synthesis"] = std::move(accuracy_json);
     std::cout << json << '\n';
     return 0;
   }
@@ -497,6 +528,15 @@ int run_fastppa_estimation(
   out << "  Clock:               " << power.clock_mw << " mW\n";
   out << "  Leakage:             " << power.leakage_mw << " mW\n";
   out << "  Total:               " << power.total_mw() << " mW\n";
+  out << "\n";
+
+  out << "Accuracy (estimate / synthesis, 10th to 90th percentile over "
+      << (cmdline.isset("netlist") ? 197 : 188)
+      << "\nheld-out designs, NanGate45):\n";
+  out << std::setprecision(2);
+  for(auto &a : accuracy(cmdline.isset("netlist")))
+    out << "  " << std::left << std::setw(21) << (std::string{a.quantity} + ':')
+        << std::right << a.p10 << "x to " << a.p90 << "x\n";
   out << "\n";
 
   message.status() << out.str() << messaget::eom;
