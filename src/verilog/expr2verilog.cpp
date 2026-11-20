@@ -2287,7 +2287,7 @@ std::string expr2verilogt::convert(const typet &type)
   else if(type.id() == ID_verilog_time)
     return "time";
   else if(type.id() == ID_bool)
-    return "bool";
+    return "bit"; // 2-state
   else if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
   {
     auto &verilog_vector_type = to_verilog_vector_type(type);
