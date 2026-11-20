@@ -1,4 +1,4 @@
-// A hierarchical task call, which is not supported.
+// A hierarchical task call (1800-2017 13.3).
 module sub;
   task t;
     begin
