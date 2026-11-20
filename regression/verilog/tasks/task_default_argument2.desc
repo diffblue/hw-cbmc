@@ -1,0 +1,7 @@
+CORE
+task_default_argument2.sv
+--module main --bound 0
+^file .* line 6: default value for argument `out' is only supported for input arguments$
+^EXIT=2$
+^SIGNAL=0$
+--

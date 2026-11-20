@@ -1082,21 +1082,12 @@ void verilog_typecheckt::convert_function_call_or_task_enable(
 
     const code_typet &code_type = to_code_type(symbol->type);
 
-    // check arguments
-    const code_typet::parameterst &parameter_types=code_type.parameters();
-    exprt::operandst &arguments=statement.arguments();
-
-    if(parameter_types.size()!=arguments.size())
-    {
-      throw errort().with_location(statement.source_location())
-        << "wrong number of arguments";
-    }
-
-    for(unsigned i=0; i<arguments.size(); i++)
-    {
-      convert_expr(arguments[i]);
-      assignment_conversion(arguments[i], parameter_types[i].type());
-    }
+    // Reorder ordered and named arguments (1800-2017 13.5.4) into
+    // positional order, fill in defaults, and convert them.
+    convert_arguments(
+      statement.arguments(),
+      code_type.parameters(),
+      statement.source_location());
 
     statement.function() =
       symbol->symbol_expr().with_source_location(statement.function());

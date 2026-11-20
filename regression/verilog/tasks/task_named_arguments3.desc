@@ -1,0 +1,7 @@
+CORE
+task_named_arguments3.sv
+--module main --bound 0
+^file .* line 10: no argument for formal `value'$
+^EXIT=2$
+^SIGNAL=0$
+--

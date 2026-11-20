@@ -1097,31 +1097,24 @@ exprt verilog_typecheck_exprt::convert_expr_rec(exprt expr)
 
 /*******************************************************************\
 
-Function: verilog_typecheck_exprt::resolve_arguments
+Function: verilog_typecheck_exprt::convert_arguments
 
   Inputs:
 
  Outputs:
 
  Purpose: Reorder a list of ordered and named arguments into positional
-          order, as per 1800-2017 13.5.4.
+          order, as per 1800-2017 13.5.4, fill in default values for
+          formals without actual (1800-2017 13.5.3), and convert the
+          arguments to the types of the formals.
 
 \*******************************************************************/
 
-void verilog_typecheck_exprt::resolve_arguments(
+void verilog_typecheck_exprt::convert_arguments(
   exprt::operandst &arguments,
   const code_typet::parameterst &parameters,
   const source_locationt &source_location)
 {
-  // Any named arguments present?
-  bool have_named = false;
-  for(auto &argument : arguments)
-    if(argument.id() == ID_verilog_named_port_connection)
-      have_named = true;
-
-  if(!have_named)
-    return; // all positional, nothing to do
-
   // 1800-2017 13.5.4: ordered arguments, if any, come first and bind to
   // the leading formals; named arguments follow and bind by name.
   exprt::operandst resolved;
@@ -1167,8 +1160,13 @@ void verilog_typecheck_exprt::resolve_arguments(
           << "malformed named argument";
       }
 
-      resolved[*index] = to_unary_expr(argument).op();
-      assigned[*index] = true;
+      // An empty named argument ".name()" uses the default value, if any
+      // (1800-2017 13.5.4).
+      if(to_unary_expr(argument).op().is_not_nil())
+      {
+        resolved[*index] = to_unary_expr(argument).op();
+        assigned[*index] = true;
+      }
     }
     else
     {
@@ -1190,14 +1188,27 @@ void verilog_typecheck_exprt::resolve_arguments(
     }
   }
 
-  // Every formal must have been given a value: we do not support default
-  // argument values.
   for(std::size_t i = 0; i < parameters.size(); i++)
-    if(!assigned[i])
+  {
+    if(assigned[i])
+    {
+      convert_expr(resolved[i]);
+      assignment_conversion(resolved[i], parameters[i].type());
+    }
+    else if(parameters[i].has_default_value())
+    {
+      // The default value has already been converted to the type of the
+      // formal and evaluated to a constant, in the scope of the subroutine
+      // declaration.
+      resolved[i] = parameters[i].default_value();
+      resolved[i].add_source_location() = source_location;
+    }
+    else
     {
       throw errort().with_location(source_location)
         << "no argument for formal `" << parameters[i].get_base_name() << "'";
     }
+  }
 
   arguments = std::move(resolved);
 }
@@ -1335,14 +1346,6 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
 
   const code_typet &code_type=to_code_type(symbol->type);
 
-  // Reorder ordered and named arguments (1800-2017 13.5.4) into
-  // positional order before they are converted.
-  resolve_arguments(arguments, code_type.parameters(), expr.source_location());
-
-  // convert the arguments for regular function calls
-  Forall_expr(it, arguments)
-    convert_expr(*it);
-
   f_op = symbol->symbol_expr().with_source_location(f_op);
   expr.type()=code_type.return_type();
 
@@ -1352,17 +1355,9 @@ exprt verilog_typecheck_exprt::convert_expr_function_call(
       << "expected function, but got task";
   }
 
-  // check arguments
-  const code_typet::parameterst &parameter_types=code_type.parameters();
-
-  if(parameter_types.size()!=arguments.size())
-  {
-    throw errort().with_location(expr.source_location())
-      << "wrong number of arguments";
-  }
-
-  for(unsigned i=0; i<arguments.size(); i++)
-    assignment_conversion(arguments[i], parameter_types[i].type());
+  // Reorder ordered and named arguments (1800-2017 13.5.4) into
+  // positional order, fill in defaults, and convert them.
+  convert_arguments(arguments, code_type.parameters(), expr.source_location());
 
   return std::move(expr);
 }

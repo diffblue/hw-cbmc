@@ -679,6 +679,37 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
           parameter.set_identifier(symbol.name);
           parameter.set(ID_output, output);
           parameter.set(ID_input, input);
+
+          // 1800-2017 13.5.3: default argument value. The standard
+          // evaluates the default in the scope that contains the
+          // subroutine declaration, each time a call uses it. We require
+          // the default to be an elaboration-time constant, and evaluate
+          // it here, in the declaring scope, once. This avoids resolving
+          // identifiers in the scope of the caller. Since a constant is
+          // not an lvalue, we only permit defaults for input arguments.
+          if(declarator.has_value())
+          {
+            if(!input || output)
+            {
+              throw errort().with_location(declarator.source_location())
+                << "default value for argument `" << symbol.base_name
+                << "' is only supported for input arguments";
+            }
+
+            exprt default_value = declarator.value();
+
+            // Identifiers in the default are resolved in the scope that
+            // contains the subroutine, not in the subroutine itself.
+            const irep_idt saved_function_or_task_name = function_or_task_name;
+            function_or_task_name = irep_idt{};
+            convert_expr(default_value);
+            function_or_task_name = saved_function_or_task_name;
+
+            assignment_conversion(default_value, symbol.type);
+
+            parameter.default_value() =
+              elaborate_constant_expression_check(std::move(default_value));
+          }
         }
 
         auto result = symbol_table.symbols.find(symbol.name);

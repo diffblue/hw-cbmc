@@ -1,0 +1,7 @@
+CORE
+default_argument5.sv
+--module main --bound 0
+^file .* line 4: expected constant expression, but got `main\.i'$
+^EXIT=2$
+^SIGNAL=0$
+--
