@@ -1,0 +1,17 @@
+KNOWNBUG
+empty_argument1.sv
+--module main --bound 0
+^\[main\.p0\] always .* == 156: PROVED up to bound 0$
+^\[main\.p1\] always .* == 426: PROVED up to bound 0$
+^\[main\.p2\] always .* == 453: PROVED up to bound 0$
+^\[main\.p3\] always .* == 123: PROVED up to bound 0$
+^\[main\.p4\] always .* == 129: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Empty positions in the argument list of a subroutine call
+(1800-2017 13.5.3, A.6.9 list_of_arguments) are not supported: a
+leading empty position is silently dropped by the parser, and any other
+empty position is a syntax error.

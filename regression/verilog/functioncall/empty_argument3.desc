@@ -1,0 +1,11 @@
+KNOWNBUG
+empty_argument3.sv
+--module main --bound 0
+^file .* line 8: too many arguments$
+^EXIT=2$
+^SIGNAL=0$
+--
+PROVED
+--
+A leading empty position in the argument list is dropped by the parser,
+so g(, 5) is silently read as g(5).
