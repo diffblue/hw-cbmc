@@ -3,7 +3,7 @@
 reports for the Rocket core published by RTL-Timer (see primetime/NOTICE
 for provenance). Run fetch_rtl.sh and primetime/fetch_reports.sh first.
 
-Every number in src/fastppa/COMPARISON.md is produced by this script:
+The Rocket rows of benchmarking/fastppa_eval/RESULTS.md come from this script:
 
     $ ./compare_primetime.py
 
@@ -168,7 +168,7 @@ def main():
               f"| {est:.1f} | {est / fp_sum:.1%} |")
     print()
     print(f"(PrimeTime total power, whole core: {pt_power_mw:.1f} mW; "
-          f"see COMPARISON.md for why absolute power is not comparable.)")
+          f"the activity and clock frequency PrimeTime used are not known, so absolute power is not comparable.)")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,93 @@
+epfl/adder	ok	754.110000	4.5493	none	2	0	3698.96	18.0836
+epfl/arbiter	ok	7001.652000	1.6263	none	22	0	33045.9	148.124
+epfl/bar	ok	1881.684000	1.2314	none	4	0	11640.1	39.8617
+epfl/cavlc	ok	386.764000	0.3415	none	1	0	1433.45	9.27934
+epfl/dec	ok	250.040000	0.1817	none	1	0	335.526	7.87438
+epfl/div	ok	15495.830000	91.6159	none	66	0	91398	355.775
+epfl/hyp	synth_failed				593
+epfl/i2c	ok	657.020000	0.4132	none	2	0	1822.23	14.9956
+epfl/int2float	ok	127.946000	0.2420	none	1	0	417.284	2.92314
+epfl/log2	synth_failed				1200
+epfl/max	ok	1794.702000	6.4771	none	3	0	17697.3	41.0387
+epfl/memctrl	ok	24080.448000	4.9292	none	74	0	104592	567.1
+epfl/multiplier	ok	16270.954000	5.7096	none	1131	0	196480	373.064
+epfl/priority	ok	375.326000	4.0289	none	3	0	1577.22	8.02019
+epfl/router	ok	115.710000	0.4495	none	1	0	256.975	2.53438
+epfl/sin	ok	3558.814000	4.7677	none	10	0	40394.5	92.7936
+epfl/sqrt	synth_failed				1200
+epfl/square	ok	12516.896000	5.8529	none	24	0	104142	299.779
+epfl/voter	ok	7545.888000	1.6042	none	19	0	87356	180.808
+iscas85/c1355	ok	231.952000	0.4780	none	1	0	1660.32	5.36211
+iscas85/c17	ok	5.054000	0.0587	none	0	0	17.0048	0.12691
+iscas85/c1908	ok	259.882000	0.7340	none	1	0	1528.5	5.98103
+iscas85/c2670	ok	332.234000	0.5677	none	2	0	1694.62	7.30704
+iscas85/c3540	ok	595.308000	0.9779	none	2	0	3130.12	13.4321
+iscas85/c432	ok	90.440000	0.7289	none	0	0	385.419	2.43918
+iscas85/c499	ok	230.090000	0.4812	none	1	0	1686.98	4.85467
+iscas85/c5315	ok	883.386000	0.6742	none	2	0	4794.67	20.3809
+iscas85/c6288	ok	1493.324000	2.1250	none	2	0	18360.5	35.3385
+iscas85/c7552	ok	896.686000	1.0413	none	3	0	6001.45	20.9798
+iscas85/c880	ok	193.914000	0.6042	none	1	0	824.125	4.39401
+iscas89/s1196	ok	366.282000	0.5677	CK	1	89.8815	1038.71	8.43758
+iscas89/s1238	ok	391.020000	0.4890	CK	1	90.097	1076.34	8.96649
+iscas89/s13207	ok	3342.822000	1.1447	CK	5	2625.61	7231.95	62.2903
+iscas89/s1423	ok	650.370000	1.3862	CK	1	419.709	1612.96	12.6633
+iscas89/s1488	ok	367.346000	0.5160	CK	1	29.4435	2680.27	8.71194
+iscas89/s15850	ok	4044.264000	1.7831	CK	7	3067.87	8853.15	77.4073
+iscas89/s27	ok	21.546000	0.1678	CK	1	13.2027	64.5565	0.414542
+iscas89/s298	ok	120.232000	0.2849	CK	1	76.2415	320.75	2.35647
+iscas89/s344	ok	131.670000	0.4074	CK	1	64.097	708.825	2.65975
+iscas89/s349	ok	132.468000	0.3953	CK	0	64.0665	715.895	2.65392
+iscas89/s35932	ok	12878.390000	2.2282	CK	15	9864.1	40611.5	246.654
+iscas89/s382	ok	171.836000	0.3366	CK	1	132.043	225.325	3.32788
+iscas89/s38417	ok	11546.528000	2.7315	CK	19	7052.45	63854	223.358
+iscas89/s38584	ok	11368.574000	2.0881	CK	24	5553.15	68197.5	228.219
+iscas89/s386	ok	105.070000	0.3098	CK	1	34.9526	280.688	2.30714
+iscas89/s400	ok	172.634000	0.3498	CK	1	127.037	272.9	3.37884
+iscas89/s420	ok	150.556000	0.5496	CK	0	97.946	697.745	2.95959
+iscas89/s444	ok	166.782000	0.3315	CK	1	131.691	206.375	3.29161
+iscas89/s510	ok	164.122000	0.3613	CK	1	24.4159	2121.9	3.66508
+iscas89/s526	ok	179.284000	0.4089	CK	1	128.585	222.16	3.40818
+iscas89/s5378	ok	1326.542000	0.5337	CK	2	923.98	3270	27.0509
+iscas89/s641	ok	176.624000	0.4938	CK	1	100.005	397.19	3.41458
+iscas89/s713	ok	173.964000	0.4700	CK	1	100.537	393.93	3.36809
+iscas89/s820	ok	175.294000	0.4084	CK	1	29.1713	485.192	3.98176
+iscas89/s832	ok	177.954000	0.4008	CK	1	29.32	477.349	3.91784
+iscas89/s838	ok	299.782000	0.9411	CK	1	209.189	686.635	5.77343
+iscas89/s9234	ok	1120.126000	0.7083	CK	3	856.325	1067.1	21.7442
+iscas89/s953	ok	366.282000	0.4519	CK	1	160.72	1283.67	8.14126
+koios/attention_layer	synth_failed				606
+koios/bwave_like_fixed_small	synth_failed				47
+koios/bwave_like_float_small	synth_failed				130
+koios/clstm_like_medium	synth_failed				43
+koios/clstm_like_small	synth_failed				470
+koios/conv_layer	synth_failed				75
+koios/conv_layer_hls	ok	117733.994000	7.1672	ap_clk	89	90912.5	89515	2108.11
+koios/dla_like_medium	synth_failed				251
+koios/dla_like_small	synth_failed				131
+koios/dnnweaver	synth_failed				172
+koios/eltwise_layer	synth_failed				54
+koios/gemm_layer	synth_failed				56
+koios/lstm	synth_failed				441
+koios/reduction_layer	ok	5430.656000	1.6548	clk	49	3628.26	29743.9	103.89
+koios/robot_rl	ok	256471.348000	26.5820	clk	140	209280	705785	4614.17
+koios/softmax	ok	92689.296000	23.0789	clk	101	58450	259430	1873.45
+koios/spmv	synth_failed				284
+koios/tpu_like_small_os	synth_failed				150
+koios/tpu_like_small_ws	synth_failed				82
+large/aes	synth_failed				0
+large/axicrossbar	synth_failed				628
+large/bitcoin	synth_failed				42
+large/blackparrot	synth_failed				53
+large/coralnpu	synth_failed				1
+large/cva6	synth_failed				0
+large/lz77	synth_failed				152
+large/nvdlafull	synth_failed				69
+large/nvdlasmall	synth_failed				122
+large/ofdm	ok	166303.732000	43.4795	clk	109	83191.5	396135	3397.12
+large/qr	synth_failed				235
+large/rocket	synth_failed				2
+large/sonicboom	synth_failed				9
+large/tpu	ok	63501.914000	23.5683	clk	35	18670.2	798743	1370.76
+large/vortex	ok	426.398000	0.3872	clk	378	368.577	513.485	8.16301
+large/wally	synth_failed				0

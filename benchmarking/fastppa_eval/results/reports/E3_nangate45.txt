@@ -1,0 +1,143 @@
+designs: 93, compared: 58, excluded: 35
+  graph handles 65/93
+  netlist handles 68/93
+  pr1927 handles 68/93
+
+Area vs G1 (Yosys+ABC, NanGate45)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph        58    0     2.28     2.25     2.87     12%    38%   0.97
+  netlist      58    0     0.51     1.60     6.44     43%    60%   0.94
+  pr1927       58    0     3.54     3.21     6.21      3%    19%   0.95
+
+Delay vs G1 (OpenSTA data arrival)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph        58    0     0.94     1.27     2.39     72%    84%   0.87
+  netlist      58    0     0.23     4.01     9.01      0%     3%   0.84
+  pr1927       58    0     0.98     1.61     2.66     45%    74%   0.84
+
+Clock energy per cycle vs G1 (OpenSTA, clock pins)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph        31   27     0.80     1.53     1.73     45%    97%   0.99
+  netlist      31   27     0.38     1.95    11.58     23%    52%   0.88
+  pr1927       31   27    40.37    35.65    82.71      0%     0%   0.89
+
+Data energy per cycle and unit of toggle rate vs G1 (OpenSTA)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph        58    0     1.25     1.77     2.96     41%    62%   0.92
+  netlist      58    0     0.24     3.94    11.79      0%    10%   0.93
+  pr1927       58    0   238.33   204.09   511.68      0%     0%   0.88
+
+Leakage vs G1 (OpenSTA)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph        58    0     2.40     2.35     3.06     10%    33%   0.97
+  netlist      58    0     0.47     1.78     7.10     38%    57%   0.94
+  pr1927       58    0    16.31    15.50    27.18      0%     0%   0.95
+
+Area vs G2 (LogikBench yosys_freepdk45)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph        54    0     1.90     1.96     2.68     19%    54%   0.96
+  netlist      54    0     0.45     1.78     6.41     28%    59%   0.93
+  pr1927       54    0     2.97     2.90     5.69     11%    30%   0.93
+
+Delay vs G2 (1/fmax)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph        54    0     1.04     1.26     1.85     80%    94%   0.88
+  netlist      54    0     0.25     3.94     5.56      0%     2%   0.87
+  pr1927       54    0     1.05     1.67     2.51     39%    69%   0.81
+
+Per design: G1 area, graph, netlist, pr1927 | G1 delay, graph, netlist, pr1927
+  epfl/adder                              754.1     1692.8      402.4     3753.0 |     4549     6823     1398     9618
+  epfl/arbiter                           7001.7    18658.3     4670.5    40769.0 |     1626     2323      477     3704
+  epfl/bar                               1881.7     4574.7     1316.1     9562.5 |     1231      318       66      464
+  epfl/cavlc                              386.8     1049.1      273.4     2265.0 |      342      427       88      706
+  epfl/dec                                250.0      327.7      119.9      620.0 |      182       72       16      134
+  epfl/div                              15495.8    84508.2    22584.0   181028.0 |    91616   116875    23970   182432
+  epfl/i2c                                657.0     1871.6      529.4     3935.0 |      413      464      110      818
+  epfl/int2float                          127.9      374.0      102.6      794.5 |      242      410       88      597
+  epfl/max                               1794.7     4387.9     1130.2     9507.0 |     6477     6038     1574    10468
+  epfl/memctrl                          24080.4    68681.7    18476.8   146815.5 |     4929     2921      625     4298
+  epfl/multiplier                       16271.0    41265.1    10676.0    89287.0 |     5710     7090     1502    11306
+  epfl/priority                           375.3     1534.8      385.8     3349.5 |     4029     6644     1371     9334
+  epfl/router                             115.7      380.9      101.4      817.0 |      450      661      296     1452
+  epfl/sin                               3558.8     7615.0     2136.6    16055.0 |     4768     4734     1234     7700
+  epfl/square                           12516.9    28715.2     7292.0    62480.0 |     5853     6669     1371    10478
+  epfl/voter                             7545.9    21533.2     5427.5    46956.0 |     1604     1863      384     2882
+  iscas85/c1355                           232.0      572.4      204.4      997.2 |      478      587      142      555
+  iscas85/c17                               5.1        6.4        2.4       12.0 |       59       68       16      110
+  iscas85/c1908                           259.9      648.0      241.8     1240.7 |      734      647      181      745
+  iscas85/c2670                           332.2      894.3      345.6     1733.9 |      568      735      137      644
+  iscas85/c3540                           595.3     1318.8      478.5     2120.5 |      978     1038      219      889
+  iscas85/c432                             90.4      215.5       83.6      281.1 |      729      605      230      374
+  iscas85/c499                            230.1      278.8      163.3      325.2 |      481      415      110      273
+  iscas85/c5315                           883.4     2272.2      794.9     3306.7 |      674      994      192     1094
+  iscas85/c6288                          1493.3     2553.6      927.9     4816.0 |     2125     4968      658     2900
+  iscas85/c7552                           896.7     2600.9      994.1     5181.8 |     1041      773      159      932
+  iscas85/c880                            193.9      392.1      133.3      644.2 |      604      610      132      508
+  iscas89/s1196                           366.3      658.6      232.9      607.5 |      568      587      169      495
+  iscas89/s1238                           391.0      687.9      252.2      608.8 |      489      602      180      479
+  iscas89/s13207                         3342.8     7934.5     1692.7    14229.7 |     1145     1097      252     1286
+  iscas89/s1423                           650.4      880.5      309.8     1521.9 |     1386     1650      350     1286
+  iscas89/s1488                           367.3      825.7      176.3      600.2 |      516      482      147      362
+  iscas89/s15850                         4044.3     8707.0     1059.7    16529.2 |     1783     1376      235     1766
+  iscas89/s27                              21.5       23.1       15.9       31.1 |      168      267      103      165
+  iscas89/s298                            120.2      203.8       27.1      239.4 |      285      325       82      225
+  iscas89/s344                            131.7      207.7       52.1      343.0 |      407      509       92      425
+  iscas89/s349                            132.5      209.9       52.1      346.0 |      395      509       92      425
+  iscas89/s35932                        12878.4    21914.7     2316.2    37534.6 |     2228      598      158      686
+  iscas89/s382                            171.8      278.5       27.1      337.6 |      337      435       82      232
+  iscas89/s38417                        11546.5    21737.0      850.0    43826.3 |     2732      974      158     1064
+  iscas89/s38584                        11368.6    22321.1     3121.9    36395.3 |     2088      942      257     1196
+  iscas89/s386                            105.1      240.5       59.1      186.0 |      310      347      136      259
+  iscas89/s400                            172.6      287.5       27.1      345.3 |      350      435       82      232
+  iscas89/s420                            150.6      272.4      105.5      262.7 |      550      403      142      266
+  iscas89/s444                            166.8      304.6       27.1      386.3 |      332      443       82      268
+  iscas89/s510                            164.1      270.8       55.9      344.8 |      361      403      125      284
+  iscas89/s526                            179.3      371.6       27.1      388.6 |      409      325       82      228
+  iscas89/s5378                          1326.5     3024.2      961.2     4046.9 |      534      751      186      512
+  iscas89/s641                            176.6      374.3      124.2      511.6 |      494      787      208     1221
+  iscas89/s713                            174.0      405.1      123.8      542.5 |      470      935      208     1253
+  iscas89/s820                            175.3      489.2       75.5      377.2 |      408      403      136      254
+  iscas89/s832                            178.0      500.9       75.5      377.8 |      401      403      136      254
+  iscas89/s838                            299.8      557.5      214.1      531.8 |      941      493      164      353
+  iscas89/s9234                          1120.1     2627.8      166.6     9564.3 |      708      861      175     1268
+  iscas89/s953                            366.3      545.6      104.0      858.1 |      452      492       82      368
+  koios/reduction_layer                  5430.7   568868.2   623608.0   566319.5 |     1655      794    11480     1642
+  koios/robot_rl                       256471.3   370600.4    23577.0   505299.1 |    26582     2712      849     3205
+  koios/softmax                         92689.3   242880.7     1142.2   339048.9 |    23079     3405      240     5392
+
+Excluded:
+  epfl/hyp: ground truth: synth_failed
+  epfl/log2: ground truth: synth_failed
+  epfl/sqrt: ground truth: synth_failed
+  koios/attention_layer: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  koios/bwave_like_fixed_small: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  koios/bwave_like_float_small: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  koios/clstm_like_medium: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  koios/clstm_like_small: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  koios/conv_layer: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  koios/conv_layer_hls: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR
+  koios/dla_like_medium: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  koios/dla_like_small: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  koios/dnnweaver: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  koios/eltwise_layer: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  koios/gemm_layer: ground truth: synth_failed
+  koios/lstm: ground truth: synth_failed
+  koios/spmv: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  koios/tpu_like_small_os: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  koios/tpu_like_small_ws: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  large/aes: graph: failed: file logikbench/logikbench/benchmarks/large/aes/rtl/aes.sv line 5160: syntax error, unexpected TOK_NON_TYPE_IDENTIFIER before 'LfsrIdxDw'; netlist: failed: file logikbench/logikbench/benchmarks/large/aes/rtl/aes.sv line 5160: syntax error, unexpected TOK_NON_TYPE_IDENTIFIER before 'LfsrIdxDw'; pr1927: failed: file logikbench/logikbench/benchmarks/large/aes/rtl/aes.sv line 5160: syntax error, unexpected TOK_NON_TYPE_IDENTIFIER before 'LfsrIdxDw'; ground truth: synth_failed
+  large/axicrossbar: graph: failed: error: combinational loop through Verilog::$root.axi_crossbar.axi_crossbar_wr_inst.s_ifaces[0].b_arb_inst.priority_encoder_inst.stage_valid; ground truth: synth_failed
+  large/bitcoin: ground truth: synth_failed
+  large/blackparrot: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR; ground truth: synth_failed
+  large/coralnpu: graph: failed: file logikbench/logikbench/benchmarks/large/coralnpu/rtl/coralnpu.sv line 31961: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'fp_form; netlist: failed: file logikbench/logikbench/benchmarks/large/coralnpu/rtl/coralnpu.sv line 31961: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'fp_form; pr1927: failed: file logikbench/logikbench/benchmarks/large/coralnpu/rtl/coralnpu.sv line 31961: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'fp_form; ground truth: synth_failed
+  large/cva6: graph: failed: file logikbench/logikbench/benchmarks/large/cva6/rtl/cva6.sv line 8567: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'fp_format_e'; netlist: failed: file logikbench/logikbench/benchmarks/large/cva6/rtl/cva6.sv line 8567: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'fp_format_e'; pr1927: failed: file logikbench/logikbench/benchmarks/large/cva6/rtl/cva6.sv line 8567: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'fp_format_e'; ground truth: synth_failed
+  large/lz77: graph: failed: exit 6; netlist: failed: exit 6; pr1927: failed: exit 6; ground truth: synth_failed
+  large/nvdlafull: graph: failed: exit -6; netlist: failed: exit -6; pr1927: failed: exit -6; ground truth: synth_failed
+  large/nvdlasmall: ground truth: synth_failed
+  large/ofdm: graph: failed: error: unsupported state constraint with left-hand side if
+  large/qr: graph: timeout; netlist: timeout; pr1927: timeout; ground truth: synth_failed
+  large/rocket: graph: failed: exit 6; netlist: failed: exit 6; pr1927: failed: exit 6; ground truth: synth_failed
+  large/sonicboom: graph: failed: exit 6; netlist: failed: exit 6; pr1927: failed: exit 6; ground truth: synth_failed
+  large/tpu: graph: failed: error: unsupported state constraint with left-hand side index
+  large/vortex: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; pr1927: failed: CONVERSION ERROR
+  large/wally: graph: failed: file logikbench/logikbench/benchmarks/large/wally/rtl/lambda.v line 2: syntax error, unexpected TOK_NON_TYPE_IDENTIFIER, expecting ')' or ',' before 'CLK'; netlist: failed: file logikbench/logikbench/benchmarks/large/wally/rtl/lambda.v line 2: syntax error, unexpected TOK_NON_TYPE_IDENTIFIER, expecting ')' or ',' before 'CLK'; pr1927: failed: file logikbench/logikbench/benchmarks/large/wally/rtl/lambda.v line 2: syntax error, unexpected TOK_NON_TYPE_IDENTIFIER, expecting ')' or ',' before 'CLK'; ground truth: synth_failed

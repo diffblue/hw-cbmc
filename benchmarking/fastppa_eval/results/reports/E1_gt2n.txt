@@ -1,0 +1,57 @@
+designs: 157, compared: 130, excluded: 27
+  graph handles 132/157
+  netlist handles 141/157
+
+Area vs G1 (Yosys+ABC, NanGate45)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph       130    0     1.78     1.44     4.29     54%    69%   0.95
+  netlist     128    2     1.08     1.37     2.97     64%    82%   0.92
+
+Delay vs G1 (OpenSTA data arrival)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph       130    0     0.84     1.72     7.49     44%    60%   0.78
+  netlist     128    2     0.23     3.11    38.62      8%    19%   0.59
+
+Clock energy per cycle vs G1 (OpenSTA, clock pins)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph        57   73     1.07     1.00     1.15     96%    98%   0.99
+  netlist      55   75     0.92     1.00     1.78     89%    89%   0.84
+
+Data energy per cycle and unit of toggle rate vs G1 (OpenSTA)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph       129    1     1.17     1.65     5.97     43%    60%   0.92
+  netlist     128    2     0.54     2.57     6.22     22%    38%   0.89
+
+Leakage vs G1 (OpenSTA)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  graph       130    0     2.09     1.80     6.01     39%    55%   0.93
+  netlist     128    2     0.80     1.53     3.36     49%    68%   0.91
+
+Excluded:
+  arithmetic/addtree: graph: failed: error: combinational loop through Verilog::$root.addtree.node
+  arithmetic/argmax: graph: failed: error: combinational loop through Verilog::$root.argmax.g_argmax[1].sel
+  arithmetic/argmin: graph: failed: error: combinational loop through Verilog::$root.argmin.g_argmin[1].sel
+  arithmetic/avgn: graph: failed: error: combinational loop through Verilog::$root.avgn.acc
+  arithmetic/maxn: graph: failed: error: combinational loop through Verilog::$root.maxn.acc
+  basic/bin2prio: graph: timeout; netlist: timeout
+  basic/icg: ground truth: sta_failed
+  basic/latch: ground truth: sta_failed
+  blocks/beamformer: graph: failed: exit 6; netlist: failed: exit 6
+  blocks/chiplink: graph: failed: error: combinational loop through Verilog::$root.chiplink.u_rx.u_fifo.do_wr
+  blocks/crc32: graph: failed: exit 6; netlist: failed: exit 6
+  blocks/fft: graph: failed: error: unsupported state constraint with left-hand side if
+  blocks/gearbox66: graph: timeout
+  blocks/hamming: graph: failed: exit 6; netlist: failed: exit 6; ground truth: synth_failed
+  blocks/hmac: graph: failed: file logikbench/logikbench/benchmarks/blocks/hmac/rtl/hmac.sv line 9611: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'action_mask_t'; netlist: failed: file logikbench/logikbench/benchmarks/blocks/hmac/rtl/hmac.sv line 9611: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'action_mask_t'; ground truth: synth_failed
+  blocks/i2c: graph: failed: file logikbench/logikbench/benchmarks/blocks/i2c/rtl/i2c.sv line 7630: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; netlist: failed: file logikbench/logikbench/benchmarks/blocks/i2c/rtl/i2c.sv line 7630: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; ground truth: synth_failed
+  blocks/jesd204b: graph: failed: error: combinational loop through Verilog::$root.jesd204b.u_tx.g_lane[0].u_scr.st[1]
+  blocks/lpddr5: graph: timeout; netlist: timeout; ground truth: synth_failed
+  blocks/padring: graph: failed: error: unsupported state constraint: verilog-primitive-module; netlist: failed: exit -6; ground truth: synth_failed
+  blocks/spi: graph: failed: file logikbench/logikbench/benchmarks/blocks/spi/rtl/spi.sv line 8347: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; netlist: failed: file logikbench/logikbench/benchmarks/blocks/spi/rtl/spi.sv line 8347: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; ground truth: synth_failed
+  blocks/uart: graph: failed: file logikbench/logikbench/benchmarks/blocks/uart/rtl/uart.sv line 6211: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; netlist: failed: file logikbench/logikbench/benchmarks/blocks/uart/rtl/uart.sv line 6211: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; ground truth: synth_failed
+  blocks/viterbi: graph: timeout; netlist: timeout; ground truth: synth_failed
+  memory/rambit: graph: failed: exit 6; netlist: failed: exit 6
+  memory/ramsdp: graph: failed: exit 6; netlist: failed: exit 6
+  memory/ramsp: graph: failed: exit 6; netlist: failed: exit 6
+  memory/ramtdp: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR
+  memory/ramtdpdc: graph: failed: CONVERSION ERROR; netlist: failed: CONVERSION ERROR; ground truth: sta_failed

@@ -94,7 +94,7 @@ void fastppa_parse_optionst::help()
                "45nm)\n"
                " --clock-freq <hz>      target clock frequency in Hz\n"
                " --toggle-rate <alpha>  switching activity (0-1, default 0.1)\n"
-               " --netlist              use AIG netlist (more accurate)\n"
+               " --netlist              estimate from the bit-level AIG\n"
                " --cost-table <file>    read operator costs from a file\n"
                " --paths <n>            show the n slowest paths (default 3)\n"
                " --json                 print the results in JSON\n"

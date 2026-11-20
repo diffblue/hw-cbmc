@@ -1,0 +1,57 @@
+designs: 157, compared: 130, excluded: 27
+  derived handles 132/157
+  measured handles 132/157
+
+Area vs G1 (Yosys+ABC, NanGate45)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  derived     130    0     1.57     1.30     3.70     62%    73%   0.95
+  measured    130    0     1.75     1.40     3.99     53%    72%   0.95
+
+Delay vs G1 (OpenSTA data arrival)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  derived     130    0     0.87     1.46     5.17     55%    69%   0.77
+  measured    130    0     1.14     1.68     5.31     42%    65%   0.81
+
+Clock energy per cycle vs G1 (OpenSTA, clock pins)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  derived      57   73     0.29     3.70     3.93      0%     2%   0.99
+  measured     57   73     1.17     1.11     1.21     96%    96%   0.99
+
+Data energy per cycle and unit of toggle rate vs G1 (OpenSTA)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  derived     130    0     2.25     1.98    12.55     32%    50%   0.92
+  measured    130    0     1.58     1.86    10.24     35%    55%   0.92
+
+Leakage vs G1 (OpenSTA)
+  model         n zero  geomean  med.err  p90.err  <=1.5x   <=2x    rho
+  derived     130    0  2825.36  2290.40  6539.02      0%     0%   0.95
+  measured    130    0     1.84     1.50     4.45     50%    68%   0.95
+
+Excluded:
+  arithmetic/addtree: derived: failed: error: combinational loop through Verilog::$root.addtree.node; measured: failed: error: combinational loop through Verilog::$root.addtree.node
+  arithmetic/argmax: derived: failed: error: combinational loop through Verilog::$root.argmax.g_argmax[1].sel; measured: failed: error: combinational loop through Verilog::$root.argmax.g_argmax[1].sel
+  arithmetic/argmin: derived: failed: error: combinational loop through Verilog::$root.argmin.g_argmin[1].sel; measured: failed: error: combinational loop through Verilog::$root.argmin.g_argmin[1].sel
+  arithmetic/avgn: derived: failed: error: combinational loop through Verilog::$root.avgn.acc; measured: failed: error: combinational loop through Verilog::$root.avgn.acc
+  arithmetic/maxn: derived: failed: error: combinational loop through Verilog::$root.maxn.acc; measured: failed: error: combinational loop through Verilog::$root.maxn.acc
+  basic/bin2prio: derived: timeout; measured: timeout
+  basic/icg: ground truth: sta_failed
+  basic/latch: ground truth: sta_failed
+  blocks/beamformer: derived: failed: exit 6; measured: failed: exit 6
+  blocks/chiplink: derived: failed: error: combinational loop through Verilog::$root.chiplink.u_rx.u_fifo.do_wr; measured: failed: error: combinational loop through Verilog::$root.chiplink.u_rx.u_fifo.do_wr
+  blocks/crc32: derived: failed: exit 6; measured: failed: exit 6
+  blocks/fft: derived: failed: error: unsupported state constraint with left-hand side if; measured: failed: error: unsupported state constraint with left-hand side if
+  blocks/gearbox66: derived: timeout; measured: timeout
+  blocks/hamming: derived: failed: exit 6; measured: failed: exit 6; ground truth: synth_failed
+  blocks/hmac: derived: failed: file logikbench/logikbench/benchmarks/blocks/hmac/rtl/hmac.sv line 9611: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'action_mask_t'; measured: failed: file logikbench/logikbench/benchmarks/blocks/hmac/rtl/hmac.sv line 9611: syntax error, unexpected TOK_TYPE_IDENTIFIER, expecting TOK_NON_TYPE_IDENTIFIER before 'action_mask_t'; ground truth: synth_failed
+  blocks/i2c: derived: failed: file logikbench/logikbench/benchmarks/blocks/i2c/rtl/i2c.sv line 7630: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; measured: failed: file logikbench/logikbench/benchmarks/blocks/i2c/rtl/i2c.sv line 7630: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; ground truth: synth_failed
+  blocks/jesd204b: derived: failed: error: combinational loop through Verilog::$root.jesd204b.u_tx.g_lane[0].u_scr.st[1]; measured: failed: error: combinational loop through Verilog::$root.jesd204b.u_tx.g_lane[0].u_scr.st[1]
+  blocks/lpddr5: derived: timeout; measured: timeout; ground truth: synth_failed
+  blocks/padring: derived: failed: error: unsupported state constraint: verilog-primitive-module; measured: failed: error: unsupported state constraint: verilog-primitive-module; ground truth: synth_failed
+  blocks/spi: derived: failed: file logikbench/logikbench/benchmarks/blocks/spi/rtl/spi.sv line 8347: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; measured: failed: file logikbench/logikbench/benchmarks/blocks/spi/rtl/spi.sv line 8347: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; ground truth: synth_failed
+  blocks/uart: derived: failed: file logikbench/logikbench/benchmarks/blocks/uart/rtl/uart.sv line 6211: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; measured: failed: file logikbench/logikbench/benchmarks/blocks/uart/rtl/uart.sv line 6211: syntax error, unexpected default, expecting TOK_NON_TYPE_IDENTIFIER before 'default'; ground truth: synth_failed
+  blocks/viterbi: derived: timeout; measured: timeout; ground truth: synth_failed
+  memory/rambit: derived: failed: exit 6; measured: failed: exit 6
+  memory/ramsdp: derived: failed: exit 6; measured: failed: exit 6
+  memory/ramsp: derived: failed: exit 6; measured: failed: exit 6
+  memory/ramtdp: derived: failed: CONVERSION ERROR; measured: failed: CONVERSION ERROR
+  memory/ramtdpdc: derived: failed: CONVERSION ERROR; measured: failed: CONVERSION ERROR; ground truth: sta_failed

@@ -1,80 +1,84 @@
 fastppa
 =======
 
-Purpose
--------
-
-`fastppa` estimates area, delay, and power for Verilog/SystemVerilog designs
-at a configurable process node (3nm to 130nm). It operates at the word
-level, walking expression DAGs from the transition system without requiring
-gate-level synthesis.
-
-How It Works
-------------
-
-The module takes the transition system produced by the Verilog front-end
-and decomposes it into per-register next-state functions. Each expression
-node (adder, multiplier, shift, MUX, comparator, bitwise op) is costed by
-bit-width using per-technology lookup tables:
-
-- **Area** (µm²) — sum of operator areas across the design
-- **Delay** (ns) — critical-path through the deepest expression DAG,
-  plus a wire-delay heuristic based on √area and fan-out
-- **Power** (mW) — dynamic + clock tree + leakage, at `--clock-freq`
-  (default 1 GHz) and `--toggle-rate` (default 0.1)
-
-The cost tables and heuristics are calibrated against real synthesis
-(Yosys + ABC + OpenSTA, NanGate45); see `DOCKER_VALIDATION.md` for the
-methodology, per-design results, and known limitations of the model.
+`fastppa` estimates the area, delay and power of a Verilog or
+SystemVerilog design without synthesizing it. It reads the design with
+EBMC's front end, builds one graph of the hardware, and costs each
+operator with tables fitted on synthesis results for real cell libraries.
+An estimate takes seconds where synthesis takes minutes to hours, and is
+meant for comparing design alternatives early, not for sign-off.
 
 Usage
 -----
 
-Area and delay estimate at 28nm:
+    $ fastppa design.sv --top main
+    $ fastppa design.sv --top main --process sky130 --clock-freq 100e6
+    $ fastppa design.sv --top main --json > estimate.json
 
-    $ fastppa design.sv --top main --process 28nm
+Options:
 
-Include power estimate at 500 MHz:
+| Option | Meaning |
+|---|---|
+| `--top <module>` | top module |
+| `--process <name>` | process node or cell library (default `45nm`); `fastppa --help` lists them |
+| `--clock-freq <Hz>` | clock frequency for power and slack (default 1 GHz) |
+| `--toggle-rate <a>` | data toggle rate per cycle, 0 to 1 (default 0.1) |
+| `--netlist` | estimate from the bit-level AIG instead of the word-level graph |
+| `--paths <n>` | number of slowest paths to show (default 3) |
+| `--json` | print the results as JSON |
+| `--cost-table <file>` | use a cost table from a file instead of a built-in one |
+| `-I`, `-D`, `--systemverilog` | as for `ebmc` |
 
-    $ fastppa design.sv --top main --process 7nm --clock-freq 500e6
+Output
+------
 
-Technology Parameterization
----------------------------
+- Registers: bits and area.
+- Combinational logic: operators, logic depth and area.
+- Timing: the critical path (the latest data arrival time at a register
+  or output, including the launching register's clock-to-Q delay but not
+  setup time), slack at the given clock, and the slowest paths with the
+  source line of every operator on them.
+- Power: dynamic (switching energy x toggle rate x frequency), clock (the
+  registers' clock pins, which toggle every cycle), and leakage.
+- Accuracy: the range (10th to 90th percentile) of estimate / synthesis
+  measured on held-out designs.
 
-Built-in nodes: `3nm`, `7nm`, `14nm`, `28nm`, `45nm`, `65nm`, `90nm`,
-`130nm`.
+Process nodes
+-------------
 
-Each node provides per-operator cost tables indexed by bit-width.
+Tables measured on open cell libraries: `gf180` (`180nm`), `sky130`
+(`130nm`), `ihp-sg13g2`, `nangate45` (`45nm`), `asap7` (`7nm`), `gt2n`
+(`2nm`). Tables derived by published scaling factors: `90nm`, `65nm`,
+`28nm`, `14nm` (from NanGate45), `5nm`, `3nm` (from ASAP7). The derived
+tables are much less accurate; see `LIMITATIONS.md`.
 
-Limitations
------------
+Accuracy
+--------
 
-- No placement or routing; wire delay is a heuristic, not a wire-load
-  model.
-- Operator costs assume generic standard-cell implementations.
-- Register arrays are costed as flip-flops up to 4096 bits and at SRAM
-  density above that; no memory-compiler macros.
-- Power assumes uniform switching activity (scaled by an RTL-derived
-  activity ratio).
-- I/O pads and power grid are not modeled.
-- No liveness analysis: registers that real synthesis would eliminate as
-  dead are still costed (see `DOCKER_VALIDATION.md`).
+On 93 LogikBench designs that no part of the model was tuned on, at
+45nm, the median error factor against Yosys+ABC and OpenSTA is 2.25x for
+area and 1.27x for delay; areas are too large by about 2.3x on average,
+with a rank correlation of 0.97. `--netlist` estimates area better (median
+1.60x) but delay much worse. The full results, and how they were obtained,
+are in `benchmarking/fastppa_eval/RESULTS.md`.
 
-File Structure
---------------
+Further reading
+---------------
+
+- `ARCHITECTURE.md`: how the estimate is computed.
+- `LIMITATIONS.md`: what is known to be wrong or missing.
+- `benchmarking/fastppa_eval/`: the evaluation protocol, the scripts that
+  produce the ground truth and the cost tables, and the results.
+- `benchmarking/rocket_core/`: a comparison with a commercial post-route
+  report for the Rocket RISC-V core.
+
+Files
+-----
 
     src/fastppa/
-    ├── README.md
-    ├── DOCKER_VALIDATION.md         — validation methodology and results
-    ├── COMPARISON.md                — vs real Synopsys PrimeTime data
-    ├── Makefile
-    ├── main.cpp
-    ├── fastppa_parse_options.{h,cpp} — CLI
-    ├── fastppa_frontend.{h,cpp}      — Verilog → transition system
-    ├── fastppa_estimator.{h,cpp}     — orchestration + output
-    ├── estimate.{h,cpp}              — core DAG walker
-    └── technology_db.{h,cpp}         — process cost tables
-
-The scripts that compare fastppa with Yosys, ABC and OpenSTA on
-calibration and held-out designs are in `benchmarking/fastppa_eval/`
-(see its `README.md`, `PROTOCOL.md` and `RESULTS.md`).
+    ├── main.cpp, fastppa_parse_options.{h,cpp}  command line
+    ├── fastppa_frontend.{h,cpp}   Verilog to transition system, outputs
+    ├── estimate.{h,cpp}           word-level graph estimator
+    ├── fastppa_estimator.{h,cpp}  --netlist estimator, power, output
+    ├── cost_table.{h,cpp}         cost tables and the built-in processes
+    └── cost_table_*.inc           tables generated by fit.py and derive.py
