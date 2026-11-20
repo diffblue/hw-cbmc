@@ -1,0 +1,16 @@
+CORE
+parameter4.sv
+--bound 1
+^\[main\.s\[0\]\.p0\] always \$bits\(main\.s\[0\]\.s\.a\) == 4: PROVED up to bound 1$
+^\[main\.s\[0\]\.p1\] always .*: PROVED up to bound 1$
+^\[main\.s\[0\]\.p2\] always .*: PROVED up to bound 1$
+^\[main\.s\[1\]\.p0\] always \$bits\(main\.s\[1\]\.s\.a\) == 4: PROVED up to bound 1$
+^\[main\.s\[1\]\.p1\] always .*: PROVED up to bound 1$
+^\[main\.s\[1\]\.p2\] always .*: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A parameterised interface bound to the interface ports of an instance
+array.

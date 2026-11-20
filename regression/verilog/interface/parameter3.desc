@@ -1,0 +1,14 @@
+CORE
+parameter3.sv
+--bound 1
+^\[main\.m\.l\.p0\] always \$bits\(main\.m\.l\.s\.a\) == 4: PROVED up to bound 1$
+^\[main\.m\.l\.p1\] always \$bits\(main\.m\.l\.t\[0\]\.a\) == 4: PROVED up to bound 1$
+^\[main\.m\.l\.p2\] always \$bits\(main\.m\.l\.t\[1\]\.a\) == 4: PROVED up to bound 1$
+^\[main\.m\.l\.p3\] always .*: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Parameterised interfaces passed on through a chain of interface ports, as a
+single port and as an array of ports.
