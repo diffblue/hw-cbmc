@@ -30,13 +30,23 @@ build_fastppa_model(const cmdlinet &cmdline, message_handlert &message_handler)
   // Build word-level next-state functions
   const namespacet ns(model.transition_system.symbol_table);
   model.wl_trans = std::make_unique<word_level_transt>(ns);
-  try
+  // A design without registers has the transition relation 'true', and
+  // no next-state functions. Anything else read_trans cannot handle is an
+  // error, not a combinational design.
+  if(!model.transition_system.trans_expr.trans().is_true())
   {
-    model.wl_trans->read_trans(model.transition_system.trans_expr);
-  }
-  catch(...)
-  {
-    // Combinational design — no next-state functions, that's OK
+    try
+    {
+      model.wl_trans->read_trans(model.transition_system.trans_expr);
+    }
+    catch(const std::string &e)
+    {
+      throw ebmc_errort{} << e;
+    }
+    catch(const char *e)
+    {
+      throw ebmc_errort{} << e;
+    }
   }
 
   model.state_vars = model.transition_system.state_variables();
