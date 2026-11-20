@@ -14,7 +14,9 @@ Author: Kiro
 #include <util/std_expr.h>
 #include <util/std_types.h>
 
+#include <ebmc/ebmc_error.h>
 #include <verilog/verilog_bits.h>
+#include <verilog/verilog_types.h>
 
 #include <cmath>
 #include <optional>
@@ -71,13 +73,50 @@ struct walk_contextt
 };
 
 /// Compute the total bit-width of a type, including arrays, structs and
-/// (packed) unions.
+/// (packed) unions. Types that have no hardware representation as a
+/// bit-vector (e.g., real) are an error, rather than being costed as a
+/// single bit.
 static std::size_t get_width(const typet &type)
 {
-  auto bits_opt = verilog_bits_opt(type);
-  if(bits_opt.has_value())
-    return bits_opt->to_ulong();
-  return 1;
+  if(type.id() == ID_bool)
+    return 1;
+  else if(type.id() == ID_floatbv || type.id() == ID_fixedbv)
+  {
+    // fall through to the error
+  }
+  else if(can_cast_type<bitvector_typet>(type))
+    return to_bitvector_type(type).get_width();
+  else if(type.id() == ID_array)
+  {
+    auto &array_type = to_array_type(type);
+    auto size = numeric_cast<mp_integer>(array_type.size());
+    if(size.has_value())
+      return get_width(array_type.element_type()) *
+             numeric_cast_v<std::size_t>(*size);
+  }
+  else if(type.id() == ID_struct)
+  {
+    std::size_t sum = 0;
+    for(auto &component : to_struct_type(type).components())
+      sum += get_width(component.type());
+    return sum;
+  }
+  else if(type.id() == ID_union)
+  {
+    std::size_t max = 0;
+    for(auto &component : to_verilog_union_type(type).components())
+      max = std::max(max, get_width(component.type()));
+    return max;
+  }
+  else
+  {
+    auto bits_opt = verilog_bits_opt(type);
+    if(bits_opt.has_value())
+      return numeric_cast_v<std::size_t>(*bits_opt);
+  }
+
+  throw ebmc_errort{} << "fastppa: cannot determine the width of type "
+                      << type.id();
 }
 
 /// Collect wire definitions from the invariant (invar) constraint.
