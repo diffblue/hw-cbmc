@@ -1,0 +1,13 @@
+CORE
+enum_single_bit1.sv
+--bound 3
+^\[main\.p0\] always .*: PROVED up to bound 3$
+^\[main\.p1\] always .*: PROVED up to bound 3$
+^\[main\.p2\] always .*: PROVED up to bound 3$
+^\[main\.p3\] always main\.b != main\.B1: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+Enums with a single-bit base type were rejected with "assignment to enum
+requires enum of the same type".

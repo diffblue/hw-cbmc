@@ -29,7 +29,9 @@ Function: verilog_typecheck_exprt::is_packed_type
 
 static bool is_packed_type(const typet &type)
 {
-  if(type.id() == ID_struct || type.id() == ID_union)
+  if(type.id() == ID_verilog_enum)
+    return is_packed_type(to_verilog_enum_type(type).base_type());
+  else if(type.id() == ID_struct || type.id() == ID_union)
     return type.get_bool(ID_packed);
   else if(type.id() == ID_array)
     return type.get(ID_C_verilog_type) == ID_verilog_packed_array;
@@ -498,16 +500,20 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
   }
   else if(src.id() == ID_verilog_enum)
   {
-    // Replace by base type, but annotate the original type.
-    // The default base type is 'int'.
+    // Elaborate the base type, and refer to the type symbol that holds the
+    // enum names. The default base type is 'int'. Enum types are replaced
+    // by their base type when lowering.
     auto &enum_type = to_verilog_enum_type(src);
-    auto result = enum_type.has_base_type()
-                    ? elaborate_type(enum_type.base_type())
-                    : signedbv_typet(32);
-    result.set(ID_C_verilog_type, ID_verilog_enum);
+
+    if(enum_type.is_elaborated())
+      return src;
+
+    auto base_type = enum_type.has_base_type()
+                       ? elaborate_type(enum_type.base_type())
+                       : signedbv_typet(32);
     const auto identifier = hierarchical_identifier(enum_type.base_name());
-    result.set(ID_C_identifier, identifier);
-    return result.with_source_location(source_location);
+    return verilog_enum_typet{std::move(base_type), identifier}
+      .with_source_location(source_location);
   }
   else if(src.id() == ID_verilog_event)
   {

@@ -10,6 +10,7 @@
 * SystemVerilog: default values for function and task arguments
 * SystemVerilog: named arguments in task calls
 * SystemVerilog: task lifetimes (task automatic, task static)
+* SystemVerilog: enums with a single-bit base type
 
 # EBMC 6.2
 

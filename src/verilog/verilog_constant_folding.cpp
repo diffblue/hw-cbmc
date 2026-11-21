@@ -89,6 +89,37 @@ verilog_lift_constant(exprt lowered, const typet &verilog_type_given)
   if(!lowered.is_constant())
     return lowered;
 
+  if(verilog_type.id() == ID_verilog_enum)
+  {
+    // Lift to the base type. The value of a constant of enum type is
+    // encoded as that of a constant of the base type.
+    auto &enum_type = to_verilog_enum_type(verilog_type);
+    enum_type.base_type().remove(ID_C_offset);
+    enum_type.base_type().remove(ID_C_increasing);
+    const auto &base_type = enum_type.base_type();
+
+    auto lifted = verilog_lift_constant(std::move(lowered), base_type);
+
+    if(!lifted.is_constant())
+      return lifted;
+
+    if(lifted.type() == base_type)
+    {
+      lifted.type() = verilog_type;
+    }
+    else if(is_four_valued(base_type))
+    {
+      // The value has no x/z, and has been given the two-valued type.
+      auto value_opt = numeric_cast<mp_integer>(to_constant_expr(lifted));
+      if(value_opt.has_value())
+      {
+        lifted = verilog_from_integer(*value_opt, verilog_type)
+                   .with_source_location(lifted.source_location());
+      }
+    }
+
+    return lifted;
+  }
   // Lift four-valued constants back to their Verilog type, unless they
   // are two-valued.
   if(

@@ -14,6 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/mp_arith.h>
 #include <util/std_types.h>
 
+#include <optional>
+
 /// Used during elaboration only,
 /// to signal that a symbol is yet to be elaborated.
 class to_be_elaborated_typet : public type_with_subtypet
@@ -687,6 +689,14 @@ public:
     enum_names() = std::move(_enum_names);
   }
 
+  /// The elaborated enum type, with elaborated base type and the
+  /// identifier of the type symbol that holds the enum names.
+  verilog_enum_typet(typet _base_type, irep_idt _identifier)
+    : type_with_subtypet(ID_verilog_enum, std::move(_base_type))
+  {
+    identifier(_identifier);
+  }
+
   const typet &base_type() const
   {
     return subtype();
@@ -700,6 +710,20 @@ public:
   bool has_base_type() const
   {
     return base_type().is_not_nil();
+  }
+
+  /// The base type of this (elaborated) enum type, annotated with
+  /// C_verilog_type set to verilog_enum and C_identifier set to the
+  /// identifier of the type symbol of the enum. This is the
+  /// representation of enum types after lowering; expr2verilog uses the
+  /// annotations to find the enum names.
+  typet annotated_base_type() const
+  {
+    PRECONDITION(is_elaborated());
+    typet result = base_type();
+    result.set(ID_C_verilog_type, ID_verilog_enum);
+    result.set(ID_C_identifier, identifier());
+    return result;
   }
 
   const enum_namest &enum_names() const
@@ -716,6 +740,24 @@ public:
   irep_idt base_name() const
   {
     return get(ID_base_name);
+  }
+
+  // The identifier of the type symbol of the enum, which holds the
+  // enum names. Set by the type checker; the elaborated type has an
+  // elaborated base type and an identifier, but no enum names.
+  irep_idt identifier() const
+  {
+    return get(ID_identifier);
+  }
+
+  void identifier(irep_idt _identifier)
+  {
+    set(ID_identifier, _identifier);
+  }
+
+  bool is_elaborated() const
+  {
+    return !identifier().empty();
   }
 
   irep_idt scope_prefix() const
@@ -1078,15 +1120,23 @@ bool is_interface_array_type(const typet &);
 /// The two-valued modelling of a variable or net of the given type: all
 /// four-valued vector types are replaced by their corresponding two-valued
 /// type, and unsigned vectors with a single bit and no declared range by
-/// bool. This recurses into arrays, structs and unions. Any attributes of
+/// bool. Enums are replaced by their base type, see
+/// verilog_enum_typet::annotated_base_type.
+/// This recurses into arrays, structs and unions. Any attributes of
 /// the type, e.g. the Verilog type, are retained.
 typet make_two_valued(typet);
 
 /// A constant of the given type with the given value. Like from_integer,
 /// but also for the four-valued vector types, whose constants are strings
-/// of 0/1/x/z digits.
+/// of 0/1/x/z digits, and for enum types, whose constants are encoded
+/// as those of the base type.
 class constant_exprt;
 constant_exprt verilog_from_integer(const mp_integer &, const typet &);
+
+/// The value of the given constant. Like numeric_cast, but also for the
+/// four-valued vector types and for enum types. Empty if the value
+/// contains x/z, or if the type is not supported.
+std::optional<mp_integer> verilog_numeric_cast(const constant_exprt &);
 
 /// The two-valued vector type with the same width, signedness and
 /// attributes as the given four-valued vector type. Unlike
