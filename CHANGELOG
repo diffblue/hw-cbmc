@@ -20,6 +20,8 @@
 * SystemVerilog: wildcard port connections (.*)
 * SystemVerilog: the conditional operator with operands of the same enum
   type yields that enum type
+* SystemVerilog: system functions, e.g., $rose, in named properties and
+  sequences
 
 # EBMC 6.2
 

@@ -2123,6 +2123,15 @@ void verilog_typecheckt::preresolve_identifiers(exprt &expr)
     // once the type of the lhs is known.
     preresolve_identifiers(to_hierarchical_identifier_expr(expr).lhs());
   }
+  else if(
+    expr.id() == ID_function_call &&
+    to_function_call_expr(expr).is_system_function_call())
+  {
+    // The name of a system function, e.g., $rose, is not an
+    // identifier in scope; only its arguments are.
+    for(auto &argument : to_function_call_expr(expr).arguments())
+      preresolve_identifiers(argument);
+  }
   else
   {
     for(auto &op : expr.operands())
