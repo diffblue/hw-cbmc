@@ -16,6 +16,7 @@
 * SystemVerilog: enums with a single-bit base type
 * Verilog: the conditional operator with a condition that contains x/z
   combines the operands bit-wise
+* SystemVerilog: operators with a real and a shortreal operand yield real
 
 # EBMC 6.2
 

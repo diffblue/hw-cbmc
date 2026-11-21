@@ -3506,8 +3506,12 @@ typet verilog_typecheck_exprt::max_type(
   if(vt0.is_other() || vt1.is_other())
     return static_cast<const typet &>(get_nil_irep());
 
-  // If one of the operands is a real, we return the real.
-  if(vt0.is_real())
+  // If one of the operands is a real, we return the real. If one is real
+  // and the other is shortreal, the result is real (1800-2017 11.3.1,
+  // 11.4.11).
+  if(vt0.is_real() && vt1.is_real())
+    return vt1.get_width() > vt0.get_width() ? t1 : t0;
+  else if(vt0.is_real())
     return t0;
   else if(vt1.is_real())
     return t1;
