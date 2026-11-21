@@ -1,0 +1,12 @@
+CORE
+gated_clock_property1.sv
+--bound 3
+^\[main\.0\.a1\] always main\.en: PROVED up to bound 3$
+^\[main\.1\.a2\] always main\.en: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Properties in an always construct on a gated clock are checked only when
+the gated clock has an edge.

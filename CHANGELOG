@@ -10,6 +10,9 @@
 * SystemVerilog: default values for function and task arguments
 * SystemVerilog: named arguments in task calls
 * SystemVerilog: task lifetimes (task automatic, task static)
+* Verilog: clock gating: always constructs on a clock that is derived from
+  a base clock by combinational logic, e.g., clk & en, execute only when
+  the base clock edge passes the gating logic
 
 # EBMC 6.2
 

@@ -1,0 +1,9 @@
+CORE
+gated_clock_multilevel1.sv
+--show-rtl
+^\$root\.main\.q\[0:0\] register, next-state value: main\.en2 && main\.en1 \? main\.d : main\.q$
+^\$root\.main\.r\[0:0\] register, next-state value: main\.en1 \? main\.d : main\.r$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

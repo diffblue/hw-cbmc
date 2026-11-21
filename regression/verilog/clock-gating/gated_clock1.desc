@@ -1,0 +1,14 @@
+CORE
+gated_clock1.sv
+--bound 6
+^\[main\.p_hold\] always \(!main\.en \|=> \$stable\(main\.q\)\): PROVED up to bound 6$
+^\[main\.p_follow\] always \(main\.en \|=> main\.q == \$past\(main\.d\)\): PROVED up to bound 6$
+^\[main\.p_r\] always \(##1 main\.r == \$past\(main\.d\)\): PROVED up to bound 6$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A register on a gated clock, clk & en, only changes when en is set at the
+clock edge. The base clock clk is identified by the always construct
+that uses it without gating.

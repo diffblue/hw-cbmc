@@ -443,6 +443,95 @@ protected:
   /// mark the wire slices that depend on themselves
   void mark_self_dependent_wires();
 
+  /// An always construct with an edge-sensitive event control,
+  /// recorded for the clock gating analysis.
+  class clocked_blockt
+  {
+  public:
+    /// the operands of the posedge and negedge events
+    std::vector<exprt> edges;
+
+    /// the slices the construct assigns
+    std::vector<std::pair<irep_idt, verilog_rtl_slicet>> slices;
+
+    /// the indices of the properties recorded within the construct
+    std::vector<std::size_t> properties;
+  };
+
+  std::vector<clocked_blockt> clocked_blocks;
+
+  /// Guard the registers and properties of the always constructs whose
+  /// clock is derived from a base clock by combinational logic,
+  /// e.g. clk & en, with the condition under which an edge of the
+  /// base clock is an edge of the derived clock.
+  void apply_clock_gating();
+
+  /// the signals that are used as clocks without gating, after
+  /// resolving aliases
+  std::set<irep_idt> base_clocks;
+
+  /// The whole-signal definition of the given identifier, if any:
+  /// the value of a wire that is defined as a whole, or the
+  /// expression it is connected to by a port connection.
+  std::optional<exprt> signal_definition(const irep_idt &) const;
+
+  /// The whole-signal definitions obtained from port connections: an
+  /// input port is defined by its actual, and an actual that is a
+  /// plain signal is defined by the output port it is connected to.
+  std::map<irep_idt, exprt> port_definitions;
+
+  /// signals with more than one port connection; these are not defined
+  /// by the port connections
+  std::set<irep_idt> multiply_connected;
+
+  void record_port_definition(const irep_idt &identifier, const exprt &value)
+  {
+    if(multiply_connected.find(identifier) != multiply_connected.end())
+      return;
+
+    if(!port_definitions.emplace(identifier, value).second)
+    {
+      port_definitions.erase(identifier);
+      multiply_connected.insert(identifier);
+    }
+  }
+
+  /// The identifier the given signal is an alias of, following
+  /// whole-signal definitions that are plain signals, or {} if the
+  /// signal is defined by an expression that is not a plain signal.
+  std::optional<irep_idt> resolve_alias(const irep_idt &) const;
+
+  /// the base clocks the given expression depends on, following
+  /// whole-signal definitions
+  const std::set<irep_idt> &clocks_of(const irep_idt &);
+  std::set<irep_idt> clocks_of(const exprt &);
+  std::map<irep_idt, std::set<irep_idt>> clocks_of_cache;
+
+  /// The condition under which an edge of the given base clock
+  /// is an edge of the given clock expression, or {} if the logic
+  /// is not recognised as gating logic or exceeds \ref clock_logic_limit.
+  std::optional<exprt>
+  clock_sensitivity(const exprt &, const irep_idt &clock, std::size_t &budget);
+
+  /// the condition under which an edge of the given base clock
+  /// is an edge of the given signal
+  std::optional<exprt> clock_sensitivity(
+    const irep_idt &,
+    const irep_idt &clock,
+    std::size_t &budget);
+
+  /// the results of clock_sensitivity, per signal and base clock
+  std::map<std::pair<irep_idt, irep_idt>, std::optional<exprt>>
+    clock_sensitivity_cache;
+
+  /// The number of expression nodes the analysis of the gating logic
+  /// of one clock may visit. Gating logic is small; a clock that passes
+  /// through more logic is not considered gated.
+  static const std::size_t clock_logic_limit = 100;
+
+  /// the condition under which the given always construct executes
+  exprt clock_enable(const clocked_blockt &);
+
   /// an lvalue lowered to an assignment of a whole symbol
   class loweredt
   {
@@ -572,7 +661,7 @@ protected:
   /// The width of the entire identifier as a slice. Types without
   /// a fixed number of bits, e.g. chandles, are treated as a single
   /// slice; they are always assigned as a whole.
-  verilog_rtl_slicet whole_slice(const symbol_exprt &symbol)
+  verilog_rtl_slicet whole_slice(const symbol_exprt &symbol) const
   {
     auto bits_opt = verilog_bits_opt(symbol.type());
     if(bits_opt.has_value())
@@ -4231,6 +4320,433 @@ void verilog_rtl_buildert::collect_reads(
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::signal_definition
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<exprt>
+verilog_rtl_buildert::signal_definition(const irep_idt &identifier) const
+{
+  auto map_it = rtl.identifier_map.find(identifier);
+
+  if(map_it != rtl.identifier_map.end())
+  {
+    auto &slice_map = map_it->second;
+
+    const symbolt *symbol;
+    if(ns.lookup(identifier, symbol))
+      return {};
+
+    // a wire that is defined as a whole
+    if(
+      slice_map.size() == 1 && slice_map.begin()->second.is_wire() &&
+      slice_map.begin()->first ==
+        whole_slice(symbol_exprt{identifier, symbol->type}))
+    {
+      return slice_map.begin()->second.value;
+    }
+
+    return {};
+  }
+
+  auto port_it = port_definitions.find(identifier);
+
+  if(port_it != port_definitions.end())
+    return port_it->second;
+
+  return {};
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::resolve_alias
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<irep_idt>
+verilog_rtl_buildert::resolve_alias(const irep_idt &identifier) const
+{
+  std::set<irep_idt> visited;
+  irep_idt current = identifier;
+
+  while(visited.insert(current).second)
+  {
+    auto definition_opt = signal_definition(current);
+
+    if(!definition_opt.has_value())
+      return current; // no definition, the signal is free
+
+    // A typecast between one-bit types, e.g. by a port connection,
+    // does not alter the signal.
+    const exprt *definition = &*definition_opt;
+    while(definition->id() == ID_typecast)
+      definition = &to_typecast_expr(*definition).op();
+
+    if(definition->id() != ID_symbol)
+      return {}; // defined by logic
+
+    current = to_symbol_expr(*definition).get_identifier();
+  }
+
+  return {}; // cyclic
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::clocks_of
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+const std::set<irep_idt> &
+verilog_rtl_buildert::clocks_of(const irep_idt &identifier)
+{
+  auto cache_it = clocks_of_cache.find(identifier);
+  if(cache_it != clocks_of_cache.end())
+    return cache_it->second;
+
+  // An empty entry breaks cycles, and is also the result for
+  // signals that are not derived from a base clock.
+  clocks_of_cache[identifier];
+
+  std::set<irep_idt> result;
+
+  if(base_clocks.find(identifier) != base_clocks.end())
+    result.insert(identifier);
+  else
+  {
+    auto definition_opt = signal_definition(identifier);
+    if(definition_opt.has_value())
+      result = clocks_of(*definition_opt);
+  }
+
+  return clocks_of_cache[identifier] = std::move(result);
+}
+
+std::set<irep_idt> verilog_rtl_buildert::clocks_of(const exprt &expr)
+{
+  std::set<irep_idt> result;
+
+  for(auto it = expr.depth_begin(); it != expr.depth_end(); ++it)
+    if(it->id() == ID_symbol)
+    {
+      auto &clocks = clocks_of(to_symbol_expr(*it).get_identifier());
+      result.insert(clocks.begin(), clocks.end());
+    }
+
+  return result;
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::clock_sensitivity
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: The condition under which an edge of the given base clock
+          causes an edge of the given clock expression, which must
+          depend on the base clock, and on no other base clock. E.g.,
+          clk & en has an edge together with clk iff en is set.
+          Signals other than the base clock are assumed to be stable
+          around the edge, as they are in a glitch-free clock gate.
+
+          The gating constructs that are recognised are and, or and
+          xor gates, inverters, and multiplexers whose select signal
+          does not depend on the clock. A clock that passes through
+          other logic is not considered gated, which gives {}.
+
+\*******************************************************************/
+
+std::optional<exprt> verilog_rtl_buildert::clock_sensitivity(
+  const irep_idt &identifier,
+  const irep_idt &clock,
+  std::size_t &budget)
+{
+  if(identifier == clock)
+    return true_exprt{};
+
+  if(clocks_of(identifier).empty())
+    return false_exprt{};
+
+  // The definitions form a DAG; the condition for a signal is
+  // computed once, and shared.
+  auto cache_key = std::make_pair(identifier, clock);
+  auto cache_it = clock_sensitivity_cache.find(cache_key);
+  if(cache_it != clock_sensitivity_cache.end())
+    return cache_it->second;
+
+  auto definition_opt = signal_definition(identifier);
+  CHECK_RETURN(definition_opt.has_value());
+
+  auto result = clock_sensitivity(*definition_opt, clock, budget);
+  clock_sensitivity_cache.emplace(cache_key, result);
+
+  return result;
+}
+
+std::optional<exprt> verilog_rtl_buildert::clock_sensitivity(
+  const exprt &expr,
+  const irep_idt &clock,
+  std::size_t &budget)
+{
+  auto to_bool = [](const exprt &op) -> exprt
+  { return typecast_exprt::conditional_cast(op, bool_typet{}); };
+
+  // the negation of a Boolean, avoiding double negation
+  auto negation = [&to_bool](const exprt &op) -> exprt
+  {
+    if(op.id() == ID_not || op.id() == ID_bitnot)
+      return to_bool(to_unary_expr(op).op());
+    else
+      return not_exprt{to_bool(op)};
+  };
+
+  if(budget == 0)
+    return {};
+
+  budget--;
+
+  // expressions that do not depend on the clock have no edges
+  if(clocks_of(expr).empty())
+    return false_exprt{};
+
+  if(expr.id() == ID_symbol)
+  {
+    return clock_sensitivity(
+      to_symbol_expr(expr).get_identifier(), clock, budget);
+  }
+  else if(expr.id() == ID_typecast)
+    return clock_sensitivity(to_typecast_expr(expr).op(), clock, budget);
+  else if(expr.id() == ID_not || expr.id() == ID_bitnot)
+    return clock_sensitivity(to_unary_expr(expr).op(), clock, budget);
+  else if(
+    expr.id() == ID_and || expr.id() == ID_bitand || expr.id() == ID_or ||
+    expr.id() == ID_bitor || expr.id() == ID_xor || expr.id() == ID_bitxor)
+  {
+    // Partition the operands into the one that depends on the clock
+    // and those that do not.
+    const exprt *clocked_op = nullptr;
+    std::size_t clocked_ops = 0;
+    exprt::operandst conjuncts;
+
+    for(auto &op : expr.operands())
+    {
+      if(clocks_of(op).empty())
+      {
+        // The clock passes through an and-gate when the other inputs
+        // are set, and through an or-gate when they are clear.
+        if(expr.id() == ID_and || expr.id() == ID_bitand)
+          conjuncts.push_back(to_bool(op));
+        else if(expr.id() == ID_or || expr.id() == ID_bitor)
+          conjuncts.push_back(negation(op));
+        // an xor-gate passes the clock, possibly inverted
+      }
+      else
+      {
+        clocked_op = &op;
+        clocked_ops++;
+      }
+    }
+
+    if(clocked_ops == 1)
+    {
+      auto sensitivity_opt = clock_sensitivity(*clocked_op, clock, budget);
+      if(!sensitivity_opt.has_value())
+        return {};
+      if(!sensitivity_opt->is_true())
+        conjuncts.push_back(std::move(*sensitivity_opt));
+      return conjunction(conjuncts);
+    }
+  }
+  else if(expr.id() == ID_if)
+  {
+    auto &if_expr = to_if_expr(expr);
+
+    if(clocks_of(if_expr.cond()).empty())
+    {
+      // a clock multiplexer
+      auto cond = to_bool(if_expr.cond());
+
+      auto true_case_opt =
+        clock_sensitivity(if_expr.true_case(), clock, budget);
+      if(!true_case_opt.has_value())
+        return {};
+
+      auto false_case_opt =
+        clock_sensitivity(if_expr.false_case(), clock, budget);
+      if(!false_case_opt.has_value())
+        return {};
+
+      auto &true_case = *true_case_opt;
+      auto &false_case = *false_case_opt;
+
+      if(true_case.is_true() && false_case.is_false())
+        return cond;
+      else if(true_case.is_false() && false_case.is_true())
+        return not_exprt{cond};
+      else if(true_case.is_true())
+        return or_exprt{cond, false_case};
+      else if(false_case.is_false())
+        return and_exprt{cond, true_case};
+      else if(true_case.is_false())
+        return and_exprt{not_exprt{cond}, false_case};
+      else if(false_case.is_true())
+        return or_exprt{not_exprt{cond}, true_case};
+      else
+        return if_exprt{cond, true_case, false_case};
+    }
+  }
+
+  // Anything else, e.g. a clock that is combined with another signal
+  // that depends on the clock, is not recognised as gating logic.
+  return {};
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::clock_enable
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: The condition under which the given always construct
+          executes, i.e., under which any of its edge events occurs.
+          An edge event on a clock that is not derived from exactly
+          one base clock occurs in every step.
+
+\*******************************************************************/
+
+exprt verilog_rtl_buildert::clock_enable(const clocked_blockt &block)
+{
+  exprt::operandst disjuncts;
+
+  for(auto &edge : block.edges)
+  {
+    auto clocks = clocks_of(edge);
+
+    // An expression over no base clock, e.g. a signal that is only
+    // used as a clock in gated form, or over several base clocks,
+    // e.g. a multiplexer between two clocks, is not gated.
+    if(clocks.size() != 1)
+      return true_exprt{};
+
+    std::size_t budget = clock_logic_limit;
+    auto sensitivity_opt = clock_sensitivity(edge, *clocks.begin(), budget);
+
+    // Clocks that pass through logic that is not recognised as
+    // gating, e.g. in gate-level designs that use arbitrary signals
+    // as clocks, are not gated.
+    if(!sensitivity_opt.has_value())
+      return true_exprt{};
+
+    // an edge that is not gated makes the construct execute in every step
+    if(sensitivity_opt->is_true())
+      return true_exprt{};
+
+    disjuncts.push_back(std::move(*sensitivity_opt));
+  }
+
+  return disjunction(disjuncts);
+}
+
+/*******************************************************************\
+
+Function: verilog_rtl_buildert::apply_clock_gating
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: All edge-triggered always constructs execute in every step
+          of the transition system, as if their clocks were the
+          same. This is refined for constructs whose clock is derived
+          from a base clock by combinational logic, e.g.,
+
+            wire gclk = clk & en;
+            always @(posedge gclk) q <= d;
+
+          The base clocks are the signals that are used as clocks
+          without gating. The constructs on a derived clock execute
+          only when the base clock edge passes through the gating
+          logic; otherwise, their registers hold their values, and
+          their properties are not checked.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::apply_clock_gating()
+{
+  // The base clocks are the clocks of the constructs that are not
+  // gated, i.e., where the edge is on a free signal or an alias
+  // of one.
+  for(auto &block : clocked_blocks)
+    for(auto &edge : block.edges)
+    {
+      const exprt *expr = &edge;
+      while(expr->id() == ID_typecast)
+        expr = &to_typecast_expr(*expr).op();
+
+      if(expr->id() == ID_symbol)
+      {
+        auto alias_opt = resolve_alias(to_symbol_expr(*expr).get_identifier());
+        if(alias_opt.has_value())
+          base_clocks.insert(*alias_opt);
+      }
+    }
+
+  // Now gate the constructs on derived clocks.
+  for(auto &block : clocked_blocks)
+  {
+    auto enable = clock_enable(block);
+
+    if(enable.is_true())
+      continue;
+
+    for(auto &[identifier, slice] : block.slices)
+    {
+      auto &definition = rtl.identifier_map.at(identifier).at(slice);
+      DATA_INVARIANT(
+        definition.is_state_holding(), "clocked constructs define registers");
+
+      const symbolt &symbol = ns.lookup(identifier);
+      auto hold_value = slice_of(symbol_exprt{identifier, symbol.type}, slice);
+
+      definition.value = if_exprt{
+        enable,
+        definition.value,
+        typecast_exprt::conditional_cast(hold_value, definition.value.type())};
+    }
+
+    for(auto property_index : block.properties)
+    {
+      auto &condition = rtl.properties[property_index].condition;
+      condition = verilog_implies_exprt{
+        enable, typecast_exprt::conditional_cast(condition, bool_typet{})};
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::build_always
 
   Inputs:
@@ -4245,6 +4761,7 @@ void verilog_rtl_buildert::build_always(const verilog_always_baset &always)
 {
   const verilog_statementt *body = &always.statement();
   bool clocked = false;
+  clocked_blockt clocked_block;
 
   if(always.id() == ID_verilog_always_latch)
   {
@@ -4258,13 +4775,23 @@ void verilog_rtl_buildert::build_always(const verilog_always_baset &always)
     auto &guard = event_guard.guard();
 
     // any edge in the guard makes this a clocked process
+    auto add_edge = [&clocked, &clocked_block, this](const exprt &event)
+    {
+      if(event.id() == ID_posedge || event.id() == ID_negedge)
+      {
+        clocked = true;
+        statet state;
+        clocked_block.edges.push_back(
+          substitute(to_unary_expr(event).op(), state));
+      }
+    };
+
     if(guard.id() == ID_posedge || guard.id() == ID_negedge)
-      clocked = true;
+      add_edge(guard);
     else
     {
       for(auto &op : guard.operands())
-        if(op.id() == ID_posedge || op.id() == ID_negedge)
-          clocked = true;
+        add_edge(op);
     }
 
     body = &event_guard.body();
@@ -4286,6 +4813,8 @@ void verilog_rtl_buildert::build_always(const verilog_always_baset &always)
   auto old_context = property_context;
   property_context = verilog_rtl_propertyt::contextt::ALWAYS;
 
+  auto first_property = rtl.properties.size();
+
   build_statement(*body, state, framest{});
 
   property_context = old_context;
@@ -4294,6 +4823,21 @@ void verilog_rtl_buildert::build_always(const verilog_always_baset &always)
     state,
     clocked ? kindt::STATE_HOLDING : kindt::WIRE,
     always.source_location());
+
+  if(clocked)
+  {
+    // record the registers and properties for the clock gating analysis
+    for(auto &value_entry : state.values)
+      if(!is_cycle_local(value_entry.first))
+        for(auto &slice_entry : value_entry.second)
+          clocked_block.slices.emplace_back(
+            value_entry.first, slice_entry.first);
+
+    for(auto i = first_property; i < rtl.properties.size(); i++)
+      clocked_block.properties.push_back(i);
+
+    clocked_blocks.push_back(std::move(clocked_block));
+  }
 }
 
 /*******************************************************************\
@@ -4748,8 +5292,15 @@ void verilog_rtl_buildert::build_port_connection(
 
   statet state;
   record_forced(lhs, instance_identifier);
-  rtl.constraints.push_back(equal_exprt{
-    substitute(std::move(lhs), state), substitute(std::move(rhs), state)});
+
+  lhs = substitute(std::move(lhs), state);
+  rhs = substitute(std::move(rhs), state);
+
+  // record the connection for the clock gating analysis
+  if(lhs.id() == ID_symbol && port.direction() != ID_inout)
+    record_port_definition(to_symbol_expr(lhs).get_identifier(), rhs);
+
+  rtl.constraints.push_back(equal_exprt{std::move(lhs), std::move(rhs)});
 }
 
 /*******************************************************************\
@@ -5296,6 +5847,7 @@ verilog_rtlt verilog_rtl_buildert::build()
   // now that all drivers are known
   force_interface_port_connections();
   mark_self_dependent_wires();
+  apply_clock_gating();
 
   return std::move(rtl);
 }

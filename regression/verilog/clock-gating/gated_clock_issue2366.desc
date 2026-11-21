@@ -1,0 +1,12 @@
+KNOWNBUG
+gated_clock_issue2366.sv
+--top gated --bound 6
+^\[gated\.p_hold\] .*: PROVED up to bound 6$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The only use of clk as a clock is the clocking event of the property,
+which the parser discards. Hence clk is not identified as the base clock
+of gclk, and the always construct is not gated.
