@@ -10,6 +10,7 @@
 * SystemVerilog: default values for function and task arguments
 * SystemVerilog: named arguments in task calls
 * SystemVerilog: task lifetimes (task automatic, task static)
+* SystemVerilog: operators with a real and a shortreal operand yield real
 
 # EBMC 6.2
 
