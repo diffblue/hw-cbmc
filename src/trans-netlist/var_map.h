@@ -30,7 +30,11 @@ public:
     vartypet vartype;
     typet type;
     irep_idt mode;
-    
+
+    /// The variable is an output port of the module. This is
+    /// independent of the vartype: an `output reg` is a LATCH.
+    bool is_output_port = false;
+
     inline bool is_latch() const { return vartype==vartypet::LATCH; }
     inline bool is_input() const { return vartype==vartypet::INPUT; }
     inline bool is_output() const
