@@ -22,6 +22,9 @@
   type yields that enum type
 * SystemVerilog: system functions, e.g., $rose, in named properties and
   sequences
+* Verilog: lowering and simplification visit each distinct subexpression
+  once, which avoids exponential time and memory on designs that build
+  shared expressions, e.g., bit-wise writes into memories in loops
 
 # EBMC 6.2
 
