@@ -1,0 +1,16 @@
+CORE
+gated_clock_operators1.sv
+--show-rtl
+^\$root\.main\.q1\[0:0\] register, next-state value: main\.en \? main\.d : main\.q1$
+^\$root\.main\.q2\[0:0\] register, next-state value: main\.sel \? main\.d : main\.q2$
+^\$root\.main\.q4\[0:0\] register, next-state value: main\.sel && main\.en \? main\.d : main\.q4$
+^\$root\.main\.q5\[0:0\] register, next-state value: main\.sel && main\.en \? main\.d : main\.q5$
+^\$root\.main\.q6\[0:0\] register, next-state value: main\.sel \|\| main\.en \? main\.d : main\.q6$
+^\$root\.main\.r\[0:0\] register, next-state value: main\.d$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The gating condition is derived structurally for and, or, xor, not and
+the conditional operator, and composes through intermediate nets.

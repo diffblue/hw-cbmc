@@ -1,0 +1,17 @@
+CORE
+gated_clock_ungated1.sv
+--show-rtl
+^\$root\.main\.q1\[0:0\] register, next-state value: main\.d$
+^\$root\.main\.q2\[0:0\] register, next-state value: !main\.rst_n \? 1'b0 : main\.d$
+^\$root\.main\.q3\[0:0\] register, next-state value: main\.d$
+^\$root\.main\.q4\[0:0\] register, next-state value: main\.d$
+^\$root\.main\.q5\[0:0\] register, next-state value: main\.d$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Clock gating is only applied when the clock expression depends on
+exactly one base clock, when every edge of the event control is gated,
+and when the logic consists of and, or, xor, not and the conditional
+operator.
