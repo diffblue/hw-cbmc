@@ -1,0 +1,15 @@
+CORE
+nested_loop_flag1.sv
+--bound 0
+^\[main\.p0\] always .*: PROVED up to bound 0$
+^\[main\.p1\] always .*: PROVED up to bound 0$
+^\[main\.p2\] always main\.ok -> main\.used == 255: PROVED up to bound 0$
+^\[main\.p3\] always main\.ok -> main\.w\[0\] == main\.rdata\[7:0\]: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Each iteration of the nested loop reads back and conditionally updates
+'found' and 'used'. The RTL builder must name the intermediate values
+to avoid exponential growth (https://github.com/diffblue/hw-cbmc/issues/2196).
