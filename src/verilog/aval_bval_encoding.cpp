@@ -469,12 +469,7 @@ exprt aval_bval(const not_exprt &expr)
   return if_exprt{has_xz, x, aval_bval_conversion(not_expr, x.type())};
 }
 
-// Reduce a (possibly four-valued) operand to its logical truth value.
-//   is_true:  the operand has at least one known 1 bit
-//   is_false: the operand has no 1 bit and no x/z bit
-// A four-valued operand that is neither is 'x'.
-// See IEEE 1800-2017 11.4.7 and Table 11-18/11-19.
-static exprt logical_has_one(const exprt &op)
+exprt logical_has_one(const exprt &op)
 {
   if(is_aval_bval(op))
   {
