@@ -1,0 +1,11 @@
+CORE
+named_property8.sv
+--bound 10
+^\[main\.assert\.1\] always main\.p: PROVED up to bound 10$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Issue #2308: system functions such as $rose in a named property
+declaration were reported as unknown identifiers.
