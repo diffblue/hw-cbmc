@@ -14,6 +14,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <map>
 #include <ostream>
 #include <string>
+#include <unordered_set>
+#include <vector>
 
 extern "C"
 {
@@ -79,20 +81,35 @@ invariant_literal(const std::optional<exprt> &netlist_expr)
 
 /// Split a netlist literal into the conjuncts given by its
 /// (non-negated) AND nodes. The constant TRUE yields no conjunct.
-static void
-flatten_conjunction(const netlistt &netlist, literalt l, bvt &conjuncts)
+/// This uses an explicit stack, as the conjunction may be deep, and
+/// visits shared AND nodes once.
+static bvt flatten_conjunction(const netlistt &netlist, const bvt &literals)
 {
-  if(l.is_true())
-    return;
+  bvt conjuncts;
+  std::vector<literalt> stack(literals.rbegin(), literals.rend());
+  std::unordered_set<literalt::var_not> visited;
 
-  if(!l.is_constant() && !l.sign() && netlist.nodes[l.var_no()].is_and())
+  while(!stack.empty())
   {
-    const auto &node = netlist.nodes[l.var_no()];
-    flatten_conjunction(netlist, node.a, conjuncts);
-    flatten_conjunction(netlist, node.b, conjuncts);
+    literalt l = stack.back();
+    stack.pop_back();
+
+    if(l.is_true())
+      continue;
+
+    if(!l.is_constant() && !l.sign() && netlist.nodes[l.var_no()].is_and())
+    {
+      if(!visited.insert(l.var_no()).second)
+        continue; // already flattened
+      const auto &node = netlist.nodes[l.var_no()];
+      stack.push_back(node.b);
+      stack.push_back(node.a);
+    }
+    else
+      conjuncts.push_back(l);
   }
-  else
-    conjuncts.push_back(l);
+
+  return conjuncts;
 }
 
 void output_aiger(const netlistt &netlist, std::ostream &out)
@@ -130,9 +147,7 @@ void output_aiger(const netlistt &netlist, std::ostream &out)
   bvt residual_initial;
 
   {
-    bvt conjuncts;
-    for(auto l : netlist.initial)
-      flatten_conjunction(netlist, l, conjuncts);
+    bvt conjuncts = flatten_conjunction(netlist, netlist.initial);
 
     for(auto l : conjuncts)
     {
