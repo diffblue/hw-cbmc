@@ -1,0 +1,10 @@
+CORE
+blocking_flag_in_loop1.sv
+--bound 0
+^\[main\.p0\] .*: PROVED up to bound 0$
+^\[main\.p1\] .*: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+On main, this takes 40 seconds; with 32 bits, it does not finish.

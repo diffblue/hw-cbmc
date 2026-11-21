@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
+#include <util/expr_identity_map.h>
 #include <util/expr_iterator.h>
 #include <util/expr_util.h>
 #include <util/mathematical_types.h>
@@ -36,7 +37,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <algorithm>
 #include <ostream>
 #include <set>
-
+#include <unordered_map>
+#include <utility>
 /*******************************************************************\
 
    Class: verilog_rtl_buildert
@@ -441,6 +443,13 @@ protected:
     const verilog_rtl_slicet &whole,
     std::vector<verilog_rtl_slicet> &dest);
 
+  void collect_reads_rec(
+    const exprt &,
+    const irep_idt &,
+    const verilog_rtl_slicet &whole,
+    std::vector<verilog_rtl_slicet> &dest,
+    expr_identity_mapt<bool> &visited);
+
   /// mark the wire slices that depend on themselves
   void mark_self_dependent_wires();
 
@@ -490,6 +499,12 @@ protected:
 
   /// constant-fold system function calls such as $bits
   exprt fold_system_functions(exprt) const;
+  exprt fold_system_functions_rec(exprt) const;
+
+  // The values built by RTL construction are DAGs with much sharing, e.g.,
+  // for loops with blocking assignments that read the assigned variable
+  // more than once. Each distinct subexpression is folded once.
+  mutable expr_identity_mapt<exprt> fold_system_functions_cache;
 
   /// Folds the system functions in the given expression, and then
   /// simplifies it, when the simplifier supports its types. The result is
@@ -597,8 +612,31 @@ Function: verilog_rtl_buildert::fold_system_functions
 
 exprt verilog_rtl_buildert::fold_system_functions(exprt expr) const
 {
-  for(auto &op : expr.operands())
-    op = fold_system_functions(std::move(op));
+  if(auto cached = fold_system_functions_cache.find(expr))
+    return *cached;
+  const exprt original = expr;
+  auto result = fold_system_functions_rec(std::move(expr));
+  fold_system_functions_cache.insert(original, result);
+  return result;
+}
+
+exprt verilog_rtl_buildert::fold_system_functions_rec(exprt expr) const
+{
+  // Only modify the expression when an operand changes: writing to the
+  // operands of a shared node copies it, and the copies would no longer
+  // share their subexpressions with the values they were built from.
+  const auto &operands = std::as_const(expr).operands();
+  exprt::operandst folded;
+  folded.reserve(operands.size());
+  bool changed = false;
+  for(auto &op : operands)
+  {
+    folded.push_back(fold_system_functions(op));
+    if(&folded.back().read() != &op.read())
+      changed = true;
+  }
+  if(changed)
+    expr.operands() = std::move(folded);
 
   if(expr.id() == ID_function_call)
   {
@@ -4114,6 +4152,22 @@ void verilog_rtl_buildert::collect_reads(
   const verilog_rtl_slicet &whole,
   std::vector<verilog_rtl_slicet> &dest)
 {
+  expr_identity_mapt<bool> visited;
+  collect_reads_rec(expr, identifier, whole, dest, visited);
+}
+
+void verilog_rtl_buildert::collect_reads_rec(
+  const exprt &expr,
+  const irep_idt &identifier,
+  const verilog_rtl_slicet &whole,
+  std::vector<verilog_rtl_slicet> &dest,
+  expr_identity_mapt<bool> &visited)
+{
+  // a subexpression that occurs more than once has the same reads
+  if(visited.find(expr))
+    return;
+  visited.insert(expr, true);
+
   if(
     expr.id() == ID_symbol || expr.id() == ID_verilog_bit_select ||
     expr.id() == ID_verilog_non_indexed_part_select ||
@@ -4160,7 +4214,7 @@ void verilog_rtl_buildert::collect_reads(
   }
 
   for(auto &op : expr.operands())
-    collect_reads(op, identifier, whole, dest);
+    collect_reads_rec(op, identifier, whole, dest, visited);
 }
 
 /*******************************************************************\
