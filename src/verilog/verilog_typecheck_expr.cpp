@@ -4821,8 +4821,19 @@ exprt verilog_typecheck_exprt::convert_trinary_expr(ternary_exprt expr)
     if(!is_four_valued(expr.op0().type()))
       make_boolean(expr.op0());
 
-    tc_binary_expr(expr, expr.op1(), expr.op2());
-    expr.type()=expr.op1().type();
+    if(
+      expr.op1().type().id() == ID_verilog_enum &&
+      expr.op1().type() == expr.op2().type())
+    {
+      // When both operands have the same enum type, so does the result,
+      // which can then be assigned to a variable of that enum type.
+      expr.type() = expr.op1().type();
+    }
+    else
+    {
+      tc_binary_expr(expr, expr.op1(), expr.op2());
+      expr.type() = expr.op1().type();
+    }
 
     // anything four valued?
     if(is_four_valued(expr.op0().type()) || is_four_valued(expr.type()))
