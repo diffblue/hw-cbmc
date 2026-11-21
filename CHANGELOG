@@ -10,6 +10,8 @@
 * SystemVerilog: default values for function and task arguments
 * SystemVerilog: named arguments in task calls
 * SystemVerilog: task lifetimes (task automatic, task static)
+* Verilog: the conditional operator with a condition that contains x/z
+  combines the operands bit-wise
 
 # EBMC 6.2
 
