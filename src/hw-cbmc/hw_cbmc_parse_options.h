@@ -11,6 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cbmc/cbmc_parse_options.h>
 
+class goto_trace_storaget;
+
 #define HW_CBMC_OPTIONS \
   "(showvarmap)(bound):(module):(top):" \
   "(show-modules)(gen-interface)(vcd):"
@@ -20,7 +22,7 @@ class hw_cbmc_parse_optionst:public cbmc_parse_optionst
 public:
   virtual int doit();
   virtual void help();
-  
+
   hw_cbmc_parse_optionst(int argc, const char **argv):
     cbmc_parse_optionst(argc, argv, HW_CBMC_OPTIONS)
   {
@@ -28,6 +30,9 @@ public:
 
   irep_idt unwind_module;
   unsigned unwind_no_timeframes;
+
+  void
+  show_unwind_trace(const optionst &options, const goto_trace_storaget &traces);
 
 protected:
   virtual int get_modules(std::list<exprt> &bmc_constraints);
