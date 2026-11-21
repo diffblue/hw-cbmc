@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "instantiate_word_level.h"
 
 #include <util/ebmc_util.h>
+#include <util/expr_identity_map.h>
 #include <util/expr_util.h>
 
 #include <ebmc/ebmc_error.h>
@@ -18,6 +19,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <verilog/verilog_expr.h>
 
 #include "sequence.h"
+
+#include <map>
 
 /*******************************************************************\
 
@@ -87,7 +90,14 @@ protected:
   bool next_symbol_allowed;
 
   [[nodiscard]] exprt instantiate_rec(exprt, const mp_integer &t) const;
+  [[nodiscard]] exprt
+  instantiate_rec_uncached(exprt, const mp_integer &t) const;
   [[nodiscard]] typet instantiate_rec(typet, const mp_integer &t) const;
+
+  // Expressions are DAGs with much sharing; instantiate each distinct
+  // subexpression once per timeframe.
+  using cachet = expr_identity_mapt<exprt>;
+  mutable std::map<mp_integer, cachet> cache;
 };
 
 /*******************************************************************\
@@ -103,6 +113,17 @@ Function: wl_instantiatet::instantiate_rec
 \*******************************************************************/
 
 exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
+{
+  if(auto cached = cache[t].find(expr))
+    return *cached;
+  const exprt original = expr;
+  auto result = instantiate_rec_uncached(std::move(expr), t);
+  cache[t].insert(original, result);
+  return result;
+}
+
+exprt wl_instantiatet::instantiate_rec_uncached(exprt expr, const mp_integer &t)
+  const
 {
   expr.type() = instantiate_rec(expr.type(), t);
 

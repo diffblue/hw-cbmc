@@ -9,6 +9,9 @@
 * SystemVerilog: interface ports with a modport in non-ANSI port declarations
 * SystemVerilog: default values for function and task arguments
 * SystemVerilog: named arguments in task calls
+* Verilog: lowering and simplification visit each distinct subexpression
+  once, which avoids exponential time and memory on designs that build
+  shared expressions, e.g., bit-wise writes into memories in loops
 
 # EBMC 6.2
 
