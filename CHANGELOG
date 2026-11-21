@@ -9,15 +9,17 @@
 * Verilog: variables connected to inout ports are rejected
 * Verilog: hierarchical references into named generate blocks
 * Verilog: '?' as z digit in decimal, octal and hex literals
+* Verilog: the conditional operator with a condition that contains x/z
+  combines the operands bit-wise
 * SystemVerilog: interface ports with a modport in non-ANSI port declarations
 * SystemVerilog: default values for function and task arguments
 * SystemVerilog: named arguments in task calls
 * SystemVerilog: task lifetimes (task automatic, task static)
 * SystemVerilog: enums with a single-bit base type
-* Verilog: the conditional operator with a condition that contains x/z
-  combines the operands bit-wise
 * SystemVerilog: operators with a real and a shortreal operand yield real
 * SystemVerilog: wildcard port connections (.*)
+* SystemVerilog: the conditional operator with operands of the same enum
+  type yields that enum type
 
 # EBMC 6.2
 
