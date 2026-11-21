@@ -1,0 +1,15 @@
+CORE
+upward_name_referencing1.sv
+--bound 5
+^\[top\.cons\.p_ok\] always top\.cons\.probe == top\.prod\.cnt: PROVED up to bound 5$
+^\[top\.cons\.p_bad\] always top\.cons\.probe == 0: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Upward name referencing (1800-2017 23.8): the consumer instance reads a
+signal in the sibling producer instance by going up through the
+top-level module name (top.prod.cnt). The reference must resolve to the
+sibling's counter, so p_ok holds and p_bad (probe constantly zero) is
+refuted.
