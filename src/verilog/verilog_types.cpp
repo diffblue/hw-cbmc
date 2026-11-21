@@ -109,7 +109,11 @@ bool is_unbounded_array_type(const typet &type)
 
 typet make_two_valued(typet src)
 {
-  if(src.id() == ID_verilog_unsignedbv || src.id() == ID_unsignedbv)
+  if(src.id() == ID_verilog_enum)
+  {
+    return make_two_valued(to_verilog_enum_type(src).annotated_base_type());
+  }
+  else if(src.id() == ID_verilog_unsignedbv || src.id() == ID_unsignedbv)
   {
     // Is it [0:0]? If so, make it 'bool'
     if(
@@ -123,6 +127,9 @@ typet make_two_valued(typet src)
       irep_idt verilog_vector_type = src.get(ID_C_verilog_vector_type);
       if(verilog_vector_type != irep_idt{})
         result.set(ID_C_verilog_vector_type, verilog_vector_type);
+      irep_idt identifier = src.get(ID_C_identifier);
+      if(identifier != irep_idt{})
+        result.set(ID_C_identifier, identifier);
       return result;
     }
     else
@@ -154,6 +161,28 @@ typet make_two_valued(typet src)
     return src;
 }
 
+std::optional<mp_integer> verilog_numeric_cast(const constant_exprt &src)
+{
+  auto &type = src.type();
+
+  if(type.id() == ID_verilog_enum)
+  {
+    return verilog_numeric_cast(
+      constant_exprt{src.get_value(), to_verilog_enum_type(type).base_type()});
+  }
+  else if(is_four_valued(type))
+  {
+    auto &value = id2string(src.get_value());
+    if(value.find_first_not_of("01") != std::string::npos)
+      return {};
+    return binary2integer(value, type.id() == ID_verilog_signedbv);
+  }
+  else if(type.id() == ID_bool)
+    return src.is_true() ? 1 : 0;
+  else
+    return numeric_cast<mp_integer>(src);
+}
+
 typet two_valued_vector_type(typet src)
 {
   if(src.id() == ID_verilog_unsignedbv)
@@ -166,7 +195,14 @@ typet two_valued_vector_type(typet src)
 
 constant_exprt verilog_from_integer(const mp_integer &value, const typet &type)
 {
-  if(is_four_valued(type))
+  if(type.id() == ID_verilog_enum)
+  {
+    auto result =
+      verilog_from_integer(value, to_verilog_enum_type(type).base_type());
+    result.type() = type;
+    return result;
+  }
+  else if(is_four_valued(type))
   {
     auto width = to_bitvector_type(type).get_width();
     return constant_exprt{integer2binary(value, width), type};

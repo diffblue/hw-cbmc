@@ -1313,33 +1313,52 @@ expr2verilogt::convert_constant(const constant_exprt &src)
   const typet &type=src.type();
   std::string dest;
 
-  if(type.get(ID_C_verilog_type) == ID_verilog_enum)
+  if(
+    type.id() == ID_verilog_enum ||
+    type.get(ID_C_verilog_type) == ID_verilog_enum)
   {
+    // An enum, or the lowered representation of an enum.
     // Get the numerical value.
-    auto int_value = numeric_cast_v<mp_integer>(src);
+    auto int_value_opt = verilog_numeric_cast(src);
 
     // Look up the enum type symbol.
-    auto enum_type_identifier = type.get(ID_C_identifier);
-    auto &symbol = ns.lookup(enum_type_identifier);
-    auto &enum_type = to_verilog_enum_type(symbol.type);
+    auto enum_type_identifier = type.id() == ID_verilog_enum
+                                  ? to_verilog_enum_type(type).identifier()
+                                  : type.get(ID_C_identifier);
 
-    // Find the enum name with the matching value.
-    for(auto &enum_name : enum_type.enum_names())
+    if(int_value_opt.has_value() && !enum_type_identifier.empty())
     {
-      const auto identifier = enum_name.identifier();
-      auto &enum_symbol = ns.lookup(identifier);
-      DATA_INVARIANT(
-        enum_symbol.value.id() == ID_constant,
-        "enum name value must be constant");
-      auto enum_int_value =
-        numeric_cast_v<mp_integer>(to_constant_expr(enum_symbol.value));
-      if(enum_int_value == int_value)
-        return {precedence, id2string(enum_symbol.display_name())};
+      auto &symbol = ns.lookup(enum_type_identifier);
+      auto &enum_type = to_verilog_enum_type(symbol.type);
+
+      // Find the enum name with the matching value.
+      for(auto &enum_name : enum_type.enum_names())
+      {
+        const auto identifier = enum_name.identifier();
+        auto &enum_symbol = ns.lookup(identifier);
+        DATA_INVARIANT(
+          enum_symbol.value.id() == ID_constant,
+          "enum name value must be constant");
+        auto enum_int_value =
+          verilog_numeric_cast(to_constant_expr(enum_symbol.value));
+        if(enum_int_value == int_value_opt)
+          return {precedence, id2string(enum_symbol.display_name())};
+      }
     }
 
-    return {precedence, integer2string(int_value)};
+    if(type.id() == ID_verilog_enum)
+    {
+      // show the value of the base type
+      return convert_constant(constant_exprt{
+        src.get_value(), to_verilog_enum_type(type).base_type()});
+    }
+    else if(int_value_opt.has_value())
+      return {precedence, integer2string(*int_value_opt)};
+
+    // otherwise, show the value of the lowered type
   }
-  else if(type.id() == ID_bool)
+
+  if(type.id() == ID_bool)
   {
     if(src.is_true())
       dest+='1';
@@ -2385,7 +2404,12 @@ std::string expr2verilogt::convert(const typet &type)
     return "null";
   else if(type.id() == ID_verilog_enum)
   {
-    return "enum";
+    // An elaborated enum type is shown as its base type.
+    auto &enum_type = to_verilog_enum_type(type);
+    if(enum_type.is_elaborated())
+      return convert(enum_type.base_type());
+    else
+      return "enum";
   }
   else if(type.id() == ID_verilog_queue)
   {

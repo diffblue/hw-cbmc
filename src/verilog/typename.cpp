@@ -21,7 +21,9 @@ Author: Daniel Kroening, dkr@amazon.com
 // 0 otherwise
 mp_integer verilog_left(const typet &type)
 {
-  if(
+  if(type.id() == ID_verilog_enum)
+    return verilog_left(to_verilog_enum_type(type).base_type());
+  else if(
     type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
     type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
     type.id() == ID_bool)
@@ -51,7 +53,9 @@ mp_integer verilog_left(const typet &type)
 // 0 otherwise
 mp_integer verilog_right(const typet &type)
 {
-  if(
+  if(type.id() == ID_verilog_enum)
+    return verilog_right(to_verilog_enum_type(type).base_type());
+  else if(
     type.id() == ID_unsignedbv || type.id() == ID_signedbv ||
     type.id() == ID_verilog_unsignedbv || type.id() == ID_verilog_signedbv ||
     type.id() == ID_bool)
@@ -104,10 +108,10 @@ std::string verilog_typename(const typet &type, const namespacet &ns)
   auto right = [](const typet &type)
   { return integer2string(verilog_right(type)); };
 
-  if(type.get(ID_C_verilog_type) == ID_verilog_enum)
+  if(type.id() == ID_verilog_enum)
   {
     // not well standardised; tool-specific
-    auto identifier = type.get(ID_C_identifier);
+    auto identifier = to_verilog_enum_type(type).identifier();
     auto &enum_symbol = ns.lookup(identifier);
     auto &enum_type = to_verilog_enum_type(enum_symbol.type);
     std::string result = "enum{";
