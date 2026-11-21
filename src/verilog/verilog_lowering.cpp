@@ -1048,6 +1048,147 @@ two_valued_constant(const constant_exprt &aval_bval_constant, const typet &type)
   return from_integer(aval, two_valued_vector_type(type));
 }
 
+/// The default uninitialized value of a variable of the given lowered
+/// type (1800-2017 Table 7-1), in the two-valued modelling, in which x
+/// is 0: all bits are zero.
+static exprt default_uninitialized_value(const typet &type)
+{
+  if(type.id() == ID_bool)
+    return false_exprt{};
+  else if(type.id() == ID_array)
+  {
+    auto &array_type = to_array_type(type);
+    return array_of_exprt{
+      default_uninitialized_value(array_type.element_type()), array_type};
+  }
+  else if(type.id() == ID_struct)
+  {
+    exprt::operandst values;
+    for(auto &component : to_struct_type(type).components())
+      values.push_back(default_uninitialized_value(component.type()));
+    return struct_exprt{std::move(values), type};
+  }
+  else if(type.id() == ID_union)
+  {
+    auto &union_type = to_union_type(type);
+    PRECONDITION(!union_type.components().empty());
+    auto &component = union_type.components().front();
+    return union_exprt{
+      component.get_name(),
+      default_uninitialized_value(component.type()),
+      union_type};
+  }
+  else
+  {
+    // The bit-vector types, and the real types, for which 0.0 is all
+    // zeros. The members of a lowered aggregate may have a Verilog real
+    // type.
+    auto width = to_bitvector_type(verilog_lowering(type)).get_width();
+    return constant_exprt{integer2bvrep(0, width), type};
+  }
+}
+
+/// True iff the given lowered values of the same type are logically
+/// equivalent, as given by == (1800-2017 11.4.5). Reals are compared
+/// as IEEE 754 numbers, and aggregates element by element.
+static exprt same_value(const exprt &a, const exprt &b)
+{
+  auto &type = a.type();
+
+  if(type.id() == ID_array)
+  {
+    auto &array_type = to_array_type(type);
+    auto size = numeric_cast_v<mp_integer>(to_constant_expr(array_type.size()));
+    auto index_type = array_type.index_type();
+    exprt::operandst conjuncts;
+    for(mp_integer i = 0; i < size; ++i)
+    {
+      auto index = from_integer(i, index_type);
+      conjuncts.push_back(same_value(
+        index_exprt{a, index, array_type.element_type()},
+        index_exprt{b, index, array_type.element_type()}));
+    }
+    return conjunction(std::move(conjuncts));
+  }
+  else if(type.id() == ID_struct)
+  {
+    exprt::operandst conjuncts;
+    for(auto &component : to_struct_type(type).components())
+    {
+      conjuncts.push_back(
+        same_value(member_exprt{a, component}, member_exprt{b, component}));
+    }
+    return conjunction(std::move(conjuncts));
+  }
+  else if(type.id() == ID_union)
+    return equal_exprt{to_bitvector(a), to_bitvector(b)};
+  else if(type.id() == ID_floatbv)
+    return ieee_float_equal_exprt{a, b};
+  else
+    return equal_exprt{a, b};
+}
+
+/// The result of ?: when the condition is ambiguous, for lowered operands
+/// of the same type that are not aval/bval encoded (1800-2017 11.4.11).
+/// When the operands are logically equivalent, the result is either of
+/// them. Otherwise:
+/// * integral operands, which includes packed aggregates, are combined
+///   bit by bit (Table 11-20): a bit that differs is x, which is 0 in the
+///   two-valued modelling; this yields the operand when the operands are
+///   equal;
+/// * unpacked arrays are combined element by element: an element that
+///   matches is kept, and otherwise, it is the value given by Table 7-1
+///   for the type of the element;
+/// * for all other types, e.g. reals and unpacked structs and unions, the
+///   result is the value given by Table 7-1 for the type.
+static exprt ambiguous_conditional_value(const exprt &t, const exprt &f)
+{
+  auto &type = t.type();
+  PRECONDITION(type == f.type());
+
+  auto is_packed = [](const typet &type)
+  {
+    if(type.id() == ID_struct || type.id() == ID_union)
+      return type.get_bool(ID_packed);
+    else if(type.id() == ID_array)
+      return type.get(ID_C_verilog_type) == ID_verilog_packed_array;
+    else
+      return false;
+  };
+
+  if(type.id() == ID_bool)
+    return and_exprt{t, f};
+  else if(type.id() == ID_unsignedbv || type.id() == ID_signedbv)
+    return bitand_exprt{t, f};
+  else if(is_packed(type))
+  {
+    auto bits = bitand_exprt{to_bitvector(t), to_bitvector(f)};
+    return from_bitvector(bits, 0, type);
+  }
+  else if(type.id() == ID_array)
+  {
+    auto &array_type = to_array_type(type);
+    auto &element_type = array_type.element_type();
+    auto size = numeric_cast_v<mp_integer>(to_constant_expr(array_type.size()));
+    auto index_type = array_type.index_type();
+    exprt::operandst elements;
+    for(mp_integer i = 0; i < size; ++i)
+    {
+      auto index = from_integer(i, index_type);
+      auto t_i = index_exprt{t, index, element_type};
+      auto f_i = index_exprt{f, index, element_type};
+      elements.push_back(if_exprt{
+        same_value(t_i, f_i), t_i, default_uninitialized_value(element_type)});
+    }
+    return array_exprt{std::move(elements), array_type};
+  }
+  else
+  {
+    // e.g. a real, an unpacked struct or union, chandle or event
+    return if_exprt{same_value(t, f), t, default_uninitialized_value(type)};
+  }
+}
+
 exprt verilog_lowering(exprt expr)
 {
   // lowered already
@@ -2099,18 +2240,14 @@ exprt verilog_lowering(exprt expr)
       aval_bval_operands();
       return aval_bval(if_expr);
     }
-    else if(is_verilog_real(expr.type()))
+
+    if(is_verilog_real(expr.type()))
     {
       // The operands are floatbv already; the result must be, too.
       expr.type() = verilog_lowering(expr.type());
-      return expr;
     }
     else
     {
-      // The condition is Boolean.
-      if_expr.cond() =
-        typecast_exprt::conditional_cast(if_expr.cond(), bool_typet{});
-
       // The cases must have the same type.
       if(if_expr.true_case().type() != if_expr.false_case().type())
       {
@@ -2121,6 +2258,29 @@ exprt verilog_lowering(exprt expr)
       }
 
       expr.type() = if_expr.true_case().type();
+    }
+
+    if(is_aval_bval(if_expr.cond()))
+    {
+      // A condition that may be ambiguous, and a result that is not a
+      // four-valued vector, e.g., a real or an aggregate. The condition
+      // is true if it has a known 1 bit, and false if all of its bits
+      // are 0 (1800-2017 11.4.11).
+      auto &cond = if_expr.cond();
+      return if_exprt{
+        logical_has_one(cond),
+        if_expr.true_case(),
+        if_exprt{
+          has_xz(cond),
+          ambiguous_conditional_value(
+            if_expr.true_case(), if_expr.false_case()),
+          if_expr.false_case()}};
+    }
+    else
+    {
+      // The condition is Boolean.
+      if_expr.cond() =
+        typecast_exprt::conditional_cast(if_expr.cond(), bool_typet{});
       return expr;
     }
   }
