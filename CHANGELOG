@@ -11,6 +11,8 @@
 * SystemVerilog: named arguments in task calls
 * SystemVerilog: task lifetimes (task automatic, task static)
 * SystemVerilog: enums with a single-bit base type
+* SystemVerilog: the conditional operator with operands of the same enum
+  type yields that enum type
 
 # EBMC 6.2
 
