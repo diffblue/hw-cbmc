@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 initial1.sv
 --aiger --top main
 ^aag [0-9]+ [0-9]+ 2 0 [0-9]+ 2$
@@ -8,13 +8,6 @@ initial1.sv
 ^SIGNAL=0$
 --
 --
-The AIGER output resets every latch to 0, and ignores the initial-state
-constraint of the netlist. With r1 reset to 0, p1 fails in the AIGER
-file, while EBMC proves it; with r2 reset to 0, p2 holds, while EBMC
-refutes it. The expected latch lines are AIGER 1.9's "lit next 1" for
-r1 and the uninitialised "lit next lit" for r2.
-
-Initial-state constraints that are not given by reset values, e.g.,
-initial b = a for an a without initial value, need a different encoding,
-e.g., an additional latch that is 0 in the first step, and an AIGER
-constraint that requires the initial-state constraint in that step.
+A latch with an initial value is exported with that value as AIGER 1.9
+reset value, "lit next 1" for r1, and a latch without initial value is
+uninitialised, "lit next lit" for r2.

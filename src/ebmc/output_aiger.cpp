@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <solvers/prop/literal_expr.h>
 #include <trans-netlist/netlist.h>
 
+#include <map>
 #include <ostream>
 #include <string>
 
@@ -76,6 +77,24 @@ invariant_literal(const std::optional<exprt> &netlist_expr)
   return to_literal_expr(body).get_literal();
 }
 
+/// Split a netlist literal into the conjuncts given by its
+/// (non-negated) AND nodes. The constant TRUE yields no conjunct.
+static void
+flatten_conjunction(const netlistt &netlist, literalt l, bvt &conjuncts)
+{
+  if(l.is_true())
+    return;
+
+  if(!l.is_constant() && !l.sign() && netlist.nodes[l.var_no()].is_and())
+  {
+    const auto &node = netlist.nodes[l.var_no()];
+    flatten_conjunction(netlist, node.a, conjuncts);
+    flatten_conjunction(netlist, node.b, conjuncts);
+  }
+  else
+    conjuncts.push_back(l);
+}
+
 void output_aiger(const netlistt &netlist, std::ostream &out)
 {
   aiger *aig = aiger_init();
@@ -104,6 +123,31 @@ void output_aiger(const netlistt &netlist, std::ostream &out)
   for(auto var_no : netlist.var_map.nondets)
     aiger_add_input(aig, to_aiger_lit(literalt{var_no, false}), nullptr);
 
+  // The initial-state constraint is a conjunction. Conjuncts that fix
+  // the value of a latch become its AIGER reset value. Any other
+  // conjuncts are 'residual' and are encoded below.
+  std::map<unsigned, bool> reset_values;
+  bvt residual_initial;
+
+  {
+    bvt conjuncts;
+    for(auto l : netlist.initial)
+      flatten_conjunction(netlist, l, conjuncts);
+
+    for(auto l : conjuncts)
+    {
+      if(!l.is_constant() && netlist.var_map.latches.count(l.var_no()) != 0)
+      {
+        bool value = !l.sign();
+        auto result = reset_values.emplace(l.var_no(), value);
+        if(result.second || result.first->second == value)
+          continue; // reset value recorded or already given
+      }
+
+      residual_initial.push_back(l);
+    }
+  }
+
   // Add latches
   for(auto var_no : netlist.var_map.latches)
   {
@@ -114,8 +158,34 @@ void output_aiger(const netlistt &netlist, std::ostream &out)
     literalt next = netlist.var_map.get_next(it->second);
     unsigned next_lit = to_aiger_lit(next);
     aiger_add_latch(aig, lit, next_lit, nullptr);
-    // reset to 0
-    aiger_add_reset(aig, lit, 0);
+
+    // Latches without reset value are uninitialised, which AIGER 1.9
+    // denotes by using the latch literal as reset value.
+    auto reset_it = reset_values.find(var_no);
+    if(reset_it == reset_values.end())
+      aiger_add_reset(aig, lit, lit);
+    else
+      aiger_add_reset(aig, lit, reset_it->second ? 1 : 0);
+  }
+
+  // Residual initial-state constraints use an additional latch
+  // 'first', which is 1 in the initial state only, and an AIGER
+  // constraint !first || c, i.e., !(first && !c), for each residual
+  // constraint c.
+  unsigned next_aiger_var = netlist.number_of_nodes() + 1;
+
+  if(!residual_initial.empty())
+  {
+    unsigned first_lit = aiger_var2lit(next_aiger_var++);
+    aiger_add_latch(aig, first_lit, aiger_false, nullptr);
+    aiger_add_reset(aig, first_lit, 1);
+
+    for(auto l : residual_initial)
+    {
+      unsigned and_lit = aiger_var2lit(next_aiger_var++);
+      aiger_add_and(aig, and_lit, first_lit, aiger_not(to_aiger_lit(l)));
+      aiger_add_constraint(aig, aiger_not(and_lit), nullptr);
+    }
   }
 
   // Add AND gates

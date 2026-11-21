@@ -1,0 +1,16 @@
+CORE
+initial3.smv
+--aiger
+^aag [0-9]+ 0 4 0 [0-9]+ 0 2$
+^2 2 2$
+^4 4 4$
+^6 6 6$
+^([0-9]+) 0 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The initial-state constraint does not fix any latch value. The latches
+are uninitialised, and the constraint is an AIGER invariant constraint
+that is enforced by an additional latch that is 1 only in the initial
+state.
