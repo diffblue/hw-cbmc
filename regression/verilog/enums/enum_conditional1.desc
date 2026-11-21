@@ -1,0 +1,10 @@
+KNOWNBUG
+enum_conditional1.sv
+--bound 0
+^\[main\.1\.assert\.1\] .*: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The conditional operator with operands of the same enum type yields the
+base type of the enum, which cannot be assigned to an enum variable.
