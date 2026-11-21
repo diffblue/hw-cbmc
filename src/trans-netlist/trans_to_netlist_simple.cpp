@@ -87,9 +87,9 @@ void convert_trans_to_netlist_simplet::operator()(
   dest.var_map.build_reverse_map();
 
   // convert the constraints
-  dest.initial.push_back(solver.convert(trans.init()));
-  dest.constraints.push_back(solver.convert(trans.invar()));
-  dest.constraints.push_back(solver.convert(trans.trans()));
+  solver.netlist_set_to(trans.init(), true, dest.initial);
+  solver.netlist_set_to(trans.invar(), true, dest.constraints);
+  solver.netlist_set_to(trans.trans(), true, dest.constraints);
 
   // convert the properties
   for(const auto &[id, property_expr] : properties)
