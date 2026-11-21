@@ -12,6 +12,8 @@
 * SystemVerilog: task lifetimes (task automatic, task static)
 * Verilog: the conditional operator with a condition that contains x/z
   combines the operands bit-wise
+* SystemVerilog: the conditional operator with a condition that contains
+  x/z on reals and on unpacked structs and arrays
 
 # EBMC 6.2
 
