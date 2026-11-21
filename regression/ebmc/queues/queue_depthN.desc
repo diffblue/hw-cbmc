@@ -1,0 +1,8 @@
+CORE buechi
+queue_depthN.sv
+--bdd --buechi
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
