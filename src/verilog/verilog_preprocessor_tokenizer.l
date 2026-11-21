@@ -39,21 +39,22 @@ String		\"(\\(.|\n)|[^"\\])*\"
 <INITIAL>"/*"           { BEGIN MLCOMMENT; /* multi-line comment */ }
 <INITIAL>{String}	{ return tokent::STRING_LITERAL; }
 <INITIAL>{Identifier}	{ return tokent::IDENTIFIER; }
+\r/\n			{ /* leave the newline to be tokenized as LF */ }
 <INITIAL>.|\n		{ return yytext[0]; /* anything else */ }
 <SLCOMMENT>\n		{ BEGIN INITIAL; return '\n'; }
-<SLCOMMENT>\\\n		{
+<SLCOMMENT>\\\r?\n		{
 			  /* 1800-2017 22.5.1: a one-line comment ending in a
 			     backslash continues a `define on the next line */
 			  if(static_cast<const verilog_preprocessor_scannert &>(
 			       FLEX_CLASS_NAME::from_extra(yyget_extra(yyscanner))).in_macro_text)
 			  {
-			    yyless(1); /* return the \n to the input */
+			    yyless(1); /* return the line ending to the input */
 			    return '\\';
 			  }
 			  else
 			  {
 			    BEGIN INITIAL;
-			    yyless(1); /* rescan the \n as a newline token */
+			    yyless(1); /* rescan the line ending as a newline token */
 			  }
 			}
 <SLCOMMENT>.		{ /* just eat up */ }
