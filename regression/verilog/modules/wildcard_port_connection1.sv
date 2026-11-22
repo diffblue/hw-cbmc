@@ -4,6 +4,6 @@ module M(input a, b);
 endmodule
 
 module main;
-  wire a = 0, b = 1;
+  wire a = 1, b = 0;
   M m(.*);
 endmodule

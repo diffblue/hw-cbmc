@@ -4784,11 +4784,9 @@ void verilog_rtl_buildert::build_port_connections(
     // no requirement that all ports are connected
     for(const auto &connection : instance.connections())
     {
-      if(connection.id() == ID_verilog_wildcard_port_connection)
-      {
-        throw errort{}.with_location(connection.source_location())
-          << "no support for wildcard port connection";
-      }
+      DATA_INVARIANT(
+        connection.id() != ID_verilog_wildcard_port_connection,
+        "wildcard port connections are expanded by the type checker");
 
       auto &named_connection = to_verilog_named_port_connection(connection);
       auto port_it =

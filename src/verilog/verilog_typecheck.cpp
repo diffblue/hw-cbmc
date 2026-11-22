@@ -25,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_expr.h"
 #include "verilog_types.h"
 
+#include <algorithm>
 #include <cassert>
 #include <functional>
 #include <map>
@@ -247,6 +248,7 @@ void verilog_typecheckt::typecheck_port_connections(
 
     std::set<irep_idt> assigned_ports;
     bool wildcard = false;
+    source_locationt wildcard_location;
 
     for(auto &connection : inst.connections())
     {
@@ -262,6 +264,7 @@ void verilog_typecheckt::typecheck_port_connections(
         else
         {
           wildcard = true;
+          wildcard_location = connection.source_location();
           continue;
         }
       }
@@ -312,6 +315,61 @@ void verilog_typecheckt::typecheck_port_connections(
       }
 
       assigned_ports.insert(base_name);
+    }
+
+    if(wildcard)
+    {
+      // Replace the wildcard by named connections, one for each port
+      // that is not connected explicitly.
+      auto &connections = inst.connections();
+
+      connections.erase(
+        std::remove_if(
+          connections.begin(),
+          connections.end(),
+          [](const exprt &connection)
+          { return connection.id() == ID_verilog_wildcard_port_connection; }),
+        connections.end());
+
+      for(auto &port : ports)
+      {
+        const irep_idt &base_name = port.base_name();
+
+        if(assigned_ports.find(base_name) != assigned_ports.end())
+          continue;
+
+        // 1800-2017 23.3.2.4: the port is connected to the net or
+        // variable of the same name in the instantiating scope. If there
+        // is none, the port is left unconnected.
+        const symbolt *actual = resolve(base_name);
+
+        if(actual == nullptr)
+          continue;
+
+        // Only nets and variables qualify, and interface instances
+        // for interface ports.
+        const bool interface_port =
+          port.type().id() == ID_verilog_module_instance ||
+          is_interface_array_type(port.type());
+
+        if(
+          actual->is_type || actual->is_macro || actual->type.id() == ID_code ||
+          ((actual->type.id() == ID_verilog_module_instance ||
+            actual->type.id() == ID_primitive_module_instance) &&
+           !interface_port))
+        {
+          continue;
+        }
+
+        exprt value = verilog_identifier_exprt{base_name};
+        value.add_source_location() = wildcard_location;
+        typecheck_port_connection(value, port);
+
+        connections.push_back(verilog_inst_baset::named_port_connectiont{
+          symbol_exprt{port.identifier(), port.type()}.with_source_location(
+            wildcard_location),
+          std::move(value)});
+      }
     }
   }
   else // Positional connections, i.e., just a list without port names
