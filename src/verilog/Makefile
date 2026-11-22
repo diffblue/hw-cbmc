@@ -20,6 +20,7 @@ SRC = aval_bval_encoding.cpp \
       verilog_interfaces.cpp \
       verilog_interpreter.cpp \
       verilog_language.cpp \
+      verilog_layout.cpp \
       verilog_lex.yy.cpp \
       verilog_lowering.cpp \
       verilog_parse_tree.cpp \
