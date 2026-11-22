@@ -10,6 +10,8 @@
 * SystemVerilog: default values for function and task arguments
 * SystemVerilog: named arguments in task calls
 * SystemVerilog: task lifetimes (task automatic, task static)
+* SystemVerilog: type parameter overrides are resolved in the instantiating
+  module, e.g., sub #(.T(T))
 
 # EBMC 6.2
 

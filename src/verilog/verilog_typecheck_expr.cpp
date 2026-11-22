@@ -2115,8 +2115,11 @@ exprt verilog_typecheck_exprt::convert_nullary_expr(nullary_exprt expr)
   }
   else if(expr.id() == ID_type)
   {
-    // Used, e.g., for $bits
-    expr.type() = elaborate_type(expr.type());
+    // Used, e.g., for $bits.
+    // A type given as parameter override may have been elaborated
+    // in the scope of the instantiating module already.
+    if(!expr.get_bool(ID_elaborated))
+      expr.type() = elaborate_type(expr.type());
     return std::move(expr);
   }
   else if(expr.id() == ID_this)

@@ -532,6 +532,18 @@ void verilog_typecheckt::parameterize_instantiated_design_elements(
 
   exprt::operandst &parameter_assignments = inst.parameter_assignments();
 
+  // The type given as override for a type parameter port is resolved in
+  // the scope of the instantiating module (1800-2017 23.10), not in the
+  // scope of the instantiated module. Hence, elaborate it here, and mark it
+  // as elaborated.
+  auto elaborate_type_override = [this](exprt &value)
+  {
+    auto location = value.source_location();
+    value.type() = elaborate_type(value.type());
+    value.set(ID_elaborated, true);
+    value.add_source_location() = location;
+  };
+
   Forall_expr(it, parameter_assignments)
   {
     // These must be constants. Preserve the location.
@@ -540,7 +552,7 @@ void verilog_typecheckt::parameterize_instantiated_design_elements(
       auto &value = static_cast<exprt &>(it->add(ID_value));
       if(value.id() == ID_type)
       {
-        // leave as is
+        elaborate_type_override(value);
       }
       else
       {
@@ -554,7 +566,7 @@ void verilog_typecheckt::parameterize_instantiated_design_elements(
     {
       if(it->id() == ID_type)
       {
-        // leave as is
+        elaborate_type_override(*it);
       }
       else
       {
