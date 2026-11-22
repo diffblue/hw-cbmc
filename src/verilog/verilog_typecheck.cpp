@@ -715,20 +715,7 @@ void verilog_typecheckt::check_lhs(
   const exprt &lhs,
   vassignt vassign)
 {
-  if(lhs.id()==ID_index)
-  {
-    check_lhs(to_index_expr(lhs).array(), vassign);
-  }
-  else if(lhs.id()==ID_extractbit)
-  {
-    if(lhs.operands().size()!=2)
-    {
-      throw errort() << "extractbit takes two operands";
-    }
-
-    check_lhs(to_extractbit_expr(lhs).src(), vassign);
-  }
-  else if(lhs.id() == ID_verilog_bit_select)
+  if(lhs.id() == ID_verilog_bit_select)
   {
     check_lhs(to_verilog_bit_select_expr(lhs).src(), vassign);
   }
@@ -849,15 +836,7 @@ void verilog_typecheckt::check_inout_connection(
   // an inout port." Descend through the connection expression to the
   // referenced net(s)/variable(s); a variable (reg/logic/var) is an lvalue,
   // whereas a net is not.
-  if(op.id() == ID_index)
-  {
-    check_inout_connection(to_index_expr(op).array(), port);
-  }
-  else if(op.id() == ID_extractbit)
-  {
-    check_inout_connection(to_extractbit_expr(op).src(), port);
-  }
-  else if(op.id() == ID_verilog_bit_select)
+  if(op.id() == ID_verilog_bit_select)
   {
     check_inout_connection(to_verilog_bit_select_expr(op).src(), port);
   }
