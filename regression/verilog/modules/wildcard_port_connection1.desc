@@ -1,8 +1,9 @@
 CORE
 wildcard_port_connection1.sv
 
-^file .* line 8: no support for wildcard port connection$
-^EXIT=2$
+^\[main\.m\.assert\.1\] always main\.m\.a: PROVED \(transition property\)$
+^\[main\.m\.assert\.2\] always !main\.m\.b: PROVED \(transition property\)$
+^EXIT=0$
 ^SIGNAL=0$
 --
 ^warning: ignoring

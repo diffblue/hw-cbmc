@@ -17,6 +17,7 @@
 * Verilog: the conditional operator with a condition that contains x/z
   combines the operands bit-wise
 * SystemVerilog: operators with a real and a shortreal operand yield real
+* SystemVerilog: wildcard port connections (.*)
 
 # EBMC 6.2
 
