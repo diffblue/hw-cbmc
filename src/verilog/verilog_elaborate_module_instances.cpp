@@ -19,7 +19,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::process_module_instantiations
+Function: verilog_typecheckt::process_design_element_instantiations
 
   Inputs:
 
@@ -29,15 +29,16 @@ Function: verilog_typecheckt::process_module_instantiations
 
 \*******************************************************************/
 
-void verilog_typecheckt::process_module_instantiations(
+void verilog_typecheckt::process_design_element_instantiations(
   verilog_module_exprt &verilog_module_expr)
 {
-  // Module instantiations are processed in three steps:
-  // 1. Create a symbol S for each instance
+  // Instantiations of design elements (modules, interfaces, programs, ...)
+  // are processed in three steps:
+  // 1. Create a symbol S for each _instance_
   // 2. Get values for all defparam S.parameter = ... items.
-  // 3. Parameterize the module with the parameters.
+  // 3. Parameterize the design element with the parameters.
 
-  // create the module instance symbols
+  // create the instance symbols
   for(auto &module_item : verilog_module_expr.module_items())
     elaborate_module_instances(module_item);
 
@@ -45,9 +46,9 @@ void verilog_typecheckt::process_module_instantiations(
   for(auto &module_item : verilog_module_expr.module_items())
     process_parameter_override(module_item);
 
-  // now parameterize the instantiated modules
+  // now parameterize the instantiated design elements
   for(auto &module_item : verilog_module_expr.module_items())
-    parameterize_instantiated_modules(module_item);
+    parameterize_instantiated_design_elements(module_item);
 }
 
 /*******************************************************************\
@@ -456,7 +457,7 @@ void verilog_typecheckt::process_parameter_override(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::parameterize_instantiated_modules
+Function: verilog_typecheckt::parameterize_instantiated_design_elements
 
   Inputs:
 
@@ -466,16 +467,17 @@ Function: verilog_typecheckt::parameterize_instantiated_modules
 
 \*******************************************************************/
 
-void verilog_typecheckt::parameterize_instantiated_modules(
+void verilog_typecheckt::parameterize_instantiated_design_elements(
   verilog_module_itemt &module_item)
 {
   if(module_item.id() == ID_inst)
   {
-    parameterize_instantiated_modules(to_verilog_inst(module_item));
+    parameterize_instantiated_design_elements(to_verilog_inst(module_item));
   }
   else if(module_item.id() == ID_inst_builtin)
   {
-    parameterize_instantiated_modules(to_verilog_inst_builtin(module_item));
+    parameterize_instantiated_design_elements(
+      to_verilog_inst_builtin(module_item));
   }
   else if(module_item.id() == ID_generate_block)
   {
@@ -491,7 +493,7 @@ void verilog_typecheckt::parameterize_instantiated_modules(
     }
 
     for(auto &item : generate_block.module_items())
-      parameterize_instantiated_modules(item);
+      parameterize_instantiated_design_elements(item);
 
     if(is_named)
       named_blocks.pop_back();
@@ -501,14 +503,14 @@ void verilog_typecheckt::parameterize_instantiated_modules(
     auto old_genvars = genvars;
     auto &set_genvars = to_verilog_set_genvars(module_item);
     genvars = set_genvars.build_map();
-    parameterize_instantiated_modules(set_genvars.module_item());
+    parameterize_instantiated_design_elements(set_genvars.module_item());
     genvars = std::move(old_genvars);
   }
 }
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::parameterize_instantiated_modules
+Function: verilog_typecheckt::parameterize_instantiated_design_elements
 
   Inputs:
 
@@ -518,14 +520,15 @@ Function: verilog_typecheckt::parameterize_instantiated_modules
 
 \*******************************************************************/
 
-void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
+void verilog_typecheckt::parameterize_instantiated_design_elements(
+  verilog_instt &inst)
 {
-  const irep_idt &inst_module = inst.module_base_name();
+  const irep_idt &design_element_base_name = inst.module_base_name();
 
-  // The instantiated module must be user-defined.
+  // The instantiated design element must be user-defined.
 
-  const irep_idt module_identifier =
-    verilog_module_symbol(id2string(inst_module));
+  const irep_idt design_element_identifier =
+    verilog_module_symbol(id2string(design_element_base_name));
 
   exprt::operandst &parameter_assignments = inst.parameter_assignments();
 
@@ -576,7 +579,7 @@ void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
       expand_instance_array(
         inst,
         instance,
-        module_identifier,
+        design_element_identifier,
         parameter_assignments,
         new_instances);
       continue;
@@ -590,27 +593,27 @@ void verilog_typecheckt::parameterize_instantiated_modules(verilog_instt &inst)
     // add relevant defparam assignments
     auto &instance_defparams = defparams[instance_identifier];
 
-    irep_idt new_module_identifier = instantiate_module(
+    irep_idt new_design_element_identifier = instantiate_design_element(
       inst.source_location(),
-      module_identifier,
-      inst_module,
+      design_element_identifier,
+      design_element_base_name,
       instance_identifier,
       parameter_assignments,
       instance_defparams);
 
     instance.identifier(instance_identifier);
-    instance.module_identifier(new_module_identifier);
+    instance.module_identifier(new_design_element_identifier);
 
     symbolt &instance_symbol = symbol_table_lookup(instance_identifier);
 
-    // fix the module in the instance symbol
-    instance_symbol.value.set(ID_module, new_module_identifier);
+    // fix the design element in the instance symbol
+    instance_symbol.value.set(ID_module, new_design_element_identifier);
 
-    const symbolt &parameterized_module_symbol =
-      symbol_table_lookup(new_module_identifier);
+    const symbolt &parameterized_design_element_symbol =
+      symbol_table_lookup(new_design_element_identifier);
 
     // check the port connections
-    typecheck_port_connections(instance, parameterized_module_symbol);
+    typecheck_port_connections(instance, parameterized_design_element_symbol);
 
     new_instances.push_back(std::move(instance));
   }
@@ -635,11 +638,11 @@ Function: verilog_typecheckt::expand_instance_array
 void verilog_typecheckt::expand_instance_array(
   const verilog_instt &inst,
   const verilog_instt::instancet &instance,
-  const irep_idt &module_identifier,
+  const irep_idt &design_element_identifier,
   const exprt::operandst &parameter_assignments,
   verilog_instt::instancest &dest)
 {
-  const irep_idt &inst_module = inst.module_base_name();
+  const irep_idt &design_element_base_name = inst.module_base_name();
 
   auto dims = instance_array_dimensions(
     instance.instance_array(), instance.source_location());
@@ -648,13 +651,13 @@ void verilog_typecheckt::expand_instance_array(
 
   const mp_integer number_of_elements = suffixes.size();
 
-  // Instantiate the module for each element of the array.
+  // Instantiate the design element for each element of the array.
   std::vector<irep_idt> element_base_names, element_identifiers,
-    element_modules;
+    element_design_elements;
 
   element_base_names.reserve(suffixes.size());
   element_identifiers.reserve(suffixes.size());
-  element_modules.reserve(suffixes.size());
+  element_design_elements.reserve(suffixes.size());
 
   for(auto &suffix : suffixes)
   {
@@ -664,28 +667,29 @@ void verilog_typecheckt::expand_instance_array(
     // add relevant defparam assignments
     auto &instance_defparams = defparams[element_identifier];
 
-    irep_idt element_module_identifier = instantiate_module(
+    irep_idt element_design_element_identifier = instantiate_design_element(
       inst.source_location(),
-      module_identifier,
-      inst_module,
+      design_element_identifier,
+      design_element_base_name,
       element_identifier,
       parameter_assignments,
       instance_defparams);
 
-    // fix the module in the instance symbol
+    // fix the design element in the instance symbol
     symbolt &element_symbol = symbol_table_lookup(element_identifier);
-    element_symbol.value.set(ID_module, element_module_identifier);
+    element_symbol.value.set(ID_module, element_design_element_identifier);
 
     element_base_names.push_back(element_base_name);
     element_identifiers.push_back(element_identifier);
-    element_modules.push_back(element_module_identifier);
+    element_design_elements.push_back(element_design_element_identifier);
   }
 
   // Now do the port connections. All elements have the same list
   // of ports; use the ports of the first element to resolve the
   // connections.
   const auto &first_ports =
-    to_module_type(symbol_table_lookup(element_modules.front()).type).ports();
+    to_module_type(symbol_table_lookup(element_design_elements.front()).type)
+      .ports();
 
   // 'no connection' is one connection that is nil
   exprt::operandst connections = instance.connections();
@@ -804,7 +808,8 @@ void verilog_typecheckt::expand_instance_array(
   for(std::size_t k = 0; k < suffixes.size(); k++)
   {
     const auto &ports =
-      to_module_type(symbol_table_lookup(element_modules[k]).type).ports();
+      to_module_type(symbol_table_lookup(element_design_elements[k]).type)
+        .ports();
 
     exprt::operandst element_connections;
     element_connections.reserve(resolved_connections.size());
@@ -859,7 +864,7 @@ void verilog_typecheckt::expand_instance_array(
     element.remove(ID_verilog_instance_array);
     element.base_name(element_base_names[k]);
     element.identifier(element_identifiers[k]);
-    element.module_identifier(element_modules[k]);
+    element.module_identifier(element_design_elements[k]);
     element.connections() = std::move(element_connections);
 
     dest.push_back(std::move(element));
@@ -1074,7 +1079,7 @@ exprt verilog_typecheckt::instance_array_element_connection(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::parameterize_instantiated_modules
+Function: verilog_typecheckt::parameterize_instantiated_design_elements
 
   Inputs:
 
@@ -1084,7 +1089,7 @@ Function: verilog_typecheckt::parameterize_instantiated_modules
 
 \*******************************************************************/
 
-void verilog_typecheckt::parameterize_instantiated_modules(
+void verilog_typecheckt::parameterize_instantiated_design_elements(
   verilog_inst_builtint &inst)
 {
   const irep_idt &inst_module = inst.module_base_name();
