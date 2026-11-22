@@ -1,0 +1,17 @@
+MODULE main
+
+VAR x : 0..6;
+
+-- every case branch is a set
+ASSIGN
+  init(x) := 0;
+  next(x) := case
+               x = 0 : {1, 2};
+               TRUE : {0};
+             esac;
+
+SPEC AG x <= 2
+SPEC AG (x = 0 -> EX x = 1)
+SPEC AG (x = 0 -> EX x = 2)
+SPEC AG (x != 0 -> AX x = 0)
+SPEC AG x != 2

@@ -1,0 +1,16 @@
+MODULE main
+
+VAR state : {ready, busy};
+
+-- set-valued case branch, which is a nondeterministic choice
+ASSIGN
+  init(state) := ready;
+  next(state) := case
+                   state = ready : busy;
+                   TRUE : {ready, busy};
+                 esac;
+
+SPEC AG (state = ready -> AX state = busy)
+SPEC AG (state = busy -> EX state = ready)
+SPEC AG (state = busy -> EX state = busy)
+SPEC AG (state = busy -> AX state = ready)

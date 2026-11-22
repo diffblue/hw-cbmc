@@ -1,0 +1,11 @@
+CORE
+assign_set5.smv
+--bdd
+^\[spec1\] AG \(state = ready -> AX state = busy\): PROVED$
+^\[spec2\] AG \(state = busy -> EX state = ready\): PROVED$
+^\[spec3\] AG \(state = busy -> EX state = busy\): PROVED$
+^\[spec4\] AG \(state = busy -> AX state = ready\): REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
