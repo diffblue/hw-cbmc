@@ -189,14 +189,15 @@ exprt convert_integral_literal(const irep_idt &value)
     return verilog_based_unsized_literal_exprt{
       std::string(final_bits, 'x'), type};
   }
-  else if(rest == "dz" || rest == "dZ")
+  else if(rest == "dz" || rest == "dZ" || rest == "d?")
   {
+    // 1800-2017 5.7.1: '?' is an alternative for the z character
     std::size_t final_bits = bits_given ? bits : 32;
     auto type = s_flag_given
                   ? static_cast<typet>(verilog_signedbv_typet{final_bits})
                   : verilog_unsignedbv_typet{final_bits};
     return verilog_based_unsized_literal_exprt{
-      std::string(final_bits, 'z'), type};
+      std::string(final_bits, rest == "d?" ? '?' : 'z'), type};
   }
 
   unsigned base = 10;
@@ -272,6 +273,7 @@ exprt convert_integral_literal(const irep_idt &value)
         case '7': bit_value+="111"; break;
         case 'x': bit_value+="xxx"; break;
         case 'z': bit_value+="zzz"; break;
+        case '?': bit_value+="???"; break;
           // clang-format on
         }
       }
@@ -301,6 +303,7 @@ exprt convert_integral_literal(const irep_idt &value)
         case 'f': bit_value+="1111"; break;
         case 'x': bit_value+="xxxx"; break;
         case 'z': bit_value+="zzzz"; break;
+        case '?': bit_value+="????"; break;
           // clang-format on
         }
       }
@@ -323,7 +326,9 @@ exprt convert_integral_literal(const irep_idt &value)
         // extend appropriately
         char ext = '0';
 
-        if(fvalue.size() != 0 && (fvalue[0] == 'x' || fvalue[0] == 'z'))
+        if(
+          fvalue.size() != 0 &&
+          (fvalue[0] == 'x' || fvalue[0] == 'z' || fvalue[0] == '?'))
           ext = fvalue[0];
 
         // add missing bits
