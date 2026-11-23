@@ -1,0 +1,13 @@
+KNOWNBUG
+type_parameter_port8.sv
+--bound 0
+^\[main\.assert\.1\] always main\.egress == main\.ingress: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The override value of a type parameter port is resolved in the scope of
+the instantiated module instead of the instantiating module, giving
+"cyclic dependency when elaborating main.dut.data_t".
+Reported in https://github.com/diffblue/hw-cbmc/issues/2130.
