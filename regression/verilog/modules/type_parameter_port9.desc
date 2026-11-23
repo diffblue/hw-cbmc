@@ -1,0 +1,10 @@
+CORE
+type_parameter_port9.sv
+--bound 0
+^\[main\.assert\.1\] always main\.o == main\.i: PROVED up to bound 0$
+^\[main\.assert\.2\] always main\.po == main\.pi: PROVED up to bound 0$
+^\[main\.assert\.3\] always \$bits\(main\.m1\.l\.i\) == 8: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring

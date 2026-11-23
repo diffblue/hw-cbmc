@@ -206,8 +206,13 @@ void verilog_typecheckt::collect_symbols(
     }
 
     // much like a typedef
-    auto symbol_type =
-      to_be_elaborated_typet{to_type_expr(declarator.value()).type()};
+    const auto &value_type = to_type_expr(declarator.value()).type();
+
+    // An override given with the instantiation has been elaborated
+    // in the scope of the instantiating module already.
+    typet symbol_type = declarator.value().get_bool(ID_elaborated)
+                          ? value_type
+                          : to_be_elaborated_typet{value_type};
 
     type_symbolt symbol{full_identifier, symbol_type, mode};
 
