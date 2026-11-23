@@ -56,6 +56,12 @@ exprt aval_underlying(const exprt &);
 /// For a two-valued operand the result is 'false'.
 exprt has_xz(const exprt &);
 
+/// Return true iff the (possibly four-valued) operand has at least one
+/// known 1 bit, i.e., its logical truth value is true. The truth value is
+/// false if the operand has no 1 bit and no x/z bit, and x otherwise.
+/// See IEEE 1800-2017 11.4.7 and Table 11-18/11-19.
+exprt logical_has_one(const exprt &);
+
 exprt aval_bval_conversion(const exprt &, const typet &);
 
 exprt aval_bval_concatenation(const exprt::operandst &, const typet &);
