@@ -437,6 +437,28 @@ void verilog_typecheck_exprt::assignment_conversion(
       return;
     }
 
+    // 1800-2017 5.9: "A string literal can be assigned to an unpacked
+    // array of bytes. If the size differs, it is left justified."
+    if(
+      rhs.id() == ID_typecast && to_typecast_expr(rhs).op().is_constant() &&
+      to_typecast_expr(rhs).op().type().id() == ID_string)
+    {
+      auto &lhs_array_type = to_verilog_array_type(lhs_type);
+      auto &element_type = lhs_array_type.element_type();
+
+      if(
+        (element_type.id() == ID_signedbv ||
+         element_type.id() == ID_unsignedbv ||
+         element_type.id() == ID_verilog_signedbv ||
+         element_type.id() == ID_verilog_unsignedbv) &&
+        to_bitvector_type(element_type).width() == 8)
+      {
+        rhs = string_literal_to_byte_array(
+          to_constant_expr(to_typecast_expr(rhs).op()), lhs_array_type);
+        return;
+      }
+    }
+
     // assignment of a non-matching type to unpacked array
     throw errort().with_location(rhs.source_location())
       << "failed to convert `" << to_string(original_rhs_type) << "' to `"
@@ -720,6 +742,50 @@ exprt verilog_typecheck_exprt::unpacked_array_assignment_conversion(
 
   auto result = array_exprt{std::move(elements), lhs_array_type};
   result.add_source_location() = std::move(source_location);
+  return std::move(result);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheck_exprt::string_literal_to_byte_array
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Converts a string literal into an unpacked array of bytes,
+          1800-2017 5.9. The first character goes into the leftmost
+          element. A shorter string is padded with zeros, a longer
+          one is truncated.
+
+\*******************************************************************/
+
+exprt verilog_typecheck_exprt::string_literal_to_byte_array(
+  const constant_exprt &string_literal,
+  const verilog_array_typet &lhs_array_type)
+{
+  PRECONDITION(string_literal.type().id() == ID_string);
+
+  const std::string &value = id2string(string_literal.get_value());
+  auto size = numeric_cast_v<std::size_t>(lhs_array_type.size_int());
+  auto &source_location = string_literal.source_location();
+
+  // Unpacked arrays are stored starting from the left index of the
+  // declared range.
+  exprt::operandst elements;
+  elements.reserve(size);
+
+  for(std::size_t i = 0; i < size; i++)
+  {
+    unsigned char character = i < value.size() ? value[i] : 0;
+    exprt element = from_integer(character, unsignedbv_typet{8});
+    element.add_source_location() = source_location;
+    assignment_conversion(element, lhs_array_type.element_type());
+    elements.push_back(std::move(element));
+  }
+
+  auto result = array_exprt{std::move(elements), lhs_array_type};
+  result.add_source_location() = source_location;
   return std::move(result);
 }
 
