@@ -1,5 +1,7 @@
 # EBMC 6.3
 
+* AIGER output: latches have the initial value given by the design instead
+  of zero, and latches without initial value are uninitialised
 * netlist conversion no longer overflows the stack on long chains of
   combinational definitions, e.g., deep AIGs
 * Verilog: continuous assignments to variables are rejected in Verilog

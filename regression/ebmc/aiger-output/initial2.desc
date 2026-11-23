@@ -1,0 +1,10 @@
+CORE
+initial2.sv
+--aiger --top top
+^aag 3 2 1 0 0$
+^6 4 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The explicit initial value 1 of q is the reset value of its latch.

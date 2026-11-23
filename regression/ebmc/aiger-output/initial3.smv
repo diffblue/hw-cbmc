@@ -1,0 +1,4 @@
+MODULE main
+VAR a : boolean; b : boolean; c : boolean;
+INIT b = (a & !c)
+ASSIGN next(a) := a; next(b) := b; next(c) := c;
