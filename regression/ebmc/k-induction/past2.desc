@@ -1,0 +1,11 @@
+CORE broken-smt-backend
+past2.sv
+--k-induction
+^\[main\.p0\] always .*: PROVED$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The instrumentation of $past used to take time exponential in the number
+of iterations of the loop. The SMT backends do not finish in reasonable
+time on it.
