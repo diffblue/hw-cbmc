@@ -31,6 +31,9 @@
   shared expressions
 * netlist conversion no longer takes exponential time on definitions
   that share subexpressions
+* Verilog: the lowered definitions of the variables of a transition
+  relation share their common subexpressions, which avoids exponential
+  time in the propositional encoding
 
 # EBMC 6.2
 

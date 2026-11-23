@@ -1,0 +1,14 @@
+CORE broken-smt-backend
+blocking_flag_in_loop2.sv
+--bound 0
+^\[main\.p0\] .*: PROVED up to bound 0$
+^\[main\.p1\] .*: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The definitions of out, valid and found share subexpressions, which the
+lowering of each definition used to copy, and the propositional encoding
+then compared the copies structurally, which takes time exponential in
+the number of iterations. The SMT backends do not finish in reasonable
+time on it.

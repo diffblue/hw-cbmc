@@ -134,6 +134,11 @@ protected:
   exprt lower_system_functions_rec(exprt);
   expr_identity_mapt<exprt> lower_system_functions_cache;
 
+  // One lowering for the entire transition relation, so that the
+  // definitions of different variables that share subexpressions remain
+  // shared once lowered.
+  verilog_loweringt lowering;
+
   /// the symbol, with lowered type
   exprt symbol_expr(const symbolt &, bool next) const;
 
@@ -525,7 +530,7 @@ exprt verilog_transition_relationt::lower(exprt expr)
 {
   // First lower any Verilog-specific expressions, then rewrite
   // the remaining system function calls, e.g. $past.
-  auto l = verilog_lowering(std::move(expr));
+  auto l = lowering(expr);
   auto r = lower_system_functions(std::move(l));
   return r;
 }

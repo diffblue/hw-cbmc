@@ -7,4 +7,4 @@ blocking_flag_in_loop1.sv
 ^SIGNAL=0$
 --
 --
-On main, this takes 40 seconds; with 32 bits, it does not finish.
+On main, this takes 40 seconds. blocking_flag_in_loop2 has 32 bits.
