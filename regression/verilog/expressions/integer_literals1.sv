@@ -32,4 +32,12 @@ module main;
   p19: assert final (4'dZ===4'hz);
   p20: assert final ($typename(4'sdx)==="logic signed[3:0]");
 
+  // '?' is an alternative for z
+  p21: assert final ('d?===32'hzzzz_zzzz);
+  p22: assert final (16'sd?===16'sbz);
+  p23: assert final ($typename(16'sd?)==="logic signed[15:0]");
+  p24: assert final (4'b1?0?===4'b1z0z);
+  p25: assert final (6'o?1===6'oz1);
+  p26: assert final (8'h?1===8'hz1);
+
 endmodule

@@ -8,6 +8,7 @@
   (they remain allowed in SystemVerilog)
 * Verilog: variables connected to inout ports are rejected
 * Verilog: hierarchical references into named generate blocks
+* Verilog: '?' as z digit in decimal, octal and hex literals
 * SystemVerilog: interface ports with a modport in non-ANSI port declarations
 * SystemVerilog: default values for function and task arguments
 * SystemVerilog: named arguments in task calls
