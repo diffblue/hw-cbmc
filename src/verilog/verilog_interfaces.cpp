@@ -254,7 +254,7 @@ void verilog_typecheckt::instantiate_interface_port(
   exprt::operandst no_parameters;
   std::map<irep_idt, exprt> no_defparams;
 
-  instantiate_module(
+  instantiate_design_element(
     location,
     interface_module_id,
     interface_base_name,
@@ -262,7 +262,7 @@ void verilog_typecheckt::instantiate_interface_port(
     no_parameters,
     no_defparams);
 
-  // Update the instance symbol value to record the module binding
+  // Update the instance symbol value to record the interface binding
   symbolt &symbol = symbol_table_lookup(identifier);
   symbol.value = verilog_module_instancet{id2string(identifier) + "$module"};
 }

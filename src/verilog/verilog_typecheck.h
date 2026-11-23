@@ -133,12 +133,12 @@ protected:
   std::set<irep_idt> let_symbols;
 
   // instances
-  void process_module_instantiations(verilog_module_exprt &);
+  void process_design_element_instantiations(verilog_module_exprt &);
   void process_parameter_override(const class verilog_parameter_overridet &);
   void process_parameter_override(const verilog_module_itemt &);
-  void parameterize_instantiated_modules(verilog_module_itemt &);
-  void parameterize_instantiated_modules(class verilog_instt &);
-  void parameterize_instantiated_modules(class verilog_inst_builtint &);
+  void parameterize_instantiated_design_elements(verilog_module_itemt &);
+  void parameterize_instantiated_design_elements(class verilog_instt &);
+  void parameterize_instantiated_design_elements(class verilog_inst_builtint &);
 
   void elaborate_inst(const verilog_inst_baset &);
 
@@ -174,7 +174,7 @@ protected:
   void expand_instance_array(
     const verilog_instt &,
     const verilog_instt::instancet &,
-    const irep_idt &module_identifier,
+    const irep_idt &design_element_identifier,
     const exprt::operandst &parameter_assignments,
     verilog_instt::instancest &dest);
 
@@ -186,12 +186,12 @@ protected:
     const mp_integer &element_index,
     const source_locationt &);
 
-  // Specialize a module to a given instance identifier
-  // and parameter assignment
-  irep_idt instantiate_module(
+  // Specialize a design element (module, interface, program, ...)
+  // to a given instance identifier and parameter assignment
+  irep_idt instantiate_design_element(
     const source_locationt &location,
-    const irep_idt &module_identifier,
-    const irep_idt &module_base_name,
+    const irep_idt &design_element_identifier,
+    const irep_idt &design_element_base_name,
     const irep_idt &instance_identifier,
     const exprt::operandst &parameter_assignment,
     const std::map<irep_idt, exprt> &defparams);

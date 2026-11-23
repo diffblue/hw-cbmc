@@ -15,7 +15,7 @@ SRC = aval_bval_encoding.cpp \
       verilog_elaborate_type.cpp \
       verilog_expr.cpp \
       verilog_generate.cpp \
-      verilog_instantiate_module.cpp \
+      verilog_instantiate_design_element.cpp \
       verilog_initializer.cpp \
       verilog_interfaces.cpp \
       verilog_interpreter.cpp \

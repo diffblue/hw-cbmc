@@ -2242,8 +2242,8 @@ void verilog_typecheckt::typecheck_design_element(
   // generate constructs, and add the symbols to the symbol table.
   auto verilog_module_expr = elaborate(module_source);
 
-  // submodules
-  process_module_instantiations(verilog_module_expr);
+  // instantiate and parameterize submodules, interfaces, etc.
+  process_design_element_instantiations(verilog_module_expr);
 
   // Create symbols for the functions, tasks, registers/variables and wires.
   for(auto &module_item : verilog_module_expr.module_items())

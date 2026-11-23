@@ -206,31 +206,32 @@ void verilog_typecheckt::set_parameter_values(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::instantiate_module
+Function: verilog_typecheckt::instantiate_design_element
 
   Inputs:
 
  Outputs:
 
- Purpose:
+ Purpose: Specialize a design element (module, interface, program, ...)
+          to a given instance identifier and parameter assignment.
 
 \*******************************************************************/
 
-irep_idt verilog_typecheckt::instantiate_module(
+irep_idt verilog_typecheckt::instantiate_design_element(
   const source_locationt &location,
-  const irep_idt &module_identifier,
-  const irep_idt &module_base_name,
+  const irep_idt &design_element_identifier,
+  const irep_idt &design_element_base_name,
   const irep_idt &instance_identifier,
   const exprt::operandst &parameter_assignments,
   const std::map<irep_idt, exprt> &instance_defparams)
 {
-  // find module source symbol
+  // find the source symbol of the design element
   symbol_tablet::symbolst::const_iterator it =
-    symbol_table.symbols.find(id2string(module_identifier) + "$source");
+    symbol_table.symbols.find(id2string(design_element_identifier) + "$source");
 
   if(it == symbol_table.symbols.end())
     throw errort().with_location(location)
-      << "module `" << module_base_name << "' not found";
+      << "module `" << design_element_base_name << "' not found";
 
   const symbolt &source_symbol = it->second;
 
@@ -241,20 +242,21 @@ irep_idt verilog_typecheckt::instantiate_module(
   auto parameter_values = get_parameter_values(
     module_source, parameter_assignments, instance_defparams);
 
-  // Create full parameterized module name by appending "$module"
-  // to the name of the module instance.
-  auto new_module_identifier = id2string(instance_identifier) + "$module";
+  // Create the identifier of the parameterized design element
+  // by appending "$module" to the identifier of the instance.
+  auto new_design_element_identifier =
+    id2string(instance_identifier) + "$module";
 
   DATA_INVARIANT(
-    symbol_table.symbols.find(new_module_identifier) ==
+    symbol_table.symbols.find(new_design_element_identifier) ==
       symbol_table.symbols.end(),
-    "instantiated module symbol must not yet exist");
+    "instantiated design element symbol must not yet exist");
 
   // copy the symbol
   symbolt symbol{source_symbol};
 
-  symbol.name = new_module_identifier;
-  symbol.module = new_module_identifier;
+  symbol.name = new_design_element_identifier;
+  symbol.module = new_design_element_identifier;
   symbol.type = typet{ID_module};
 
   // copy the module source
@@ -281,5 +283,5 @@ irep_idt verilog_typecheckt::instantiate_module(
   verilog_typecheck.typecheck_design_element(
     source_copy, *new_symbol, instance_identifier);
 
-  return new_module_identifier;
+  return new_design_element_identifier;
 }
