@@ -23,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_bits.h"
 #include "verilog_expr.h"
 #include "verilog_initializer.h"
+#include "verilog_layout.h"
 #include "verilog_types.h"
 
 #include <algorithm>
@@ -315,16 +316,13 @@ exprt from_bitvector(
     exprt::operandst field_values;
     field_values.reserve(struct_type.components().size());
 
-    // start from the top; the first field is the most significant
-    mp_integer component_offset = verilog_bits(dest);
+    auto lower_bits = verilog_struct_component_lower_bits(dest);
 
-    for(auto &component : struct_type.components())
+    for(std::size_t i = 0; i < lower_bits.size(); i++)
     {
-      auto width = verilog_bits(component.type());
-      component_offset -= width;
       // rec. call
-      field_values.push_back(
-        from_bitvector(src, offset + component_offset, component.type()));
+      field_values.push_back(from_bitvector(
+        src, offset + lower_bits[i], struct_type.components()[i].type()));
     }
 
     return struct_exprt{std::move(field_values), struct_type};
@@ -354,34 +352,13 @@ exprt from_bitvector(
     element_values.reserve(size_int);
 
     // For packed arrays, we take the index direction into account.
-    bool is_packed =
-      array_type.get(ID_C_verilog_type) == ID_verilog_packed_array;
-
-    mp_integer element_width = verilog_bits(element_type);
-
-    if(is_packed && array_type.get_bool(ID_C_increasing))
+    for(std::size_t index = 0; index < size_int; index++)
     {
-      mp_integer element_offset = verilog_bits(dest);
-
-      for(std::size_t index = 0; index < size_int; index++)
-      {
-        element_offset -= element_width;
-        auto element_value =
-          from_bitvector(src, offset + element_offset, element_type);
-        element_values.push_back(std::move(element_value));
-      }
-    }
-    else
-    {
-      mp_integer element_offset = 0;
-
-      for(std::size_t index = 0; index < size_int; index++)
-      {
-        auto element_value =
-          from_bitvector(src, offset + element_offset, element_type);
-        element_values.push_back(std::move(element_value));
-        element_offset += element_width;
-      }
+      auto element_value = from_bitvector( // rec. call
+        src,
+        offset + verilog_array_element_lower_bit(array_type, index),
+        element_type);
+      element_values.push_back(std::move(element_value));
     }
 
     return array_exprt{std::move(element_values), array_type};
@@ -565,8 +542,7 @@ exprt to_bitvector(const exprt &src)
 
     // For packed arrays, we take the index direction into account.
     // Concatenation puts the most significant first.
-    bool is_packed =
-      array_type.get(ID_C_verilog_type) == ID_verilog_packed_array;
+    bool element_zero_first = verilog_array_element_zero_is_msb(array_type);
 
     // An array constructor: use its operands, rather than index
     // expressions on the constructor, which would replicate the entire
@@ -584,7 +560,7 @@ exprt to_bitvector(const exprt &src)
         return index_exprt{src, from_integer(index, integer_typet{})};
     };
 
-    if(is_packed && array_type.get_bool(ID_C_increasing))
+    if(element_zero_first)
     {
       for(std::size_t index = 0; index < size_int; index++)
         element_values.push_back(to_bitvector(element(index))); // rec. call
@@ -852,22 +828,11 @@ static exprt lower_packed_array_slice(
   auto &src_array_type = to_verilog_array_type(src.type());
   auto &result_array_type = to_verilog_array_type(result_type);
 
-  auto src_offset = src_array_type.offset();
-  auto src_size = src_array_type.size_int();
-  auto element_width = verilog_bits(src_array_type.element_type());
-
   // Flatten the source packed array to a bit vector.
   auto bv = to_bitvector(src);
 
-  // Lowest internal bit of the selected sub-array, following the
-  // element-to-bit mapping used by to_bitvector/from_bitvector and
-  // the write side (decompose_lhs in verilog_rtl.cpp).
-  mp_integer offset_in_bv;
-
-  if(src_array_type.increasing())
-    offset_in_bv = (src_size - 1 - (msb - src_offset)) * element_width;
-  else
-    offset_in_bv = (lsb - src_offset) * element_width;
+  // Lowest internal bit of the selected sub-array, see verilog_layout.h.
+  auto offset_in_bv = verilog_packed_array_lower_bit(src_array_type, lsb, msb);
 
   return from_bitvector(bv, offset_in_bv, result_array_type);
 }
@@ -885,8 +850,6 @@ static exprt lower_unpacked_array_slice(
   const mp_integer &msb,
   const typet &result_type)
 {
-  auto src_offset = src_array_type.offset();
-  auto src_size = src_array_type.size_int();
   auto &element_type = src_array_type.element_type();
   auto index_type = src_array_type.index_type();
   auto slice_size = msb - lsb + 1;
@@ -902,10 +865,7 @@ static exprt lower_unpacked_array_slice(
   // Internal element index of a declared index v in the source: elements
   // are stored starting from the left index of the declared range.
   auto src_internal = [&](const mp_integer &v)
-  {
-    return src_array_type.increasing() ? (v - src_offset)
-                                       : (src_offset + src_size - 1 - v);
-  };
+  { return verilog_unpacked_array_element_index(src_array_type, v); };
 
   // The result array stores its elements starting from its own left index.
   // Element j (j=0..slice_size-1) of the result corresponds to the Verilog

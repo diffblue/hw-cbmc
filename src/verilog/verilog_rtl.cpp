@@ -27,6 +27,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_bits.h"
 #include "verilog_constant_folding.h"
 #include "verilog_expr.h"
+#include "verilog_layout.h"
 #include "verilog_lowering.h"
 #include "verilog_typecheck_base.h"
 #include "verilog_typecheck_expr.h"
@@ -727,36 +728,21 @@ std::pair<mp_integer, mp_integer> verilog_rtl_buildert::member_slice(
   const irep_idt &component_name,
   const source_locationt &source_location)
 {
-  if(compound.id() == ID_struct)
-  {
-    // the first component is the most significant
-    mp_integer offset = get_width(compound);
-
-    for(auto &component : to_struct_type(compound).components())
-    {
-      auto width = get_width(component.type());
-      offset -= width;
-      if(component.get_name() == component_name)
-        return {offset, width};
-    }
-  }
-  else if(compound.id() == ID_union)
-  {
-    // all members of a packed union start at offset 0
-    for(auto &component : to_verilog_union_type(compound).components())
-    {
-      if(component.get_name() == component_name)
-        return {0, get_width(component.type())};
-    }
-  }
-  else
+  if(compound.id() != ID_struct && compound.id() != ID_union)
   {
     throw errort().with_location(source_location)
       << "member select on unexpected type `" << compound.id() << "'";
   }
 
-  throw errort().with_location(source_location)
-    << "member `" << component_name << "' not found";
+  auto range_opt = verilog_member_bit_range(compound, component_name);
+
+  if(!range_opt.has_value())
+  {
+    throw errort().with_location(source_location)
+      << "member `" << component_name << "' not found";
+  }
+
+  return {range_opt->lower, range_opt->width()};
 }
 
 /*******************************************************************\
@@ -800,18 +786,8 @@ static verilog_rtl_slicet packed_array_slice(
       << "array index out of range";
   }
 
-  mp_integer slice_lower;
-
-  if(array_type.increasing())
-  {
-    // The element with the low declared index is the most significant;
-    // the lowest internal bit corresponds to the largest element index.
-    slice_lower = lower + (size - 1 - (to - offset)) * element_width;
-  }
-  else
-  {
-    slice_lower = lower + (from - offset) * element_width;
-  }
+  auto slice_lower =
+    lower + verilog_packed_array_lower_bit(array_type, from, to);
 
   auto slice_width = (to - from + 1) * element_width;
 
@@ -858,46 +834,25 @@ verilog_rtl_buildert::decompose(const exprt &lhs, const index_functiont &index)
       // a bit select on an array selects an element
       auto &array_type = to_verilog_array_type(src.type());
       auto element_width = get_width(array_type.element_type());
-      auto size = array_type.size_int();
-      auto offset = array_type.offset();
 
-      // The bit-level layout must match the read side, i.e., the
-      // to_bitvector/from_bitvector functions in verilog_lowering.cpp.
+      // The bit-level layout is defined in verilog_layout.h.
+      //
+      // Per 1800-2017 7.4.6, writing to an array with an invalid index
+      // shall perform no operation. The out-of-range element maps to a
+      // bit slice that lies entirely outside the symbol; assign_to
+      // clips it to nothing (11.5.1), making the write a silent no-op.
       mp_integer lower;
 
       if(array_type.is_unpacked())
       {
-        // For unpacked arrays, the elements are stored starting from the
-        // left index of the declared range, i.e., the element with the
-        // left index occupies the least significant bits.
-        auto internal = array_type.increasing()
-                          ? *index_opt - offset
-                          : (offset + size - 1) - *index_opt;
-
-        // Per 1800-2017 7.4.6, writing to an array with an invalid index
-        // shall perform no operation. The out-of-range element maps to a
-        // bit slice that lies entirely outside the symbol; assign_to
-        // clips it to nothing (11.5.1), making the write a silent no-op.
-        lower = sub_opt->slice.lower + internal * element_width;
+        lower = sub_opt->slice.lower +
+                verilog_unpacked_array_element_index(array_type, *index_opt) *
+                  element_width;
       }
       else
       {
-        // For packed arrays, the element with the left index of the
-        // declared range is the most significant (1800-2017 7.4.1).
-        // The element with declared index i is the (i - offset)-th
-        // element counting from the low index. For an increasing range,
-        // that element is the most significant; for a decreasing range,
-        // the least significant.
-        auto element = *index_opt - offset;
-
-        // Per 1800-2017 7.4.6, writing to an array with an invalid index
-        // shall perform no operation. The out-of-range element maps to a
-        // bit slice that lies entirely outside the symbol; assign_to
-        // clips it to nothing (11.5.1), making the write a silent no-op.
-        auto internal =
-          array_type.increasing() ? (size - 1 - element) : element;
-
-        lower = sub_opt->slice.lower + internal * element_width;
+        lower = sub_opt->slice.lower + verilog_packed_array_lower_bit(
+                                         array_type, *index_opt, *index_opt);
       }
 
       return lhst{
@@ -905,18 +860,15 @@ verilog_rtl_buildert::decompose(const exprt &lhs, const index_functiont &index)
     }
     else
     {
-      auto offset = to_verilog_vector_type(src.type()).offset();
+      // The bit-level layout is defined in verilog_layout.h.
+      auto range = verilog_vector_bit_range(
+        verilog_bits(src.type()),
+        to_verilog_vector_type(src.type()).offset(),
+        src.type().get_bool(ID_C_increasing),
+        *index_opt,
+        *index_opt);
 
-      // The internal bit position within the source, following the same
-      // mapping as the read side (verilog_lowering.cpp): for an increasing
-      // range [l:r] with l<r (1800-2017 7.4.1), index l is the most
-      // significant bit, so the internal bit is (width-1)-(index-offset).
-      auto internal = *index_opt - offset;
-
-      if(src.type().get_bool(ID_C_increasing))
-        internal = (verilog_bits(src.type()) - 1) - internal;
-
-      auto bit = sub_opt->slice.lower + internal;
+      auto bit = sub_opt->slice.lower + range.lower;
 
       return lhst{sub_opt->symbol, verilog_rtl_slicet{bit, bit}};
     }
@@ -971,24 +923,16 @@ verilog_rtl_buildert::decompose(const exprt &lhs, const index_functiont &index)
         packed_array_slice(src, lower, from, to, lhs.source_location())};
     }
 
-    // For a decreasing range the declared index i maps to the internal bit
-    // i-offset; for an increasing range it maps to (width-1)-(i-offset)
-    // (1800-2017 7.4.1, 11.5.1). This must match the read side (lower()).
-    if(src.type().get_bool(ID_C_increasing))
-    {
-      auto width = get_width(src.type());
-      return lhst{
-        sub_opt->symbol,
-        verilog_rtl_slicet{
-          lower + (width - 1) - (to - offset),
-          lower + (width - 1) - (from - offset)}};
-    }
-    else
-    {
-      return lhst{
-        sub_opt->symbol,
-        verilog_rtl_slicet{lower + from - offset, lower + to - offset}};
-    }
+    auto range = verilog_vector_bit_range(
+      get_width(src.type()),
+      offset,
+      src.type().get_bool(ID_C_increasing),
+      from,
+      to);
+
+    return lhst{
+      sub_opt->symbol,
+      verilog_rtl_slicet{lower + range.lower, lower + range.upper}};
   }
   else if(
     lhs.id() == ID_verilog_indexed_part_select_plus ||
@@ -1045,24 +989,16 @@ verilog_rtl_buildert::decompose(const exprt &lhs, const index_functiont &index)
         packed_array_slice(src, lower, lo, hi, lhs.source_location())};
     }
 
-    // For a decreasing range the declared index i maps to the internal bit
-    // i-offset; for an increasing range it maps to (width-1)-(i-offset)
-    // (1800-2017 7.4.1, 11.5.1). This must match the read side (lower()).
-    if(src.type().get_bool(ID_C_increasing))
-    {
-      auto width = get_width(src.type());
-      return lhst{
-        sub_opt->symbol,
-        verilog_rtl_slicet{
-          lower + (width - 1) - (hi - offset),
-          lower + (width - 1) - (lo - offset)}};
-    }
-    else
-    {
-      return lhst{
-        sub_opt->symbol,
-        verilog_rtl_slicet{lower + lo - offset, lower + hi - offset}};
-    }
+    auto range = verilog_vector_bit_range(
+      get_width(src.type()),
+      offset,
+      src.type().get_bool(ID_C_increasing),
+      lo,
+      hi);
+
+    return lhst{
+      sub_opt->symbol,
+      verilog_rtl_slicet{lower + range.lower, lower + range.upper}};
   }
   else if(lhs.id() == ID_member)
   {
@@ -1658,9 +1594,7 @@ extract_bits(const exprt &value, const mp_integer &offset, std::size_t width)
 
     // as in to_bitvector: for increasing packed arrays, element 0 is
     // the most significant; otherwise, the least significant
-    bool element_zero_first =
-      array_type.get(ID_C_verilog_type) == ID_verilog_packed_array &&
-      array_type.get_bool(ID_C_increasing);
+    bool element_zero_first = verilog_array_element_zero_is_msb(array_type);
 
     for(std::size_t i = 0; i < size; i++)
     {
