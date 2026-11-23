@@ -29,6 +29,8 @@
   earlier iterations assigned no longer takes exponential time
 * the instrumentation of $past no longer takes exponential time on
   shared expressions
+* netlist conversion no longer takes exponential time on definitions
+  that share subexpressions
 
 # EBMC 6.2
 

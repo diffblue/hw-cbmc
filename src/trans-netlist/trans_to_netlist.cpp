@@ -34,6 +34,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <algorithm>
 #include <map>
+#include <set>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -158,11 +160,17 @@ protected:
 
   using lhs_dependenciest = std::vector<lhs_mapt::iterator>;
 
+  // The pairs of an expression node and a bit range done already.
+  // The definitions are DAGs with much sharing.
+  using collect_lhs_visitedt =
+    std::set<std::tuple<const void *, std::size_t, std::size_t>>;
+
   void collect_lhs_rec(
     const exprt &expr,
     std::size_t from,
     std::size_t to,
-    lhs_dependenciest &dependencies);
+    lhs_dependenciest &dependencies,
+    collect_lhs_visitedt &visited);
 
   void convert_constraints();
 
@@ -639,8 +647,13 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator root)
         // get all lhs symbols this depends on
         if(frame.needs_conversion())
         {
+          collect_lhs_visitedt visited;
           collect_lhs_rec(
-            rhs_entry.expr, 0, rhs_entry.width - 1, frame.dependencies());
+            rhs_entry.expr,
+            0,
+            rhs_entry.width - 1,
+            frame.dependencies(),
+            visited);
         }
       }
 
@@ -725,9 +738,15 @@ void convert_trans_to_netlistt::collect_lhs_rec(
   const exprt &expr,
   std::size_t from,
   std::size_t to,
-  lhs_dependenciest &dependencies)
+  lhs_dependenciest &dependencies,
+  collect_lhs_visitedt &visited)
 {
   PRECONDITION(from <= to);
+
+  // Each bit range of a node is done once. The dependencies are only
+  // added to, hence the second visit adds nothing new.
+  if(!visited.emplace(&expr.read(), from, to).second)
+    return;
 
   if(expr.id()==ID_symbol)
   {
@@ -781,7 +800,8 @@ void convert_trans_to_netlistt::collect_lhs_rec(
          to_extractbit_expr(expr).index(), i)) // constant?
     {
       from = i.to_ulong();
-      collect_lhs_rec(to_extractbit_expr(expr).src(), from, from, dependencies);
+      collect_lhs_rec(
+        to_extractbit_expr(expr).src(), from, from, dependencies, visited);
       return;
     }
   }
@@ -800,7 +820,8 @@ void convert_trans_to_netlistt::collect_lhs_rec(
       from = new_from.to_ulong();
       to = new_to.to_ulong();
 
-      collect_lhs_rec(to_extractbits_expr(expr).src(), from, to, dependencies);
+      collect_lhs_rec(
+        to_extractbits_expr(expr).src(), from, to, dependencies, visited);
       return;
     }
   }
@@ -835,7 +856,7 @@ void convert_trans_to_netlistt::collect_lhs_rec(
       const std::size_t hi = std::min(to, offset + op_width - 1);
 
       if(lo <= hi)
-        collect_lhs_rec(op, lo - offset, hi - offset, dependencies);
+        collect_lhs_rec(op, lo - offset, hi - offset, dependencies, visited);
 
       if(!is_concat)
         offset += op_width;
@@ -868,7 +889,11 @@ void convert_trans_to_netlistt::collect_lhs_rec(
       if(element_width != 0 && to + offset < array_width)
       {
         collect_lhs_rec(
-          index_expr.array(), from + offset, to + offset, dependencies);
+          index_expr.array(),
+          from + offset,
+          to + offset,
+          dependencies,
+          visited);
         return;
       }
     }
@@ -890,7 +915,11 @@ void convert_trans_to_netlistt::collect_lhs_rec(
       if(op_width != 0 && from + d < op_width)
       {
         collect_lhs_rec(
-          shift.op(), from + d, std::min(to + d, op_width - 1), dependencies);
+          shift.op(),
+          from + d,
+          std::min(to + d, op_width - 1),
+          dependencies,
+          visited);
       }
 
       return;
@@ -912,7 +941,7 @@ void convert_trans_to_netlistt::collect_lhs_rec(
     if(width==0)
       continue;
 
-    collect_lhs_rec(*it, 0, width - 1, dependencies);
+    collect_lhs_rec(*it, 0, width - 1, dependencies, visited);
   }
 }
 
