@@ -2233,9 +2233,31 @@ exprt smv_typecheckt::set_to_predicate(
     }
     else if(set_expression.id() == ID_cond)
     {
-      // we'll use the lowering to if
-      auto lowering = to_cond_expr(set_expression).lower();
-      return set_to_predicate(variable, lowering, source_location);
+      // c1 : v1, c2 : v2, ...  --->  c1 : p(v1), c2 : p(v2), ...
+      // We do not lower first, since the lowering to if_exprt takes
+      // the type of the true case, which may not be a set.
+      auto &operands = set_expression.operands();
+      DATA_INVARIANT(
+        !operands.empty() && operands.size() % 2 == 0,
+        "cond must have an even number of operands");
+
+      exprt::operandst predicate_ops;
+      predicate_ops.reserve(operands.size());
+
+      for(std::size_t i = 0; i < operands.size(); i += 2)
+      {
+        predicate_ops.push_back(operands[i]);
+        predicate_ops.push_back(
+          set_to_predicate(variable, operands[i + 1], source_location));
+      }
+
+      return cond_exprt{std::move(predicate_ops), bool_typet{}}.lower();
+    }
+    else if(set_expression.id() == ID_smv_cases)
+    {
+      // case ... esac
+      auto cond_expr = to_smv_cases_expr(set_expression).lower();
+      return set_to_predicate(variable, cond_expr, source_location);
     }
     else
       PRECONDITION(false);

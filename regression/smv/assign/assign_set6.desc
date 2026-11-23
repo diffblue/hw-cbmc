@@ -1,0 +1,12 @@
+CORE
+assign_set6.smv
+--bdd
+^\[spec1\] AG x <= 2: PROVED$
+^\[spec2\] AG \(x = 0 -> EX x = 1\): PROVED$
+^\[spec3\] AG \(x = 0 -> EX x = 2\): PROVED$
+^\[spec4\] AG \(x != 0 -> AX x = 0\): PROVED$
+^\[spec5\] AG x != 2: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
