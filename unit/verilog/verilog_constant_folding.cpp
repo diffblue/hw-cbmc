@@ -352,3 +352,37 @@ SCENARIO("verilog_constant_folding lifts constants of other Verilog types")
     }
   }
 }
+
+SCENARIO("verilog_constant_folding lifts enum constants")
+{
+  symbol_tablet symbol_table;
+  namespacet ns{symbol_table};
+  const irep_idt enum_identifier = "Verilog::$root.main.enum-0";
+
+  GIVEN("a cast of a two-valued constant to an enum with base type int")
+  {
+    auto enum_type = verilog_enum_typet{signedbv_typet{32}, enum_identifier};
+    typecast_exprt expr{from_integer(1, signedbv_typet{32}), enum_type};
+
+    THEN("the result is a constant of the enum type")
+    {
+      auto result = verilog_constant_folding(expr, ns);
+      REQUIRE(result == verilog_from_integer(1, enum_type));
+      REQUIRE(verilog_numeric_cast(to_constant_expr(result)) == mp_integer{1});
+    }
+  }
+
+  GIVEN("a cast to an enum with a four-valued base type")
+  {
+    auto enum_type =
+      verilog_enum_typet{verilog_unsignedbv_typet{4}, enum_identifier};
+    typecast_exprt expr{l4("0101"), enum_type};
+
+    THEN("the result is a constant of the enum type, four-valued encoded")
+    {
+      auto result = verilog_constant_folding(expr, ns);
+      REQUIRE(result == constant_exprt{"0101", enum_type});
+      REQUIRE(verilog_numeric_cast(to_constant_expr(result)) == mp_integer{5});
+    }
+  }
+}

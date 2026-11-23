@@ -38,11 +38,21 @@ Author: Daniel Kroening, kroening@kroening.com
 ///   single bit without a declared range becomes bool (make_two_valued).
 ///   Aggregate types are lowered member-wise.
 /// * chandle and event become their encoding.
+/// * enums become the lowered base type, see
+///   verilog_enum_typet::annotated_base_type.
 /// Four-valued values that do contain x/z, e.g. literals, are lowered to
 /// the aval/bval encoding, see aval_bval_encoding.h.
 typet verilog_lowering(typet type)
 {
-  if(type.id() == ID_verilog_real || type.id() == ID_verilog_realtime)
+  if(type.id() == ID_verilog_enum)
+  {
+    auto &enum_type = to_verilog_enum_type(type);
+    auto result = verilog_lowering(enum_type.base_type());
+    result.set(ID_C_verilog_type, ID_verilog_enum);
+    result.set(ID_C_identifier, enum_type.identifier());
+    return result;
+  }
+  else if(type.id() == ID_verilog_real || type.id() == ID_verilog_realtime)
   {
     return ieee_float_spect::double_precision().to_type();
   }
@@ -79,14 +89,49 @@ void verilog_lower_symbol_types(symbol_table_baset &symbol_table)
   {
     const auto &symbol = it->second;
 
-    // Parameters are substituted by their value, and types are not
-    // variables.
-    if(symbol.mode != ID_Verilog || symbol.is_macro || symbol.is_type)
+    if(symbol.mode != ID_Verilog || symbol.is_type)
       continue;
+
+    if(symbol.is_macro)
+    {
+      // Parameters are substituted by their value. The back-ends may
+      // still enumerate them, e.g. to show their values in traces, and
+      // hence enum names and parameters of enum type are lowered,
+      // including their value.
+      if(symbol.type.id() == ID_verilog_enum)
+      {
+        auto &writeable_symbol = it.get_writeable_symbol();
+        writeable_symbol.type = verilog_lowering(writeable_symbol.type);
+        if(writeable_symbol.value.is_not_nil())
+        {
+          auto lowered_value = verilog_lowering(writeable_symbol.value);
+
+          // A value with x/z keeps its Verilog encoding, as the
+          // aval/bval encoding cannot be shown.
+          if(is_aval_bval(lowered_value))
+          {
+            auto &value_type = writeable_symbol.value.type();
+            if(value_type.id() == ID_verilog_enum)
+              value_type =
+                to_verilog_enum_type(value_type).annotated_base_type();
+          }
+          else
+            writeable_symbol.value = std::move(lowered_value);
+        }
+      }
+
+      continue;
+    }
 
     auto &type = symbol.type;
 
-    if(
+    if(type.id() == ID_verilog_enum)
+    {
+      // The lowered type of the base type retains the annotations
+      // that identify the enum, e.g. for showing values in traces.
+      it.get_writeable_symbol().type = verilog_lowering(type);
+    }
+    else if(
       type.id() == ID_verilog_real || type.id() == ID_verilog_shortreal ||
       type.id() == ID_verilog_realtime || type.id() == ID_verilog_chandle ||
       type.id() == ID_verilog_event)
@@ -1068,6 +1113,17 @@ exprt verilog_lowering(exprt expr)
         return expr;
       }
     }
+  }
+
+  // Enum types are replaced by their annotated base type.
+  // The lowering of the expression then proceeds as for the base type.
+  if(expr.type().id() == ID_verilog_enum)
+    expr.type() = to_verilog_enum_type(expr.type()).annotated_base_type();
+
+  for(auto &op : expr.operands())
+  {
+    if(op.type().id() == ID_verilog_enum)
+      op.type() = to_verilog_enum_type(op.type()).annotated_base_type();
   }
 
   // The Verilog types of the expression and of the operands are needed

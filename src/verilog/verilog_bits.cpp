@@ -24,6 +24,9 @@ std::optional<mp_integer> verilog_bits_opt(const typet &type)
     type.id() == ID_verilog_signedbv || type.id() == ID_verilog_unsignedbv)
     return type.get_int(ID_width);
 
+  if(type.id() == ID_verilog_enum)
+    return verilog_bits_opt(to_verilog_enum_type(type).base_type());
+
   if(type.id() == ID_array)
   {
     auto &array_type = to_array_type(type);

@@ -28,7 +28,12 @@ Function: vtypet::vtypet
 
 vtypet::vtypet(const typet &type)
 {
-  if(type.id() == ID_integer)
+  if(type.id() == ID_verilog_enum)
+  {
+    // Enums are classified by their base type.
+    *this = vtypet{to_verilog_enum_type(type).base_type()};
+  }
+  else if(type.id() == ID_integer)
   {
     vtype = INTEGER;
     width = 32;

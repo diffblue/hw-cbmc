@@ -396,15 +396,15 @@ void verilog_typecheck_exprt::assignment_conversion(
 
   auto original_rhs_type = rhs.type(); // copy
 
-  auto &verilog_dest_type = lhs_type.get(ID_C_verilog_type);
-  if(verilog_dest_type == ID_verilog_enum)
+  if(lhs_type.id() == ID_verilog_enum)
   {
     // IEEE 1800-2017 6.19.3: "a variable of type enum cannot be directly
     // assigned a value that lies outside the enumeration set unless an
     // explicit cast is used"
     if(
-      rhs.type().get(ID_C_verilog_type) != ID_verilog_enum ||
-      rhs.type().get(ID_C_identifier) != lhs_type.get(ID_C_identifier))
+      rhs.type().id() != ID_verilog_enum ||
+      to_verilog_enum_type(rhs.type()).identifier() !=
+        to_verilog_enum_type(lhs_type).identifier())
     {
       throw errort().with_location(rhs.source_location())
         << "assignment to enum requires enum of the same type, but got "
@@ -611,7 +611,7 @@ bool verilog_typecheck_exprt::unpacked_array_assignment_compatible(
   }
 
   // Enums only accept values of the same enum type, 1800-2017 6.19.3.
-  if(lhs_type.get(ID_C_verilog_type) == ID_verilog_enum)
+  if(lhs_type.id() == ID_verilog_enum)
     return false;
 
   // What remains are the integral and real types, which can be
@@ -626,7 +626,7 @@ bool verilog_typecheck_exprt::unpacked_array_assignment_compatible(
     {
       return type.id() == ID_bool || type.id() == ID_unsignedbv ||
              type.id() == ID_signedbv || type.id() == ID_verilog_unsignedbv ||
-             type.id() == ID_verilog_signedbv ||
+             type.id() == ID_verilog_signedbv || type.id() == ID_verilog_enum ||
              type.id() == ID_verilog_integer || type.id() == ID_integer ||
              type.id() == ID_verilog_real ||
              type.id() == ID_verilog_shortreal ||
@@ -1667,6 +1667,21 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
 
   exprt::operandst &arguments=expr.arguments();
 
+  // These functions operate on the value of their arguments, and enum
+  // arguments decay to their base type.
+  if(
+    base_name == "$signed" || base_name == "$unsigned" ||
+    base_name == "$countones" || base_name == "$countbits" ||
+    base_name == "$onehot" || base_name == "$onehot0" ||
+    base_name == "$clog2" || base_name == "$isunknown" ||
+    base_name == "$rtoi" || base_name == "$itor" ||
+    base_name == "$bitstoreal" || base_name == "$bitstoshortreal" ||
+    base_name == "$realtobits" || base_name == "$shortrealtobits")
+  {
+    for(auto &argument : arguments)
+      enum_decay(argument);
+  }
+
   if(base_name == "$signed")
   {
     // this is an explicit type cast
@@ -1794,7 +1809,8 @@ exprt verilog_typecheck_exprt::convert_system_function(function_call_exprt expr)
       arguments[0].type().id() != ID_verilog_unsignedbv &&
       arguments[0].type().id() != ID_verilog_signedbv &&
       arguments[0].type().id() != ID_bool &&
-      arguments[0].type().id() != ID_array)
+      arguments[0].type().id() != ID_array &&
+      arguments[0].type().id() != ID_verilog_enum)
     {
       throw errort().with_location(arguments[0].source_location())
         << base_name << " expects an array or integral argument";
@@ -3028,8 +3044,7 @@ void verilog_typecheck_exprt::implicit_typecast(
   if(dest_type.id()==irep_idt())
     return;
 
-  auto &verilog_dest_type = dest_type.get(ID_C_verilog_type);
-  if(verilog_dest_type == ID_verilog_enum)
+  if(dest_type.id() == ID_verilog_enum)
   {
     // IEEE 1800-2017 6.19.3: "a variable of type enum cannot be directly
     // assigned a value that lies outside the enumeration set unless an
@@ -3037,8 +3052,9 @@ void verilog_typecheck_exprt::implicit_typecast(
     const typet &src_type = expr.type();
 
     if(
-      src_type.get(ID_C_verilog_type) != ID_verilog_enum ||
-      src_type.get(ID_C_identifier) != dest_type.get(ID_C_identifier))
+      src_type.id() != ID_verilog_enum ||
+      to_verilog_enum_type(src_type).identifier() !=
+        to_verilog_enum_type(dest_type).identifier())
     {
       throw errort().with_location(expr.source_location())
         << "assignment to enum requires enum of the same type, but got "
@@ -3258,13 +3274,8 @@ typet verilog_typecheck_exprt::enum_decay(const typet &type)
 {
   // Verilog enum types decay to their base type when used in relational
   // or arithmetic expressions.
-  if(type.get(ID_C_verilog_type) == ID_verilog_enum)
-  {
-    typet result = type;
-    result.remove(ID_C_verilog_type);
-    result.remove(ID_C_identifier);
-    return result;
-  }
+  if(type.id() == ID_verilog_enum)
+    return to_verilog_enum_type(type).base_type();
   else
     return type;
 }
@@ -3314,7 +3325,7 @@ void verilog_typecheck_exprt::enum_decay(exprt &expr) const
 {
   // Verilog enum types decay to their base type when used in relational
   // or arithmetic expressions.
-  if(expr.type().get(ID_C_verilog_type) == ID_verilog_enum)
+  if(expr.type().id() == ID_verilog_enum)
   {
     expr = typecast_exprt{expr, enum_decay(expr.type())};
   }
@@ -3560,6 +3571,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   {
     // may produce an 'x' if the operand is a verilog_bv
     convert_expr(expr.op());
+    enum_decay(expr.op());
 
     if(
       expr.op().type().id() == ID_verilog_signedbv ||
@@ -3625,7 +3637,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
 
     // In contrast to assignments, these can turn integers into enums
     // (1800-2017 6.19.3).
-    if(expr.type().get(ID_C_verilog_type) == ID_verilog_enum)
+    if(expr.type().id() == ID_verilog_enum)
     {
       expr.op() = typecast_exprt::conditional_cast(expr.op(), expr.type());
     }
@@ -3641,6 +3653,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     // SystemVerilog has got signed'(expr) and unsigned'(expr).
     // This is an explicit type cast.
     convert_expr(expr.op());
+    enum_decay(expr.op());
     const auto &old_type = expr.op().type();
     const auto dest_type = expr.type().id();
     PRECONDITION(dest_type == ID_signed || dest_type == ID_unsigned);
@@ -3716,6 +3729,7 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
   else if(expr.id() == ID_bitnot)
   {
     convert_expr(expr.op());
+    enum_decay(expr.op());
     expr.type() = expr.op().type();
 
     // Boolean, or a single four-valued bit? On a single bit, bit-wise
@@ -4146,7 +4160,10 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // These yield 'x' when the result is not determined by a
     // controlling operand but at least one operand contains x or z.
     Forall_operands(it, expr)
+    {
       convert_expr(*it);
+      enum_decay(*it);
+    }
 
     // Four-valued if any operand is four-valued.
     bool any_four_valued = false;
@@ -4176,6 +4193,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // 1800 2017 11.4.7 Logical operators
     convert_expr(expr.lhs());
     convert_expr(expr.rhs());
+    enum_decay(expr.lhs());
+    enum_decay(expr.rhs());
 
     // These return 'x' if either of the operands contains x or z.
     if(
@@ -4226,6 +4245,10 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // == and !=
     convert_expr(expr.lhs());
     convert_expr(expr.rhs());
+
+    // These may yield 'x' if the base type of an enum is four-valued.
+    enum_decay(expr.lhs());
+    enum_decay(expr.rhs());
 
     // There is no need to decay structs, unions, arrays if
     // the types are equal.
@@ -4421,6 +4444,7 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     // type cast, to change the size (in bits) of the rhs to the
     // number given as lhs.
     convert_expr(expr.rhs());
+    enum_decay(expr.rhs());
     auto new_size = convert_integer_constant_expression(expr.lhs());
     expr.lhs() = from_integer(new_size, natural_typet{});
     auto new_size_int = numeric_cast_v<std::size_t>(new_size);

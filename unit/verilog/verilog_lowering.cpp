@@ -210,3 +210,50 @@ SCENARIO("verilog_lower_symbol_types lowers the Verilog-specific types")
     REQUIRE(to_array_type(a_type).element_type() == unsignedbv_typet{2});
   }
 }
+
+SCENARIO("verilog_lowering replaces enum types by their base type")
+{
+  const irep_idt enum_identifier = "Verilog::$root.main.enum-0";
+
+  GIVEN("an enum type with a four-valued base type")
+  {
+    auto enum_type =
+      verilog_enum_typet{verilog_unsignedbv_typet{2}, enum_identifier};
+
+    THEN("the type lowers to the two-valued base type, annotated")
+    {
+      auto lowered = verilog_lowering(enum_type);
+      REQUIRE(lowered == unsignedbv_typet{2});
+      REQUIRE(lowered.get(ID_C_verilog_type) == ID_verilog_enum);
+      REQUIRE(lowered.get(ID_C_identifier) == enum_identifier);
+    }
+
+    THEN("a symbol of the enum type gets the lowered type")
+    {
+      auto lowered = verilog_lowering(symbol_exprt{"s", enum_type});
+      REQUIRE(lowered == symbol_exprt{"s", unsignedbv_typet{2}});
+      REQUIRE(lowered.type().get(ID_C_identifier) == enum_identifier);
+    }
+
+    THEN("a constant of the enum type lowers to a two-valued constant")
+    {
+      auto lowered = verilog_lowering(verilog_from_integer(2, enum_type));
+      REQUIRE(lowered == from_integer(2, unsignedbv_typet{2}));
+      REQUIRE(lowered.type().get(ID_C_identifier) == enum_identifier);
+    }
+  }
+
+  GIVEN("a struct with an enum member")
+  {
+    auto enum_type = verilog_enum_typet{signedbv_typet{32}, enum_identifier};
+    auto struct_type = struct_typet{{{"e", enum_type}}};
+
+    THEN("the member type is lowered")
+    {
+      auto lowered = verilog_lowering(struct_type);
+      auto &component = to_struct_type(lowered).components().front();
+      REQUIRE(component.type() == signedbv_typet{32});
+      REQUIRE(component.type().get(ID_C_verilog_type) == ID_verilog_enum);
+    }
+  }
+}
