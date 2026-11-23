@@ -994,16 +994,34 @@ exprt aval_bval(const if_exprt &expr)
   // Is the condition four-valued?
   if(is_aval_bval(expr.cond().type()))
   {
-    auto cond_aval = aval(expr.cond());
+    // 1800-2017 11.4.11: the condition is true if it has a known 1 bit,
+    // and false if all of its bits are 0. Otherwise, it is ambiguous,
+    // and the operands are combined bit-wise (Table 11-20): a bit that
+    // is 0 in both operands or 1 in both is that value, and x otherwise.
+    auto &true_case = expr.true_case();
+    auto &false_case = expr.false_case();
+    auto aval_bval_type = lower_to_aval_bval(type);
 
-    auto cond_aval_zero = to_bv_type(cond_aval.type()).all_zeros_expr();
+    auto true_aval = aval(true_case), true_bval = bval(true_case);
+    auto false_aval = aval(false_case), false_bval = bval(false_case);
 
-    auto two_valued_if = if_exprt{
-      notequal_exprt{cond_aval, cond_aval_zero},
-      expr.true_case(),
-      expr.false_case()};
+    // the bits that are x in the combination
+    auto combined_bval = bitor_exprt{
+      bitor_exprt{true_bval, false_bval}, bitxor_exprt{true_aval, false_aval}};
 
-    return if_exprt{has_xz(expr.cond()), make_x(type), two_valued_if};
+    // x is aval 0, bval 1
+    auto combined_aval = bitand_exprt{true_aval, bitnot_exprt{combined_bval}};
+
+    auto combined =
+      combine_aval_bval(combined_aval, combined_bval, aval_bval_type);
+
+    return if_exprt{
+      logical_has_one(expr.cond()),
+      aval_bval_conversion(true_case, aval_bval_type),
+      if_exprt{
+        has_xz(expr.cond()),
+        std::move(combined),
+        aval_bval_conversion(false_case, aval_bval_type)}};
   }
   else
   {
