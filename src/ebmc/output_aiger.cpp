@@ -227,12 +227,14 @@ void output_aiger(const netlistt &netlist, std::ostream &out)
   // sense (e.g. the product bits of a multiplier), as consumed by
   // gate-level tools such as AMulet. Emitted per bit, LSB first,
   // named "id[bit]". Note the bit's current literal may be negated;
-  // to_aiger_lit preserves the sign.
+  // to_aiger_lit preserves the sign. Output ports that are state
+  // variables (e.g. `output reg`) remain latches, and the output
+  // is driven by the current latch value.
   for(const auto &map_it : netlist.var_map.sorted())
   {
     const auto &id = map_it->first;
     const auto &var = map_it->second;
-    if(!var.is_output())
+    if(!var.is_output() && !var.is_output_port)
       continue;
     for(std::size_t bit_nr = 0; bit_nr < var.bits.size(); bit_nr++)
     {

@@ -97,6 +97,7 @@ build_netlist_var_map(symbol_table_baset &symbol_table, const irep_idt &module)
     var.vartype = vartype;
     var.type = symbol.type;
     var.mode = symbol.mode;
+    var.is_output_port = symbol.is_output;
     var.bits.resize(size);
   };
 
