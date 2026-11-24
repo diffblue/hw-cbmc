@@ -34,6 +34,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_types.h"
 
 #include <algorithm>
+#include <optional>
 #include <ostream>
 #include <set>
 
@@ -1112,6 +1113,56 @@ Function: verilog_rtl_buildert::lower_lhs
 
 \*******************************************************************/
 
+/// Whether the given Verilog index of an element of the given unpacked
+/// array lies in the declared range of the array, or an empty optional if
+/// every value of the type of the index does. The comparison is done
+/// in a signed type that is wide enough for the index and the bounds of
+/// the range, as on the read side (verilog_lowering.cpp).
+static std::optional<exprt> unpacked_array_index_in_range(
+  const exprt &index,
+  const verilog_array_typet &array_type)
+{
+  // the declared indices are offset, ..., offset + size - 1
+  auto low = array_type.offset();
+  auto high = low + array_type.size_int() - 1;
+
+  // the values of the type of the index
+  auto &index_type = index.type();
+  auto index_bits = verilog_bits_opt(index_type);
+
+  if(index_bits.has_value() && *index_bits >= 1)
+  {
+    bool is_unsigned = index_type.id() == ID_bool ||
+                       index_type.id() == ID_unsignedbv ||
+                       index_type.id() == ID_verilog_unsignedbv;
+    bool is_signed =
+      index_type.id() == ID_signedbv || index_type.id() == ID_verilog_signedbv;
+
+    if(is_unsigned && power(2, *index_bits) - 1 <= high && low <= 0)
+      return {};
+
+    if(
+      is_signed && power(2, *index_bits - 1) - 1 <= high &&
+      low <= -power(2, *index_bits - 1))
+    {
+      return {};
+    }
+  }
+
+  std::size_t index_width =
+    numeric_cast_v<std::size_t>(verilog_bits_opt(index.type()).value_or(1));
+  auto bound = std::max(low < 0 ? -low : low, high < 0 ? -high : high) + 1;
+  std::size_t compare_width = std::max<std::size_t>(
+    index_width + 1, numeric_cast_v<std::size_t>(address_bits(bound)) + 1);
+  signedbv_typet compare_type{compare_width};
+
+  exprt wide_index = typecast_exprt{index, compare_type};
+
+  return and_exprt{
+    binary_relation_exprt{wide_index, ID_ge, from_integer(low, compare_type)},
+    binary_relation_exprt{wide_index, ID_le, from_integer(high, compare_type)}};
+}
+
 verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
   const exprt &lhs,
   exprt rhs,
@@ -1134,6 +1185,10 @@ verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
     auto old_value = read_lhs(src, state, blocking);
     auto index = substitute(bit_select.index(), state);
 
+    // Per 1800-2017 7.4.6, a write to an unpacked array with an index
+    // outside of the declared range performs no operation.
+    std::optional<exprt> in_range;
+
     // The with-expression uses the internal index, whereas the Verilog
     // index follows the declared range. Map the Verilog index to the
     // internal index, mirroring the read side (verilog_lowering.cpp).
@@ -1141,6 +1196,12 @@ verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
     {
       auto &array_type = to_verilog_array_type(src.type());
       auto index_type = array_type.index_type();
+
+      // The range check uses the Verilog index, which the conversion to
+      // the index type below may truncate.
+      if(array_type.is_unpacked())
+        in_range = unpacked_array_index_in_range(index, array_type);
+
       index = typecast_exprt{std::move(index), index_type};
 
       if(array_type.is_unpacked())
@@ -1182,8 +1243,13 @@ verilog_rtl_buildert::loweredt verilog_rtl_buildert::lower_lhs(
           minus_exprt{verilog_from_integer(width - 1, index.type()), index};
     }
 
-    with_exprt new_value{
-      std::move(old_value), std::move(index), std::move(rhs)};
+    exprt new_value = with_exprt{old_value, std::move(index), std::move(rhs)};
+
+    if(in_range.has_value())
+    {
+      new_value =
+        if_exprt{std::move(*in_range), std::move(new_value), old_value};
+    }
 
     // recursive call
     return lower_lhs(src, std::move(new_value), state, blocking);

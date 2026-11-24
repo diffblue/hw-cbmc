@@ -22,6 +22,8 @@
   type yields that enum type
 * SystemVerilog: system functions, e.g., $rose, in named properties and
   sequences
+* Verilog: a write to an unpacked array with a variable index outside of
+  the declared range performs no operation
 
 # EBMC 6.2
 
