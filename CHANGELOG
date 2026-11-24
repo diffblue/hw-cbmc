@@ -22,6 +22,9 @@
   type yields that enum type
 * SystemVerilog: system functions, e.g., $rose, in named properties and
   sequences
+* netlist conversion: the elements of an unpacked array that is written
+  with a variable index are no longer partly unconstrained, which could
+  refute properties that hold
 
 # EBMC 6.2
 

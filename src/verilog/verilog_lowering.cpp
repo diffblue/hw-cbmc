@@ -2087,7 +2087,39 @@ exprt verilog_lowering(exprt expr)
     // The element has the element type of the lowered array.
     auto &index_expr = to_index_expr(expr);
     if(index_expr.array().type().id() == ID_array)
+    {
       expr.type() = to_array_type(index_expr.array().type()).element_type();
+
+      // The index of an element select that is generated internally may
+      // be a constant of the mathematical integer type, which the
+      // back-ends do not support. E.g., the simplifier turns
+      // (a WITH [i:=v])[j] into a conditional on i == j, which then has
+      // the type of j. Convert it to the index type of the array that
+      // the writes use, or a wider unsigned type when the index does not
+      // fit.
+      auto &index = index_expr.index();
+      if(
+        index.is_constant() && index.type().id() != ID_unsignedbv &&
+        index.type().id() != ID_signedbv &&
+        verilog_operand_type(0).id() == ID_array &&
+        to_array_type(verilog_operand_type(0)).size().is_constant())
+      {
+        auto index_int = numeric_cast<mp_integer>(to_constant_expr(index));
+        if(index_int.has_value() && *index_int >= 0)
+        {
+          auto &verilog_array_type =
+            to_verilog_array_type(verilog_operand_type(0));
+          auto index_type = verilog_array_type.index_type();
+          auto width = to_unsignedbv_type(index_type).get_width();
+          if(*index_int >= power(2, width))
+          {
+            index_type = unsignedbv_typet{
+              numeric_cast_v<std::size_t>(address_bits(*index_int + 1))};
+          }
+          index = from_integer(*index_int, index_type);
+        }
+      }
+    }
     return expr;
   }
   else if(expr.id() == ID_if)
