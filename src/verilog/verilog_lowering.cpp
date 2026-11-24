@@ -2192,6 +2192,36 @@ exprt verilog_lowering(exprt expr)
 
     return expr;
   }
+  else if(expr.id() == ID_with)
+  {
+    // As for the aggregate constructors, the new values must have the
+    // types of the elements or members of the lowered aggregate type.
+    // E.g., the elements of an unpacked array of 1-bit variables are
+    // lowered to bool, whereas a 1-bit constant is lowered to a vector.
+    expr.type() = verilog_lowering(expr.type());
+
+    auto &operands = expr.operands();
+
+    for(std::size_t i = 1; i + 1 < operands.size(); i += 2)
+    {
+      auto &new_value = operands[i + 1];
+
+      if(expr.type().id() == ID_array)
+      {
+        new_value =
+          coerce_to_type(new_value, to_array_type(expr.type()).element_type());
+      }
+      else if(expr.type().id() == ID_struct)
+      {
+        auto &component = to_struct_type(expr.type())
+                            .get_component(operands[i].get(ID_component_name));
+        if(component.is_not_nil())
+          new_value = coerce_to_type(new_value, component.type());
+      }
+    }
+
+    return expr;
+  }
   else if(expr.id() == ID_array_of)
   {
     expr.type() = verilog_lowering(expr.type());

@@ -1,0 +1,12 @@
+CORE
+bit_array_write1.sv
+--aig --bound 2
+^\[main\.p0\] .*: PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The elements of the array are lowered to bool, whereas the constant
+1'b1 is lowered to a bit-vector. The netlist converter used to fail an
+invariant of the simplifier.

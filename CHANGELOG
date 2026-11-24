@@ -25,6 +25,9 @@
 * netlist conversion: the elements of an unpacked array that is written
   with a variable index are no longer partly unconstrained, which could
   refute properties that hold
+* Verilog: writes of a constant into an element of an unpacked array of
+  1-bit variables no longer make the SMT backends reject the problem, or
+  the netlist conversion fail an invariant
 
 # EBMC 6.2
 
