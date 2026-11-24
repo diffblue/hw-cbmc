@@ -1,0 +1,11 @@
+KNOWNBUG
+out_of_range_index_write2.sv
+--bound 0
+^\[main\.p0\] .*: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The index of the write is truncated to the index type of the array, which
+has 4 bits for 16 elements. Hence, e.g., q[32'h3FBFFFF3] = d writes q[3],
+and the property is refuted.
