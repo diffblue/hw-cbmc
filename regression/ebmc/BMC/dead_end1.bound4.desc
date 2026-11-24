@@ -1,0 +1,12 @@
+CORE
+dead_end1.sv
+--bound 4
+^\[main\.p0\] .*: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+^no path with
+--
+With a bound of 4, the path to the violation of p0 in the state with
+cnt == 3 can be extended to the bound.

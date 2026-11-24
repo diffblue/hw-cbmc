@@ -1,0 +1,13 @@
+KNOWNBUG
+dead_end2.sv
+--bound 10
+^\[main\.p0\] .*: PROVED up to bound 10$
+^no path with 11 states satisfies the constraints and assumptions; the results for bound 10 are vacuous$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The state with cnt == 5 has no consistent value for the nets of the
+combinational loop, and hence no path has more than five states. The
+vacuity is not reported.
