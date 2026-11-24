@@ -1,0 +1,14 @@
+CORE
+smv_ltlspec_V5.smv
+--bound 6 --numbered-trace
+^\[spec1\] x = 4 V x <= 2: REFUTED$
+^Counterexample with 4 states:$
+^x@3 = 3$
+^EXIT=10$
+^SIGNAL=0$
+--
+^Counterexample with [123] states?:$
+^warning: ignoring
+--
+The counterexample extends to the state with x = 3, in which the
+property is violated.
