@@ -166,8 +166,8 @@ verilog_ebmc_languaget::parse_treest verilog_ebmc_languaget::parse()
   return parse_trees;
 }
 
-/// elaborates a given module
-void verilog_ebmc_languaget::elaborate_module(
+/// elaborates a given top-level module
+void verilog_ebmc_languaget::elaborate_top_level_module(
   modulet &module,
   symbol_tablet &symbol_table)
 {
@@ -258,7 +258,7 @@ void verilog_ebmc_languaget::elaborate_module_hierarchy(
     auto m_it = module_map.find(verilog_module_symbol(top_level_module));
     CHECK_RETURN(m_it != module_map.end());
 
-    elaborate_module(m_it->second, symbol_table);
+    elaborate_top_level_module(m_it->second, symbol_table);
   }
 }
 
