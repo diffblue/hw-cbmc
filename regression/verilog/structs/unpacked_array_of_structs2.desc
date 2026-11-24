@@ -1,0 +1,11 @@
+CORE
+unpacked_array_of_structs2.sv
+--bound 0
+^\[main\.p0\] .*: PROVED up to bound 0$
+^\[main\.p1\] .*: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The member used to be read from the value of the element before the
+write.
