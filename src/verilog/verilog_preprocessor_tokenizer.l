@@ -48,13 +48,13 @@ String		\"(\\(.|\n)|[^"\\])*\"
 			  if(static_cast<const verilog_preprocessor_scannert &>(
 			       FLEX_CLASS_NAME::from_extra(yyget_extra(yyscanner))).in_macro_text)
 			  {
-			    yyless(1); /* return the line ending to the input */
+			    yyless(1); /* return the \n to the input */
 			    return '\\';
 			  }
 			  else
 			  {
 			    BEGIN INITIAL;
-			    yyless(1); /* rescan the line ending as a newline token */
+			    yyless(1); /* rescan the \n as a newline token */
 			  }
 			}
 <SLCOMMENT>.		{ /* just eat up */ }
