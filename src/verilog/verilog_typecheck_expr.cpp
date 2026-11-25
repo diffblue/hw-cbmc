@@ -3824,6 +3824,25 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(
   // operand.
   exprt &src = expr.src(), &index = expr.index();
   convert_expr(src);
+
+  // An element of an array of interface instances, 1800-2017 25.4, is
+  // not an ordinary array element: each element is a symbol of its own,
+  // named bus[0], bus[1], and so on. Resolve to that symbol. The index
+  // is an elaboration-time constant, which is converted there.
+  if(is_interface_array_type(src.type()))
+    return convert_interface_array_element(std::move(expr));
+
+  if(src.type().id() == ID_named_block)
+  {
+    // 1800-2017 27.6: a generate loop with a block name yields an array of
+    // generate blocks, the individual blocks being named block_name[0],
+    // block_name[1], and so on.  The parser has read the brackets as a bit
+    // select.  The index must be an elaboration-time constant.
+    auto index_value = convert_integer_constant_expression(expr.index());
+    return convert_array_element_symbol(
+      std::move(expr), index_value, "generate block");
+  }
+
   convert_expr(index);
 
   if(index.type().id() == ID_verilog_real)
@@ -3834,25 +3853,7 @@ exprt verilog_typecheck_exprt::convert_bit_select_expr(
 
   if(src.type().id() == ID_array)
   {
-    auto &array_type = to_array_type(src.type());
-
-    // An element of an array of interface instances, 1800-2017 25.4, is
-    // not an ordinary array element: each element is a symbol of its own,
-    // named bus[0], bus[1], and so on. Resolve to that symbol.
-    if(is_interface_array_type(src.type()))
-      return convert_interface_array_element(std::move(expr));
-
-    expr.type() = array_type.element_type();
-  }
-  else if(src.type().id() == ID_named_block)
-  {
-    // 1800-2017 27.6: a generate loop with a block name yields an array of
-    // generate blocks, the individual blocks being named block_name[0],
-    // block_name[1], and so on.  The parser has read the brackets as a bit
-    // select.  The index must be an elaboration-time constant.
-    auto index = convert_integer_constant_expression(expr.index());
-    return convert_array_element_symbol(
-      std::move(expr), index, "generate block");
+    expr.type() = to_array_type(src.type()).element_type();
   }
   else
   {

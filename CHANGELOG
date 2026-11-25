@@ -26,6 +26,8 @@
   sequences
 * SystemVerilog: an interface with an interface port can be bound to an
   interface port
+* SystemVerilog: elements of arrays of interface instances and blocks of
+  generate loops can be selected with an expression over a genvar
 
 # EBMC 6.2
 
