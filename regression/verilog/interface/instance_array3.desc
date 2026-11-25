@@ -1,0 +1,15 @@
+KNOWNBUG
+instance_array3.sv
+--bound 0
+^\[main\.p0\] always main\.o1 == 10: PROVED up to bound 0$
+^\[main\.p1\] always main\.o0 == 11: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The interface ports of the elements are left unconnected, and both
+properties are refuted. Each element is given the whole array arr rather
+than one of its elements, and the RTL builder then finds no members of
+arr to connect the members of the port to. The same split works for an
+unpacked array of vectors connected to a vector port.
