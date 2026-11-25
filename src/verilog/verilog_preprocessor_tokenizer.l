@@ -32,6 +32,7 @@ using tokent = verilog_preprocessor_tokenizert::tokent;
 
 Identifier	[a-zA-Z_][0-9a-zA-Z_$]*
 String		\"(\\(.|\n)|[^"\\])*\"
+EOL		\r?\n
 
 %%
 
@@ -39,10 +40,10 @@ String		\"(\\(.|\n)|[^"\\])*\"
 <INITIAL>"/*"           { BEGIN MLCOMMENT; /* multi-line comment */ }
 <INITIAL>{String}	{ return tokent::STRING_LITERAL; }
 <INITIAL>{Identifier}	{ return tokent::IDENTIFIER; }
-\r/\n			{ /* leave the newline to be tokenized as LF */ }
-<INITIAL>.|\n		{ return yytext[0]; /* anything else */ }
-<SLCOMMENT>\n		{ BEGIN INITIAL; return '\n'; }
-<SLCOMMENT>\\\r?\n		{
+<INITIAL>{EOL}		{ return '\n'; /* CRLF or LF */ }
+<INITIAL>.		{ return yytext[0]; /* anything else */ }
+<SLCOMMENT>{EOL}	{ BEGIN INITIAL; return '\n'; }
+<SLCOMMENT>\\{EOL}	{
 			  /* 1800-2017 22.5.1: a one-line comment ending in a
 			     backslash continues a `define on the next line */
 			  if(static_cast<const verilog_preprocessor_scannert &>(
@@ -59,7 +60,7 @@ String		\"(\\(.|\n)|[^"\\])*\"
 			}
 <SLCOMMENT>.		{ /* just eat up */ }
 <SLCOMMENT><<EOF>>      { /* we allow that */ BEGIN INITIAL; }
-<MLCOMMENT>\n		{ return '\n'; }
+<MLCOMMENT>{EOL}	{ return '\n'; }
 <MLCOMMENT>"*/"         { BEGIN INITIAL; /* comment done */ }
 <MLCOMMENT>.		{ /* just eat up */ }
 <MLCOMMENT><<EOF>>      { throw verilog_preprocessor_errort() << "EOF inside a comment"; }
