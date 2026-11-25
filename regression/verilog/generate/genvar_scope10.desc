@@ -1,0 +1,14 @@
+KNOWNBUG
+genvar_scope10.sv
+--bound 0
+^\[main\.property\.p1\] always main\.some_wire1 == 2'b10: PROVED up to bound 0$
+^\[main\.property\.p2\] always main\.some_wire2 == 2'b01: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+Two loop generate constructs in the same scope, whose bodies are not
+surrounded by begin-end, may both declare a genvar with the same name in
+their header.
+The second loop currently yields "definition of symbol `gi' conflicts with
+earlier definition".
