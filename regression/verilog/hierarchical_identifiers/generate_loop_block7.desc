@@ -1,0 +1,12 @@
+KNOWNBUG
+generate_loop_block7.sv
+--bound 0
+^\[main\.chk\[1\]\.p0\] always .*: PROVED up to bound 0$
+^\[main\.chk\[2\]\.p0\] always .*: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Fails with "no conversion for unary expression typecast": the index is
+converted twice, once as an expression and once as a constant.
