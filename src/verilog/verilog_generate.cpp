@@ -575,6 +575,43 @@ verilog_typecheckt::unnamed_generate_block_name(std::size_t construct_number)
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::add_loop_index_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Add the implicit localparam with the name of the loop index
+          to a generate block of a loop generate construct,
+          1800-2017 27.4. It is a genvar symbol, and hence takes the
+          value of the genvar that is recorded for the items of the
+          block.
+
+\*******************************************************************/
+
+void verilog_typecheckt::add_loop_index_symbol(
+  const irep_idt &block_base_name,
+  const exprt &loop_index)
+{
+  auto &base_name = to_verilog_identifier_expr(loop_index).base_name();
+
+  symbolt symbol{
+    hierarchical_identifier(
+      id2string(block_base_name) + '.' + id2string(base_name)),
+    verilog_genvar_typet{},
+    mode};
+
+  symbol.base_name = base_name;
+  symbol.module = module_identifier;
+  symbol.value.make_nil();
+  symbol.location = loop_index.source_location();
+  symbol.pretty_name = strip_verilog_root_prefix(symbol.name);
+
+  add_symbol(std::move(symbol));
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::elaborate_generate_for
 
   Inputs:
@@ -589,11 +626,6 @@ void verilog_typecheckt::elaborate_generate_for(
   const verilog_generate_fort &for_statement,
   module_itemst &dest)
 {
-  elaborate_generate_item(for_statement.init(), dest);
-
-  // work out what the loop index is
-  auto loop_index = generate_for_loop_index(for_statement.init());
-
   auto construct_number =
     for_statement.get_size_t(ID_C_verilog_construct_number);
 
@@ -612,10 +644,60 @@ void verilog_typecheckt::elaborate_generate_for(
 
   add_named_block_symbol(block_name, body.source_location());
 
+  // 1800-2017 27.4: a genvar that is declared in the header of the loop is
+  // local to the loop, and hence two loops in the same scope may declare a
+  // genvar with the same name. We declare it in the scope of the array of
+  // generate blocks, which is entered when the header of the loop is
+  // evaluated.
+  const bool genvar_in_loop_scope =
+    for_statement.init().id() == ID_verilog_genvar_decl;
+
+  auto enter_loop_scope = [this, genvar_in_loop_scope, &block_name]()
+  {
+    if(genvar_in_loop_scope)
+      enter_named_block(block_name);
+  };
+
+  auto leave_loop_scope = [this, genvar_in_loop_scope]()
+  {
+    if(genvar_in_loop_scope)
+      named_blocks.pop_back();
+  };
+
+  // The genvar must still not clash with a name in the scope that contains
+  // the loop.
+  if(genvar_in_loop_scope)
+  {
+    auto &genvar_decl = to_verilog_genvar_decl(for_statement.init());
+    for(auto &declarator : genvar_decl.declarators())
+    {
+      auto existing =
+        symbol_table.lookup(hierarchical_identifier(declarator.base_name()));
+      if(existing != nullptr)
+      {
+        throw errort().with_location(declarator.source_location())
+          << "definition of symbol `" << declarator.base_name()
+          << "' conflicts with earlier definition at line "
+          << existing->location.get_line();
+      }
+    }
+  }
+
+  enter_loop_scope();
+  elaborate_generate_item(for_statement.init(), dest);
+
+  // work out what the loop index is
+  auto loop_index = generate_for_loop_index(for_statement.init());
+  leave_loop_scope();
+
   while(true)
   {
+    enter_loop_scope();
     mp_integer condition =
       convert_integer_constant_expression(for_statement.cond());
+    const mp_integer loop_index_int =
+      condition == 0 ? 0 : convert_integer_constant_expression(loop_index);
+    leave_loop_scope();
 
     if(condition==0) break;
 
@@ -623,14 +705,21 @@ void verilog_typecheckt::elaborate_generate_for(
     // First execute the block, whose identifier is that of the loop
     // with the loop counter appended, surrounded by square brackets.
     auto copy_of_body = body;
-    const mp_integer loop_index_int =
-      convert_integer_constant_expression(loop_index);
-    copy_of_body.base_name(
-      id2string(block_name) + '[' + integer2string(loop_index_int) + ']');
+    auto new_base_name =
+      id2string(block_name) + '[' + integer2string(loop_index_int) + ']';
+    copy_of_body.base_name(new_base_name);
+
+    // 1800-2017 27.4: each generate block of the loop has an implicit
+    // localparam with the name of the loop index, whose value is that
+    // of the loop index for that block. The value of the genvar is
+    // recorded when the block is elaborated.
+    if(genvar_in_loop_scope)
+      add_loop_index_symbol(new_base_name, loop_index);
 
     elaborate_generate_item(copy_of_body, dest);
 
     // Now increase/decrease the loop counter.
+    enter_loop_scope();
     {
       auto statement = for_statement.iteration().id();
       if(statement == ID_generate_assign)
@@ -659,5 +748,6 @@ void verilog_typecheckt::elaborate_generate_for(
           for_statement.iteration().pretty());
       }
     }
+    leave_loop_scope();
   }
 }

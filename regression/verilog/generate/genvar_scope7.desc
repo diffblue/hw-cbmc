@@ -8,5 +8,6 @@ genvar_scope7.sv
 --
 Two nested loop generate constructs may both declare a genvar with the same
 name in their header.
-The inner genvar currently does not shadow the outer one, and the property is
-refuted.
+The inner genvar currently yields "definition of symbol `i' conflicts with
+earlier definition", as it clashes with the implicit localparam of the outer
+loop.
