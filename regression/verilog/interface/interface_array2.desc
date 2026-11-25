@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 interface_array2.sv
 --bound 0
 ^\[main\.g\[1\]\.p0\] always .*: PROVED up to bound 0$
@@ -8,5 +8,5 @@ interface_array2.sv
 --
 ^warning: ignoring
 --
-Fails with "no conversion for unary expression typecast": the index is
-converted twice, once as an expression and once as a constant.
+The index was converted twice, once as an expression and once as a
+constant, which failed with "no conversion for unary expression typecast".
