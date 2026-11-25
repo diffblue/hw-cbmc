@@ -1,0 +1,8 @@
+KNOWNBUG
+verilog2005_unbased_unsized0.v
+--bound 1
+^EXIT=1$
+^SIGNAL=0$
+--
+KNOWNBUG test: a .v file is Verilog 1364-2005, which does not have unbased unsized literals.
+The parser should reject it, but it is accepted.
