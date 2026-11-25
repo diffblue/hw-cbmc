@@ -36,4 +36,11 @@ enum class verilog_standardt
 /// in 1800-2017 Sec 22.14, e.g., "1800-2017".
 std::string as_string(verilog_standardt);
 
+// default for .sv files
+constexpr verilog_standardt default_sv_standard = verilog_standardt::SV2017;
+
+// default for .v files
+constexpr verilog_standardt default_verilog_standard =
+  verilog_standardt::V2005_SMV;
+
 #endif // CPROVER_VERILOG_STANDARD_H
