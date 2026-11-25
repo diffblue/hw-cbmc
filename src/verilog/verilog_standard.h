@@ -9,6 +9,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef CPROVER_VERILOG_STANDARD_H
 #define CPROVER_VERILOG_STANDARD_H
 
+#include <string>
+
 // This follows the version specifier in 1800-2017 Sec 22.14.
 // "V2005_VIS" is an extension, meant to cover the variant of
 // Verilog that the VIS model checker accepts.
@@ -29,5 +31,9 @@ enum class verilog_standardt
   SV2017,
   SV2023
 };
+
+/// Returns the version specifier for the given standard, as used
+/// in 1800-2017 Sec 22.14, e.g., "1800-2017".
+std::string as_string(verilog_standardt);
 
 #endif // CPROVER_VERILOG_STANDARD_H
