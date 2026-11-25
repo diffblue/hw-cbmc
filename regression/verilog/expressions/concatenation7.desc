@@ -1,5 +1,5 @@
 CORE
-concatenation7.v
+concatenation7.sv
 
 ^file .* line 5: unsized literals are not allowed in concatenations$
 ^EXIT=2$

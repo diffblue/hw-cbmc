@@ -90,6 +90,9 @@ verilog_array_typet verilog_typecheck_exprt::convert_unpacked_array_type(
   else if(size_expr.is_not_nil())
   {
     // [size] is syntactic sugar for [0:size-1]
+    require_system_verilog(
+      "unpacked array size", size_expr.find_source_location());
+
     increasing = true;
     size = convert_integer_constant_expression(size_expr);
     offset = 0;
@@ -192,6 +195,8 @@ typet verilog_typecheck_exprt::convert_packed_array_type(
   {
     // We have a multi-dimensional packed array,
     // and do a recursive call.
+    require_system_verilog("multiple packed dimensions", source_location);
+
     typet element_type = elaborate_type(subtype);
 
     // the element type must be packed; reject otherwise

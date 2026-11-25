@@ -54,6 +54,14 @@ protected:
   const namespacet &ns;
   const irep_idt mode;
 
+  /// Throws an error if the Verilog standard in use is older than
+  /// SystemVerilog, i.e., 1364-2005 Verilog or a variant thereof.
+  /// \param what: a description of the SystemVerilog-only construct
+  /// \param source_location: the location of the construct
+  void require_system_verilog(
+    const std::string &what,
+    const source_locationt &source_location) const;
+
   static mp_integer get_width(const exprt &expr)
   {
     return get_width(expr.type());
