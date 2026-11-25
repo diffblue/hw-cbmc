@@ -41,6 +41,7 @@ public:
   using parse_treest = std::list<parse_treet>;
 
 protected:
+  verilog_standardt standard(const std::filesystem::path &) const;
   void preprocess(const std::filesystem::path &, std::ostream &);
   void preprocess();
   verilog_parse_treet parse(const std::filesystem::path &, verilog_scopest &);

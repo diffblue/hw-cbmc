@@ -19,6 +19,7 @@ Author: Daniel Kroening, dkr@amazon.com
 /// to the given file name; we use a fixed name so the expected output is
 /// stable. These tests deliberately avoid `include/+incdir+, which depend
 /// on the file system and are covered by the regression suite instead.
+/// As in the front-end, a file name ending in .sv selects SystemVerilog.
 static std::string preprocess(
   const std::string &source,
   const std::string &file_name = "test.v",
@@ -29,8 +30,19 @@ static std::string preprocess(
   null_message_handlert message_handler;
   const std::list<std::string> include_paths;
 
+  const bool is_sv = file_name.size() >= 3 &&
+                     file_name.compare(file_name.size() - 3, 3, ".sv") == 0;
+  const auto standard =
+    is_sv ? verilog_standardt::SV2023 : verilog_standardt::V2005;
+
   verilog_preprocessort preprocessor(
-    in, out, message_handler, file_name, include_paths, initial_defines);
+    in,
+    out,
+    message_handler,
+    file_name,
+    include_paths,
+    initial_defines,
+    standard);
 
   preprocessor.preprocessor();
 
@@ -291,7 +303,7 @@ SCENARIO("Verilog preprocessor `undefineall")
       "`else\n"
       "PASS\n"
       "`endif",
-      "undefineall1.v");
+      "undefineall1.sv");
 
     THEN("the previously defined macro is no longer defined")
     {
@@ -312,11 +324,11 @@ SCENARIO("Verilog preprocessor `__FILE__ and `__LINE__")
       "    `__FILE__, `__LINE__);\n"
       "\n"
       "endmodule",
-      "file1.v");
+      "file1.sv");
 
     THEN("they expand to the file name and line number")
     {
-      REQUIRE(out.find("\"file1.v\", 4);") != std::string::npos);
+      REQUIRE(out.find("\"file1.sv\", 4);") != std::string::npos);
     }
   }
 }
@@ -353,6 +365,19 @@ SCENARIO("Verilog preprocessor error handling")
     {
       // The command-line front-end catches this and exits with code 1.
       REQUIRE_THROWS(preprocess("`something", "unknown_directive.v"));
+    }
+  }
+
+  GIVEN("SystemVerilog preprocessor features in a Verilog file")
+  {
+    THEN("the preprocessor throws")
+    {
+      REQUIRE_THROWS(preprocess("`__FILE__", "file2.v"));
+      REQUIRE_THROWS(preprocess("`__LINE__", "line2.v"));
+      REQUIRE_THROWS(preprocess("`undefineall", "undefineall2.v"));
+      REQUIRE_THROWS(preprocess("`define P(x) x``_y\n`P(a)", "paste2.v"));
+      REQUIRE_THROWS(preprocess("`define S(x) `\"x`\"", "stringify2.v"));
+      REQUIRE_THROWS(preprocess("a``b", "paste3.v"));
     }
   }
 }

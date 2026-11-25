@@ -151,6 +151,27 @@ std::filesystem::path verilog_preprocessort::find_include_file(
 
 /*******************************************************************\
 
+Function: verilog_preprocessort::require_standard
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void verilog_preprocessort::require_standard(
+  verilog_standardt minimum,
+  const std::string &feature) const
+{
+  if(standard < minimum)
+    throw verilog_preprocessor_errort()
+      << feature << " requires " << ::as_string(minimum) << " or higher";
+}
+
+/*******************************************************************\
+
 Function: verilog_preprocessort::emit_line_directive
 
   Inputs:
@@ -677,6 +698,8 @@ void verilog_preprocessort::directive()
   // Double backtick?
   if(directive_token == '`')
   {
+    // 1800-2005 23.2
+    require_standard(verilog_standardt::SV2005, "``");
     // these simply separate tokens -- do not emit anything
     return;
   }
@@ -745,6 +768,7 @@ void verilog_preprocessort::directive()
       if(token == '`' && tokenizer().peek().is_string_literal())
       {
         // `"...`" (1800-2017 22.5.1)
+        require_standard(verilog_standardt::SV2005, "`\"");
         auto stringified = tokenize_stringified(read_stringified());
         define.tokens.insert(
           define.tokens.end(),
@@ -807,6 +831,9 @@ void verilog_preprocessort::directive()
   {
     if(!condition)
       return;
+
+    // 1800-2009 22.5.3
+    require_standard(verilog_standardt::SV2009, "`undefineall");
 
     defines.clear();
   }
@@ -1074,14 +1101,20 @@ void verilog_preprocessort::directive()
     // 1800 2017 22.13
     // String literal
     if(condition)
+    {
+      require_standard(verilog_standardt::SV2009, "`__FILE__");
       out << verilog_string_literal(context().filename_as_string());
+    }
   }
   else if(text == "__LINE__")
   {
     // 1800 2017 22.13
     // decimal number
     if(condition)
+    {
+      require_standard(verilog_standardt::SV2009, "`__LINE__");
       out << tokenizer().line_no();
+    }
   }
   else
   {

@@ -62,7 +62,7 @@ void verilog_indexert::operator()(
   enum verilog_standardt standard)
 {
   // run the preprocessor
-  const auto preprocessed_string = preprocess(id2string(file_name));
+  const auto preprocessed_string = preprocess(id2string(file_name), standard);
   std::istringstream preprocessed(preprocessed_string);
 
   // set up the tokenizer
@@ -76,7 +76,9 @@ void verilog_indexert::operator()(
   file_map[file_name].number_of_lines = parser.verilog_parser.get_line_no();
 }
 
-std::string verilog_indexert::preprocess(const std::string &file_name)
+std::string verilog_indexert::preprocess(
+  const std::string &file_name,
+  verilog_standardt standard)
 {
   std::stringstream preprocessed;
 
@@ -92,7 +94,7 @@ std::string verilog_indexert::preprocess(const std::string &file_name)
 
   console_message_handlert message_handler;
   verilog_preprocessort preprocessor(
-    in_stream, preprocessed, message_handler, file_name, {}, {});
+    in_stream, preprocessed, message_handler, file_name, {}, {}, standard);
 
   try
   {

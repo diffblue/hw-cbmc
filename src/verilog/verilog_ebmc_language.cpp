@@ -38,6 +38,25 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <functional>
 #include <iostream>
 
+verilog_standardt
+verilog_ebmc_languaget::standard(const std::filesystem::path &path) const
+{
+  if(cmdline.isset("systemverilog"))
+    return default_sv_standard;
+  else
+  {
+    auto standard = default_standard(path);
+
+    // Upgrade Verilog (but not SystemVerilog) to the SMV variant.
+    if(
+      standard < verilog_standardt::SV2005 &&
+      cmdline.isset("vl2smv-extensions"))
+      return verilog_standardt::V2005_SMV;
+    else
+      return standard;
+  }
+}
+
 void verilog_ebmc_languaget::preprocess(
   const std::filesystem::path &path,
   std::ostream &out)
@@ -75,7 +94,8 @@ void verilog_ebmc_languaget::preprocess(
     message_handler,
     path.u8string(),
     all_include_paths,
-    initial_defines);
+    initial_defines,
+    standard(path));
 
   try
   {
@@ -102,17 +122,10 @@ verilog_parse_treet verilog_ebmc_languaget::parse(
   const std::filesystem::path &path,
   verilog_scopest &scopes)
 {
-  auto standard = cmdline.isset("systemverilog") ? default_sv_standard
-                                                 : default_standard(path);
-
-  // Upgrade Verilog (but not SystemVerilog) to the SMV variant.
-  if(cmdline.isset("vl2smv-extensions") && standard < verilog_standardt::SV2005)
-    standard = verilog_standardt::V2005_SMV;
-
   std::stringstream preprocessed;
   preprocess(path, preprocessed);
 
-  verilog_parsert verilog_parser{standard, scopes, message_handler};
+  verilog_parsert verilog_parser{standard(path), scopes, message_handler};
 
   verilog_parser.set_file(path.u8string());
   verilog_parser.in = &preprocessed;

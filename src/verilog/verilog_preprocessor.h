@@ -7,6 +7,7 @@
 #include <util/string_hash.h>
 
 #include "verilog_preprocessor_tokenizer.h"
+#include "verilog_standard.h"
 
 #include <filesystem>
 #include <list>
@@ -24,10 +25,12 @@ public:
     message_handlert &_message_handler,
     const std::string &_filename,
     const std::list<std::string> &_include_paths,
-    const std::list<std::string> &_initial_defines)
+    const std::list<std::string> &_initial_defines,
+    verilog_standardt _standard)
     : preprocessort(_in, _out, _message_handler, _filename),
       include_paths(_include_paths),
-      initial_defines(_initial_defines)
+      initial_defines(_initial_defines),
+      standard(_standard)
   {
     condition=true;
   }
@@ -38,6 +41,12 @@ protected:
   // from the command line
   const std::list<std::string> &include_paths;
   const std::list<std::string> &initial_defines;
+
+  // the Verilog standard of the input file
+  verilog_standardt standard;
+
+  // throws an error when the standard is older than the given one
+  void require_standard(verilog_standardt, const std::string &feature) const;
 
   using tokent = verilog_preprocessor_token_sourcet::tokent;
 
