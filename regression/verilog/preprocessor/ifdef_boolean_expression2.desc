@@ -1,0 +1,10 @@
+CORE
+ifdef_boolean_expression2.sv
+
+^\[main\.p0\] always 1: PROVED .*$
+^\[main\.p1\] always 1: PROVED .*$
+^\[main\.p2\] always 1: PROVED .*$
+^\[main\.p3\] always 1: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--

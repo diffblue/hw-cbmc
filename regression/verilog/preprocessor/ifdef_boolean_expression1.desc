@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 ifdef_boolean_expression1.sv
 
 ^\[main\.p0\] always 1: PROVED .*$
@@ -11,6 +11,3 @@ ifdef_boolean_expression1.sv
 ^EXIT=0$
 ^SIGNAL=0$
 --
---
-IEEE 1800-2023 22.6 allows Boolean expressions in `ifdef, `ifndef, and `elsif,
-with the operators !, &&, ||, -> and <->, and parentheses.
