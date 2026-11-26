@@ -94,4 +94,12 @@ struct cone_of_influence_resultt
 cone_of_influence_resultt
 cone_of_influence(const transt &, const exprt::operandst &seeds);
 
+/// True if a conjunct of the given transition system is a general
+/// constraint, i.e., not a definition, as classified for the
+/// cone-of-influence reduction above. Without general constraints, there
+/// is an initial state, and every state has a successor: given any values
+/// of the variables that have no definition, the definitions can be
+/// satisfied timeframe by timeframe, by the argument above.
+bool has_general_constraints(const transt &);
+
 #endif // CPROVER_TRANS_WORD_LEVEL_CONE_OF_INFLUENCE_H

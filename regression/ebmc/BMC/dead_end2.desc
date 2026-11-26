@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 dead_end2.sv
 --bound 10
 ^\[main\.p0\] .*: PROVED up to bound 10$
@@ -10,4 +10,4 @@ dead_end2.sv
 --
 The state with cnt == 5 has no consistent value for the nets of the
 combinational loop, and hence no path has more than five states. The
-vacuity is not reported.
+vacuity is reported.

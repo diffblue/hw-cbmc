@@ -36,6 +36,8 @@ public:
 
   cone_of_influence_resultt operator()();
 
+  bool has_general_constraints();
+
 protected:
   const transt &trans;
   const exprt::operandst &seeds;
@@ -668,6 +670,55 @@ cone_of_influence_resultt cone_of_influencet::operator()()
   statistics.state_variables_kept = state_variables_kept.size();
 
   return result;
+}
+
+/*******************************************************************\
+
+Function: cone_of_influencet::has_general_constraints
+
+  Inputs:
+
+ Outputs: true if a conjunct of the transition system is not a
+          definition
+
+ Purpose:
+
+\*******************************************************************/
+
+bool cone_of_influencet::has_general_constraints()
+{
+  conjuncts.clear();
+  collect_conjuncts(sectiont::INVAR, trans.invar());
+  collect_conjuncts(sectiont::INIT, trans.init());
+  collect_conjuncts(sectiont::TRANS, trans.trans());
+
+  find_definitions();
+  demote_conflicting_definitions();
+  demote_cyclic_definitions();
+
+  for(auto &conjunct : conjuncts)
+    if(!conjunct.definitional)
+      return true;
+
+  return false;
+}
+
+/*******************************************************************\
+
+Function: has_general_constraints
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool has_general_constraints(const transt &trans)
+{
+  exprt::operandst no_seeds;
+  return cone_of_influencet{trans, no_seeds}.has_general_constraints();
 }
 
 /*******************************************************************\

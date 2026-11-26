@@ -193,6 +193,24 @@ void bmc_with_iterative_constraint_strengthening(
   }
 }
 
+bool may_have_dead_ends(const transt &trans, const ebmc_propertiest &properties)
+{
+  for(auto &property : properties.properties)
+    if(property.is_assumed())
+      return true;
+
+  return has_general_constraints(trans);
+}
+
+void report_no_path(std::size_t bound, message_handlert &message_handler)
+{
+  messaget message{message_handler};
+  message.warning() << "no path with " << bound + 1
+                    << " states satisfies the constraints and assumptions;"
+                    << " the results for bound " << bound << " are vacuous"
+                    << messaget::eom;
+}
+
 /// Extension of solver.handle(...) from expressions to vectors of expressions
 static exprt::operandst
 handles(const exprt::operandst &exprs, decision_proceduret &solver)
@@ -344,6 +362,17 @@ property_checker_resultt bmc(
                      << messaget::eom;
 
     auto sat_start_time = std::chrono::steady_clock::now();
+
+    // The results are vacuous when no path satisfies the constraints and
+    // the assumptions. This is checked with the solver's constraints, i.e.,
+    // without the properties, which keeps the queries for the properties
+    // as they are.
+    if(
+      may_have_dead_ends(trans_expr, properties) &&
+      solver() == decision_proceduret::resultt::D_UNSATISFIABLE)
+    {
+      report_no_path(bound, message_handler);
+    }
 
     if(bmc_with_assumptions)
     {

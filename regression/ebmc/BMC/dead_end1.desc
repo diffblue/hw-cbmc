@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 dead_end1.sv
 --bound 10
 ^\[main\.p0\] .*: PROVED up to bound 10$
@@ -11,4 +11,4 @@ dead_end1.sv
 BMC considers the paths with bound + 1 states, which must satisfy the
 assumption in every state. No path does beyond the state with cnt == 4,
 and hence p0 holds vacuously with a bound of 5 or more, whereas a bound of
-3 or 4 refutes it (dead_end1.bound4.desc). The vacuity is not reported.
+3 or 4 refutes it (dead_end1.bound4.desc). The vacuity is reported.
