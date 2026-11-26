@@ -1,0 +1,8 @@
+KNOWNBUG
+verilog2005_error.v
+--bound 1
+^EXIT=1$
+^SIGNAL=0$
+--
+KNOWNBUG test: a .v file is Verilog 1364-2005, which has no $error.
+The type checker should reject it, but it is accepted.
