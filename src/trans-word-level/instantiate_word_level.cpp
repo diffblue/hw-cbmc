@@ -19,6 +19,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "sequence.h"
 
+#include <map>
+#include <memory>
+#include <unordered_map>
+
 /*******************************************************************\
 
 Function: timeframe_identifier
@@ -71,23 +75,48 @@ symbol_exprt timeframe_symbol(const mp_integer &timeframe, symbol_exprt src)
 class wl_instantiatet
 {
 public:
-  wl_instantiatet(const mp_integer &_no_timeframes, bool _next_symbol_allowed)
-    : no_timeframes(_no_timeframes), next_symbol_allowed(_next_symbol_allowed)
+  wl_instantiatet(
+    const mp_integer &_t,
+    const mp_integer &_no_timeframes,
+    bool _next_symbol_allowed)
+    : t(_t),
+      no_timeframes(_no_timeframes),
+      next_symbol_allowed(_next_symbol_allowed)
   {
   }
 
   /// Instantiate the given expression for timeframe t
-  [[nodiscard]] exprt operator()(exprt expr, const mp_integer &t) const
+  [[nodiscard]] exprt operator()(const exprt &expr)
   {
-    return instantiate_rec(std::move(expr), t);
+    return instantiate_rec(expr);
   }
 
 protected:
+  const mp_integer t;
   const mp_integer &no_timeframes;
   bool next_symbol_allowed;
 
-  [[nodiscard]] exprt instantiate_rec(exprt, const mp_integer &t) const;
-  [[nodiscard]] typet instantiate_rec(typet, const mp_integer &t) const;
+  // Instances of shared subexpressions, keyed by the node of the
+  // original expression, to retain sharing and avoid repeated work.
+  // The original expression outlives this object.
+  std::unordered_map<const void *, exprt> shared_cache;
+
+  // instantiators for $past
+  std::map<mp_integer, std::unique_ptr<wl_instantiatet>> other_timeframes;
+
+  wl_instantiatet &other_timeframe(const mp_integer &u)
+  {
+    auto &entry = other_timeframes[u];
+    if(!entry)
+    {
+      entry = std::make_unique<wl_instantiatet>(
+        u, no_timeframes, next_symbol_allowed);
+    }
+    return *entry;
+  }
+
+  [[nodiscard]] exprt instantiate_rec(const exprt &);
+  [[nodiscard]] exprt instantiate_rec_uncached(const exprt &);
 };
 
 /*******************************************************************\
@@ -102,20 +131,56 @@ Function: wl_instantiatet::instantiate_rec
 
 \*******************************************************************/
 
-exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
+exprt wl_instantiatet::instantiate_rec(const exprt &expr)
 {
-  expr.type() = instantiate_rec(expr.type(), t);
+  // Only nodes that are referenced more than once can be reached
+  // again, so only these are worth caching.
+  if(expr.has_operands() && expr.read().ref_count > 1)
+  {
+    auto entry = shared_cache.find(&expr.read());
+    if(entry != shared_cache.end())
+      return entry->second;
+    auto result = instantiate_rec_uncached(expr);
+    shared_cache.emplace(&expr.read(), result);
+    return result;
+  }
+  else
+    return instantiate_rec_uncached(expr);
+}
+
+/*******************************************************************\
+
+Function: wl_instantiatet::instantiate_rec_uncached
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt wl_instantiatet::instantiate_rec_uncached(const exprt &expr)
+{
+  // Types are not instantiated.
 
   if(expr.id() == ID_next_symbol)
   {
     PRECONDITION(next_symbol_allowed);
-    expr.id(ID_symbol);
-    auto u = t + 1;
-    return timeframe_symbol(u, to_symbol_expr(std::move(expr)));
+    exprt result = expr;
+    result.id(ID_symbol);
+    result.set(
+      ID_identifier,
+      timeframe_identifier(t + 1, to_symbol_expr(result).identifier()));
+    return result;
   }
   else if(expr.id() == ID_symbol)
   {
-    return timeframe_symbol(t, to_symbol_expr(std::move(expr)));
+    exprt result = expr;
+    result.set(
+      ID_identifier,
+      timeframe_identifier(t, to_symbol_expr(expr).identifier()));
+    return result;
   }
   else if(expr.id() == ID_nondet_symbol)
   {
@@ -123,11 +188,12 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
     // identifier of a nondet_symbol may be that of a symbol, e.g., of the
     // wire whose bits it gives; the prefix keeps it distinct from the
     // symbol in the same time frame.
+    exprt result = expr;
     auto identifier = expr.get(ID_identifier);
-    expr.set(
+    result.set(
       ID_identifier,
       timeframe_identifier(t, "nondet::" + id2string(identifier)));
-    return expr;
+    return result;
   }
   else if(
     expr.id() == ID_typecast && expr.type().id() == ID_bool &&
@@ -158,7 +224,7 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
     }
     else
     {
-      return instantiate_rec(verilog_past.what(), t - ticks);
+      return other_timeframe(t - ticks).instantiate_rec(verilog_past.what());
     }
   }
   else if(is_temporal_operator(expr))
@@ -169,30 +235,39 @@ exprt wl_instantiatet::instantiate_rec(exprt expr, const mp_integer &t) const
   }
   else
   {
-    for(auto &op : expr.operands())
+    // The result shares the node of the original expression unless an
+    // operand changes. The new operands are collected before any copy
+    // of the node is made, since a copy would raise the reference
+    // counts of the original operands, which instantiate_rec uses to
+    // decide what to cache.
+    const auto &operands = expr.operands();
+    exprt::operandst new_operands;
+
+    for(std::size_t i = 0; i < operands.size(); i++)
     {
-      op = instantiate_rec(op, t);
+      exprt op = instantiate_rec(operands[i]);
+
+      if(!new_operands.empty())
+        new_operands.push_back(std::move(op));
+      else if(&op.read() != &operands[i].read())
+      {
+        new_operands.reserve(operands.size());
+        new_operands.insert(
+          new_operands.end(), operands.begin(), operands.begin() + i);
+        new_operands.push_back(std::move(op));
+      }
     }
 
-    return expr;
+    if(new_operands.empty())
+      return expr;
+
+    // Build a new node rather than copying the original one, which
+    // would copy the operands.
+    exprt result{expr.id()};
+    result.get_named_sub() = expr.get_named_sub();
+    result.operands().swap(new_operands);
+    return result;
   }
-}
-
-/*******************************************************************\
-
-Function: wl_instantiatet::instantiate_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-typet wl_instantiatet::instantiate_rec(typet type, const mp_integer &) const
-{
-  return type;
 }
 
 /*******************************************************************\
@@ -212,8 +287,8 @@ exprt instantiate(
   const mp_integer &t,
   const mp_integer &no_timeframes)
 {
-  wl_instantiatet wl_instantiate(no_timeframes, true);
-  return wl_instantiate(expr, t);
+  wl_instantiatet wl_instantiate(t, no_timeframes, true);
+  return wl_instantiate(expr);
 }
 
 /*******************************************************************\
@@ -234,6 +309,6 @@ exprt instantiate_state_predicate(
   const mp_integer &no_timeframes)
 {
   PRECONDITION(expr.type().id() == ID_bool);
-  wl_instantiatet wl_instantiate(no_timeframes, false);
-  return wl_instantiate(expr, current);
+  wl_instantiatet wl_instantiate(current, no_timeframes, false);
+  return wl_instantiate(expr);
 }
