@@ -4,6 +4,8 @@
   of zero, and latches without initial value are uninitialised
 * netlist conversion no longer overflows the stack on long chains of
   combinational definitions, e.g., deep AIGs
+* BMC: --max-bound N does incremental BMC with bounds 0..N, giving shortest
+  counterexamples
 * BMC: followed-by (#-# and #=#) no longer fails when the antecedent may
   match beyond the bound
 * Verilog: continuous assignments to variables are rejected in Verilog
