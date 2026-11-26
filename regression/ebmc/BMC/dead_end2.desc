@@ -1,0 +1,12 @@
+KNOWNBUG
+dead_end2.sv
+--bound 10
+^\[main\.p0\] .*: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+The violation of p0 in the state with cnt == 3 is reported with --bound 3
+and --bound 4. The state with cnt == 5 has no consistent value for the
+nets of the loop, and with a bound of 5 or more, BMC requires the path to
+reach the bound, which no path does, and reports p0 as proved.

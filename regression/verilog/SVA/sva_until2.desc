@@ -1,0 +1,17 @@
+CORE
+sva_until2.sv
+--bound 6 --numbered-trace
+^\[main\.p0\] main\.x <= 2 until main\.x == 4: REFUTED$
+^\[main\.p1\] main\.x <= 2 s_until main\.x == 4: REFUTED$
+^\[main\.p2\] main\.x <= 2 until_with main\.x == 4: REFUTED$
+^\[main\.p3\] main\.x <= 2 s_until_with main\.x == 4: REFUTED$
+^Counterexample with 4 states:$
+^main\.x@3 = 4'b0011$
+^EXIT=10$
+^SIGNAL=0$
+--
+^Counterexample with [123] states?:$
+^warning: ignoring
+--
+The counterexamples extend to the state with x == 3, in which the
+properties are violated.

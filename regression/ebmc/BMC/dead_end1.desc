@@ -1,0 +1,12 @@
+KNOWNBUG
+dead_end1.sv
+--bound 10
+^\[main\.p0\] .*: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+The violation of p0 in the state with cnt == 3 satisfies the assumption,
+and is reported with --bound 3 and --bound 4. With a bound of 5 or more,
+BMC requires the path to satisfy the assumption up to the bound, which no
+path does, and reports p0 as proved.

@@ -495,6 +495,11 @@ static obligationst property_obligations_rec(
     exprt::operandst q_disjuncts;
     obligationst obligations;
 
+    // The condition for timeframe j refers to the timeframes up to j;
+    // it is keyed by the last one, which is the length of the
+    // counterexample when it is violated.
+    mp_integer q_time = current;
+
     // Visit the timeframes in path order starting at 'current'; the
     // operands must not be evaluated before the start of the attempt.
     auto timeframes = path_order_timeframes(current, no_timeframes, lasso);
@@ -502,15 +507,17 @@ static obligationst property_obligations_rec(
     for(auto j : timeframes)
     {
       auto q_rec = property_obligations_rec(
-        q, allow_pending_matches, j, no_timeframes, lasso);
-      q_disjuncts.push_back(q_rec.conjunction().second);
+                     q, allow_pending_matches, j, no_timeframes, lasso)
+                     .conjunction();
+      q_disjuncts.push_back(q_rec.second);
+      q_time = std::max(q_time, q_rec.first);
 
       auto p_rec = property_obligations_rec(
-        p, allow_pending_matches, j, no_timeframes, lasso);
-      auto cond =
-        or_exprt{p_rec.conjunction().second, disjunction(q_disjuncts)};
+                     p, allow_pending_matches, j, no_timeframes, lasso)
+                     .conjunction();
+      auto cond = or_exprt{p_rec.second, disjunction(q_disjuncts)};
 
-      obligations.add(current, cond);
+      obligations.add(std::max(p_rec.first, q_time), cond);
     }
 
     return obligations;
@@ -525,6 +532,11 @@ static obligationst property_obligations_rec(
     exprt::operandst p_disjuncts;
     obligationst obligations;
 
+    // The condition for timeframe j refers to the timeframes up to j;
+    // it is keyed by the last one, which is the length of the
+    // counterexample when it is violated.
+    mp_integer p_time = current;
+
     // Visit the timeframes in path order starting at 'current'; the
     // operands must not be evaluated before the start of the attempt.
     auto timeframes = path_order_timeframes(current, no_timeframes, lasso);
@@ -532,14 +544,16 @@ static obligationst property_obligations_rec(
     for(auto j : timeframes)
     {
       auto q_rec = property_obligations_rec(
-        q, allow_pending_matches, j, no_timeframes, lasso);
-      auto cond =
-        or_exprt{q_rec.conjunction().second, disjunction(p_disjuncts)};
-      obligations.add(current, cond);
+                     q, allow_pending_matches, j, no_timeframes, lasso)
+                     .conjunction();
+      auto cond = or_exprt{q_rec.second, disjunction(p_disjuncts)};
+      obligations.add(std::max(q_rec.first, p_time), cond);
 
       auto p_rec = property_obligations_rec(
-        p, allow_pending_matches, j, no_timeframes, lasso);
-      p_disjuncts.push_back(p_rec.conjunction().second);
+                     p, allow_pending_matches, j, no_timeframes, lasso)
+                     .conjunction();
+      p_disjuncts.push_back(p_rec.second);
+      p_time = std::max(p_time, p_rec.first);
     }
 
     return obligations;
