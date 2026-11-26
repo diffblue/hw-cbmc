@@ -71,7 +71,7 @@ protected:
     const std::vector<irep_idt> &top_level_modules,
     symbol_tablet &);
 
-  void elaborate_module(modulet &, symbol_tablet &);
+  void elaborate_top_level_module(modulet &, symbol_tablet &);
 
   void create_root_module(
     const std::vector<irep_idt> &top_level_modules,
