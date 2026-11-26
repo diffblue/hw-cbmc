@@ -594,12 +594,41 @@ void verilog_ebmc_languaget::create_reset_logic(
   new_trans_expr.init() =
     and_exprt(new_trans_expr.init(), reset_constraint_lowered);
 
-  // and not anymore afterwards
-  exprt reset_next_state = reset_constraint_lowered;
-  make_next_state(reset_next_state);
+  // and not anymore afterwards, which constrains the inputs that the
+  // reset condition reads. A reset condition that reads no input is a
+  // condition on the state, whose negation in the later states would
+  // constrain the state, and might leave no path at all, e.g., for a
+  // counter. It is hence imposed on the initial state only.
+  bool reads_input = false;
 
-  new_trans_expr.trans() =
-    and_exprt(new_trans_expr.trans(), not_exprt(reset_next_state));
+  reset_constraint_lowered.visit_pre(
+    [&ns, &reads_input](const exprt &node)
+    {
+      const symbolt *symbol;
+      if(
+        node.id() == ID_symbol &&
+        !ns.lookup(to_symbol_expr(node).get_identifier(), symbol) &&
+        symbol->is_input)
+      {
+        reads_input = true;
+      }
+    });
+
+  if(reads_input)
+  {
+    exprt reset_next_state = reset_constraint_lowered;
+    make_next_state(reset_next_state);
+
+    new_trans_expr.trans() =
+      and_exprt(new_trans_expr.trans(), not_exprt(reset_next_state));
+  }
+  else
+  {
+    messaget message{message_handler};
+    message.warning() << "the reset condition reads no input, and is hence "
+                      << "imposed on the initial state only" << messaget::eom;
+  }
+
   transition_system.trans_expr = new_trans_expr;
 }
 
