@@ -1,6 +1,6 @@
 CORE
 next_netlist1.smv
---new-ic3
+--ic3
 ^\[spec1\] AG !a: REFUTED$
 ^EXIT=10$
 ^SIGNAL=0$
