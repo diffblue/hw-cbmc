@@ -1,0 +1,16 @@
+KNOWNBUG
+inout_z1.sv
+--bound 0
+^\[main\.b0\.p0\] always main\.b0\.en \|\| main\.b0\.data == 100: PROVED up to bound 0$
+^\[main\.b1\.p0\] always main\.b1\.en \|\| main\.b1\.data == 100: PROVED up to bound 0$
+^\[main\.p1\] always main\.data0 == 200: PROVED up to bound 0$
+^\[main\.p2\] always main\.data1 == 100: PROVED up to bound 0$
+^\[main\.p3\] always main\.x == 0: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The z driver of b1 is modelled as the value 8'hff, which contradicts the
+other driver of data1. The model has no state, and every property holds
+vacuously, including p3.
