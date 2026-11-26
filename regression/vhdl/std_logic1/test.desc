@@ -1,8 +1,13 @@
-CORE
+KNOWNBUG
 std_logic1.vhd
 --bound 1
 ^EXIT=0$
 ^SIGNAL=0$
-^\[Verilog::main.property.p1\] .* SUCCESS$
+^\[std_logic1\.p1\] .* PROVED up to bound 1$
+^\[std_logic1\.p5\] .* PROVED up to bound 1$
+^\[std_logic1\.p11\] .* PROVED up to bound 1$
 --
 ^warning: ignoring
+^REFUTED
+--
+Nothing is implemented yet.

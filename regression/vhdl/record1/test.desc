@@ -1,0 +1,11 @@
+KNOWNBUG
+record1.vhd
+--bound 1
+^EXIT=10$
+^SIGNAL=0$
+^\[record1\.p1\] .* PROVED up to bound 1$
+^\[record1\.p2\] .* REFUTED$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

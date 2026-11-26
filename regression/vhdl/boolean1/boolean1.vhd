@@ -1,27 +1,22 @@
-library ieee;
-use ieee.std_logic_1164.all;
+-- The logical operators on boolean, as concurrent assertions
+-- over constant expressions.
 
-entity boolean1_ent is
-end boolean1_ent;  
+entity boolean1 is
+end boolean1;
 
-architecture boolean1_test of boolean1_ent is 
+architecture test of boolean1 is
+begin
 
-signal a, b, c: boolean;
+  p1:  assert (true  or   false) = true  report "true or false";
+  p2:  assert (false or   false) = false report "false or false";
+  p3:  assert (true  nor  false) = false report "true nor false";
+  p4:  assert (false nor  false) = true  report "false nor false";
+  p5:  assert (true  and  false) = false report "true and false";
+  p6:  assert (true  and  true)  = true  report "true and true";
+  p7:  assert (true  nand false) = true  report "true nand false";
+  p8:  assert (true  nand true)  = false report "true nand true";
+  p9:  assert (true  xor  false) = true  report "true xor false";
+  p10: assert (true  xnor false) = false report "true xnor false";
+  p11: assert (not false)        = true  report "not false";
 
-begin 
-
-  process begin
-    a:=true  or   false; assert a=true report "true or false";
-    a:=false or   false; assert a=false report "false or false";
-    a:=true  nor  false; assert a=false report "true nor false";
-    a:=false nor  false; assert a=true report "false nor false";
-    a:=true  and  false; assert a=false report "true and false";
-    a:=true  and  true;  assert a=true report "true and true";
-    a:=true  nand false; assert a=true report "true nand false";
-    a:=true  nand true;  assert a=false report "true nand true";
-    a:=true  xor  false; assert a=true report "true xor false";
-    a:=true  xnor false; assert a=false report "true xnor false";
-    a:=not false;        assert a=true report "not false";
-  end process;
-
-end boolean1_test;
+end test;

@@ -1,0 +1,11 @@
+KNOWNBUG
+numeric_std1.vhd
+--bound 3
+^EXIT=10$
+^SIGNAL=0$
+^\[numeric_std1\.p1\] .* PROVED up to bound 3$
+^\[numeric_std1\.p2\] .* REFUTED$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

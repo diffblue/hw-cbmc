@@ -1,0 +1,11 @@
+KNOWNBUG
+std_logic_arith1.vhd
+--bound 2
+^EXIT=10$
+^SIGNAL=0$
+^\[std_logic_arith1\.p1\] .* PROVED up to bound 2$
+^\[std_logic_arith1\.p2\] .* REFUTED$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

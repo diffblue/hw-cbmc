@@ -1,0 +1,11 @@
+KNOWNBUG
+counter1.vhd
+--bound 5
+^EXIT=10$
+^SIGNAL=0$
+^\[counter1\.p1\] .* PROVED up to bound 5$
+^\[counter1\.p2\] .* REFUTED$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.
