@@ -1,5 +1,6 @@
 # EBMC 6.3
 
+* BMC: faster word-level unwinding, with less memory
 * AIGER output: latches have the initial value given by the design instead
   of zero, and latches without initial value are uninitialised
 * netlist conversion no longer overflows the stack on long chains of
