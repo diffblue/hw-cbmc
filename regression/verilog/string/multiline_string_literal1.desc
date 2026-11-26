@@ -1,0 +1,11 @@
+KNOWNBUG
+multiline_string_literal1.sv
+
+^\[main\.p0\] always .*: PROVED .*$
+^\[main\.p1\] always .*: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+IEEE 1800-2023 5.9 adds triple-quoted string literals, which may contain
+newlines and unescaped double quotes.
