@@ -77,6 +77,8 @@ void verilog_ebmc_languaget::preprocess(
     all_include_paths,
     initial_defines);
 
+  preprocessor.standard = standard_of(path);
+
   try
   {
     preprocessor.preprocessor();
@@ -98,18 +100,20 @@ void verilog_ebmc_languaget::preprocess()
   preprocess(file_name, std::cout);
 }
 
+verilog_standardt
+verilog_ebmc_languaget::standard_of(const std::filesystem::path &path) const
+{
+  if(path.extension() == ".sv" || cmdline.isset("systemverilog"))
+    return verilog_standardt::SV2023;
+  else
+    return verilog_standardt::V2005_SMV;
+}
+
 verilog_parse_treet verilog_ebmc_languaget::parse(
   const std::filesystem::path &path,
   verilog_scopest &scopes)
 {
-  verilog_standardt standard;
-
-  if(path.extension() == ".sv" || cmdline.isset("systemverilog"))
-    standard = verilog_standardt::SV2023;
-  else if(cmdline.isset("vl2smv-extensions"))
-    standard = verilog_standardt::V2005_SMV;
-  else
-    standard = verilog_standardt::V2005_SMV;
+  const auto standard = standard_of(path);
 
   std::stringstream preprocessed;
   preprocess(path, preprocessed);

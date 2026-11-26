@@ -92,6 +92,9 @@ public:
   }
 
 protected:
+  // the language standard used for the given file
+  verilog_standardt standard_of(const std::string &path) const;
+
   bool force_systemverilog = false;
   bool vl2smv_extensions = false;
   bool warn_implicit_nets = false;
