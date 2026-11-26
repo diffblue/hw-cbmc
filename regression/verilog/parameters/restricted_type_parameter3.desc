@@ -1,0 +1,8 @@
+CORE
+restricted_type_parameter3.v
+
+^file restricted_type_parameter3\.v line 1: syntax error, unexpected .* before 'struct'$
+^EXIT=1$
+^SIGNAL=0$
+--
+Type parameters are not part of Verilog 2005.

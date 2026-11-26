@@ -1,0 +1,7 @@
+CORE
+restricted_type_parameter2.sv
+
+^\[main\.p0\] always .*: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
