@@ -1,5 +1,7 @@
 # EBMC 6.3
 
+* k-induction: a cover with no witness within the bound stays refuted up
+  to that bound when the inductive step fails, instead of INCONCLUSIVE
 * AIGER output: latches have the initial value given by the design instead
   of zero, and latches without initial value are uninitialised
 * netlist conversion no longer overflows the stack on long chains of
