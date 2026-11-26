@@ -45,6 +45,26 @@ void verilog_languaget::set_language_options(
 
 /*******************************************************************\
 
+Function: verilog_languaget::standard_of
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: The language standard used for the given file
+
+\*******************************************************************/
+
+verilog_standardt verilog_languaget::standard_of(const std::string &path) const
+{
+  if(has_suffix(path, ".sv") || force_systemverilog)
+    return verilog_standardt::SV2023;
+  else
+    return verilog_standardt::V2005_SMV;
+}
+
+/*******************************************************************\
+
 Function: verilog_languaget::parse
 
   Inputs:
@@ -65,14 +85,7 @@ bool verilog_languaget::parse(
   if(preprocess(instream, path, str, message_handler))
     return true;
 
-  verilog_standardt standard;
-
-  if(has_suffix(path, ".sv") || force_systemverilog)
-    standard = verilog_standardt::SV2023;
-  else if(vl2smv_extensions)
-    standard = verilog_standardt::V2005_SMV;
-  else
-    standard = verilog_standardt::V2005_SMV;
+  const auto standard = standard_of(path);
 
   verilog_scopest scopes;
   verilog_parsert verilog_parser(standard, scopes, message_handler);
@@ -112,6 +125,8 @@ bool verilog_languaget::preprocess(
 {
   verilog_preprocessort preprocessor(
     instream, outstream, message_handler, path, include_paths, initial_defines);
+
+  preprocessor.standard = standard_of(path);
 
   try { preprocessor.preprocessor(); }
   catch(int e) { return true; }

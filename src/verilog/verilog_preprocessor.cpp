@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 
 /*******************************************************************\
 
@@ -290,6 +291,155 @@ void verilog_preprocessort::preprocessor()
 
   if(error_found)
     throw 0;
+}
+
+/*******************************************************************\
+
+Function: verilog_preprocessort::parse_ifdef_condition
+
+  Inputs:
+
+ Outputs: The value of the condition
+
+ Purpose: Parses and evaluates the condition of `ifdef, `ifndef and
+          `elsif. This is an identifier, which is true when a macro
+          of that name is defined. 1800-2023 22.6 also allows Boolean
+          expressions over such identifiers, with the operators
+          !, &&, ||, -> and <->, and parentheses. Precedence, from
+          high to low: !, &&, ||, then -> and <-> (right-associative).
+
+\*******************************************************************/
+
+bool verilog_preprocessort::parse_ifdef_condition(const std::string &directive)
+{
+  auto &t = tokenizer();
+
+  auto error = [&directive]()
+  {
+    return verilog_preprocessor_errort()
+           << "expecting an identifier or expression after " << directive;
+  };
+
+  auto accept1 = [&t](char ch)
+  {
+    t.skip_ws();
+    if(t.peek() == ch)
+    {
+      t.next_token();
+      return true;
+    }
+    return false;
+  };
+
+  std::function<bool()> parse_implication;
+
+  std::function<bool()> parse_primary = [&]() -> bool
+  {
+    t.skip_ws();
+
+    if(t.peek() == '!')
+    {
+      t.next_token();
+      return !parse_primary();
+    }
+
+    if(t.peek() == '(')
+    {
+      t.next_token();
+      bool value = parse_implication();
+      if(!accept1(')'))
+        throw error();
+      return value;
+    }
+
+    if(!t.peek().is_identifier())
+      throw error();
+
+    const std::string identifier = t.next_token().text;
+    return defines.find(identifier) != defines.end();
+  };
+
+  std::function<bool()> parse_and = [&]() -> bool
+  {
+    bool value = parse_primary();
+    while(true)
+    {
+      t.skip_ws();
+      if(t.peek() != '&')
+        return value;
+      t.next_token();
+      if(t.peek() != '&')
+        throw error();
+      t.next_token();
+      const bool rhs = parse_primary();
+      value = value && rhs;
+    }
+  };
+
+  std::function<bool()> parse_or = [&]() -> bool
+  {
+    bool value = parse_and();
+    while(true)
+    {
+      t.skip_ws();
+      if(t.peek() != '|')
+        return value;
+      t.next_token();
+      if(t.peek() != '|')
+        throw error();
+      t.next_token();
+      const bool rhs = parse_and();
+      value = value || rhs;
+    }
+  };
+
+  parse_implication = [&]() -> bool
+  {
+    const bool lhs = parse_or();
+    t.skip_ws();
+
+    if(t.peek() == '-')
+    {
+      t.next_token();
+      if(t.peek() != '>')
+        throw error();
+      t.next_token();
+      const bool rhs = parse_implication();
+      return !lhs || rhs;
+    }
+
+    if(t.peek() == '<')
+    {
+      t.next_token();
+      if(t.peek() != '-')
+        throw error();
+      t.next_token();
+      if(t.peek() != '>')
+        throw error();
+      t.next_token();
+      const bool rhs = parse_implication();
+      return lhs == rhs;
+    }
+
+    return lhs;
+  };
+
+  t.skip_ws();
+
+  // A plain identifier, or an expression in parentheses.
+  if(t.peek() == '(')
+  {
+    if(standard < verilog_standardt::SV2023)
+      throw verilog_preprocessor_errort()
+        << "Boolean expressions in " << directive
+        << " require SystemVerilog 2023";
+
+    return parse_primary();
+  }
+  else if(t.peek().is_identifier())
+    return defines.find(t.next_token().text) != defines.end();
+  else
+    throw error();
 }
 
 /*******************************************************************\
@@ -814,17 +964,7 @@ void verilog_preprocessort::directive()
   {
     bool ifdef = text == "ifdef";
 
-    // skip whitespace
-    tokenizer().skip_ws();
-
-    // we expect an identifier
-    const auto identifier_token = tokenizer().next_token();
-
-    if(!identifier_token.is_identifier())
-      throw verilog_preprocessor_errort()
-        << "expecting an identifier after ifdef";
-
-    auto &identifier = identifier_token.text;
+    const bool defined = parse_ifdef_condition("ifdef");
 
     // Only skip trailing whitespace, not the rest of the line: any further
     // tokens (in particular a nested `ifdef/`endif on the same line) must
@@ -832,8 +972,6 @@ void verilog_preprocessort::directive()
     // directives and, inside a FALSE region, silently swallow the remainder
     // of the file.
     tokenizer().skip_ws();
-
-    bool defined = defines.find(identifier) != defines.end();
 
     conditionalt conditional;
 
@@ -871,23 +1009,11 @@ void verilog_preprocessort::directive()
     if(conditionals.empty())
       throw verilog_preprocessor_errort() << "`elsif without `ifdef/`ifndef";
 
-    // skip whitespace
-    tokenizer().skip_ws();
-
-    // we expect an identifier
-    const auto identifier_token = tokenizer().next_token();
-
-    if(!identifier_token.is_identifier())
-      throw verilog_preprocessor_errort()
-        << "expecting an identifier after `elsif";
-
-    auto &identifier = identifier_token.text;
+    const bool defined = parse_ifdef_condition("`elsif");
 
     // Only skip trailing whitespace; inline directives on the same line
     // must still be processed.
     tokenizer().skip_ws();
-
-    bool defined = defines.find(identifier) != defines.end();
 
     conditionalt &conditional = conditionals.back();
 

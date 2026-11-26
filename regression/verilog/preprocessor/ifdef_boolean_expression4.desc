@@ -1,0 +1,8 @@
+CORE
+ifdef_boolean_expression4.v
+
+^file ifdef_boolean_expression4\.v line 3: Boolean expressions in ifdef require SystemVerilog 2023$
+^EXIT=1$
+^SIGNAL=0$
+--
+Boolean expressions are not part of Verilog 2005.
