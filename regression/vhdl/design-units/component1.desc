@@ -1,0 +1,11 @@
+KNOWNBUG
+component1.vhd
+--top component1 --bound 2
+^EXIT=10$
+^SIGNAL=0$
+^\[component1\.p1\] .* PROVED up to bound 2$
+^\[component1\.p2\] .* REFUTED$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

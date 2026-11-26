@@ -1,0 +1,11 @@
+KNOWNBUG
+variable1.vhd
+--bound 2
+^EXIT=10$
+^SIGNAL=0$
+^\[variable1\.p1\] .* PROVED up to bound 2$
+^\[variable1\.p2\] .* REFUTED$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.
