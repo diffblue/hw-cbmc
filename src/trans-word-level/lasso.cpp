@@ -14,6 +14,8 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "instantiate_word_level.h"
 
+#include <algorithm>
+
 /*******************************************************************\
 
 Function: states_equal
@@ -89,6 +91,28 @@ void lasso_constraints(
   const namespacet &ns,
   const irep_idt &module_identifier)
 {
+  lasso_constraints(solver, 0, no_timeframes, ns, module_identifier);
+}
+
+/*******************************************************************\
+
+Function: lasso_constraints
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void lasso_constraints(
+  decision_proceduret &solver,
+  const mp_integer &from_timeframe,
+  const mp_integer &to_timeframe,
+  const namespacet &ns,
+  const irep_idt &module_identifier)
+{
   // The definition of a lasso to state s_i is that there
   // is an identical state s_k = s_i with k<i.
   // "Identical" is defined as "state variables and top-level inputs match".
@@ -116,7 +140,8 @@ void lasso_constraints(
   std::sort(variables_to_compare.begin(), variables_to_compare.end(), ordering);
 
   // Create the constraint
-  for(mp_integer i = 1; i < no_timeframes; ++i)
+  for(mp_integer i = std::max(from_timeframe, mp_integer{1}); i < to_timeframe;
+      ++i)
   {
     for(mp_integer k = 0; k < i; ++k)
     {
