@@ -1,0 +1,7 @@
+CORE
+multiline_string_literal2.sv
+
+^file multiline_string_literal2\.sv line 5: syntax error, unexpected .*$
+^EXIT=1$
+^SIGNAL=0$
+--
