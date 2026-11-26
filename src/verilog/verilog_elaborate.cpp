@@ -209,6 +209,12 @@ void verilog_typecheckt::collect_symbols(
     auto symbol_type =
       to_be_elaborated_typet{to_type_expr(declarator.value()).type()};
 
+    // 1800-2023 6.20.3: the restriction on the type parameter, if any,
+    // is checked when the type is elaborated.
+    const auto forward_type = type.get(ID_verilog_forward_type);
+    if(!forward_type.empty())
+      symbol_type.set(ID_verilog_forward_type, forward_type);
+
     type_symbolt symbol{full_identifier, symbol_type, mode};
 
     symbol.module = verilog_root_module_identifier();
@@ -1584,6 +1590,9 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
     // mark as "elaborating" to detect cycles
     symbol.type.id(ID_elaborating);
 
+    // the restriction of a type parameter, if any
+    const auto forward_type = symbol.type.get(ID_verilog_forward_type);
+
     bool is_let = let_symbols.find(symbol.name) != let_symbols.end();
 
     // Is the type derived from the value (e.g., parameters)?
@@ -1619,6 +1628,32 @@ void verilog_typecheckt::elaborate_symbol_rec(irep_idt identifier)
       // No, elaborate the type.
       auto elaborated_type =
         elaborate_type(to_type_with_subtype(symbol.type).subtype());
+
+      if(!forward_type.empty())
+      {
+        // 1800-2023 6.20.3: the type assigned to a restricted type
+        // parameter must be of the given kind. Interface classes are
+        // not distinguished from classes.
+        const auto given_kind = elaborated_type.id();
+        const bool is_class_kind = forward_type == ID_verilog_class ||
+                                   forward_type == ID_verilog_interface;
+        const bool matches = is_class_kind ? given_kind == ID_verilog_class_type
+                                           : given_kind == forward_type;
+
+        if(!matches)
+        {
+          const char *keyword = forward_type == ID_verilog_enum ? "enum"
+                                : forward_type == ID_struct     ? "struct"
+                                : forward_type == ID_union      ? "union"
+                                : forward_type == ID_verilog_class
+                                  ? "class"
+                                  : "interface class";
+
+          throw errort{}.with_location(symbol.location)
+            << "type parameter " << symbol.base_name << " is restricted to "
+            << keyword << " types";
+        }
+      }
 
       // Now elaborate the value, possibly recursively, if any.
       if(symbol.value.is_not_nil())

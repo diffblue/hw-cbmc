@@ -1,0 +1,7 @@
+CORE
+restricted_type_parameter4.sv
+
+^file restricted_type_parameter4\.sv line 4: type parameter E is restricted to enum types$
+^EXIT=2$
+^SIGNAL=0$
+--

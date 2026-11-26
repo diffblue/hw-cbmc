@@ -150,6 +150,16 @@ Function: add_attributes
 
 \*******************************************************************/
 
+// The type of a type parameter declaration. The optional forward
+// type, e.g., "enum" in "parameter type enum T", is recorded.
+static typet type_parameter_type(const exprt &forward_type)
+{
+  typet result{ID_type};
+  if(forward_type.id() != ID_nil)
+    result.set(ID_verilog_forward_type, forward_type.id());
+  return result;
+}
+
 static void add_attributes(YYSTYPE &dest, YYSTYPE &attributes)
 {
   PRECONDITION(stack_expr(attributes).id() == ID_verilog_attributes);
@@ -1780,10 +1790,10 @@ local_parameter_declaration:
                 { init($$, ID_local_parameter_decl);
                   stack_expr($$).type() = std::move(stack_type($2));
                   swapop($$, $3); }
-        | TOK_LOCALPARAM TOK_TYPE list_of_type_assignments
+        | TOK_LOCALPARAM TOK_TYPE forward_type_opt list_of_type_assignments
                 { init($$, ID_local_parameter_decl);
-                  stack_expr($$).type() = typet(ID_type);
-                  swapop($$, $3); }
+                  stack_expr($$).type() = type_parameter_type(stack_expr($3));
+                  swapop($$, $4); }
         ;
 
 parameter_declaration:
@@ -1791,10 +1801,10 @@ parameter_declaration:
                 { init($$, ID_parameter_decl);
                   stack_expr($$).type() = std::move(stack_type($2));
                   swapop($$, $3); }
-        | TOK_PARAMETER TOK_TYPE list_of_type_assignments
+        | TOK_PARAMETER TOK_TYPE forward_type_opt list_of_type_assignments
                 { init($$, ID_parameter_decl);
-                  stack_expr($$).type() = typet(ID_type);
-                  swapop($$, $3); }
+                  stack_expr($$).type() = type_parameter_type(stack_expr($3));
+                  swapop($$, $4); }
         ;
 
 specparam_declaration:
@@ -2431,23 +2441,45 @@ list_of_variable_identifiers:
                 }
         ;
 
+// 1800-2023 6.20.3: a type parameter may restrict the type that is
+// assigned to it. The restriction is recorded in the type of the
+// declaration, and checked during elaboration.
+forward_type_opt:
+          /* Optional */
+                { init($$, ID_nil); }
+        | forward_type
+        ;
+
+forward_type:
+          TOK_ENUM
+                { init($$, ID_verilog_enum); }
+        | TOK_STRUCT
+                { init($$, ID_struct); }
+        | TOK_UNION
+                { init($$, ID_union); }
+        | TOK_CLASS
+                { init($$, ID_verilog_class); }
+        | TOK_INTERFACE TOK_CLASS
+                { init($$, ID_verilog_interface); }
+        ;
+
 // This rule is more permissive that the grammar in the standard
 // to cover list_of_param_assignments.
 parameter_port_declaration:
           TOK_PARAMETER data_type_or_implicit param_assignment
                 { init($$, ID_decl); stack_expr($$).type() = std::move(stack_type($2)); mto($$, $3); }
-        | TOK_PARAMETER TOK_TYPE type_assignment
-                { init($$, ID_decl); stack_expr($$).type() = typet{ID_type}; mto($$, $3); }
+        | TOK_PARAMETER TOK_TYPE forward_type_opt type_assignment
+                { init($$, ID_decl); stack_expr($$).type() = type_parameter_type(stack_expr($3)); mto($$, $4); }
         | TOK_LOCALPARAM data_type_or_implicit param_assignment
                 { init($$, ID_decl); stack_expr($$).type() = std::move(stack_type($2)); mto($$, $3); }
-        | TOK_LOCALPARAM TOK_TYPE type_assignment
-                { init($$, ID_decl); stack_expr($$).type() = typet{ID_type}; mto($$, $3); }
+        | TOK_LOCALPARAM TOK_TYPE forward_type_opt type_assignment
+                { init($$, ID_decl); stack_expr($$).type() = type_parameter_type(stack_expr($3)); mto($$, $4); }
         | data_type param_assignment
                 { init($$, ID_decl); stack_expr($$).type() = std::move(stack_type($1)); mto($$, $2); }
         | param_assignment
                 { init($$, ID_decl); mto($$, $1); }
-        | TOK_TYPE type_assignment
-                { init($$, ID_decl); stack_expr($$).type() = typet{ID_type}; mto($$, $2); }
+        | TOK_TYPE forward_type_opt type_assignment
+                { init($$, ID_decl); stack_expr($$).type() = type_parameter_type(stack_expr($2)); mto($$, $3); }
         ;
 
 list_of_defparam_assignments:

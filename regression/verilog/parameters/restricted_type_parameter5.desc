@@ -1,0 +1,7 @@
+CORE
+restricted_type_parameter5.sv
+
+^file restricted_type_parameter5\.sv line 5: type parameter S is restricted to struct types$
+^EXIT=2$
+^SIGNAL=0$
+--
