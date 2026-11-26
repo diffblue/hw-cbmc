@@ -22,6 +22,8 @@
   type yields that enum type
 * SystemVerilog: system functions, e.g., $rose, in named properties and
   sequences
+* --reset: a reset condition that reads no input is imposed on the initial
+  state only
 
 # EBMC 6.2
 
