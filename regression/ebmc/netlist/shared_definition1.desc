@@ -1,0 +1,11 @@
+CORE
+shared_definition1.sv
+--aig --bound 0
+^\[main\.p0\] .*: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The collection of the bits that the definition of x reads used to take
+time exponential in the number of iterations of the loop.

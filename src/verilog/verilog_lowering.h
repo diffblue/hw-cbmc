@@ -9,13 +9,28 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VERILOG_LOWERING_H
 #define CPROVER_VERILOG_LOWERING_H
 
-class exprt;
+#include <util/expr_identity_map.h>
+
 class symbol_table_baset;
 class typecast_exprt;
 class typet;
 
 exprt verilog_lowering(exprt);
 typet verilog_lowering(typet);
+
+/// Lowers expressions, once per distinct expression node. The
+/// expressions that are lowered by the same instance share the lowering
+/// of their common subexpressions; this keeps, e.g., the definitions of
+/// different variables of a transition relation that read the same
+/// subexpression shared after lowering.
+class verilog_loweringt
+{
+public:
+  exprt operator()(const exprt &);
+
+private:
+  expr_identity_mapt<exprt> cache;
+};
 
 exprt verilog_lowering_cast(typecast_exprt);
 

@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/ebmc_util.h>
+#include <util/expr_identity_map.h>
 #include <util/expr_util.h>
 #include <util/mathematical_expr.h>
 #include <util/namespace.h>
@@ -32,6 +33,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "netlist_boolbv.h"
 
 #include <algorithm>
+#include <map>
+#include <set>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 /*******************************************************************\
@@ -136,6 +141,15 @@ protected:
   void add_constraint(const exprt &src);
   void add_equality(const equal_exprt &src);
 
+  // Constant folding of the parts of definitions, see fold_constants.
+  // The caches are keyed by the identity of the expression nodes, since
+  // the definitions are DAGs with much sharing.
+  exprt fold_constants(const exprt &);
+  expr_identity_mapt<exprt> fold_constants_cache;
+  exprt push_typecast(const exprt &, const typet &);
+  std::map<std::pair<const void *, typet>, std::pair<exprt, exprt>>
+    push_typecast_cache;
+
   void add_equality_rec(
     const equal_exprt &src,
     const exprt &lhs,
@@ -146,11 +160,17 @@ protected:
 
   using lhs_dependenciest = std::vector<lhs_mapt::iterator>;
 
+  // The pairs of an expression node and a bit range done already.
+  // The definitions are DAGs with much sharing.
+  using collect_lhs_visitedt =
+    std::set<std::tuple<const void *, std::size_t, std::size_t>>;
+
   void collect_lhs_rec(
     const exprt &expr,
     std::size_t from,
     std::size_t to,
-    lhs_dependenciest &dependencies);
+    lhs_dependenciest &dependencies,
+    collect_lhs_visitedt &visited);
 
   void convert_constraints();
 
@@ -627,8 +647,13 @@ void convert_trans_to_netlistt::finalize_lhs(lhs_mapt::iterator root)
         // get all lhs symbols this depends on
         if(frame.needs_conversion())
         {
+          collect_lhs_visitedt visited;
           collect_lhs_rec(
-            rhs_entry.expr, 0, rhs_entry.width - 1, frame.dependencies());
+            rhs_entry.expr,
+            0,
+            rhs_entry.width - 1,
+            frame.dependencies(),
+            visited);
         }
       }
 
@@ -713,9 +738,15 @@ void convert_trans_to_netlistt::collect_lhs_rec(
   const exprt &expr,
   std::size_t from,
   std::size_t to,
-  lhs_dependenciest &dependencies)
+  lhs_dependenciest &dependencies,
+  collect_lhs_visitedt &visited)
 {
   PRECONDITION(from <= to);
+
+  // Each bit range of a node is done once. The dependencies are only
+  // added to, hence the second visit adds nothing new.
+  if(!visited.emplace(&expr.read(), from, to).second)
+    return;
 
   if(expr.id()==ID_symbol)
   {
@@ -769,7 +800,8 @@ void convert_trans_to_netlistt::collect_lhs_rec(
          to_extractbit_expr(expr).index(), i)) // constant?
     {
       from = i.to_ulong();
-      collect_lhs_rec(to_extractbit_expr(expr).src(), from, from, dependencies);
+      collect_lhs_rec(
+        to_extractbit_expr(expr).src(), from, from, dependencies, visited);
       return;
     }
   }
@@ -788,7 +820,8 @@ void convert_trans_to_netlistt::collect_lhs_rec(
       from = new_from.to_ulong();
       to = new_to.to_ulong();
 
-      collect_lhs_rec(to_extractbits_expr(expr).src(), from, to, dependencies);
+      collect_lhs_rec(
+        to_extractbits_expr(expr).src(), from, to, dependencies, visited);
       return;
     }
   }
@@ -823,7 +856,7 @@ void convert_trans_to_netlistt::collect_lhs_rec(
       const std::size_t hi = std::min(to, offset + op_width - 1);
 
       if(lo <= hi)
-        collect_lhs_rec(op, lo - offset, hi - offset, dependencies);
+        collect_lhs_rec(op, lo - offset, hi - offset, dependencies, visited);
 
       if(!is_concat)
         offset += op_width;
@@ -856,7 +889,11 @@ void convert_trans_to_netlistt::collect_lhs_rec(
       if(element_width != 0 && to + offset < array_width)
       {
         collect_lhs_rec(
-          index_expr.array(), from + offset, to + offset, dependencies);
+          index_expr.array(),
+          from + offset,
+          to + offset,
+          dependencies,
+          visited);
         return;
       }
     }
@@ -878,7 +915,11 @@ void convert_trans_to_netlistt::collect_lhs_rec(
       if(op_width != 0 && from + d < op_width)
       {
         collect_lhs_rec(
-          shift.op(), from + d, std::min(to + d, op_width - 1), dependencies);
+          shift.op(),
+          from + d,
+          std::min(to + d, op_width - 1),
+          dependencies,
+          visited);
       }
 
       return;
@@ -900,8 +941,136 @@ void convert_trans_to_netlistt::collect_lhs_rec(
     if(width==0)
       continue;
 
-    collect_lhs_rec(*it, 0, width - 1, dependencies);
+    collect_lhs_rec(*it, 0, width - 1, dependencies, visited);
   }
+}
+
+/*******************************************************************\
+
+Function: convert_trans_to_netlistt::fold_constants
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Replace the subexpressions whose operands are all constants
+          by their value, and push typecasts to narrower or unsigned
+          bit-vector types into arithmetic, see push_typecast. Each
+          distinct node is done once, and the nodes that do not change
+          are kept, so that the sharing of the expression is preserved.
+          The general simplifier does not preserve sharing, and takes
+          time exponential in the depth of the expression.
+
+\*******************************************************************/
+
+exprt convert_trans_to_netlistt::fold_constants(const exprt &expr)
+{
+  if(auto cached = fold_constants_cache.find(expr))
+    return *cached;
+
+  exprt result = expr;
+  bool all_constant = !expr.operands().empty();
+
+  for(std::size_t i = 0; i < expr.operands().size(); i++)
+  {
+    const exprt &op = expr.operands()[i];
+    auto new_op = fold_constants(op);
+    all_constant = all_constant && new_op.is_constant();
+    if(&new_op.read() != &op.read())
+      result.operands()[i] = std::move(new_op);
+  }
+
+  if(all_constant)
+  {
+    auto simplified = simplify_expr(result, ns);
+    if(simplified.is_constant())
+      result = std::move(simplified);
+  }
+  else if(result.id() == ID_typecast)
+  {
+    // Read-only access: writing to result would unshare it.
+    const auto &op = to_typecast_expr(std::as_const(result)).op();
+    if(
+      op.id() == ID_mult || op.id() == ID_plus || op.id() == ID_minus ||
+      op.id() == ID_unary_minus)
+    {
+      auto pushed = push_typecast(op, result.type());
+      if(pushed.id() != ID_typecast)
+        result = std::move(pushed);
+    }
+  }
+
+  fold_constants_cache.insert(expr, result);
+  return result;
+}
+
+/*******************************************************************\
+
+Function: convert_trans_to_netlistt::push_typecast
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: (T)(x OP y) for an arithmetic operator, as (T)x OP (T)y, where
+          T is a bit-vector type no wider than that of x OP y. The bits
+          of the two agree, and the latter is smaller in the netlist when
+          T is narrower or unsigned, e.g., for the product of two signed
+          operands that is cast to an unsigned type of the same width,
+          since a signed multiplier needs more gates than an unsigned
+          one. Returns the typecast itself when there is nothing to gain.
+
+\*******************************************************************/
+
+exprt convert_trans_to_netlistt::push_typecast(
+  const exprt &expr,
+  const typet &type)
+{
+  auto key = std::make_pair(static_cast<const void *>(&expr.read()), type);
+  auto cache_it = push_typecast_cache.find(key);
+  if(cache_it != push_typecast_cache.end())
+    return cache_it->second.second;
+
+  auto is_bitvector = [](const typet &t)
+  { return t.id() == ID_signedbv || t.id() == ID_unsignedbv; };
+
+  exprt result = typecast_exprt::conditional_cast(expr, type);
+
+  if(
+    is_bitvector(type) && is_bitvector(expr.type()) &&
+    (expr.id() == ID_mult || expr.id() == ID_plus || expr.id() == ID_minus ||
+     expr.id() == ID_unary_minus) &&
+    !expr.operands().empty() &&
+    std::all_of(
+      expr.operands().begin(),
+      expr.operands().end(),
+      [&expr](const exprt &op) { return op.type() == expr.type(); }))
+  {
+    auto width = to_bitvector_type(type).get_width();
+    auto expr_width = to_bitvector_type(expr.type()).get_width();
+    bool narrower = width < expr_width;
+    bool to_unsigned = expr.id() == ID_mult &&
+                       expr.type().id() == ID_signedbv &&
+                       type.id() == ID_unsignedbv;
+
+    if(width <= expr_width && (narrower || to_unsigned))
+    {
+      result = expr;
+      result.type() = type;
+      for(auto &op : result.operands())
+        op = push_typecast(op, type);
+    }
+  }
+
+  if(result.id() == ID_typecast && to_typecast_expr(result).op().is_constant())
+  {
+    auto simplified = simplify_expr(result, ns);
+    if(simplified.is_constant())
+      result = std::move(simplified);
+  }
+
+  push_typecast_cache.emplace(key, std::make_pair(expr, result));
+  return result;
 }
 
 /*******************************************************************\
@@ -980,10 +1149,11 @@ void convert_trans_to_netlistt::add_equality(const equal_exprt &src)
 
         exprt lhs_part;
 
-        // Simplify, to resolve selects of the wire with constant indices,
-        // e.g., (v >> (2 - 1) * 2)[1:0], into extracts of the bits they
-        // read, which the dependency analysis of the wire's bits needs.
-        exprt rhs_part = simplify_expr(op, ns);
+        // Fold constants, to resolve selects of the wire with constant
+        // indices, e.g., (v >> (2 - 1) * 2)[1:0], into extracts of the bits
+        // they read, which the dependency analysis of the wire's bits
+        // needs.
+        exprt rhs_part = fold_constants(op);
 
         if(op.type().id() == ID_bool)
         {

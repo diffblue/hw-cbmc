@@ -1068,7 +1068,11 @@ static exprt verilog_lowering_cached(const exprt &expr, lowering_cachet &cache)
 
 exprt verilog_lowering(exprt expr)
 {
-  lowering_cachet cache;
+  return verilog_loweringt{}(expr);
+}
+
+exprt verilog_loweringt::operator()(const exprt &expr)
+{
   return verilog_lowering_cached(expr, cache);
 }
 
