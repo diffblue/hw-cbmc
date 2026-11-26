@@ -155,7 +155,8 @@ property_checker_resultt k_induction(
   ebmc_propertiest &properties,
   message_handlert &message_handler)
 {
-  std::size_t k = [&cmdline, &message_handler]() -> std::size_t {
+  std::size_t k = [&cmdline, &message_handler]() -> std::size_t
+  {
     if(!cmdline.isset("bound"))
     {
       messaget message(message_handler);
@@ -364,7 +365,7 @@ void k_inductiont::induction_step()
       exprt tmp = instantiate(p, c, no_timeframes - 1);
       solver.set_to_true(tmp);
     }
-    
+
     // property: time frame k
     {
       exprt tmp = instantiate(p, no_timeframes - 1, no_timeframes);
@@ -376,10 +377,24 @@ void k_inductiont::induction_step()
     switch(dec_result)
     {
     case decision_proceduret::resultt::D_SATISFIABLE:
-      message.result()
-        << "SAT: inductive proof failed, k-induction is inconclusive"
-        << messaget::eom;
-      p_it.inconclusive();
+      // The base case of an exists-path property (cover) records
+      // REFUTED_WITH_BOUND when no witness exists within the bound.
+      // The inductive step failing does not retract that. The step
+      // can still strengthen it to an unbounded refutation when the
+      // negated property is inductive.
+      if(p_it.is_refuted_with_bound())
+      {
+        message.result()
+          << "SAT: inductive step failed; keeping the base-case result"
+          << messaget::eom;
+      }
+      else
+      {
+        message.result()
+          << "SAT: inductive proof failed, k-induction is inconclusive"
+          << messaget::eom;
+        p_it.inconclusive();
+      }
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE:

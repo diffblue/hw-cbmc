@@ -93,6 +93,11 @@ public:
       return status == statust::REFUTED;
     }
 
+    bool is_refuted_with_bound() const
+    {
+      return status == statust::REFUTED_WITH_BOUND;
+    }
+
     bool is_dropped() const
     {
       return status == statust::DROPPED;

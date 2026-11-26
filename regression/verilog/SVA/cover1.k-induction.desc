@@ -2,7 +2,7 @@ CORE
 cover1.sv
 --k-induction
 ^\[main\.p0\] cover main\.counter == 1: PROVED$
-^\[main\.p1\] cover main\.counter == 100: INCONCLUSIVE$
+^\[main\.p1\] cover main\.counter == 100: REFUTED up to bound 1$
 ^EXIT=10$
 ^SIGNAL=0$
 --
