@@ -1,0 +1,13 @@
+CORE
+linear_lasso3.sv
+--bound 260
+^\[main\.p0\] always s_eventually main\.d == 3: PROVED up to bound 260$
+^\[main\.p1\] always \(main\.d == 2 implies \(s_eventually main\.d == 5\)\): PROVED up to bound 260$
+^\[main\.p2\] always \(main\.d == 1 \|-> \(main\.d < 9 s_until main\.d == 9\)\): PROVED up to bound 260$
+^\[main\.p3\] always s_eventually always main\.d != 3: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Liveness with a bound that exceeds the length of the loop.

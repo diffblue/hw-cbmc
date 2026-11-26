@@ -1,0 +1,11 @@
+CORE
+linear_lasso4.sv
+--bound 6
+^\[main\.p0\] s_eventually always !main\.r: PROVED up to bound 6$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Lasso-shaped counterexamples must satisfy the assumption on the
+infinite path.
