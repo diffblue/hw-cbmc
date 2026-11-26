@@ -207,6 +207,10 @@ public:
   /// connection; these become wires
   std::set<irep_idt> forced;
 
+  /// the nets that are connected to inout ports, on either side of the
+  /// connection, which may hence have drivers that drive z
+  std::set<irep_idt> inout_nets;
+
   /// the initial values, from initial constructs and variable
   /// declarations with an initializer
   std::map<irep_idt, slice_value_mapt> initial_values;

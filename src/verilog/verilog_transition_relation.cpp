@@ -129,6 +129,10 @@ protected:
   /// type; a four-valued value is converted to a two-valued type as an
   /// assignment would (1800-2017 10.7)
   exprt lower_to(exprt, const typet &lowered_type);
+  std::optional<exprt> convert_driven_bits(
+    const exprt &lhs,
+    const exprt &value,
+    const typet &lowered_type);
 
   exprt lower_system_functions(exprt);
 
@@ -788,14 +792,74 @@ void verilog_transition_relationt::convert_definitions(
         [&nondet, &whole](const verilog_rtl_slicet &fragment)
         { return extract_range(nondet, whole, fragment); });
 
-      auto lowered_value = lower_to(std::move(value), lowered_type);
-
       exprt lhs = symbol_expr(symbol, false);
+
+      // A net that is connected to an inout port may have further
+      // drivers, by way of the connection. The bits that this definition
+      // drives with z are left to these, 1800-2017 6.6.1.
+      if(rtl.inout_nets.find(identifier) != rtl.inout_nets.end())
+      {
+        auto driven_bits = convert_driven_bits(lhs, value, lowered_type);
+        if(driven_bits.has_value())
+        {
+          trans.invar().add_to_operands(std::move(*driven_bits));
+          continue;
+        }
+      }
+
+      auto lowered_value = lower_to(std::move(value), lowered_type);
 
       trans.invar().add_to_operands(
         equal_exprt{std::move(lhs), std::move(lowered_value)});
     }
   }
+}
+
+/*******************************************************************\
+
+Function: verilog_transition_relationt::convert_driven_bits
+
+  Inputs: a net, the value of its driver, and the lowered type of the
+          net
+
+ Outputs: the constraint that the net has the value of the driver in
+          the bits that the driver does not drive with z, or nothing
+          if the driver cannot drive z
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<exprt> verilog_transition_relationt::convert_driven_bits(
+  const exprt &lhs,
+  const exprt &value,
+  const typet &lowered_type)
+{
+  auto lowered = lower(value);
+
+  if(
+    !is_aval_bval(lowered) ||
+    (lowered_type.id() != ID_bool && lowered_type.id() != ID_unsignedbv &&
+     lowered_type.id() != ID_signedbv))
+  {
+    return {};
+  }
+
+  // the bits that are z, which have both aval and bval set
+  exprt z = bitand_exprt{aval(lowered), bval(lowered)};
+
+  auto two_valued = aval_bval(typecast_exprt{lowered, lowered_type});
+
+  if(lowered_type.id() == ID_bool)
+  {
+    auto is_z = notequal_exprt{z, from_integer(0, z.type())};
+    return or_exprt{std::move(is_z), equal_exprt{lhs, std::move(two_valued)}};
+  }
+
+  auto driven = typecast_exprt{bitnot_exprt{std::move(z)}, lowered_type};
+
+  return equal_exprt{
+    bitand_exprt{lhs, driven}, bitand_exprt{std::move(two_valued), driven}};
 }
 
 /*******************************************************************\
