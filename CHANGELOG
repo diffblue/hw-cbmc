@@ -22,6 +22,8 @@
   type yields that enum type
 * SystemVerilog: system functions, e.g., $rose, in named properties and
   sequences
+* Verilog: case generate constructs outside of generate regions, and
+  library modules that are instantiated in case generate constructs
 
 # EBMC 6.2
 

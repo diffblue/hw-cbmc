@@ -445,6 +445,11 @@ static void collect_module_dependencies_rec(
     collect_module_dependencies_rec(
       to_verilog_generate_for(module_item).body(), deps);
   }
+  else if(module_item.id() == ID_verilog_case_generate)
+  {
+    for(auto &item : to_verilog_case_generate(module_item).items())
+      collect_module_dependencies_rec(item.block(), deps);
+  }
 }
 
 static std::set<irep_idt> collect_all_dependencies(

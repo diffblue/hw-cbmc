@@ -1288,7 +1288,8 @@ void verilog_typecheckt::collect_symbols(
   }
   else if(
     module_item.id() == ID_generate_block ||
-    module_item.id() == ID_generate_for || module_item.id() == ID_generate_if)
+    module_item.id() == ID_generate_for || module_item.id() == ID_generate_if ||
+    module_item.id() == ID_verilog_case_generate)
   {
     // postpone until constants are elaborated
   }
@@ -1466,7 +1467,9 @@ verilog_typecheckt::elaborate_level(const module_itemst &module_items)
     if(
       module_item.id() == ID_generate_block ||
       module_item.id() == ID_verilog_genvar_decl ||
-      module_item.id() == ID_generate_for || module_item.id() == ID_generate_if)
+      module_item.id() == ID_generate_for ||
+      module_item.id() == ID_generate_if ||
+      module_item.id() == ID_verilog_case_generate)
     {
       // elaborate_generate_item calls elaborate_level
       // recursively.
