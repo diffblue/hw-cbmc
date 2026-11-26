@@ -5,6 +5,8 @@
 * netlist conversion no longer overflows the stack on long chains of
   combinational definitions, e.g., deep AIGs
 * BMC: the encoding of until and release is linear in the bound
+* BMC: the encoding of lasso-shaped counterexamples to liveness properties
+  is linear in the bound
 * Verilog: continuous assignments to variables are rejected in Verilog
   (they remain allowed in SystemVerilog)
 * Verilog: variables connected to inout ports are rejected
