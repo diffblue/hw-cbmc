@@ -9,7 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_VHDL_PARSE_TREE_H
 #define CPROVER_VHDL_PARSE_TREE_H
 
-#include <util/expr.h>
+#include <util/irep.h>
+#include <util/source_location.h>
 #include <util/string_hash.h>
 
 #include <list>
@@ -18,7 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 class vhdl_parse_treet
 {
 public:
-  struct itemt : public exprt
+  struct itemt : public irept
   {
   public:
     irep_idt get_item_type() const
@@ -86,6 +87,11 @@ public:
     bool is_package_body() const
     {
       return get("item_type") == "package_body";
+    }
+
+    const source_locationt &source_location() const
+    {
+      return static_cast<const source_locationt &>(find(ID_C_source_location));
     }
   };
 
