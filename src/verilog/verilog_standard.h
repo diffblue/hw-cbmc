@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #ifndef CPROVER_VERILOG_STANDARD_H
 #define CPROVER_VERILOG_STANDARD_H
 
+#include <filesystem>
 #include <string>
 
 // This follows the version specifier in 1800-2017 Sec 22.14.
@@ -42,5 +43,10 @@ constexpr verilog_standardt default_sv_standard = verilog_standardt::SV2017;
 // default for .v files
 constexpr verilog_standardt default_verilog_standard =
   verilog_standardt::V2005_SMV;
+
+/// Returns the default standard for the given file, based on its
+/// extension: \ref default_sv_standard for ".sv" files, and
+/// \ref default_verilog_standard otherwise.
+verilog_standardt default_standard(const std::filesystem::path &);
 
 #endif // CPROVER_VERILOG_STANDARD_H
