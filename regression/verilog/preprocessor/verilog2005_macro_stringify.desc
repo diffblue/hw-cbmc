@@ -1,0 +1,8 @@
+KNOWNBUG
+verilog2005_macro_stringify.v
+--bound 1
+^EXIT=1$
+^SIGNAL=0$
+--
+KNOWNBUG test: a .v file is Verilog 1364-2005, which does not have this
+preprocessor feature. The preprocessor should reject it, but it accepts it.
