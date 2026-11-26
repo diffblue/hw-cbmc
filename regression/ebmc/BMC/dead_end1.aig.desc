@@ -1,0 +1,11 @@
+KNOWNBUG
+dead_end1.sv
+--aig --bound 10
+^\[main\.p0\] .*: PROVED up to bound 10$
+^no path with 11 states satisfies the constraints and assumptions; the results for bound 10 are vacuous$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+As dead_end1.desc, with the netlist-based BMC engine.
