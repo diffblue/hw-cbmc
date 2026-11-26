@@ -31,6 +31,7 @@ SRC += ebmc/bdd_model_checker.cpp \
        verilog/verilog_lowering.cpp \
        verilog/verilog_rtl.cpp \
        verilog/verilog_simplifier.cpp \
+       vhdl/expr2vhdl.cpp \
        vhdl/parse_tree.cpp \
        vhdl/parser.cpp \
        vhdl/vhdl_expr.cpp \
