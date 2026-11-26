@@ -3,6 +3,7 @@ cycle1.sv
 --bound 3 --coi --verbosity 9
 ^Cone of influence: 2 definitions are cyclic and were kept$
 ^\[main\.p0\] always main\.r == 0: PROVED up to bound 3$
+^no path with 4 states satisfies the constraints and assumptions; the results for bound 3 are vacuous$
 ^EXIT=0$
 ^SIGNAL=0$
 --

@@ -22,6 +22,8 @@
   type yields that enum type
 * SystemVerilog: system functions, e.g., $rose, in named properties and
   sequences
+* BMC: a warning when no path up to the bound satisfies the constraints and
+  assumptions, which makes the results vacuous
 
 # EBMC 6.2
 

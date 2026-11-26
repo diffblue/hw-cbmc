@@ -142,6 +142,15 @@ property_checker_resultt finish_bit_level_bmc(
   messaget message{message_handler};
   message.status() << "Solving with " << solver.solver_text() << messaget::eom;
 
+  // The results are vacuous when no path satisfies the constraints and the
+  // assumptions, as for word-level BMC.
+  if(
+    may_have_dead_ends(transition_system.trans_expr, properties) &&
+    solver.prop_solve({}) == propt::resultt::P_UNSATISFIABLE)
+  {
+    report_no_path(bound, message_handler);
+  }
+
   for(auto &property : properties.properties)
   {
     if(property.is_disabled())
