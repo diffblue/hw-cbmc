@@ -1,0 +1,8 @@
+CORE
+underscore1.vhd
+--show-parse
+^EXIT=1$
+^SIGNAL=0$
+^file underscore1\.vhd line 3: syntax error
+--
+^warning: ignoring

@@ -1,5 +1,7 @@
 %option nounput
 %option noinput
+%option reentrant
+%option noyywrap
 
 %{
 #include <util/pragma_wdeprecated_register.def>
@@ -20,10 +22,10 @@ static int isatty(int) { return 0; }
 #include "vhdl_parser.h"
 #include "vhdl_y.tab.h"
 
-void vhdl_scanner_init()
-{
-}
-
+// The scanner is reentrant, and owned by the parser as a
+// vhdl_scannert (see flex_interface.h). The input is read through
+// the parser, which keeps track of the line and column, using the
+// YY_INPUT macro of util/parser.h.
 %}
 
 %x GRAMMAR
@@ -61,6 +63,7 @@ void vhdl_scanner_init()
 "<<"            { set_loc(); return TOK_LEFT_LABEL_BRACKET; }
 ">>"            { set_loc(); return TOK_RIGHT_LABEL_BRACKET; }
 "<>"            { set_loc(); return TOK_BOX; }
+"??"            { set_loc(); return TOK_CONDITION; }
 
 [ \n\r\t] { /* eat */ }
 
@@ -83,7 +86,8 @@ void vhdl_scanner_init()
 "COMPONENT"     { set_loc(); return TOK_COMPONENT; }
 "CONFIGURATION" { set_loc(); return TOK_CONFIGURATION; }
 "CONSTANT"      { set_loc(); return TOK_CONSTANT; }
-"DISCONNENT"    { set_loc(); return TOK_DISCONNENT; }
+"CONTEXT"       { set_loc(); return TOK_CONTEXT; }
+"DISCONNECT"    { set_loc(); return TOK_DISCONNECT; }
 "DOWNTO"        { set_loc(); return TOK_DOWNTO; }
 "ELSE"          { set_loc(); return TOK_ELSE; }
 "ELSIF"         { set_loc(); return TOK_ELSIF; }
@@ -140,6 +144,7 @@ void vhdl_scanner_init()
 "ROR"           { set_loc(); return TOK_ROR; }
 "SELECT"        { set_loc(); return TOK_SELECT; }
 "SEVERITY"      { set_loc(); return TOK_SEVERITY; }
+"SHARED"        { set_loc(); return TOK_SHARED; }
 "SIGNAL"        { set_loc(); return TOK_SIGNAL; }
 "SLA"           { set_loc(); return TOK_SLA; }
 "SLL"           { set_loc(); return TOK_SLL; }
@@ -175,18 +180,29 @@ void vhdl_scanner_init()
 }
 
 \'.\' { 
+  // A tick following an identifier or a closing parenthesis is
+  // an attribute or qualified expression, not a character literal
+  // (IEEE 1076-2008 15.6).
+  if(PARSER.last_token == TOK_IDENTIFIER || PARSER.last_token == ')')
+  {
+    yyless(1);
+    set_loc();
+    return '\'';
+  }
+
   set_loc();
   yyvhdllval.text=std::string(yytext, 1, 1);
   return TOK_CHAR;
 }
 
-#[0-9a-f]*# {
+[0-9](_?[0-9])*#[0-9a-fA-F](_?[0-9a-fA-F])*(\.[0-9a-fA-F](_?[0-9a-fA-F])*)?#([eE][+-]?[0-9](_?[0-9])*)? {
+  // based literal, IEEE 1076-2008 15.5.3
   set_loc();
   yyvhdllval.text=yytext;
   return TOK_BASED_INTEGER;
 }
 
-[a-zA-Z_$][a-zA-Z0-9_$]* {
+[a-zA-Z](_?[a-zA-Z0-9])* {
   set_loc();
   yyvhdllval.text=yytext;
   return TOK_IDENTIFIER;
@@ -198,7 +214,15 @@ void vhdl_scanner_init()
   PARSER.scanner_buffer.clear();
 }
 
-[0-9]+ { 
+[0-9](_?[0-9])*\.[0-9](_?[0-9])*([eE][+-]?[0-9](_?[0-9])*)? {
+  // decimal literal with a point, IEEE 1076-2008 15.5.2
+  set_loc();
+  yyvhdllval.text=yytext;
+  return TOK_REAL;
+}
+
+[0-9](_?[0-9])*([eE]\+?[0-9](_?[0-9])*)? {
+  // decimal literal without a point, IEEE 1076-2008 15.5.2
   set_loc();
   yyvhdllval.text=yytext;
   return TOK_NATURAL;
@@ -239,5 +263,5 @@ void vhdl_scanner_init()
 
 %%
 
-int yywrap() { return 1; }
+#include <verilog/flex_interface.inc>
 

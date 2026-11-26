@@ -6,15 +6,16 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include "vhdl_language.h"
+
 #include <util/suffix.h>
 #include <util/symbol_table.h>
 
-#include "vhdl_language.h"
-#include "vhdl_typecheck.h"
-#include "vhdl_synthesis.h"
-#include "vhdl_std_packages.h"
 #include "expr2vhdl.h"
 #include "vhdl_parser.h"
+#include "vhdl_std_packages.h"
+#include "vhdl_synthesis.h"
+#include "vhdl_typecheck.h"
 
 /*******************************************************************\
 
@@ -38,8 +39,6 @@ bool vhdl_languaget::parse(
   vhdl_parser.set_file(path);
   vhdl_parser.in=&instream;
   //vhdl_parser.grammar=vhdl_parsert::LANGUAGE;
-  
-  vhdl_scanner_init();
 
   bool result=vhdl_parser.parse();
 
@@ -120,19 +119,17 @@ Function: vhdl_languaget::modules_provided
 
 \*******************************************************************/
 
-void vhdl_languaget::modules_provided(
-  std::set<std::string> &module_set)
+void vhdl_languaget::modules_provided(std::set<std::string> &module_set)
 {
   for(auto const &i : parse_tree.items)
   {
     if(i.is_architecture())
     {
-      module_set.insert(
-        vhdl_parse_treet::itemt::pretty_name(i.get_name()));
+      module_set.insert(vhdl_parse_treet::itemt::pretty_name(i.get_name()));
     }
   }
 }
-             
+
 /*******************************************************************\
 
 Function: vhdl_languaget::typecheck
@@ -150,7 +147,8 @@ bool vhdl_languaget::typecheck(
   const std::string &module,
   message_handlert &message_handler)
 {
-  if(module=="") return false;
+  if(module == "")
+    return false;
 
   vhdl_std_packages(symbol_table, message_handler);
 
@@ -160,7 +158,7 @@ bool vhdl_languaget::typecheck(
   messaget message(message_handler);
   message.debug() << "Synthesis" << messaget::eom;
 
-  std::string module2="vhdl::"+module;
+  std::string module2 = "vhdl::" + module;
 
   if(vhdl_synthesis(symbol_table, module2, message_handler))
     return true;
@@ -219,7 +217,7 @@ bool vhdl_languaget::from_expr(
   std::string &code,
   const namespacet &ns)
 {
-  code=expr2vhdl(expr);
+  code = expr2vhdl(expr);
   return false;
 }
 
@@ -240,7 +238,7 @@ bool vhdl_languaget::from_type(
   std::string &code,
   const namespacet &ns)
 {
-  code=type2vhdl(type);
+  code = type2vhdl(type);
   return false;
 }
 
@@ -264,26 +262,26 @@ bool vhdl_languaget::to_expr(
   message_handlert &message_handler)
 {
   expr.make_nil();
-  
+
   // no preprocessing
   std::istringstream i_preprocessed(code);
 
   // parsing
   vhdl_parsert vhdl_parser(message_handler);
   vhdl_parser.set_file("");
-  vhdl_parser.in=&i_preprocessed;
-  vhdl_parser.grammar=vhdl_parsert::EXPRESSION;
-  vhdl_scanner_init();
+  vhdl_parser.in = &i_preprocessed;
+  vhdl_parser.grammar = vhdl_parsert::EXPRESSION;
 
-  bool result=vhdl_parser.parse();
-  if(result) return true;
+  bool result = vhdl_parser.parse();
+  if(result)
+    return true;
 
-  //expr.swap(vhdl_parser.parse_tree.expr);
+    //expr.swap(vhdl_parser.parse_tree.expr);
 
-  #if 0
+#if 0
   // typecheck it
   result=vhdl_typecheck(expr, module, message_handler, ns);
-  #endif
+#endif
 
   return result;
 }
@@ -299,9 +297,8 @@ Function: new_vhdl_language
  Purpose:
 
 \*******************************************************************/
-  
+
 std::unique_ptr<languaget> new_vhdl_language()
 {
   return std::make_unique<vhdl_languaget>();
 }
-

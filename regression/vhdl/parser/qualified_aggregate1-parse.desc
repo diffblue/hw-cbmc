@@ -1,0 +1,9 @@
+CORE
+qualified_aggregate1.vhd
+--show-parse
+^EXIT=0$
+^SIGNAL=0$
+^ENTITY qualified_aggregate1$
+--
+^warning: ignoring
+^syntax error

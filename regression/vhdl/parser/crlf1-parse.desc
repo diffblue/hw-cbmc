@@ -1,0 +1,9 @@
+CORE
+crlf1.vhd
+--show-parse
+^EXIT=0$
+^SIGNAL=0$
+^ENTITY crlf1$
+--
+^warning: ignoring
+^syntax error

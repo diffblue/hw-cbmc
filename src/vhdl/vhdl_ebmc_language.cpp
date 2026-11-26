@@ -42,8 +42,6 @@ void vhdl_ebmc_languaget::parse(
   vhdl_parser.in = &infile;
   vhdl_parser.grammar = vhdl_parsert::LANGUAGE;
 
-  vhdl_scanner_init();
-
   if(vhdl_parser.parse())
     throw ebmc_errort{}.with_exit_code(1);
 

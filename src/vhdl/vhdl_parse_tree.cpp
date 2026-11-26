@@ -71,6 +71,11 @@ void vhdl_parse_treet::itemt::show(std::ostream &out) const
     out << "PACKAGE " << pretty_name(get_name());
     out << '\n';
   }
+  else if(type == "package_body")
+  {
+    out << "PACKAGE BODY " << pretty_name(get_name());
+    out << '\n';
+  }
   else
     DATA_INVARIANT(false, "unknown item type");
 }
