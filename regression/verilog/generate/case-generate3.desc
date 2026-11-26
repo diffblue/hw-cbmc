@@ -1,0 +1,13 @@
+KNOWNBUG
+case-generate3.sv
+--bound 0
+^\[main\.p1\] always main\.out == 255: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A case generate construct outside of a generate region fails the
+invariant "unexpected module item: verilog_case_generate". The module sub
+is instantiated only in the case generate construct, and is hence not a
+top-level module.
