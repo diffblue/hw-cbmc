@@ -21,6 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
 /*******************************************************************\
@@ -81,7 +82,8 @@ public:
     bool _next_symbol_allowed)
     : t(_t),
       no_timeframes(_no_timeframes),
-      next_symbol_allowed(_next_symbol_allowed)
+      next_symbol_allowed(_next_symbol_allowed),
+      suffix('@' + integer2string(_t))
   {
   }
 
@@ -95,6 +97,17 @@ protected:
   const mp_integer t;
   const mp_integer &no_timeframes;
   bool next_symbol_allowed;
+
+  // "@t" and "@(t+1)", computed once
+  const std::string suffix;
+  std::optional<std::string> next_suffix;
+
+  // Instances of symbols and of next_symbols, keyed by identifier.
+  // The first component is the original expression, the second its
+  // instance. Occurrences of identical symbols then share one instance,
+  // and the identifier is built only once.
+  using symbol_cachet = std::unordered_map<irep_idt, std::pair<exprt, exprt>>;
+  symbol_cachet symbol_cache, next_symbol_cache;
 
   // Instances of shared subexpressions, keyed by the node of the
   // original expression, to retain sharing and avoid repeated work.
@@ -115,6 +128,10 @@ protected:
     return *entry;
   }
 
+  [[nodiscard]] exprt instantiate_symbol(
+    const exprt &,
+    symbol_cachet &,
+    const std::string &timeframe_suffix);
   [[nodiscard]] exprt instantiate_rec(const exprt &);
   [[nodiscard]] exprt instantiate_rec_uncached(const exprt &);
 };
@@ -150,6 +167,51 @@ exprt wl_instantiatet::instantiate_rec(const exprt &expr)
 
 /*******************************************************************\
 
+Function: wl_instantiatet::instantiate_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Instantiate a symbol or next_symbol in the given timeframe
+
+\*******************************************************************/
+
+exprt wl_instantiatet::instantiate_symbol(
+  const exprt &expr,
+  symbol_cachet &cache,
+  const std::string &timeframe_suffix)
+{
+  const irep_idt &identifier = expr.get(ID_identifier);
+  auto entry = cache.find(identifier);
+
+  // The cached instance is used only when the symbol is identical,
+  // including its type and comments.
+  if(entry != cache.end())
+  {
+    const auto &original = entry->second.first;
+    if(&original.read() == &expr.read() || original.full_eq(expr))
+      return entry->second.second;
+  }
+
+  const auto &id_string = id2string(identifier);
+  std::string new_identifier;
+  new_identifier.reserve(id_string.size() + timeframe_suffix.size());
+  new_identifier += id_string;
+  new_identifier += timeframe_suffix;
+
+  exprt result = expr;
+  result.id(ID_symbol);
+  result.set(ID_identifier, new_identifier);
+
+  if(entry == cache.end())
+    cache.emplace(identifier, std::make_pair(expr, result));
+
+  return result;
+}
+
+/*******************************************************************\
+
 Function: wl_instantiatet::instantiate_rec_uncached
 
   Inputs:
@@ -167,20 +229,13 @@ exprt wl_instantiatet::instantiate_rec_uncached(const exprt &expr)
   if(expr.id() == ID_next_symbol)
   {
     PRECONDITION(next_symbol_allowed);
-    exprt result = expr;
-    result.id(ID_symbol);
-    result.set(
-      ID_identifier,
-      timeframe_identifier(t + 1, to_symbol_expr(result).identifier()));
-    return result;
+    if(!next_suffix.has_value())
+      next_suffix = '@' + integer2string(t + 1);
+    return instantiate_symbol(expr, next_symbol_cache, *next_suffix);
   }
   else if(expr.id() == ID_symbol)
   {
-    exprt result = expr;
-    result.set(
-      ID_identifier,
-      timeframe_identifier(t, to_symbol_expr(expr).identifier()));
-    return result;
+    return instantiate_symbol(expr, symbol_cache, suffix);
   }
   else if(expr.id() == ID_nondet_symbol)
   {
@@ -190,9 +245,7 @@ exprt wl_instantiatet::instantiate_rec_uncached(const exprt &expr)
     // symbol in the same time frame.
     exprt result = expr;
     auto identifier = expr.get(ID_identifier);
-    result.set(
-      ID_identifier,
-      timeframe_identifier(t, "nondet::" + id2string(identifier)));
+    result.set(ID_identifier, "nondet::" + id2string(identifier) + suffix);
     return result;
   }
   else if(
