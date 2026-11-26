@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 inout_z1.sv
 --bound 0
 ^\[main\.b0\.p0\] always main\.b0\.en \|\| main\.b0\.data == 100: PROVED up to bound 0$
@@ -11,6 +11,6 @@ inout_z1.sv
 --
 ^warning: ignoring
 --
-The z driver of b1 is modelled as the value 8'hff, which contradicts the
-other driver of data1. The model has no state, and every property holds
-vacuously, including p3.
+The z driver of b1 was modelled as the value 8'hff, which contradicted
+the other driver of data1. The model had no state, and every property,
+including p3, held vacuously.

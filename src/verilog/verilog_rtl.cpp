@@ -4647,6 +4647,20 @@ void verilog_rtl_buildert::build_port_connection(
 
   symbol_exprt port_symbol{port.identifier(), port.type()};
 
+  // The nets on either side of an inout port connection may be driven
+  // with z, which leaves them to the other drivers, see
+  // verilog_transition_relationt::convert_definitions.
+  if(port.direction() == ID_inout)
+  {
+    rtl.inout_nets.insert(port.identifier());
+    value.visit_pre(
+      [this](const exprt &node)
+      {
+        if(node.id() == ID_symbol)
+          rtl.inout_nets.insert(to_symbol_expr(node).get_identifier());
+      });
+  }
+
   // A ref port and its actual denote the same variable (1800-2017
   // 23.2.2.3): a write on either side is visible on the other. The two
   // are tied by an equality constraint (below), and the side that has no
