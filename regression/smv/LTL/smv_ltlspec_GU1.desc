@@ -1,0 +1,15 @@
+CORE
+smv_ltlspec_GU1.smv
+--bound 12
+^\[spec1\] G \(c != 10 U \(c = 10 \| c = 0\)\): PROVED up to bound 12$
+^\[spec2\] G \(c < 9 U c = 10\): REFUTED$
+^\[spec3\] G \(c = 10 V c != 12\): PROVED up to bound 12$
+^\[spec4\] G \(c = 9 V c != 3\): REFUTED$
+^\[spec5\] G \(c = 10 V c <= 10\): PROVED up to bound 12$
+^\[spec6\] G \(c != 10 U c = 10\): REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+G (p U q) and G (p R q), with both passing and failing instances.
