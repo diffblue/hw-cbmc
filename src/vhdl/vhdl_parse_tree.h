@@ -83,6 +83,10 @@ public:
     {
       return get("item_type") == "package";
     }
+    bool is_package_body() const
+    {
+      return get("item_type") == "package_body";
+    }
   };
 
   typedef std::list<itemt> itemst;
