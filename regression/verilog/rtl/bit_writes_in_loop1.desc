@@ -1,0 +1,10 @@
+CORE broken-smt-backend
+bit_writes_in_loop1.sv
+--bound 1
+^\[main\.p0\] .*: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+This used to run out of memory. The SMT backends do not finish in
+reasonable time on it.

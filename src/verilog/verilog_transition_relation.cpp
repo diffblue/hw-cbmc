@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/bitvector_expr.h>
 #include <util/bitvector_types.h>
+#include <util/expr_identity_map.h>
 #include <util/expr_iterator.h>
 #include <util/expr_util.h>
 #include <util/mathematical_expr.h>
@@ -34,7 +35,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_typecheck_expr.h"
 
 #include <algorithm>
-
 /*******************************************************************\
 
    Class: verilog_transition_relationt
@@ -131,6 +131,8 @@ protected:
   exprt lower_to(exprt, const typet &lowered_type);
 
   exprt lower_system_functions(exprt);
+  exprt lower_system_functions_rec(exprt);
+  expr_identity_mapt<exprt> lower_system_functions_cache;
 
   /// the symbol, with lowered type
   exprt symbol_expr(const symbolt &, bool next) const;
@@ -353,6 +355,18 @@ Function: verilog_transition_relationt::lower_system_functions
 \*******************************************************************/
 
 exprt verilog_transition_relationt::lower_system_functions(exprt expr)
+{
+  // Expressions are DAGs with much sharing; rewrite each distinct
+  // subexpression once.
+  if(auto cached = lower_system_functions_cache.find(expr))
+    return *cached;
+  const exprt original = expr;
+  auto result = lower_system_functions_rec(std::move(expr));
+  lower_system_functions_cache.insert(original, result);
+  return result;
+}
+
+exprt verilog_transition_relationt::lower_system_functions_rec(exprt expr)
 {
   for(auto &op : expr.operands())
     op = lower_system_functions(std::move(op));
