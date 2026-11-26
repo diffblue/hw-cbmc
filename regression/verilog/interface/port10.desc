@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 port10.sv
 --bound 0
 ^\[main\.p0\] always main\.shared\.value == 1 \|\| main\.shared\.value == 2: PROVED up to bound 0$
@@ -8,8 +8,7 @@ port10.sv
 --
 ^warning: ignoring
 --
-The initial value of the interface variable and the one of the member of
-the interface port that is bound to it are separate initial-state
-constraints on two variables that are equated, which contradict each
-other. The model has no initial state, and every property holds
-vacuously, including p1.
+The initial values of the interface variable and of the member of the
+interface port that is bound to it were separate initial-state
+constraints on two equated variables, which contradicted each other, and
+every property, including p1, held vacuously.
