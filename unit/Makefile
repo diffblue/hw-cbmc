@@ -31,6 +31,7 @@ SRC += ebmc/bdd_model_checker.cpp \
        verilog/verilog_lowering.cpp \
        verilog/verilog_rtl.cpp \
        verilog/verilog_simplifier.cpp \
+       vhdl/parse_tree.cpp \
        # Empty last line
 
 INCLUDES= -I ../src/ -I . -I $(CPROVER_DIR)/unit -I $(CPROVER_DIR)/src
@@ -50,7 +51,8 @@ OBJ += ../src/ebmc/bdd_model_checker$(OBJEXT) \
        ../src/temporal-logic/temporal-logic$(LIBEXT) \
        ../src/trans-netlist/trans-netlist$(LIBEXT) \
        ../src/trans-word-level/trans-word-level$(LIBEXT) \
-       ../src/verilog/verilog$(LIBEXT)
+       ../src/verilog/verilog$(LIBEXT) \
+       ../src/vhdl/vhdl$(LIBEXT)
 
 ifneq ($(BUILD_ENV),MSVC)
 SRC += new-ic3/ic3_solver.cpp

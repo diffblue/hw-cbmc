@@ -62,7 +62,8 @@ OBJ+= $(CPROVER_DIR)/util/util$(LIBEXT) \
       ../aiger/aiger$(LIBEXT) \
       ../btor/btor$(LIBEXT) \
       ../smvlang/smvlang$(LIBEXT) \
-      ../verilog/verilog$(LIBEXT)
+      ../verilog/verilog$(LIBEXT) \
+      ../vhdl/vhdl$(LIBEXT)
 
 ifneq ($(BUILD_ENV),MSVC)
 OBJ += ../new-ic3/new-ic3$(LIBEXT)
@@ -98,11 +99,6 @@ $(GIT_INFO_FILE):
 KNOWN_RELEASE_INFO = $(shell cat $(GIT_INFO_FILE) 2>/dev/null)
 ifneq ($(RELEASE_INFO), $(KNOWN_RELEASE_INFO))
 .PHONY: $(GIT_INFO_FILE)
-endif
-
-ifneq ($(wildcard ../vhdl/Makefile),)
-  OBJ += ../vhdl/vhdl$(LIBEXT)
-  CXXFLAGS += -DHAVE_VHDL
 endif
 
 CLEANFILES = $(GIT_INFO_FILE) ebmc$(EXEEXT)

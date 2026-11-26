@@ -1,4 +1,4 @@
-SRC = vhdl_language.cpp expr2vhdl.cpp vhdl_y.tab.cpp vhdl_lex.yy.cpp \
+SRC = vhdl_ebmc_language.cpp vhdl_language.cpp expr2vhdl.cpp vhdl_y.tab.cpp vhdl_lex.yy.cpp \
       vhdl_parser.cpp vhdl_parse_tree.cpp vhdl_typecheck.cpp \
       vhdl_synthesis.cpp vhdl_std_packages.cpp vhdl_libraries.cpp
 
