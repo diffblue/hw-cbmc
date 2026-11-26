@@ -9,7 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "instrument_past.h"
 
 #include <util/arith_tools.h>
-#include <util/expr_iterator.h>
+#include <util/expr_identity_map.h>
 #include <util/replace_expr.h>
 
 #include <verilog/verilog_expr.h>
@@ -17,16 +17,34 @@ Author: Daniel Kroening, dkr@amazon.com
 #include "ebmc_error.h"
 
 #include <set>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 // The set is ordered to get a stable numbering
 using past_sett = std::set<verilog_past_exprt>;
 
+// The expressions are DAGs with much sharing. Each distinct node is
+// visited once; a walk of the tree would take time exponential in the
+// depth of the expression.
 void collect_past(const exprt &expr, past_sett &past_set)
 {
-  for(auto it = expr.depth_begin(); it != expr.depth_end(); ++it)
+  std::unordered_set<const void *> visited;
+  std::vector<const exprt *> stack{&expr};
+
+  while(!stack.empty())
   {
-    if(it->id() == ID_verilog_past)
-      past_set.insert(to_verilog_past_expr(*it));
+    const exprt &e = *stack.back();
+    stack.pop_back();
+
+    if(!visited.insert(&e.read()).second)
+      continue;
+
+    if(e.id() == ID_verilog_past)
+      past_set.insert(to_verilog_past_expr(e));
+
+    for(auto &op : e.operands())
+      stack.push_back(&op);
   }
 }
 
@@ -169,21 +187,71 @@ model_past(const past_sett &past_set, transition_systemt &transition_system)
   return past_map;
 }
 
+using replace_past_cachet = expr_identity_mapt<exprt>;
+
+/// Replaces the $past expressions in \p expr by their model. This is
+/// done once per distinct node, and nodes without $past are kept as they
+/// are, so that the sharing of the expression is preserved.
+static exprt replace_past(
+  const replace_mapt &past_map,
+  const exprt &expr,
+  replace_past_cachet &cache)
+{
+  if(auto cached = cache.find(expr))
+    return *cached;
+
+  exprt result = expr;
+
+  auto map_entry =
+    expr.id() == ID_verilog_past ? past_map.find(expr) : past_map.end();
+
+  if(map_entry != past_map.end())
+    result = map_entry->second;
+  else
+  {
+    for(std::size_t i = 0; i < expr.operands().size(); i++)
+    {
+      const exprt &op = expr.operands()[i];
+      auto new_op = replace_past(past_map, op, cache);
+      if(&new_op.read() != &op.read())
+        result.operands()[i] = std::move(new_op);
+    }
+  }
+
+  cache.insert(expr, result);
+  return result;
+}
+
+static void replace_past(
+  const replace_mapt &past_map,
+  exprt &expr,
+  replace_past_cachet &cache)
+{
+  expr = replace_past(past_map, std::as_const(expr), cache);
+}
+
 void instrument_past_model(
   const replace_mapt &past_map,
   transition_systemt &transition_system)
 {
-  replace_expr(past_map, transition_system.trans_expr);
+  if(past_map.empty())
+    return;
+
+  replace_past_cachet cache;
+  replace_past(past_map, transition_system.trans_expr, cache);
 }
 
 void instrument_past_model(
   const replace_mapt &past_map,
   ebmc_propertiest &properties)
 {
+  if(past_map.empty())
+    return;
+
+  replace_past_cachet cache;
+
   for(auto &property : properties.properties)
-  {
-    replace_expr(past_map, property.normalized_expr);
-  }
+    replace_past(past_map, property.normalized_expr, cache);
 }
 
 void instrument_past(
