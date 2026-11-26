@@ -11,6 +11,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <solvers/prop/literal_expr.h>
 #include <trans-word-level/cone_of_influence.h>
 #include <trans-word-level/lasso.h>
+#include <trans-word-level/property.h>
 #include <trans-word-level/trans_trace_word_level.h>
 #include <trans-word-level/unwind.h>
 
@@ -18,6 +19,7 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include <chrono>
 #include <fstream>
+#include <unordered_set>
 
 void bmc_with_assumptions(
   std::size_t bound,
@@ -64,6 +66,9 @@ void bmc_with_assumptions(
         bound + 1,
         ns,
         transition_system.main_symbol->name);
+
+      if(property.linear_lasso)
+        shorten_lasso_trace(*property.witness_trace, solver, bound + 1);
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE:
@@ -154,6 +159,9 @@ void bmc_with_iterative_constraint_strengthening(
             bound + 1,
             ns,
             transition_system.main_symbol->name);
+
+          if(property.linear_lasso)
+            shorten_lasso_trace(*property.witness_trace, solver, bound + 1);
         }
       }
       break; // next iteration of while loop
@@ -275,7 +283,29 @@ property_checker_resultt bmc(
   // convert the properties
   message.status() << "Properties" << messaget::eom;
 
-  bool requires_lasso_constraints = false;
+  // The linear lasso encoding only considers lassos whose loop closes
+  // in the last timeframe, whereas the quadratic encoding considers all
+  // lassos in the unwinding. An assumption encoded with one does not
+  // constrain the lassos of the other. To keep the semantics of
+  // assumptions unchanged, we use the quadratic encoding for all
+  // properties when there is an assumption that requires a lasso.
+  // For the same reason, the states of the lassos are then compared on
+  // all variables, as opposed to only the relevant ones.
+  bool lasso_assumption = false;
+
+  for(auto &property : properties.properties)
+  {
+    if(
+      !property.is_disabled() && !property.is_failure() &&
+      property.is_assumed() && property_uses_lasso(property.normalized_expr))
+    {
+      lasso_assumption = true;
+    }
+  }
+
+  const bool linear_lasso = !lasso_assumption;
+
+  std::set<irep_idt> used_lasso_symbols;
 
   for(auto &property : properties.properties)
   {
@@ -289,14 +319,22 @@ property_checker_resultt bmc(
       continue;
     }
 
-    auto obligations = ::property(
-      property.normalized_expr,
-      !property.is_exists_path(),
-      message_handler,
-      no_timeframes);
+    property.linear_lasso =
+      linear_lasso && property_uses_linear_lasso(property.normalized_expr);
 
-    if(uses_lasso_symbol(obligations))
-      requires_lasso_constraints = true;
+    auto obligations = property.linear_lasso ? ::property(
+                                                 property.normalized_expr,
+                                                 !property.is_exists_path(),
+                                                 message_handler,
+                                                 no_timeframes,
+                                                 solver)
+                                             : ::property(
+                                                 property.normalized_expr,
+                                                 !property.is_exists_path(),
+                                                 message_handler,
+                                                 no_timeframes);
+
+    collect_lasso_symbols(obligations, used_lasso_symbols);
 
     property.timeframe_handles = handles(obligations, solver);
 
@@ -305,12 +343,86 @@ property_checker_resultt bmc(
       solver.set_to_true(conjunction(property.timeframe_handles));
   }
 
+  // A lasso-shaped counterexample found by the linear encoding must
+  // satisfy the assumptions on the entire infinite path, as opposed to
+  // only on the finite prefix. Assumptions that are not supported by
+  // the linear encoding are only enforced on the finite prefix.
+  bool have_linear_lasso_property = false;
+
+  for(auto &property : properties.properties)
+  {
+    if(property.linear_lasso && !property.is_assumed())
+      have_linear_lasso_property = true;
+  }
+
+  if(have_linear_lasso_property)
+  {
+    for(auto &property : properties.properties)
+    {
+      if(
+        property.is_assumed() && !property.is_disabled() &&
+        !property.is_failure())
+      {
+        auto constraint = property_linear_lasso_constraint(
+          property.normalized_expr, no_timeframes, solver);
+
+        if(constraint.has_value())
+        {
+          collect_lasso_symbols({*constraint}, used_lasso_symbols);
+          solver.set_to_true(*constraint);
+        }
+      }
+    }
+  }
+
   // lasso constraints, if needed
-  if(requires_lasso_constraints)
+  if(!used_lasso_symbols.empty())
   {
     message.status() << "Adding lasso constraints" << messaget::eom;
+
+    // The states only need to agree on the variables that are read by
+    // the transition system that is unwound, or by the properties.
+    std::set<irep_idt> relevant_variables;
+
+    // The expressions may share subexpressions; visit each one once.
+    std::unordered_set<const void *> visited;
+
+    auto collect_variables = [&relevant_variables, &visited](const exprt &root)
+    {
+      std::vector<const exprt *> stack{&root};
+      while(!stack.empty())
+      {
+        const exprt &node = *stack.back();
+        stack.pop_back();
+
+        if(!visited.insert(&node.read()).second)
+          continue;
+
+        if(node.id() == ID_symbol || node.id() == ID_next_symbol)
+          relevant_variables.insert(node.get(ID_identifier));
+
+        for(auto &op : node.operands())
+          stack.push_back(&op);
+      }
+    };
+
+    collect_variables(trans_expr.invar());
+    collect_variables(trans_expr.trans());
+
+    for(auto &property : properties.properties)
+    {
+      if(!property.is_disabled() && !property.is_failure())
+        collect_variables(property.normalized_expr);
+    }
+
     lasso_constraints(
-      solver, no_timeframes, ns, transition_system.main_symbol->name);
+      solver,
+      no_timeframes,
+      ns,
+      transition_system.main_symbol->name,
+      used_lasso_symbols,
+      lasso_assumption ? std::optional<std::set<irep_idt>>{}
+                       : std::optional<std::set<irep_idt>>{relevant_variables});
   }
 
   if(convert_only)

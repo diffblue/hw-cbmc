@@ -33,6 +33,7 @@ public:
     exprt normalized_expr;
     bvt timeframe_literals;             // bit level
     exprt::operandst timeframe_handles; // word level
+    bool linear_lasso = false;          // word level
     std::string description;
 
     // results

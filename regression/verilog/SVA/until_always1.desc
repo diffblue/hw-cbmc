@@ -1,0 +1,19 @@
+CORE
+until_always1.sv
+--bound 12
+^\[main\.p0\] always \(main\.c <= 9 until main\.c == 10 \|\| main\.c == 0\): PROVED up to bound 12$
+^\[main\.p1\] always \(main\.c != 5 until main\.c == 6\): REFUTED$
+^\[main\.p2\] always \(main\.c <= 9 s_until main\.c == 10 \|\| main\.c == 0\): PROVED up to bound 12$
+^\[main\.p3\] always \(main\.c <= 9 s_until main\.c == 10\): REFUTED$
+^\[main\.p4\] always \(main\.c <= 10 until_with main\.c == 10\): PROVED up to bound 12$
+^\[main\.p5\] always \(main\.c != 3 until_with main\.c == 2\): REFUTED$
+^\[main\.p6\] always \(main\.c <= 10 s_until_with main\.c == 0\): PROVED up to bound 12$
+^\[main\.p7\] always \(main\.c <= 10 s_until_with main\.c == 10\): REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Until and release (and their SVA variants) nested in an always, with
+both passing and failing instances, exercising the word-level BMC
+encoding of until/release on linear paths and on lassos.

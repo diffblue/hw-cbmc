@@ -25,10 +25,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "instantiate_word_level.h"
 #include "lasso.h"
+#include "ltl_linear_lasso.h"
 #include "obligations.h"
 #include "sequence.h"
 
 #include <cstdlib>
+#include <optional>
 
 /*******************************************************************\
 
@@ -194,6 +196,17 @@ static std::vector<mp_integer> path_order_timeframes(
   }
 
   return result;
+}
+
+/// Returns x ∨ acc, or x if acc is empty. The result shares the
+/// expression of 'acc', which allows building a disjunction over a
+/// sequence of timeframes incrementally with linear size.
+static exprt or_accumulate(std::optional<exprt> acc, exprt x)
+{
+  if(acc.has_value())
+    return or_exprt{std::move(x), std::move(*acc)};
+  else
+    return x;
 }
 
 static obligationst property_obligations_rec(
@@ -492,8 +505,13 @@ static obligationst property_obligations_rec(
     auto &q = binary_expr.rhs();
 
     // p has to to be true until (not including) q is true
-    exprt::operandst q_disjuncts;
     obligationst obligations;
+
+    // The disjunction of q over the timeframes visited so far,
+    // including the current one. This is built incrementally, sharing
+    // the expression for the previous timeframe, to keep the size of
+    // the encoding linear in the number of timeframes.
+    std::optional<exprt> q_so_far;
 
     // Visit the timeframes in path order starting at 'current'; the
     // operands must not be evaluated before the start of the attempt.
@@ -503,12 +521,11 @@ static obligationst property_obligations_rec(
     {
       auto q_rec = property_obligations_rec(
         q, allow_pending_matches, j, no_timeframes, lasso);
-      q_disjuncts.push_back(q_rec.conjunction().second);
+      q_so_far = or_accumulate(std::move(q_so_far), q_rec.conjunction().second);
 
       auto p_rec = property_obligations_rec(
         p, allow_pending_matches, j, no_timeframes, lasso);
-      auto cond =
-        or_exprt{p_rec.conjunction().second, disjunction(q_disjuncts)};
+      auto cond = or_exprt{p_rec.conjunction().second, *q_so_far};
 
       obligations.add(current, cond);
     }
@@ -522,8 +539,13 @@ static obligationst property_obligations_rec(
     auto &q = R_expr.rhs();
 
     // q has to be true until (including) p is true
-    exprt::operandst p_disjuncts;
     obligationst obligations;
+
+    // The disjunction of p over the timeframes visited so far,
+    // excluding the current one. This is built incrementally, sharing
+    // the expression for the previous timeframe, to keep the size of
+    // the encoding linear in the number of timeframes.
+    std::optional<exprt> p_so_far;
 
     // Visit the timeframes in path order starting at 'current'; the
     // operands must not be evaluated before the start of the attempt.
@@ -533,13 +555,15 @@ static obligationst property_obligations_rec(
     {
       auto q_rec = property_obligations_rec(
         q, allow_pending_matches, j, no_timeframes, lasso);
-      auto cond =
-        or_exprt{q_rec.conjunction().second, disjunction(p_disjuncts)};
-      obligations.add(current, cond);
+      auto q_j = q_rec.conjunction().second;
+      if(p_so_far.has_value())
+        obligations.add(current, or_exprt{std::move(q_j), *p_so_far});
+      else
+        obligations.add(current, std::move(q_j));
 
       auto p_rec = property_obligations_rec(
         p, allow_pending_matches, j, no_timeframes, lasso);
-      p_disjuncts.push_back(p_rec.conjunction().second);
+      p_so_far = or_accumulate(std::move(p_so_far), p_rec.conjunction().second);
     }
 
     return obligations;
@@ -987,12 +1011,9 @@ Function: property_obligations_lasso
 
 \*******************************************************************/
 
-obligationst property_obligations_lasso(
-  const exprt &property_expr,
-  const mp_integer &no_timeframes)
+/// Does the property use a lasso? This assumes NNF.
+static bool nnf_uses_lasso(const exprt &property_expr)
 {
-  PRECONDITION(no_timeframes >= 1);
-
   auto uses_lasso_pred = [](const exprt &expr)
   {
     return expr.id() == ID_F || expr.id() == ID_AF ||
@@ -1001,8 +1022,17 @@ obligationst property_obligations_lasso(
            expr.id() == ID_strong_R;
   };
 
+  return has_subexpr(property_expr, uses_lasso_pred);
+}
+
+obligationst property_obligations_lasso(
+  const exprt &property_expr,
+  const mp_integer &no_timeframes)
+{
+  PRECONDITION(no_timeframes >= 1);
+
   // Does the property use a lasso? This assumes NNF.
-  if(!has_subexpr(property_expr, uses_lasso_pred))
+  if(!nnf_uses_lasso(property_expr))
     return {};
 
   obligationst obligations;
@@ -1051,11 +1081,12 @@ Function: property_obligations
 
 \*******************************************************************/
 
-obligationst property_obligations(
+static obligationst property_obligations(
   const exprt &property_expr,
   bool allow_pending_matches,
   message_handlert &message_handler,
-  const mp_integer &no_timeframes)
+  const mp_integer &no_timeframes,
+  decision_proceduret *linear_lasso_solver)
 {
   // The word-level BMC encoding works on NNF.
   auto nnf = property_nnf(property_expr);
@@ -1075,9 +1106,68 @@ obligationst property_obligations(
     property_obligations_rec(nnf, allow_pending_matches, 0, no_timeframes, {});
 
   // Form 2 -- lasso
-  auto form_2 = property_obligations_lasso(nnf, no_timeframes);
+  obligationst form_2;
+
+  if(
+    linear_lasso_solver != nullptr && nnf_uses_lasso(nnf) &&
+    ltl_linear_lasso_supported(nnf))
+  {
+    message.debug() << "Using the linear lasso encoding" << messaget::eom;
+
+    // Linear encoding, with the loop closing in the last timeframe.
+    // The counterexample hence comprises all timeframes.
+    form_2.add(
+      no_timeframes - 1,
+      ltl_linear_lasso_obligation(nnf, no_timeframes, *linear_lasso_solver));
+  }
+  else
+    form_2 = property_obligations_lasso(nnf, no_timeframes);
 
   return obligations_union(form_1, form_2);
+}
+
+/*******************************************************************\
+
+Function: property
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+static exprt::operandst property(
+  const exprt &property_expr,
+  bool allow_pending_matches,
+  message_handlert &message_handler,
+  std::size_t no_timeframes,
+  decision_proceduret *linear_lasso_solver)
+{
+  // The first element of the pair is the length of the
+  // counterexample, and the second is the condition that
+  // must be valid for the property to hold.
+  auto obligations = property_obligations(
+    property_expr,
+    allow_pending_matches,
+    message_handler,
+    no_timeframes,
+    linear_lasso_solver);
+
+  // Map obligations onto timeframes.
+  exprt::operandst prop_handles{no_timeframes, true_exprt()};
+
+  for(auto &obligation_it : obligations.map)
+  {
+    auto t = obligation_it.first;
+    DATA_INVARIANT(
+      t >= 0 && t < no_timeframes, "obligation must have valid timeframe");
+    auto t_int = numeric_cast_v<std::size_t>(t);
+    prop_handles[t_int] = conjunction(obligation_it.second);
+  }
+
+  return prop_handles;
 }
 
 /*******************************************************************\
@@ -1098,23 +1188,97 @@ exprt::operandst property(
   message_handlert &message_handler,
   std::size_t no_timeframes)
 {
-  // The first element of the pair is the length of the
-  // counterexample, and the second is the condition that
-  // must be valid for the property to hold.
-  auto obligations = property_obligations(
-    property_expr, allow_pending_matches, message_handler, no_timeframes);
+  return property(
+    property_expr,
+    allow_pending_matches,
+    message_handler,
+    no_timeframes,
+    nullptr);
+}
 
-  // Map obligations onto timeframes.
-  exprt::operandst prop_handles{no_timeframes, true_exprt()};
+/*******************************************************************\
 
-  for(auto &obligation_it : obligations.map)
-  {
-    auto t = obligation_it.first;
-    DATA_INVARIANT(
-      t >= 0 && t < no_timeframes, "obligation must have valid timeframe");
-    auto t_int = numeric_cast_v<std::size_t>(t);
-    prop_handles[t_int] = conjunction(obligation_it.second);
-  }
+Function: property
 
-  return prop_handles;
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt::operandst property(
+  const exprt &property_expr,
+  bool allow_pending_matches,
+  message_handlert &message_handler,
+  std::size_t no_timeframes,
+  decision_proceduret &solver)
+{
+  return property(
+    property_expr,
+    allow_pending_matches,
+    message_handler,
+    no_timeframes,
+    &solver);
+}
+
+/*******************************************************************\
+
+Function: property_uses_lasso
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool property_uses_lasso(const exprt &property_expr)
+{
+  return nnf_uses_lasso(property_nnf(property_expr));
+}
+
+/*******************************************************************\
+
+Function: property_uses_linear_lasso
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool property_uses_linear_lasso(const exprt &property_expr)
+{
+  auto nnf = property_nnf(property_expr);
+  return nnf_uses_lasso(nnf) && ltl_linear_lasso_supported(nnf);
+}
+
+/*******************************************************************\
+
+Function: property_linear_lasso_constraint
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::optional<exprt> property_linear_lasso_constraint(
+  const exprt &property_expr,
+  std::size_t no_timeframes,
+  decision_proceduret &solver)
+{
+  auto nnf = property_nnf(property_expr);
+
+  if(!ltl_linear_lasso_supported(nnf))
+    return {};
+
+  return ltl_linear_lasso_obligation(nnf, no_timeframes, solver);
 }

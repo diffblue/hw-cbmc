@@ -2,6 +2,7 @@ SRC = cone_of_influence.cpp \
       counterexample_word_level.cpp \
       get_trans.cpp \
       lasso.cpp \
+      ltl_linear_lasso.cpp \
       obligations.cpp \
       property.cpp \
       trans_trace_word_level.cpp \

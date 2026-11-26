@@ -1,0 +1,17 @@
+CORE
+linear_lasso1.sv
+--bound 4 --numbered-trace
+^\[main\.p0\] always \(main\.c == 2 implies \(s_eventually main\.c == 5\)\): REFUTED$
+^Counterexample with 5 states:$
+^main\.c@0 = 2'b00$
+^main\.c@1 = 2'b01$
+^main\.c@2 = 2'b10$
+^main\.c@3 = 2'b11$
+^main\.c@4 = 2'b00$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The shortest lasso-shaped counterexample has five states; the loop
+starts in the first state, before the state in which c == 2 holds.
