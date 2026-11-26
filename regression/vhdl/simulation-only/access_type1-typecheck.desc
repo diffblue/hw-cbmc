@@ -1,0 +1,9 @@
+CORE
+access_type1.vhd
+--show-symbol-table
+^EXIT=0$
+^SIGNAL=0$
+^  vhdl::access_type1$
+--
+^warning: ignoring
+^CONVERSION ERROR

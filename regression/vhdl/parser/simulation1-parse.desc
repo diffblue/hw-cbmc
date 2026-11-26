@@ -1,0 +1,10 @@
+CORE
+simulation1.vhd
+--show-parse
+^EXIT=0$
+^SIGNAL=0$
+^ENTITY simulation1$
+^CONFIGURATION cfg OF simulation1$
+--
+^warning: ignoring
+^syntax error

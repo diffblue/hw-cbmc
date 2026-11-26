@@ -221,6 +221,36 @@ SCENARIO("VHDL types")
     }
   }
 
+  GIVEN("The types for simulation (IEEE 1076-2008 5.2.4, 5.4, 5.5)")
+  {
+    auto time = vhdl_time_type();
+    REQUIRE(is_vhdl_simulation_type(time));
+    REQUIRE(vhdl_type_to_string(time) == "time");
+
+    vhdl_access_typet p{"p", vhdl_integer_type()};
+    REQUIRE(is_vhdl_simulation_type(p));
+    REQUIRE(p.designated_type() == vhdl_integer_type());
+
+    // the anonymous access type of an allocator is compatible with
+    // any access type to the designated type
+    vhdl_access_typet anonymous{irep_idt{}, vhdl_natural_type()};
+    REQUIRE(vhdl_types_compatible(anonymous, p));
+    REQUIRE(!vhdl_types_compatible(
+      vhdl_access_typet{irep_idt{}, vhdl_bit_type()}, p));
+    REQUIRE(
+      !vhdl_types_compatible(vhdl_access_typet{"q", vhdl_integer_type()}, p));
+    REQUIRE(vhdl_type_to_string(anonymous) == "access natural");
+
+    auto text = vhdl_text_type();
+    REQUIRE(is_vhdl_simulation_type(text));
+    REQUIRE(text.element_type() == vhdl_string_type());
+    REQUIRE(!is_vhdl_simulation_type(vhdl_string_type()));
+    // the elements of character are character literals, with quotes
+    REQUIRE(vhdl_character_type().position("'A'").has_value());
+    REQUIRE(!vhdl_character_type().position("A").has_value());
+    REQUIRE(vhdl_string_type().index_type() == vhdl_positive_type());
+  }
+
   GIVEN("Universal types")
   {
     REQUIRE(is_vhdl_universal_type(typet{ID_natural}));

@@ -196,6 +196,38 @@ vhdl_integer_typet vhdl_positive_type()
   return result;
 }
 
+vhdl_enumeration_typet vhdl_character_type()
+{
+  // the printable ASCII characters, as character literals
+  irept::subt elements;
+  for(char ch = ' '; ch <= '~'; ch++)
+    elements.push_back(irept{vhdl_enumeration_typet::character_literal(ch)});
+  return vhdl_enumeration_typet{"character", std::move(elements)};
+}
+
+vhdl_array_typet vhdl_string_type()
+{
+  // IEEE 1076-2008 16.3: array (positive range <>) of character
+  return vhdl_array_typet{
+    "string", vhdl_character_type(), vhdl_positive_type()};
+}
+
+vhdl_physical_typet vhdl_time_type()
+{
+  return vhdl_physical_typet{"time"};
+}
+
+vhdl_file_typet vhdl_text_type()
+{
+  return vhdl_file_typet{"text", vhdl_string_type()};
+}
+
+bool is_vhdl_simulation_type(const typet &type)
+{
+  return type.id() == ID_vhdl_physical_type || type.id() == ID_vhdl_access ||
+         type.id() == ID_vhdl_file;
+}
+
 vhdl_array_typet vhdl_unconstrained_array_type(irep_idt name)
 {
   // the index subtype of all of these is natural
@@ -275,7 +307,7 @@ bool is_vhdl_universal_type(const typet &type)
   return type.id() == ID_natural || type.id() == ID_char ||
          type.id() == ID_string || type.id() == ID_vhdl_bit_string ||
          type.id() == ID_vhdl_aggregate || type.id() == ID_real ||
-         type.id() == ID_vhdl_overloaded_literal;
+         type.id() == ID_vhdl_overloaded_literal || type.id() == ID_nullptr;
 }
 
 bool vhdl_types_compatible(const typet &a, const typet &b)
@@ -283,9 +315,22 @@ bool vhdl_types_compatible(const typet &a, const typet &b)
   if(a.id() != b.id())
     return false;
 
+  if(a.id() == ID_vhdl_access)
+  {
+    // an anonymous access type, from an allocator or null, matches
+    // any access type with a compatible designated type
+    auto &a_access = to_vhdl_access_type(a);
+    auto &b_access = to_vhdl_access_type(b);
+    if(a_access.base_name().empty() || b_access.base_name().empty())
+      return vhdl_types_compatible(
+        a_access.designated_type(), b_access.designated_type());
+    return a_access.base_name() == b_access.base_name();
+  }
+
   if(
     a.id() != ID_vhdl_enumeration && a.id() != ID_vhdl_integer &&
-    a.id() != ID_vhdl_array && a.id() != ID_vhdl_record)
+    a.id() != ID_vhdl_array && a.id() != ID_vhdl_record &&
+    a.id() != ID_vhdl_physical_type && a.id() != ID_vhdl_file)
     return a == b;
 
   // the same base type; the subtypes may differ
@@ -350,7 +395,17 @@ std::string vhdl_type_to_string(const typet &type)
     else
       return id2string(name) + " range " + range.to_string();
   }
-  else if(type.id() == ID_vhdl_enumeration || type.id() == ID_vhdl_record)
+  else if(type.id() == ID_vhdl_access)
+  {
+    auto &access_type = to_vhdl_access_type(type);
+    if(access_type.name().empty())
+      return "access " + vhdl_type_to_string(access_type.designated_type());
+    else
+      return id2string(access_type.name());
+  }
+  else if(
+    type.id() == ID_vhdl_enumeration || type.id() == ID_vhdl_record ||
+    type.id() == ID_vhdl_physical_type || type.id() == ID_vhdl_file)
     return id2string(static_cast<const vhdl_typet &>(type).name());
   else
     return id2string(type.id());

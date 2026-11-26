@@ -192,6 +192,11 @@ typet vhdl_typecheckt::typecheck_subtype_indication(const typet &type)
     return typecheck_type(type);
 
   auto &subtype_indication = to_vhdl_subtype_indication(type);
+
+  if(subtype_indication.has_resolution_function())
+    throw errort{}.with_location(type.source_location())
+      << "resolution functions are not supported";
+
   auto base = typecheck_type_mark(subtype_indication.type_mark());
 
   auto &range_constraint = subtype_indication.range_constraint();
@@ -372,6 +377,24 @@ typet vhdl_typecheckt::typecheck_type(const typet &type)
     }
 
     vhdl_record_typet result{irep_idt{}, std::move(components)};
+    result.add_source_location() = type.source_location();
+    return std::move(result);
+  }
+  else if(type.id() == ID_vhdl_access_type)
+  {
+    // IEEE 1076-2008 5.4; simulation only, rejected by the synthesis
+    auto designated_type =
+      typecheck_subtype_indication(to_type_with_subtype(type).subtype());
+    vhdl_access_typet result{irep_idt{}, std::move(designated_type)};
+    result.add_source_location() = type.source_location();
+    return std::move(result);
+  }
+  else if(type.id() == ID_vhdl_file_type)
+  {
+    // IEEE 1076-2008 5.5; simulation only, rejected by the synthesis
+    auto element_type =
+      typecheck_type_mark(static_cast<const exprt &>(type.find(ID_name)));
+    vhdl_file_typet result{irep_idt{}, std::move(element_type)};
     result.add_source_location() = type.source_location();
     return std::move(result);
   }

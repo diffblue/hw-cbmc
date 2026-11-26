@@ -266,6 +266,63 @@ inline const vhdl_record_typet &to_vhdl_record_type(const typet &type)
   return static_cast<const vhdl_record_typet &>(type);
 }
 
+/// IEEE 1076-2008 5.2.4: a physical type; the only one is time, whose
+/// values are in femtoseconds. Physical types are for simulation.
+class vhdl_physical_typet : public vhdl_typet
+{
+public:
+  explicit vhdl_physical_typet(irep_idt _name)
+    : vhdl_typet(ID_vhdl_physical_type, _name)
+  {
+  }
+};
+
+/// IEEE 1076-2008 5.4: an access type, with the designated type.
+/// Access types are for simulation. An allocator yields an anonymous
+/// access type, which is compatible with any access type with a
+/// compatible designated type.
+class vhdl_access_typet : public vhdl_typet
+{
+public:
+  vhdl_access_typet(irep_idt _name, typet _designated_type)
+    : vhdl_typet(ID_vhdl_access, _name)
+  {
+    add_subtype() = std::move(_designated_type);
+  }
+
+  const typet &designated_type() const
+  {
+    return to_type_with_subtype(*this).subtype();
+  }
+};
+
+inline const vhdl_access_typet &to_vhdl_access_type(const typet &type)
+{
+  PRECONDITION(type.id() == ID_vhdl_access);
+  return static_cast<const vhdl_access_typet &>(type);
+}
+
+/// IEEE 1076-2008 5.5: a file type, with the type of the elements.
+/// File types are for simulation.
+class vhdl_file_typet : public vhdl_typet
+{
+public:
+  vhdl_file_typet(irep_idt _name, typet _element_type)
+    : vhdl_typet(ID_vhdl_file, _name)
+  {
+    add_subtype() = std::move(_element_type);
+  }
+
+  const typet &element_type() const
+  {
+    return to_type_with_subtype(*this).subtype();
+  }
+};
+
+/// true for the types that only exist in simulation: physical, access
+/// and file types
+bool is_vhdl_simulation_type(const typet &);
+
 // The predefined types (IEEE 1076-2008 16.3) and the types of the
 // IEEE packages std_logic_1164 and numeric_std.
 vhdl_enumeration_typet vhdl_boolean_type();
@@ -278,6 +335,13 @@ vhdl_integer_typet vhdl_integer_type();
 vhdl_integer_typet vhdl_integer_type(const vhdl_ranget &);
 vhdl_integer_typet vhdl_natural_type();
 vhdl_integer_typet vhdl_positive_type();
+/// the printable characters of ISO 8859-1
+vhdl_enumeration_typet vhdl_character_type();
+/// the unconstrained array of character
+vhdl_array_typet vhdl_string_type();
+vhdl_physical_typet vhdl_time_type();
+/// IEEE 1076-2008 16.4: the file type text of std.textio
+vhdl_file_typet vhdl_text_type();
 /// bit_vector, std_logic_vector, std_ulogic_vector, unsigned, signed
 vhdl_array_typet vhdl_unconstrained_array_type(irep_idt name);
 /// one of the above, constrained to the given range
@@ -363,6 +427,13 @@ public:
   {
     return range_constraint().is_not_nil() ||
            find(ID_vhdl_index_constraint).is_not_nil();
+  }
+
+  /// IEEE 1076-2008 6.3: a resolution indication, which is a
+  /// simulation-only construct
+  bool has_resolution_function() const
+  {
+    return find(ID_vhdl_resolution).is_not_nil();
   }
 };
 

@@ -80,7 +80,10 @@ protected:
   using valuest = std::map<irep_idt, exprt>;
 
   void synth_module(const irept &);
+  void synth_concurrent_statements(const exprt::operandst &);
   void synth_process(const vhdl_processt &);
+  /// reject the constructs that are for simulation only
+  void check_simulation_only(const exprt &) const;
   /// synthesise a process body or a concurrent statement
   void synth_statement(const codet &, bool clocked);
   void synth_property(

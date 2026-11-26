@@ -1,0 +1,9 @@
+CORE
+allocator1.vhd
+--bound 1
+^EXIT=2$
+^SIGNAL=0$
+^file allocator1\.vhd line \d+ column \d+: `[kq]' has type r?p, which is for simulation only$
+^CONVERSION ERROR$
+--
+^warning: ignoring

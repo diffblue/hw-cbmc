@@ -346,6 +346,8 @@ void vhdl_synthesist::execute_assign(
   auto lhs = substitute_indices(code.target(), values);
   auto &rhs = code.value();
 
+  check_simulation_only(rhs);
+
   // find the object
   exprt base = lhs;
   while(base.id() != ID_symbol)
@@ -525,6 +527,12 @@ void vhdl_synthesist::execute(
         values[identifier] = if_exprt{cond, then_value, else_value};
     }
   }
+  else if(statement == ID_wait)
+  {
+    message.error().source_location = code.source_location();
+    message.error() << "wait statements are not supported" << messaget::eom;
+    throw 0;
+  }
   else if(statement == ID_assert)
   {
     auto &assertion = to_vhdl_code_assert(code);
@@ -553,6 +561,8 @@ void vhdl_synthesist::synth_property(
   const exprt &report,
   const source_locationt &source_location)
 {
+  check_simulation_only(condition);
+
   symbolt new_symbol;
 
   if(label.empty())
@@ -750,16 +760,59 @@ void vhdl_synthesist::synth_process(const vhdl_processt &process)
   synth_statement(body, is_clocked_process(body));
 }
 
-void vhdl_synthesist::synth_module(const irept &module)
+/// The constructs that are for simulation only type check, and are
+/// rejected here: physical, access and file types, allocators, delays
+/// in signal assignments.
+void vhdl_synthesist::check_simulation_only(const exprt &expr) const
 {
-  PRECONDITION(module.id() == ID_module);
+  if(is_vhdl_simulation_type(expr.type()))
+  {
+    message.error().source_location = expr.source_location();
+    message.error() << "values of type " << vhdl_type_to_string(expr.type())
+                    << " are for simulation only" << messaget::eom;
+    throw 0;
+  }
 
-  const exprt &body = static_cast<const exprt &>(module.find(ID_body));
+  if(expr.id() == ID_vhdl_after || expr.id() == ID_vhdl_waveform)
+  {
+    message.error().source_location = expr.source_location();
+    message.error() << "signal assignments with a delay are for simulation only"
+                    << messaget::eom;
+    throw 0;
+  }
 
-  for(auto &op : body.operands())
+  for(auto &op : expr.operands())
+    check_simulation_only(op);
+}
+
+void vhdl_synthesist::synth_concurrent_statements(
+  const exprt::operandst &statements)
+{
+  for(auto &op : statements)
   {
     if(op.id() == ID_process)
       synth_process(to_vhdl_process(op));
+    else if(op.id() == ID_vhdl_block)
+    {
+      // IEEE 1076-2008 11.2: a guarded block drives guarded signals,
+      // which is for simulation
+      auto &block = to_vhdl_code_block(op);
+      if(block.guard().is_not_nil())
+      {
+        message.error().source_location = op.source_location();
+        message.error() << "guarded blocks are for simulation only"
+                        << messaget::eom;
+        throw 0;
+      }
+      synth_concurrent_statements(block.statements());
+    }
+    else if(op.id() == ID_vhdl_disconnect)
+    {
+      message.error().source_location = op.source_location();
+      message.error() << "disconnection specifications are for simulation only"
+                      << messaget::eom;
+      throw 0;
+    }
     else if(op.id() == ID_code)
     {
       auto &code = to_code(op);
@@ -790,6 +843,32 @@ void vhdl_synthesist::synth_module(const irept &module)
       throw 0;
     }
   }
+}
+
+void vhdl_synthesist::synth_module(const irept &module)
+{
+  PRECONDITION(module.id() == ID_module);
+
+  // the objects of the types for simulation
+  for(auto &entry : symbol_table.symbols)
+  {
+    auto &symbol = entry.second;
+
+    if(symbol.module != module_symbol->name || symbol.is_property)
+      continue;
+
+    if(is_vhdl_simulation_type(symbol.type))
+    {
+      message.error().source_location = symbol.location;
+      message.error() << "`" << symbol.base_name << "' has type "
+                      << vhdl_type_to_string(symbol.type)
+                      << ", which is for simulation only" << messaget::eom;
+      throw 0;
+    }
+  }
+
+  const exprt &body = static_cast<const exprt &>(module.find(ID_body));
+  synth_concurrent_statements(body.operands());
 
   // Initial values, and the state variables that are not assigned
   // by any clocked process or combinational statement hold their value.

@@ -1,0 +1,9 @@
+CORE
+disconnect1.vhd
+--bound 1
+^EXIT=2$
+^SIGNAL=0$
+^file disconnect1\.vhd line \d+ column \d+: disconnection specifications are for simulation only$
+^CONVERSION ERROR$
+--
+^warning: ignoring
