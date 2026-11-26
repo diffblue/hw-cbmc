@@ -1,0 +1,9 @@
+CORE
+vector_arith_nopkg.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file vector_arith_nopkg\.vhd line 8 column 10: arithmetic on std_logic_vector\(3 downto 0\) requires the package numeric_std, std_logic_arith or std_logic_unsigned$
+^CONVERSION ERROR$
+--
+^warning: ignoring

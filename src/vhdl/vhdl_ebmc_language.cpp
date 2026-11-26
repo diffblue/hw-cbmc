@@ -20,6 +20,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <ebmc/show_modules.h>
 #include <ebmc/transition_system.h>
 
+#include "vhdl_lowering.h"
 #include "vhdl_parser.h"
 #include "vhdl_synthesis.h"
 #include "vhdl_typecheck.h"
@@ -160,16 +161,30 @@ std::optional<transition_systemt> vhdl_ebmc_languaget::transition_system()
     throw ebmc_errort{}.with_exit_code(2);
   }
 
+  if(cmdline.isset("show-symbol-table"))
+  {
+    std::cout << result.symbol_table;
+    return {};
+  }
+
   if(vhdl_synthesis(result.symbol_table, module_identifier, message_handler))
   {
     message.error() << "CONVERSION ERROR" << messaget::eom;
     throw ebmc_errort{}.with_exit_code(2);
   }
 
-  if(cmdline.isset("show-symbol-table"))
+  // map the VHDL types to CBMC types
+  try
   {
-    std::cout << result.symbol_table;
-    return {};
+    vhdl_lowering(result.symbol_table);
+  }
+  catch(const ebmc_errort &error)
+  {
+    if(error.location().is_not_nil())
+      message.error().source_location = error.location();
+    message.error() << error.what() << messaget::eom;
+    message.error() << "CONVERSION ERROR" << messaget::eom;
+    throw ebmc_errort{}.with_exit_code(2);
   }
 
   result.main_symbol =

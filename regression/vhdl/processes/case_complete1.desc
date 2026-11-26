@@ -1,0 +1,11 @@
+KNOWNBUG
+case_complete1.vhd
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+^\[case_complete1\.p1\] .* PROVED up to bound 1$
+^\[case_complete1\.p2\] .* PROVED up to bound 1$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

@@ -139,6 +139,18 @@ public:
     dest.column = get_column() - token_length;
   }
 
+  /// a syntax error at the current token, with line and column
+  void syntax_error(const std::string &message, const std::string &before)
+  {
+    source_locationt location = source_location();
+    location.set_column(get_column() - before.size());
+    log.error().source_location = location;
+    log.error() << message;
+    if(!before.empty())
+      log.error() << " before `" << before << "'";
+    log.error() << messaget::eom;
+  }
+
   // for escaped identifiers and string literals
   std::string scanner_buffer;
 

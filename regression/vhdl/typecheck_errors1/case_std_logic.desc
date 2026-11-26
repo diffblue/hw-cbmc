@@ -1,0 +1,9 @@
+CORE
+case_std_logic.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file case_std_logic\.vhd line 10 column 5: the choices do not cover all values of std_logic; add an others choice$
+^CONVERSION ERROR$
+--
+^warning: ignoring

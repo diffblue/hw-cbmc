@@ -1,0 +1,9 @@
+CORE
+label_clash.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file label_clash\.vhd line 7 column 13: `process1' is already declared$
+^CONVERSION ERROR$
+--
+^warning: ignoring

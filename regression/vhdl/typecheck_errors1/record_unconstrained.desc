@@ -1,0 +1,9 @@
+CORE
+record_unconstrained.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file record_unconstrained\.vhd line 9 column 5: record element `elem' requires a constraint$
+^CONVERSION ERROR$
+--
+^warning: ignoring

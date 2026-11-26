@@ -1,0 +1,9 @@
+CORE
+bit_h.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file bit_h\.vhd line 6 column 8: 'H' is not a value of bit$
+^CONVERSION ERROR$
+--
+^warning: ignoring

@@ -1,0 +1,9 @@
+CORE
+case_others_first.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file case_others_first\.vhd line 9 column 7: others must be the last alternative$
+^CONVERSION ERROR$
+--
+^warning: ignoring

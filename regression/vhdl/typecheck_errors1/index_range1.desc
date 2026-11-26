@@ -1,0 +1,9 @@
+CORE
+index_range1.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file index_range1\.vhd line 5 column 4: index 2 is outside of the range 1 downto 0 of bit_vector$
+^CONVERSION ERROR$
+--
+^warning: ignoring

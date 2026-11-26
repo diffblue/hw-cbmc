@@ -1,0 +1,9 @@
+CORE
+event_variable.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file event_variable\.vhd line 9 column 9: 'event requires a signal$
+^CONVERSION ERROR$
+--
+^warning: ignoring

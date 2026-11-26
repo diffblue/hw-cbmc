@@ -65,7 +65,7 @@ extern YYSTYPE yyvhdllval;
 
 int yyvhdlerror(const char *error_str)
 {
-  PARSER.parse_error(error_str, PARSER.scanner->text());
+  PARSER.syntax_error(error_str, PARSER.scanner->text());
   return strlen(error_str)+1;
 }
 
@@ -158,7 +158,8 @@ Function: set_label
 
 inline static void set_label(YYSTYPE &statement, YYSTYPE &label)
 {
-  stack(statement).set(ID_label, stack(label).get(ID_identifier));
+  to_vhdl_statement(stack(statement))
+    .set_label(to_symbol_expr(stack(label)).get_identifier());
 }
 
 /*******************************************************************\
@@ -1120,7 +1121,7 @@ concurrent_statement:
             stack($$).id() == ID_generate_for ||
             stack($$).id() == ID_generate_if)
          {
-           yyvhdlerror("label required");
+           PARSER.syntax_error("label required", "");
            YYERROR;
          }
        }
@@ -2082,7 +2083,7 @@ expr:
        | expr TOK_DOUBLE_STAR expr { binary($$, $1, $2, $3, ID_power); }
        | expr TOK_SLL expr { binary($$, $1, $2, $3, ID_shl); }
        | expr TOK_SRL expr { binary($$, $1, $2, $3, ID_lshr); }
-       | expr TOK_SLA expr { binary($$, $1, $2, $3, ID_shl); }
+       | expr TOK_SLA expr { binary($$, $1, $2, $3, ID_vhdl_sla); }
        | expr TOK_SRA expr { binary($$, $1, $2, $3, ID_ashr); }
        | expr TOK_ROL expr { binary($$, $1, $2, $3, ID_rol); }
        | expr TOK_ROR expr { binary($$, $1, $2, $3, ID_ror); }

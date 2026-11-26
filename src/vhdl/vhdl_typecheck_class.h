@@ -6,33 +6,48 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_VHDL_TYPECHECK_CLASS_H
-#define CPROVER_VHDL_TYPECHECK_CLASS_H
+#ifndef CPROVER_VHDL_VHDL_TYPECHECK_CLASS_H
+#define CPROVER_VHDL_VHDL_TYPECHECK_CLASS_H
 
-#include <util/typecheck.h>
 #include <util/namespace.h>
+#include <util/std_code.h>
+#include <util/std_expr.h>
+#include <util/symbol_table_base.h>
+#include <util/typecheck.h>
 
-/*******************************************************************\
+#include "vhdl_expr.h"
+#include "vhdl_parse_tree.h"
+#include "vhdl_types.h"
 
-   Class: vhdl_typecheckt
+#include <map>
+#include <optional>
+#include <set>
+#include <vector>
 
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-class vhdl_typecheckt:public messaget
+/// Type checking of the architecture for one entity.
+///
+/// The result is a module symbol whose value has
+/// * `ID_body`, the concurrent statements, type checked;
+///
+/// and symbols for the ports, signals and process variables of the
+/// design. Constants are inlined, and enumeration literals are
+/// turned into constants of the enumeration type.
+///
+/// The expressions have VHDL types (vhdl_types.h); the mapping to
+/// CBMC types is done by vhdl_lowering, after synthesis. Statements
+/// are turned into codet. Names are resolved into symbol expressions,
+/// indexed names into index expressions, slices into vhdl_slice
+/// expressions with static bounds, and the clock edge expressions
+/// clk'event and rising_edge(clk) into vhdl_event and vhdl_rising_edge.
+class vhdl_typecheckt : public typecheckt
 {
 public:
   vhdl_typecheckt(
     const vhdl_parse_treet &_parse_tree,
-    const irep_idt &_module_name,
+    irep_idt _module_name,
     symbol_table_baset &_symbol_table,
     message_handlert &_message_handler)
-    : messaget(_message_handler),
+    : typecheckt(_message_handler),
       ns(_symbol_table),
       parse_tree(_parse_tree),
       module_name(_module_name),
@@ -40,160 +55,216 @@ public:
   {
   }
 
-  bool operator()();
+  void typecheck() override;
 
 protected:
   const namespacet ns;
   const vhdl_parse_treet &parse_tree;
-  const irep_idt &module_name;
-  symbolt *module_symbol;
+  const irep_idt module_name;
+  symbolt *module_symbol = nullptr;
   symbol_table_baset &symbol_table;
 
-  void typecheck_architecture(
-    const vhdl_parse_treet::itemt &);
-  
-  void typecheck_architecture_entity(irept &);
-  void typecheck_architecture_decl(irept &);
-  void typecheck_architecture_body(exprt &);
-  void typecheck_code(class codet &);
-  void typecheck_code_assert(class codet &);
-  void typecheck_code_assign(class codet &);
-  void typecheck_expr(exprt &);
-  void typecheck_type(typet &);
-  void convert_to_type(exprt &, const typet &);
-  
-  #if 0
-  // instances
-  irep_idt parameterize_module(
-    const source_locationt &location,
-    const irep_idt &module_identifier,
-    const exprt::operandst &parameter_assignment);
+  // design units
+  void typecheck_architecture(const vhdl_parse_treet::itemt &);
+  void typecheck_entity(const vhdl_parse_treet::itemt &);
+  void typecheck_package(const vhdl_parse_treet::itemt &);
 
-  void get_parameter_values(
-    const irept &module_source,
-    const exprt::operandst &parameter_assignment,
-    expr_listt &parameter_values);
+  // declarations
+  void typecheck_interface_list(const irept::subt &, bool is_generic);
+  void typecheck_declarations(const irept &decl);
+  void typecheck_declaration(const irept &decl);
+  void typecheck_object_declaration(const vhdl_object_declarationt &);
+  void typecheck_type_declaration(const vhdl_type_declarationt &);
+  void typecheck_subtype_declaration(const vhdl_type_declarationt &);
 
-  void set_parameter_values(
-    irept &module_source,
-    const expr_listt &parameter_values);
+  // concurrent statements
+  exprt typecheck_concurrent_statements(const irept &);
+  exprt typecheck_concurrent_statement(exprt);
+  /// the label of a concurrent statement is a declaration
+  void declare_label(irep_idt label, const source_locationt &);
+  exprt typecheck_process(exprt);
 
-  // interfaces
-  void module_interface();
-  void interface_ports(irept::subt &ports);
-  void interface_module_decl(const class vhdl_declt &decl);
-  void interface_function_or_task_decl(const class vhdl_declt &decl);
-  void interface_parameter(const exprt &expr);
-  void interface_parameter_decl(const exprt &statement);
-  void interface_inst(const class vhdl_module_itemt &statement);
-  void interface_inst(const class vhdl_module_itemt &statement, const exprt &op);
-  void interface_module_item(const class vhdl_module_itemt &module_item);
-  void interface_block(const class vhdl_blockt &statement);
-  void interface_statement(const class vhdl_statementt &statement);
-  void interface_function_or_task(const class vhdl_declt &decl);
+  // sequential statements
+  codet typecheck_code(exprt);
+  codet typecheck_block(exprt);
+  codet typecheck_assert(exprt);
+  codet typecheck_assign(exprt, bool is_signal);
+  codet typecheck_selected_assign(exprt, bool is_signal);
+  codet typecheck_if(exprt);
+  codet typecheck_case(exprt);
+  codet typecheck_for(exprt);
 
-  array_typet array_type(
-    const irept &src,
-    const typet &element_type);
+  /// a condition, with the implicit condition operator ??
+  exprt typecheck_condition(exprt);
 
-  // type checking
-  
-  typedef enum { A_CONTINUOUS, A_BLOCKING, A_NON_BLOCKING } vassignt;
-
-  // statements
-  void convert_statement(class vhdl_statementt &statement);
-  void convert_function_call_or_task_enable(class vhdl_function_callt &statement);
-  void convert_block(class vhdl_blockt &statement);
-  void convert_case(class vhdl_case_baset &statement);
-  void convert_if(class vhdl_ift &statement);
-  void convert_event_guard(class vhdl_event_guardt &statement);
-  void convert_delay(class vhdl_delayt &statement);
-  void convert_for(class vhdl_fort &statement);
-  void convert_forever(class vhdl_forevert &statement);
-  void convert_while(class vhdl_whilet &statement);
-  void convert_repeat(class vhdl_repeatt &statement);
-  void convert_assign(class vhdl_assignt &statement, bool blocking);
-  void convert_procedural_continuous_assign(
-    class vhdl_procedural_continuous_assignt &statement);
-  void convert_prepostincdec(class vhdl_statementt &statement);
-  
-  // module items
-  void convert_decl(class vhdl_declt &module_item);
-  void convert_function_or_task(class vhdl_declt &decl);
-  void convert_inst(class vhdl_instt &module_item);
-  void convert_inst_builtin(class vhdl_inst_builtint &module_item);
-  void convert_always(class vhdl_alwayst &module_item);
-  void convert_initial(class vhdl_initialt &module_item);
-  void convert_continuous_assign(class vhdl_continuous_assignt &module_item);
-  void convert_assert(exprt &statement);
-  void convert_assume(exprt &statement);
-  void check_lhs(const exprt &lhs, vassignt vassign);
-  void convert_assignments(exprt &trans);
-  void convert_module_item(class vhdl_module_itemt &module_item);
-
-  void integer_expr(exprt &expr);
-
-  void convert_case_values(
-    exprt &values,
-    const exprt &case_operand);
-
-  void instantiate_port_connections(
-    const std::string &instance,
-    const exprt &inst,
-    const symbolt &symbol,
-    exprt &trans);
-
-  void typecheck_port_connections(
-    exprt &inst,
-    const symbolt &symbol);
-
-  void typecheck_builtin_port_connections(exprt &inst);
-
-  void typecheck_port_connection(
-    exprt &op,
-    const exprt &port);
-
-  bool replace_symbols(const replace_mapt &what, exprt &dest);
-  void replace_symbols(const std::string &target, exprt &dest);
-
-  virtual void convert_statements();
-
-  virtual bool implicit_wire(
-    const irep_idt &identifier,
-    const symbolt *&symbol);
-    
-  // override parameter values
-  typedef std::map<std::string, exprt> overridest;
-  overridest overrides;
-  
-  // generate constructs
-  void elaborate_generate_assign(const exprt &statement, exprt::operandst &dest);
-  void elaborate_generate_block(const exprt &statement, exprt::operandst &dest);
-  void elaborate_generate_item(const exprt &statement, exprt::operandst &dest);
-  void elaborate_generate_if(const exprt &statement, exprt::operandst &dest);
-  void elaborate_generate_case(const exprt &statement, exprt::operandst &dest);
-  void elaborate_generate_for(const exprt &statement, exprt::operandst &dest);
-
-  // generate state
-  typedef std::map<irep_idt, mp_integer> genvarst;
-  genvarst genvars;
-
-  virtual void genvar_value(
-    const irep_idt &identifier,
-    mp_integer &value)
+  // IEEE 1076-2008 10.9: the choices of a case statement cover every
+  // value of the type of the selector exactly once
+  struct choicest
   {
-    genvarst::const_iterator it=genvars.find(identifier);
-    if(it==genvars.end())
-      value=-1;
-    else
-      value=it->second;
+    struct intervalt
+    {
+      mp_integer low, high;
+      source_locationt source_location;
+    };
+
+    std::vector<intervalt> intervals;
+    bool others = false;
+  };
+
+  /// the conditions of the alternatives; the last one is true
+  std::vector<exprt> case_conditions(
+    const exprt &selector,
+    const irept::subt &alternatives,
+    const source_locationt &);
+  /// the condition for the choices of one alternative
+  exprt
+  case_condition(const exprt &selector, const irept::subt &choices, choicest &);
+  void check_choices(choicest &, const typet &, const source_locationt &);
+  std::optional<mp_integer> position_number(const exprt &) const;
+  static std::optional<mp_integer> number_of_values(const typet &);
+  static std::string value_to_string(const mp_integer &, const typet &);
+
+  // types
+  typet typecheck_type(const typet &);
+  typet typecheck_subtype_indication(const typet &);
+  typet typecheck_type_mark(const exprt &name);
+  vhdl_ranget typecheck_range(const exprt &);
+  /// type check an expression that must be a static integer
+  mp_integer typecheck_static_integer(const exprt &);
+  /// the value of a type checked expression, if it is static
+  std::optional<mp_integer> constant_value(const exprt &) const;
+
+  /// the default initial value of a type (T'left), or nil
+  exprt default_value(const typet &);
+
+  // expressions
+  exprt typecheck_expr(exprt);
+  exprt typecheck_expr_rec(exprt);
+  exprt typecheck_symbol(symbol_exprt);
+  exprt typecheck_indexed(exprt);
+  exprt typecheck_slice(exprt);
+  exprt typecheck_attribute(exprt);
+  /// the functions of the IEEE packages that are supported
+  bool is_known_function(irep_idt name) const;
+  exprt typecheck_function_call(
+    irep_idt name,
+    exprt::operandst arguments,
+    const source_locationt &);
+  exprt typecheck_type_conversion(exprt, const typet &);
+  exprt typecheck_binary(exprt);
+  exprt typecheck_concatenation(exprt, exprt, const source_locationt &);
+  /// the operators of the numeric packages on vectors
+  exprt
+  typecheck_numeric_binary(irep_idt id, exprt, exprt, const source_locationt &);
+  bool has_numeric_operators(const typet &) const;
+  /// unsigned or signed, for the vectors with numeric operators
+  typet numeric_type_of(const typet &) const;
+  exprt typecheck_unary(exprt);
+  exprt typecheck_aggregate(exprt, const typet &);
+  /// the elements of an array aggregate, from the low index
+  std::vector<exprt>
+  aggregate_elements(const vhdl_aggregate_exprt &, const vhdl_array_typet &);
+
+  /// implicit conversion of universal literals, and type matching
+  exprt convert_to(exprt, const typet &);
+  /// the value of an integer literal
+  static mp_integer integer_literal_value(const constant_exprt &);
+  /// the type of a literal without a typed context
+  exprt literal_with_default_type(exprt);
+  /// convert universal literals to the type of the other operand
+  void match_literals(exprt &, exprt &);
+  /// make the types of two operands match; an error if they differ
+  void match_types(exprt &, exprt &);
+
+  /// IEEE 1076-2008 8.4: a static index must be in the index range
+  void check_index(
+    const exprt &index,
+    const vhdl_array_typet &,
+    const source_locationt &);
+  /// IEEE 1076-2008 5.2.1: a static value must be in the range
+  void check_range(
+    const exprt &,
+    const vhdl_integer_typet &,
+    const source_locationt &);
+  /// an array value from element literals, e.g., a string literal
+  exprt array_from_literals(
+    const std::string &literals,
+    const vhdl_array_typet &,
+    const source_locationt &);
+
+  // Scopes. IEEE 1076-2008 12.3: a declaration in an inner declarative
+  // region hides a homograph in an outer region, whatever its kind;
+  // enumeration literals may be overloaded. Statement labels are
+  // declarations in the enclosing region (IEEE 1076-2008 12.1).
+  struct declarationt
+  {
+    enum kindt
+    {
+      OBJECT,
+      CONSTANT,
+      TYPE,
+      LITERALS,
+      LABEL
+    } kind;
+
+    irep_idt symbol;             // OBJECT: the symbol table identifier
+    exprt value;                 // CONSTANT
+    typet type;                  // TYPE
+    std::vector<exprt> literals; // LITERALS: the overloaded literals
+  };
+
+  struct scopet
+  {
+    irep_idt prefix;                               // for new symbols
+    std::map<irep_idt, declarationt> declarations; // lower-case base name
+  };
+
+  std::vector<scopet> scopes;
+
+  void push_scope(irep_idt prefix)
+  {
+    scopes.push_back(scopet{prefix, {}});
   }
-  
-  // counter for assertions
-  unsigned assertion_counter;
-  #endif
-  
-  static irep_idt to_lower(const irep_idt &);
+
+  void pop_scope()
+  {
+    scopes.pop_back();
+  }
+
+  scopet &current_scope()
+  {
+    return scopes.back();
+  }
+
+  /// lower-case identifier
+  static irep_idt to_lower(irep_idt);
+
+  /// find the innermost declaration of the given name
+  std::optional<declarationt> lookup(irep_idt lower_case_name) const;
+
+  /// add a declaration to the current scope; an error if the name
+  /// is already declared there, except for enumeration literals
+  void declare(irep_idt base_name, declarationt, const source_locationt &);
+
+  std::optional<typet> lookup_type(irep_idt lower_case_name) const;
+  std::optional<exprt> lookup_constant(irep_idt lower_case_name) const;
+  const symbolt *lookup_object(irep_idt lower_case_name) const;
+
+  /// add a symbol for an object, in the current scope
+  symbolt &
+  add_object(irep_idt base_name, const typet &, const source_locationt &);
+
+  /// the names of the packages in use clauses, lower case
+  std::set<irep_idt> packages_used;
+  void collect_use_clauses();
+  bool uses_package(irep_idt name) const
+  {
+    return packages_used.count(name) != 0;
+  }
+
+  void add_predefined_types();
+
+  unsigned process_counter = 0;
 };
 
 #endif

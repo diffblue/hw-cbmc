@@ -1,0 +1,9 @@
+CORE
+unconstrained_signal.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file unconstrained_signal\.vhd line 6 column \d+: type `bit_vector' requires a constraint$
+^CONVERSION ERROR$
+--
+^warning: ignoring

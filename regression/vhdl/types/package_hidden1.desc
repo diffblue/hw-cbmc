@@ -1,0 +1,10 @@
+KNOWNBUG
+package_hidden1.vhd
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+^\[package_hidden1\.p1\] .* PROVED up to bound 0$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

@@ -1,0 +1,9 @@
+CORE
+case_complete1.vhd
+--show-symbol-table
+^EXIT=0$
+^SIGNAL=0$
+^  vhdl::case_complete1$
+--
+^warning: ignoring
+^CONVERSION ERROR

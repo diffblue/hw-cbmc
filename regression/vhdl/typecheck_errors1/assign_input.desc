@@ -1,0 +1,9 @@
+CORE
+assign_input.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file assign_input\.vhd line 7 column 3: cannot assign to input port `a'$
+^CONVERSION ERROR$
+--
+^warning: ignoring

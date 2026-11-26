@@ -1,0 +1,9 @@
+CORE
+case_duplicate.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file case_duplicate\.vhd line 10 column 14: the choice 1 is given more than once$
+^CONVERSION ERROR$
+--
+^warning: ignoring

@@ -9,6 +9,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/arith_tools.h>
 #include <util/mathematical_types.h>
 #include <util/std_expr.h>
+#include <util/std_types.h>
 
 #include <testing-utils/use_catch.h>
 #include <vhdl/vhdl_expr.h>
@@ -80,6 +81,25 @@ SCENARIO("VHDL expression classes")
     REQUIRE(selected.alternatives().empty());
   }
 
+  GIVEN("A labelled statement")
+  {
+    vhdl_signal_assignt assignment{v, zero};
+    REQUIRE(!assignment.has_label());
+
+    // the label is set through the statement base class, as the parser
+    // does for any kind of statement
+    exprt &as_expr = assignment;
+    to_vhdl_statement(as_expr).set_label("L1");
+    REQUIRE(assignment.has_label());
+    REQUIRE(assignment.label() == "L1");
+    REQUIRE(to_vhdl_signal_assign(as_expr).label() == "L1");
+    REQUIRE(to_vhdl_signal_assign(as_expr).target() == v);
+
+    vhdl_processt process{nil_exprt{}, irept{}, code_blockt{}};
+    REQUIRE(process.label().empty());
+    REQUIRE(process.body().id() == ID_code);
+  }
+
   GIVEN("A subtype indication")
   {
     vhdl_subtype_indicationt subtype{symbol_exprt{"integer", typet{}}};
@@ -88,5 +108,47 @@ SCENARIO("VHDL expression classes")
     REQUIRE(subtype.has_constraint());
     REQUIRE(subtype.type_mark().get(ID_identifier) == "integer");
     REQUIRE(subtype.index_constraint().empty());
+  }
+
+  GIVEN("An overloaded enumeration literal")
+  {
+    enumeration_typet s1, s2;
+    s1.elements().push_back(irept{"idle"});
+    s2.elements().push_back(irept{"idle"});
+    vhdl_overloaded_literal_exprt literal{
+      "Idle", {constant_exprt{"idle", s1}, constant_exprt{"idle", s2}}};
+    REQUIRE(literal.identifier() == "Idle");
+    REQUIRE(literal.candidates().size() == 2);
+    REQUIRE(literal.candidates()[1].type() == s2);
+    REQUIRE(is_vhdl_universal_type(literal.type()));
+    REQUIRE(
+      to_vhdl_overloaded_literal_expr(static_cast<const exprt &>(literal))
+        .identifier() == "Idle");
+  }
+
+  GIVEN("A type checked assertion")
+  {
+    constant_exprt report{"fail", typet{ID_string}};
+    vhdl_code_assertt assertion{true_exprt{}, "p1", report};
+    REQUIRE(assertion.get_statement() == ID_assert);
+    REQUIRE(assertion.condition() == true_exprt{});
+    REQUIRE(assertion.label() == "p1");
+    REQUIRE(assertion.report() == report);
+    REQUIRE(to_vhdl_code_assert(assertion).label() == "p1");
+  }
+
+  GIVEN("A type checked assignment")
+  {
+    vhdl_code_assignt signal_assignment{true, v, zero};
+    REQUIRE(signal_assignment.get_statement() == ID_vhdl_signal_assign);
+    REQUIRE(signal_assignment.is_signal_assignment());
+    REQUIRE(signal_assignment.target() == v);
+    REQUIRE(signal_assignment.value() == zero);
+
+    vhdl_code_assignt variable_assignment{false, v, seven};
+    REQUIRE(variable_assignment.get_statement() == ID_assign);
+    REQUIRE(!variable_assignment.is_signal_assignment());
+    REQUIRE(variable_assignment.value() == seven);
+    REQUIRE(to_vhdl_code_assign(variable_assignment).target() == v);
   }
 }

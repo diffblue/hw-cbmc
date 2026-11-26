@@ -1,0 +1,20 @@
+KNOWNBUG
+signed_mod1.vhd
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+^\[signed_mod1\.p1\] .* PROVED up to bound 0$
+^\[signed_mod1\.p2\] .* PROVED up to bound 0$
+^\[signed_mod1\.p3\] .* PROVED up to bound 0$
+^\[signed_mod1\.p4\] .* PROVED up to bound 0$
+^\[signed_mod1\.p5\] .* PROVED up to bound 0$
+^\[signed_mod1\.p6\] .* PROVED up to bound 0$
+^\[signed_mod1\.p7\] .* PROVED up to bound 0$
+^\[signed_mod1\.p8\] .* PROVED up to bound 0$
+^\[signed_mod1\.p9\] .* PROVED up to bound 0$
+^\[signed_mod1\.p10\] .* PROVED up to bound 0$
+^\[signed_mod1\.p11\] .* PROVED up to bound 0$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

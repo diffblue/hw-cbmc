@@ -1,0 +1,17 @@
+KNOWNBUG
+numeric_literal_arith1.vhd
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+^\[numeric_literal_arith1\.p1\] .* PROVED up to bound 0$
+^\[numeric_literal_arith1\.p2\] .* PROVED up to bound 0$
+^\[numeric_literal_arith1\.p3\] .* PROVED up to bound 0$
+^\[numeric_literal_arith1\.p4\] .* PROVED up to bound 0$
+^\[numeric_literal_arith1\.p5\] .* PROVED up to bound 0$
+^\[numeric_literal_arith1\.p6\] .* PROVED up to bound 0$
+^\[numeric_literal_arith1\.p7\] .* PROVED up to bound 0$
+^\[numeric_literal_arith1\.p8\] .* PROVED up to bound 0$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

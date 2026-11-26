@@ -1,0 +1,9 @@
+CORE
+concat_mismatch.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file concat_mismatch\.vhd line 8 column 10: cannot concatenate bit_vector\(3 downto 0\) and std_logic$
+^CONVERSION ERROR$
+--
+^warning: ignoring

@@ -1,0 +1,9 @@
+CORE
+enum_relation1.vhd
+--show-symbol-table
+^EXIT=0$
+^SIGNAL=0$
+^  vhdl::enum_relation1$
+--
+^warning: ignoring
+^CONVERSION ERROR

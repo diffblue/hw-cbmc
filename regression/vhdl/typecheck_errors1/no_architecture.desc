@@ -1,0 +1,9 @@
+CORE
+no_architecture.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file no_architecture\.vhd line 2 column 1: no architecture found for entity `no_architecture'$
+^CONVERSION ERROR$
+--
+^warning: ignoring

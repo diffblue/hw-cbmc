@@ -1,0 +1,9 @@
+CORE
+slv_integer.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file slv_integer\.vhd line 8 column 8: integer literal where std_logic_vector\(7 downto 0\) is expected$
+^CONVERSION ERROR$
+--
+^warning: ignoring

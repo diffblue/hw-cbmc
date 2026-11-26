@@ -1,0 +1,13 @@
+KNOWNBUG
+std_logic_condition1.vhd
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+^\[std_logic_condition1\.p1\] .* PROVED up to bound 0$
+^\[std_logic_condition1\.p2\] .* PROVED up to bound 0$
+^\[std_logic_condition1\.p3\] .* PROVED up to bound 0$
+^\[std_logic_condition1\.p4\] .* PROVED up to bound 0$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

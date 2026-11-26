@@ -1,0 +1,9 @@
+CORE
+bit_conversion.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file bit_conversion\.vhd line 8 column 12: conversion to bit from std_logic is not a type conversion$
+^CONVERSION ERROR$
+--
+^warning: ignoring

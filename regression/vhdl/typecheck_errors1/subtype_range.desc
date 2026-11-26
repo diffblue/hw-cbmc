@@ -1,0 +1,9 @@
+CORE
+subtype_range.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file subtype_range\.vhd line 5 column 24: the range -1 to 3 is outside of the range of natural$
+^CONVERSION ERROR$
+--
+^warning: ignoring

@@ -93,6 +93,36 @@ public:
     {
       return static_cast<const source_locationt &>(find(ID_C_source_location));
     }
+
+    /// entities: the generic and port interface lists, as
+    /// vhdl_object_declarationt
+    const irept::subt &generics() const
+    {
+      return find(ID_vhdl_generics).get_sub();
+    }
+
+    const irept::subt &ports() const
+    {
+      return find(ID_ports).get_sub();
+    }
+
+    /// entities, architectures, packages, processes: the declarative part
+    const irept &declarations() const
+    {
+      return find(ID_decl);
+    }
+
+    /// entities and architectures: the concurrent statements
+    const irept &body() const
+    {
+      return find(ID_body);
+    }
+
+    /// use clauses: the selected names, e.g. ieee.std_logic_1164.all
+    const irept::subt &use_names() const
+    {
+      return get_sub();
+    }
   };
 
   typedef std::list<itemt> itemst;

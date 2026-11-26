@@ -1,0 +1,9 @@
+CORE
+record1.vhd
+--show-symbol-table
+^EXIT=0$
+^SIGNAL=0$
+^  vhdl::record1$
+--
+^warning: ignoring
+^CONVERSION ERROR

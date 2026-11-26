@@ -1,0 +1,9 @@
+CORE
+undeclared.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file undeclared\.vhd line 7 column 8: `c' is not declared$
+^CONVERSION ERROR$
+--
+^warning: ignoring

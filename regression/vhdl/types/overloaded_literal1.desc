@@ -1,0 +1,10 @@
+KNOWNBUG
+overloaded_literal1.vhd
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+^\[overloaded_literal1\.p1\] .* PROVED up to bound 1$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

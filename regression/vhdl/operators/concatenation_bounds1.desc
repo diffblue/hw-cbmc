@@ -1,0 +1,16 @@
+KNOWNBUG
+concatenation_bounds1.vhd
+--bound 0
+^EXIT=0$
+^SIGNAL=0$
+^\[concatenation_bounds1\.p1\] .* PROVED up to bound 0$
+^\[concatenation_bounds1\.p2\] .* PROVED up to bound 0$
+^\[concatenation_bounds1\.p3\] .* PROVED up to bound 0$
+^\[concatenation_bounds1\.p4\] .* PROVED up to bound 0$
+^\[concatenation_bounds1\.p5\] .* PROVED up to bound 0$
+^\[concatenation_bounds1\.p6\] .* PROVED up to bound 0$
+^\[concatenation_bounds1\.p7\] .* PROVED up to bound 0$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.
