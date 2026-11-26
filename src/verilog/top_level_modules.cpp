@@ -49,6 +49,11 @@ static void module_dependencies_rec(
     module_dependencies_rec(
       to_verilog_generate_for(module_item).body(), action);
   }
+  else if(module_item.id() == ID_verilog_case_generate)
+  {
+    for(auto &item : to_verilog_case_generate(module_item).items())
+      module_dependencies_rec(item.block(), action);
+  }
 }
 
 static void module_dependencies(
