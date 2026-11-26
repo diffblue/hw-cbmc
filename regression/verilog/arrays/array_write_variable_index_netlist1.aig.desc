@@ -1,0 +1,15 @@
+CORE
+array_write_variable_index_netlist1.sv
+--aig --bound 2
+^\[main\.p0\] .*: PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The netlist converter simplifies the elements of the array, which
+rewrites an element of the array after the write as a conditional that
+compares the index of the write with the index of the element. The
+index of the element used to be of type integer, which the propositional
+encoding does not support; it used free variables for the comparisons,
+which refuted the property.

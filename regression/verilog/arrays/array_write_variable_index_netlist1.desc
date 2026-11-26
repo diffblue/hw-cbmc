@@ -1,0 +1,8 @@
+CORE
+array_write_variable_index_netlist1.sv
+--bound 2
+^\[main\.p0\] .*: PROVED up to bound 2$
+^EXIT=0$
+^SIGNAL=0$
+--
+--

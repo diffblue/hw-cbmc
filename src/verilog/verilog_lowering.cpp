@@ -2087,7 +2087,39 @@ exprt verilog_lowering(exprt expr)
     // The element has the element type of the lowered array.
     auto &index_expr = to_index_expr(expr);
     if(index_expr.array().type().id() == ID_array)
+    {
       expr.type() = to_array_type(index_expr.array().type()).element_type();
+
+      // The index of an element select that is generated internally may
+      // be a constant of the mathematical integer type, which the
+      // back-ends do not support. E.g., the simplifier turns
+      // (a WITH [i:=v])[j] into a conditional on i == j, which then has
+      // the type of j. Convert it to the index type of the array that
+      // the writes use, or a wider unsigned type when the index does not
+      // fit.
+      auto &index = index_expr.index();
+      if(
+        index.is_constant() && index.type().id() != ID_unsignedbv &&
+        index.type().id() != ID_signedbv &&
+        verilog_operand_type(0).id() == ID_array &&
+        to_array_type(verilog_operand_type(0)).size().is_constant())
+      {
+        auto index_int = numeric_cast<mp_integer>(to_constant_expr(index));
+        if(index_int.has_value() && *index_int >= 0)
+        {
+          auto &verilog_array_type =
+            to_verilog_array_type(verilog_operand_type(0));
+          auto index_type = verilog_array_type.index_type();
+          auto width = to_unsignedbv_type(index_type).get_width();
+          if(*index_int >= power(2, width))
+          {
+            index_type = unsignedbv_typet{
+              numeric_cast_v<std::size_t>(address_bits(*index_int + 1))};
+          }
+          index = from_integer(*index_int, index_type);
+        }
+      }
+    }
     return expr;
   }
   else if(expr.id() == ID_if)
@@ -2156,6 +2188,36 @@ exprt verilog_lowering(exprt expr)
       auto &element_type = to_array_type(expr.type()).element_type();
       for(auto &op : expr.operands())
         op = coerce_to_type(op, element_type);
+    }
+
+    return expr;
+  }
+  else if(expr.id() == ID_with)
+  {
+    // As for the aggregate constructors, the new values must have the
+    // types of the elements or members of the lowered aggregate type.
+    // E.g., the elements of an unpacked array of 1-bit variables are
+    // lowered to bool, whereas a 1-bit constant is lowered to a vector.
+    expr.type() = verilog_lowering(expr.type());
+
+    auto &operands = expr.operands();
+
+    for(std::size_t i = 1; i + 1 < operands.size(); i += 2)
+    {
+      auto &new_value = operands[i + 1];
+
+      if(expr.type().id() == ID_array)
+      {
+        new_value =
+          coerce_to_type(new_value, to_array_type(expr.type()).element_type());
+      }
+      else if(expr.type().id() == ID_struct)
+      {
+        auto &component = to_struct_type(expr.type())
+                            .get_component(operands[i].get(ID_component_name));
+        if(component.is_not_nil())
+          new_value = coerce_to_type(new_value, component.type());
+      }
     }
 
     return expr;
