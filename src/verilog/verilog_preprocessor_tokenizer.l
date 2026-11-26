@@ -32,12 +32,14 @@ using tokent = verilog_preprocessor_tokenizert::tokent;
 
 Identifier	[a-zA-Z_][0-9a-zA-Z_$]*
 String		\"(\\(.|\n)|[^"\\])*\"
+TripleString	\"\"\"([^"\\]|\\(.|\n)|\"{1,2}([^"\\]|\\(.|\n)))*\"\"\"
 EOL		\r?\n
 
 %%
 
 <INITIAL>"//"		{ BEGIN SLCOMMENT; /* single-line comment */ }
 <INITIAL>"/*"           { BEGIN MLCOMMENT; /* multi-line comment */ }
+<INITIAL>{TripleString}	{ return tokent::STRING_LITERAL; }
 <INITIAL>{String}	{ return tokent::STRING_LITERAL; }
 <INITIAL>{Identifier}	{ return tokent::IDENTIFIER; }
 <INITIAL>{EOL}		{ return '\n'; /* CRLF or LF */ }
