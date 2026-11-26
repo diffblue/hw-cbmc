@@ -441,17 +441,25 @@ Function: vhdl_typecheckt::operator()
 
 bool vhdl_typecheckt::operator()()
 {
-  // find the module in the parse tree
+  // The module is an entity. Find the architecture for the entity
+  // in the parse tree; when there are multiple, the last one is used.
+  const vhdl_parse_treet::itemt *architecture = nullptr;
+
+  for(const auto &item : parse_tree.items)
+    if(item.is_architecture() && module_name == item.get_entity_identifier())
+      architecture = &item;
+
+  if(architecture == nullptr)
+  {
+    error() << "no architecture found for entity `" << module_name << "'"
+            << eom;
+    return true;
+  }
 
   try
   {
-    for(const auto & item : parse_tree.items)
-      if(item.is_architecture() &&
-         module_name==item.get_pretty_name())
-      {
-        typecheck_architecture(item);
-        return false;
-      }
+    typecheck_architecture(*architecture);
+    return false;
   }
   catch(...)
   {

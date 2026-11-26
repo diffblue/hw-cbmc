@@ -1,0 +1,8 @@
+CORE
+entity1.vhd
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+^\[entity1\.property1\] .* PROVED up to bound 1$
+--
+^warning: ignoring

@@ -1,0 +1,10 @@
+CORE
+show_modules1.vhd
+--show-modules
+^EXIT=0$
+^SIGNAL=0$
+^  Identifier: vhdl::show_modules1$
+^  Name:       show_modules1$
+^  Mode:       VHDL$
+--
+^warning: ignoring

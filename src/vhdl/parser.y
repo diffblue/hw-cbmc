@@ -404,17 +404,20 @@ entity_declaration:
          TOK_ENTITY name TOK_IS TOK_END name_opt ';'
        {
          vhdl_parse_treet::itemt &e=PARSER.new_entity_item();
+         $1.set_location(e);
          e.set_name(stack($2));
        }
        | TOK_ENTITY name TOK_IS TOK_PORT '(' port_list ')' ';' TOK_END name_opt ';'
        {
          vhdl_parse_treet::itemt &e=PARSER.new_entity_item();
+         $1.set_location(e);
          e.set_name(stack($2));
        }
        | TOK_ENTITY name TOK_IS TOK_GENERIC '(' generic_list ')' ';'
          TOK_PORT '(' port_list ')' ';' TOK_END name_opt ';'
        {
          vhdl_parse_treet::itemt &e=PARSER.new_entity_item();
+         $1.set_location(e);
          e.set_name(stack($2));
        }
        ;

@@ -27,3 +27,4 @@ unit/unit_tests
 # test outputs
 regression/**/*.log
 regression/**/*.out
+regression/vhdl/**/modules.xml
