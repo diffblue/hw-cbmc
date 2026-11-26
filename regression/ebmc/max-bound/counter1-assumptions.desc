@@ -1,0 +1,12 @@
+CORE broken-smt-backend
+counter1.sv
+--max-bound 20 --numbered-trace --bmc-with-assumptions
+^\[main\.p0\] always main\.cnt != 7: REFUTED$
+^Counterexample with 8 states:$
+^\[main\.p1\] always main\.cnt <= 200: PROVED up to bound 20$
+^EXIT=10$
+^SIGNAL=0$
+--
+^main\.cnt@8 =
+--
+As counter1.desc, but checking the properties separately.

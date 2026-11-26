@@ -1,0 +1,14 @@
+CORE broken-smt-backend
+counter1.sv
+--max-bound 20 --numbered-trace
+^\[main\.p0\] always main\.cnt != 7: REFUTED$
+^Counterexample with 8 states:$
+^main\.cnt@7 = 7$
+^\[main\.p1\] always main\.cnt <= 200: PROVED up to bound 20$
+^EXIT=10$
+^SIGNAL=0$
+--
+^main\.cnt@8 =
+--
+The property p0 fails at depth 7. Incremental BMC must find the
+shortest counterexample.

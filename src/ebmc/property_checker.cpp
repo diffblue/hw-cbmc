@@ -49,26 +49,29 @@ property_checker_resultt word_level_bmc(
       if(convert_only)
         throw ebmc_errort() << "please set a specific bound";
 
-      const std::size_t max_bound =
-        unsafe_string2size_t(cmdline.get_value("max-bound"));
+      if(cmdline.isset("bound"))
+        throw ebmc_errort() << "cannot use both --bound and --max-bound";
 
-      for(std::size_t bound = 1; bound <= max_bound; bound++)
-      {
-        messaget message{message_handler};
-        message.status() << "Doing BMC with bound " << bound << messaget::eom;
+      auto max_bound_opt =
+        string2optional_size_t(cmdline.get_value("max-bound"));
 
-#if 0
-        const namespacet ns(transition_system.symbol_table);
-        CHECK_RETURN(trans_expr.has_value());
-        word_level_unwind_optionst unwind_options;
-        unwind_options.add_initial_state = true;
-        ::unwind(
-          *trans_expr, *message_handler, solver, bound + 1, ns, unwind_options);
-        result=finish_word_level_bmc(solver);
-#endif
-      }
+      if(!max_bound_opt.has_value())
+        throw ebmc_errort() << "failed to parse max-bound";
 
-      return property_checker_resultt{properties};
+      if(properties.properties.empty())
+        throw "no properties";
+
+      bool bmc_with_assumptions = cmdline.isset("bmc-with-assumptions");
+      bool cone_of_influence = cmdline.isset("coi");
+
+      return bmc_incremental(
+        *max_bound_opt,
+        bmc_with_assumptions,
+        cone_of_influence,
+        transition_system,
+        properties,
+        solver_factory,
+        message_handler);
     }
     else
     {
@@ -409,7 +412,8 @@ property_checker_resultt property_checker(
   bool use_heuristic_engine =
     !cmdline.isset("bdd") && !cmdline.isset("aig") &&
     !cmdline.isset("k-induction") && !cmdline.isset("ic3") &&
-    !cmdline.isset("new-ic3") && !cmdline.isset("bound");
+    !cmdline.isset("new-ic3") && !cmdline.isset("bound") &&
+    !cmdline.isset("max-bound");
 
   if(cmdline.isset("k-induction") || use_heuristic_engine)
   {
@@ -453,7 +457,7 @@ property_checker_resultt property_checker(
         cmdline, transition_system, properties, message_handler);
 #endif
     }
-    else if(cmdline.isset("bound"))
+    else if(cmdline.isset("bound") || cmdline.isset("max-bound"))
     {
       // word-level BMC
       return word_level_bmc(

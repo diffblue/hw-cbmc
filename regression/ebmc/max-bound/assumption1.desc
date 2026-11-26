@@ -1,0 +1,14 @@
+CORE broken-smt-backend
+assumption1.sv
+--max-bound 20 --numbered-trace
+^\[main\.a0\] always main\.in <= 1: ASSUMED$
+^\[main\.p0\] always main\.x != 5: REFUTED$
+^Counterexample with 6 states:$
+^\[main\.p1\] always main\.x <= 10: REFUTED$
+^Counterexample with 12 states:$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The assumption restricts the increment to at most 1.

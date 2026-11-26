@@ -508,6 +508,7 @@ void ebmc_parse_optionst::help()
     "\n"
     "Additonal options:\n"
     " {y--bound} {unr}               \t set bound (default: 1)\n"
+    " {y--max-bound} {unr}           \t do incremental BMC with bounds 0..nr\n"
     " {y--module} {umodule}          \t set top module (deprecated)\n"
     " {y--top} {umodule}             \t set top module\n"
     " {y-p} {uexpr}                  \t specify a property\n"
