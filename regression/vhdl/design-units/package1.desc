@@ -1,0 +1,11 @@
+KNOWNBUG
+package1.vhd
+--top package1 --bound 5
+^EXIT=10$
+^SIGNAL=0$
+^\[package1\.p1\] .* PROVED up to bound 5$
+^\[package1\.p2\] .* REFUTED$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

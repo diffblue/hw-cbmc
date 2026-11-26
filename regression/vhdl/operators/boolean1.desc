@@ -1,0 +1,21 @@
+KNOWNBUG
+boolean1.vhd
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+^\[boolean1\.p1\] .* PROVED up to bound 1$
+^\[boolean1\.p2\] .* PROVED up to bound 1$
+^\[boolean1\.p3\] .* PROVED up to bound 1$
+^\[boolean1\.p4\] .* PROVED up to bound 1$
+^\[boolean1\.p5\] .* PROVED up to bound 1$
+^\[boolean1\.p6\] .* PROVED up to bound 1$
+^\[boolean1\.p7\] .* PROVED up to bound 1$
+^\[boolean1\.p8\] .* PROVED up to bound 1$
+^\[boolean1\.p9\] .* PROVED up to bound 1$
+^\[boolean1\.p10\] .* PROVED up to bound 1$
+^\[boolean1\.p11\] .* PROVED up to bound 1$
+--
+^warning: ignoring
+^REFUTED
+--
+Nothing is implemented yet.

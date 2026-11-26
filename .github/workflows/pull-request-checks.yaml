@@ -77,6 +77,8 @@ jobs:
         run: make -C regression/smv test-cvc5
       - name: Run the smv tests with Z3
         run: make -C regression/smv test-z3
+      - name: Run the vhdl tests
+        run: make -C regression/vhdl test
       - name: Run the vlindex tests
         run: make -C regression/vlindex test
       - name: Run the hw-cbmc tests
@@ -149,6 +151,8 @@ jobs:
         run: make -C regression/smv test
       - name: Run the smv tests with Z3
         run: make -C regression/smv test-z3
+      - name: Run the vhdl tests
+        run: make -C regression/vhdl test
       - name: Run the vlindex tests
         run: make -C regression/vlindex test
       - name: Run the hw-cbmc tests

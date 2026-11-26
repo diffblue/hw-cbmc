@@ -1,0 +1,11 @@
+KNOWNBUG
+for_loop1.vhd
+--bound 1
+^EXIT=10$
+^SIGNAL=0$
+^\[for_loop1\.p1\] .* PROVED up to bound 1$
+^\[for_loop1\.p2\] .* REFUTED$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

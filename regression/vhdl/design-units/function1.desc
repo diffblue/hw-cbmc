@@ -1,0 +1,11 @@
+KNOWNBUG
+function1.vhd
+--bound 1
+^EXIT=10$
+^SIGNAL=0$
+^\[function1\.p1\] .* PROVED up to bound 1$
+^\[function1\.p2\] .* REFUTED$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

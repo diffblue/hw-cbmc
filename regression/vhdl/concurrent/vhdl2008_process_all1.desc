@@ -1,0 +1,11 @@
+KNOWNBUG
+vhdl2008_process_all1.vhd
+--bound 1
+^EXIT=10$
+^SIGNAL=0$
+^\[vhdl2008_process_all1\.p1\] .* PROVED up to bound 1$
+^\[vhdl2008_process_all1\.p2\] .* REFUTED$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

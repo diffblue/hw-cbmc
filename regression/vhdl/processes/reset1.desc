@@ -1,0 +1,13 @@
+KNOWNBUG
+reset1.vhd
+--bound 3
+^EXIT=10$
+^SIGNAL=0$
+^\[reset1\.p1\] .* PROVED up to bound 3$
+^\[reset1\.p2\] .* PROVED up to bound 3$
+^\[reset1\.p3\] .* REFUTED$
+^\[reset1\.p4\] .* REFUTED$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

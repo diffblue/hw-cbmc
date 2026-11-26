@@ -1,0 +1,11 @@
+KNOWNBUG
+generate1.vhd
+--bound 3
+^EXIT=10$
+^SIGNAL=0$
+^\[generate1\.p1\] .* PROVED up to bound 3$
+^\[generate1\.p2\] .* REFUTED$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.
