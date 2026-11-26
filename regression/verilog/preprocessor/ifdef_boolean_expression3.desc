@@ -1,0 +1,7 @@
+CORE
+ifdef_boolean_expression3.sv
+
+^file ifdef_boolean_expression3\.sv line 3: expecting an identifier or expression after ifdef$
+^EXIT=1$
+^SIGNAL=0$
+--

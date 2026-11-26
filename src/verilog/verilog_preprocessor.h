@@ -7,6 +7,7 @@
 #include <util/string_hash.h>
 
 #include "verilog_preprocessor_tokenizer.h"
+#include "verilog_standard.h"
 
 #include <filesystem>
 #include <list>
@@ -33,6 +34,9 @@ public:
   }
 
   virtual ~verilog_preprocessort() { }
+
+  // Language features newer than this standard are rejected.
+  verilog_standardt standard = verilog_standardt::SV2023;
 
 protected:
   // from the command line
@@ -65,6 +69,10 @@ protected:
   definest defines;
 
   void directive();
+
+  // The condition of `ifdef, `ifndef and `elsif: an identifier, or a
+  // Boolean expression over identifiers (1800-2023 22.6).
+  bool parse_ifdef_condition(const std::string &directive);
   std::filesystem::path find_include_file(
     const std::filesystem::path &including_file,
     const std::string &given_filename,
