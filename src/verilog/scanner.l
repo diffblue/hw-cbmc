@@ -129,6 +129,7 @@ YYSTYPE make_identifier(irep_idt base_name, exprt &dest)
 %x GRAMMAR
 %s COMMENT
 %s STRING
+%s TRIPLE_STRING
 
 NL              [\n]
 WS              [ \t\v\f\r]
@@ -203,11 +204,42 @@ void verilog_scanner_init()
                 }
 } // STRING
 
+<TRIPLE_STRING>{
+   /* triple-quoted string literal (1800-2023 5.9): may contain
+      newlines and unescaped double quotes */
+   "\"\"\""      { BEGIN(GRAMMAR);
+                  stack_expr(yyveriloglval).id(SCANNER.string_literal);
+                  return TOK_QSTRING;
+                }
+
+   <<EOF>>      { yyverilogerror("Unterminated string constant");
+                  return TOK_SCANNER_ERROR;
+                }
+
+   "\\"{NL}      { /* line continuation */ }
+   "\\n"        { SCANNER.string_literal += '\n'; }
+   "\\t"        { SCANNER.string_literal += '\t'; }
+   "\\".        { SCANNER.string_literal += yytext[1]; }
+   {NL}          { SCANNER.string_literal += '\n'; }
+   "\""          { SCANNER.string_literal += '"'; }
+   [^\\\"\n]*   { SCANNER.string_literal += &yytext[0]; }
+} // TRIPLE_STRING
+
 <GRAMMAR>{
 {NL}            { continue; }
 {WSs}           { continue; }
 {Comment}       { continue; }
 "/*"            { BEGIN COMMENT; continue; }
+"\"\"\""         { if(SCANNER.standard < verilog_standardt::SV2023)
+                  {
+                    yyverilogerror(
+                      "triple-quoted string literals require SystemVerilog 2023");
+                    return TOK_SCANNER_ERROR;
+                  }
+                  BEGIN(TRIPLE_STRING);
+                  newstack(yyveriloglval);
+                  SCANNER.string_literal.clear();
+                }
 "\""            { BEGIN(STRING);
                   newstack(yyveriloglval);
                   SCANNER.string_literal.clear();

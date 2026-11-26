@@ -1,0 +1,8 @@
+CORE
+multiline_string_literal3.v
+
+^file multiline_string_literal3\.v line 2: triple-quoted string literals require SystemVerilog 2023 before '"""'$
+^EXIT=1$
+^SIGNAL=0$
+--
+Triple-quoted string literals are not part of Verilog 2005.

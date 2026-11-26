@@ -2,13 +2,16 @@
 module main;
 
   // a newline in the literal is a newline in the string
-  localparam string s1 = """a
-b""";
+  p0: assert final ("""a
+b""" == "a\nb");
 
   // an unescaped double quote
-  localparam string s2 = """x"y""";
+  p1: assert final ("""x"y""" == "x\"y");
 
-  p0: assert final (s1 == "a\nb");
-  p1: assert final (s2 == "x\"y");
+  // two consecutive double quotes
+  p2: assert final ("""x""y""" == "x\"\"y");
+
+  // escape sequences work as in other string literals
+  p3: assert final ("""a\tb""" == "a\tb");
 
 endmodule

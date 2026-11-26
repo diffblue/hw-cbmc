@@ -23,6 +23,7 @@
 * SystemVerilog: system functions, e.g., $rose, in named properties and
   sequences
 * SystemVerilog: Boolean expressions in `ifdef, `ifndef and `elsif (1800-2023)
+* SystemVerilog: triple-quoted string literals (1800-2023)
 
 # EBMC 6.2
 
