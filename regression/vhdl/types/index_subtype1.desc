@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 index_subtype1.vhd
 --bound 0
 ^EXIT=0$
@@ -15,5 +15,3 @@ index_subtype1.vhd
 ^\[index_subtype1\.p10\] .* PROVED up to bound 0$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

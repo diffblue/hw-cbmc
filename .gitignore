@@ -10,6 +10,9 @@ src/verilog/verilog_preprocessor_lex.yy.cpp
 src/verilog/verilog_y.output
 src/verilog/verilog_y.tab.cpp
 src/verilog/verilog_y.tab.h
+src/vhdl/library_standard.inc
+src/vhdl/vhdl_lex.yy.cpp
+src/vhdl/vhdl_y.output
 src/vhdl/vhdl_y.tab.cpp
 src/vhdl/vhdl_y.tab.h
 

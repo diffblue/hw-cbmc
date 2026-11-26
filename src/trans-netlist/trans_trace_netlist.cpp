@@ -62,10 +62,12 @@ exprt bitstring_to_expr(const std::string &src, const typet &type)
   }
   else if(type.id()==ID_bool)
   {
+    // the type may carry comments, e.g., the VHDL type name, which
+    // are needed for display
     if(src=="0")
-      return false_exprt();
+      return constant_exprt{ID_false, type};
     else if(src=="1")
-      return true_exprt();
+      return constant_exprt{ID_true, type};
     else
       PRECONDITION(false);
   }

@@ -137,7 +137,9 @@ void show_trans_state(
     else
       std::cout << from_expr(ns, symbol.name, rhs);
 
-    if(rhs.type().id() == ID_unsignedbv || rhs.type().id() == ID_signedbv)
+    if(
+      (rhs.type().id() == ID_unsignedbv || rhs.type().id() == ID_signedbv) &&
+      rhs.type().get(ID_C_vhdl_type).empty()) // VHDL shows vectors as bits
     {
       std::size_t width=to_bitvector_type(rhs.type()).get_width();
 

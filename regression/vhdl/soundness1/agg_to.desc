@@ -1,0 +1,10 @@
+CORE
+agg_to.vhd
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+^\[agg_to\.p0\] .* PROVED up to bound 1$
+^\[agg_to\.p3\] .* PROVED up to bound 1$
+--
+^warning: ignoring
+^REFUTED

@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 concatenation_bounds1.vhd
 --bound 0
 ^EXIT=0$
@@ -12,5 +12,3 @@ concatenation_bounds1.vhd
 ^\[concatenation_bounds1\.p7\] .* PROVED up to bound 0$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

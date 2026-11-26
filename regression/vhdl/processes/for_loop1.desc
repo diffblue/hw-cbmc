@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 for_loop1.vhd
 --bound 1
 ^EXIT=10$
@@ -7,5 +7,3 @@ for_loop1.vhd
 ^\[for_loop1\.p2\] .* REFUTED$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

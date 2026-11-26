@@ -1,0 +1,10 @@
+CORE
+comb_init1.vhd
+--bound 2
+^EXIT=10$
+^SIGNAL=0$
+^\[comb_init1\.p_false\] .* PROVED up to bound 2$
+^\[comb_init1\.p_latch\] .* PROVED up to bound 2$
+^\[comb_init1\.p_vacuous\] .* REFUTED$
+--
+^warning: ignoring

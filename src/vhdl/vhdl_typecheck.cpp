@@ -12,6 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/symbol_table_base.h>
 
+#include <verilog/verilog_types.h>
+
 #include <algorithm>
 
 irep_idt vhdl_typecheckt::to_lower(irep_idt src)
@@ -266,6 +268,15 @@ void vhdl_typecheckt::typecheck_interface_list(
           mode == ID_output || mode == ID_vhdl_buffer || mode == ID_inout;
         symbol.is_state_var = !symbol.is_input;
         symbol.value = init_value;
+
+        // add to the ports of the module
+        irep_idt direction = mode == ID_input   ? ID_input
+                             : mode == ID_inout ? ID_inout
+                                                : ID_output;
+        module_typet::portt port{
+          symbol.name, symbol.base_name, symbol.type, direction};
+        port.add(ID_C_source_location) = source_location;
+        to_module_type(module_symbol->type).ports().push_back(std::move(port));
       }
     }
   }
@@ -1066,7 +1077,7 @@ void vhdl_typecheckt::typecheck_architecture(
 
   symbol.mode = ID_VHDL;
   symbol.name = "vhdl::" + id2string(module_name);
-  symbol.type = typet(ID_module);
+  symbol.type = module_typet{};
   symbol.base_name = module_name;
   symbol.pretty_name = module_name;
   symbol.module = symbol.name;

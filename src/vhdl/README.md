@@ -115,13 +115,26 @@ context gives them a type (`convert_to`).
 ## Synthesis
 
 `vhdl_synthesist` (`vhdl_synthesis_class.h`, `vhdl_synthesis.cpp`)
-turns the type-checked architecture into a transition system with one
-implicit clock, following IEEE 1076.6-2004: clocked processes give
-next-state functions (TRANS), the other processes and the concurrent
-assignments give constraints (INVAR), initial values give INIT, and
-assertions become property symbols. Everything stays VHDL-typed. The
-synthesis is not part of this change; `vhdl_synthesis.cpp` rejects
-every design until it lands.
+turns the type-checked architecture into a transition system, with one
+implicit clock, following IEEE 1076.6-2004:
+
+* A process whose body is a single `if`/`elsif` chain ending in a
+  clock edge condition (`clk'event and clk = '1'`, `rising_edge(clk)`)
+  is a clocked process. Its body is executed symbolically once per
+  cycle, with the edge taken to be true; the signals and variables it
+  assigns are state variables with next-state functions (TRANS).
+* Other processes and the concurrent assignments are combinational;
+  the signals they assign are constrained in every state (INVAR). An
+  incomplete combinational assignment infers a latch, with a warning.
+* Initial values are INIT constraints. Assertions become property
+  symbols, `always` the condition.
+* Multiple drivers, mixed clocks and clock edges in other positions are
+  errors.
+
+Partial assignments (to an element, a slice or a record element) are
+expressed as `with` expressions and slice concatenations on the whole
+object; the symbolic execution merges the branches of `if` statements
+into `if` expressions. Everything stays VHDL-typed.
 
 ## Lowering
 
@@ -137,15 +150,20 @@ and `update_bit` for partial assignments. The design is two-valued:
 only `'0'` and `'1'` have a value in the lowered design. `'L'` and
 `'H'` are accepted as the operand of the condition operator `??`, where
 they read as false and true (IEEE 1076-2008 9.2.9), and are rejected
-anywhere else, as are the other values of std_ulogic.
+anywhere else, as are the other values of std_ulogic. The VHDL type
+name and index range are kept as comments on the CBMC types, so that
+traces and `--show-trans` (`expr2vhdl.cpp`) can show values and names
+in VHDL notation.
 
 ## Tests
 
 * `regression/vhdl`: by topic (`operators`, `processes`, `concurrent`,
-  `types`, `design-units`, `parser`, `typecheck_errors1`); each input
-  has a `-parse`, a `-typecheck` and a BMC `.desc`.
+  `types`, `design-units`, `parser`, `typecheck_errors1`, `soundness1`);
+  each input has a `-parse`, a `-typecheck` and a BMC `.desc`.
+  `soundness1` holds designs whose verdicts were once wrong; re-run it
+  after any change to the type checker or the synthesis.
 * `unit/vhdl`: the parse tree, parser, expression and type classes,
-  and the lowering.
+  the lowering, the synthesis and `expr2vhdl`.
 
 ## References
 

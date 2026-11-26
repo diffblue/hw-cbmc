@@ -1,0 +1,9 @@
+CORE
+init_sl.vhd
+--bound 1
+^EXIT=10$
+^SIGNAL=0$
+^\[init_sl\.p0\] .* REFUTED$
+^\[init_sl\.p1\] .* REFUTED$
+--
+^warning: ignoring

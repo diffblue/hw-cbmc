@@ -1,0 +1,9 @@
+CORE
+null_array1.vhd
+--bound 0
+^EXIT=2$
+^SIGNAL=0$
+^file null_array1\.vhd line 10 column \d+: null arrays are not supported$
+^CONVERSION ERROR$
+--
+^warning: ignoring

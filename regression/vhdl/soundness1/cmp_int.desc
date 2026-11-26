@@ -1,0 +1,10 @@
+CORE
+cmp_int.vhd
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+^\[cmp_int\.p0\] .* PROVED up to bound 1$
+^\[cmp_int\.p1\] .* PROVED up to bound 1$
+^\[cmp_int\.p2\] .* PROVED up to bound 1$
+--
+^warning: ignoring

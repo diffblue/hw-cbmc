@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 mux1.vhd
 --bound 1
 ^EXIT=10$
@@ -7,5 +7,3 @@ mux1.vhd
 ^\[mux1\.p2\] .* REFUTED$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 numeric_std2.vhd
 --bound 1
 ^EXIT=0$
@@ -8,5 +8,3 @@ numeric_std2.vhd
 ^\[numeric_std2\.p2\] .* PROVED up to bound 1$
 --
 ^warning: ignoring
---
-Needs the synthesis.

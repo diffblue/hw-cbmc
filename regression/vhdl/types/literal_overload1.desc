@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 literal_overload1.vhd
 --bound 0
 ^EXIT=0$
@@ -7,5 +7,3 @@ literal_overload1.vhd
 ^\[literal_overload1\.p2\] .* PROVED up to bound 0$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

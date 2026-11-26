@@ -1,0 +1,8 @@
+CORE
+resize_signed.vhd
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+^\[resize_signed\.p0\] .* PROVED up to bound 1$
+--
+^warning: ignoring

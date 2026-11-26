@@ -76,6 +76,12 @@ trans_tracet compute_trans_trace(
           exprt value_expr = decision_procedure.get(indexed_symbol_expr);
           if(value_expr == indexed_symbol_expr)
             value_expr = nil_exprt();
+          else if(value_expr.is_constant() && value_expr.type() == symbol.type)
+          {
+            // The decision procedure may drop the comments on the type,
+            // e.g., the VHDL type name; these are needed for display.
+            value_expr.type() = symbol.type;
+          }
 
           state.assignments.emplace_back(
             symbol.symbol_expr(), std::move(value_expr));

@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 concatenation1.vhd
 --bound 0
 ^EXIT=0$
@@ -8,5 +8,3 @@ concatenation1.vhd
 ^\[concatenation1\.p3\] .* PROVED up to bound 0$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

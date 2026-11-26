@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 enum_fsm1.vhd
 --bound 3
 ^EXIT=10$
@@ -7,5 +7,3 @@ enum_fsm1.vhd
 ^\[enum_fsm1\.p2\] .* REFUTED$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

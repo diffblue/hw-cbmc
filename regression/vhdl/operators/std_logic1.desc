@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 std_logic1.vhd
 --bound 1
 ^EXIT=0$
@@ -17,5 +17,3 @@ std_logic1.vhd
 --
 ^warning: ignoring
 ^REFUTED
---
-Nothing is implemented yet.
