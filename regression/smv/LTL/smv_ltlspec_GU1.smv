@@ -1,0 +1,22 @@
+MODULE main
+
+-- counts 0, 1, ..., 10, 0, ...; may be reset to 0 at any time
+VAR c : 0..15;
+IVAR rst : boolean;
+
+ASSIGN
+  init(c) := 0;
+  next(c) := case rst : 0; c = 10 : 0; TRUE : c + 1; esac;
+
+-- expected to pass
+LTLSPEC G (c != 10 U (c = 10 | c = 0))
+-- expected to fail: c = 9 satisfies neither operand
+LTLSPEC G (c < 9 U c = 10)
+-- expected to pass: c = 12 is unreachable
+LTLSPEC G (c = 10 R c != 12)
+-- expected to fail: c = 3 is reached before c = 9
+LTLSPEC G (c = 9 R c != 3)
+-- expected to pass: before c = 10, c is at most 9
+LTLSPEC G (c = 10 R c <= 10)
+-- expected to fail: the counter may be reset forever
+LTLSPEC G (c != 10 U c = 10)

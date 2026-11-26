@@ -8,11 +8,13 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "lasso.h"
 
-#include <util/expr_iterator.h>
 #include <util/std_expr.h>
 #include <util/symbol_table.h>
 
 #include "instantiate_word_level.h"
+
+#include <unordered_set>
+#include <vector>
 
 /*******************************************************************\
 
@@ -142,15 +144,28 @@ Function: uses_lasso_symbol
 
 bool uses_lasso_symbol(const exprt &expr)
 {
-  for(auto subexpr_it = expr.depth_cbegin(), subexpr_end = expr.depth_cend();
-      subexpr_it != subexpr_end;
-      subexpr_it++)
+  // The BMC obligations share subexpressions heavily (e.g., the
+  // disjunctions built for until/release), hence visit every shared
+  // node only once instead of walking the tree.
+  std::unordered_set<const void *> visited;
+  std::vector<const exprt *> stack{&expr};
+
+  while(!stack.empty())
   {
-    if(subexpr_it->id() == ID_symbol)
-      if(to_symbol_expr(*subexpr_it).identifier().starts_with(LASSO_PREFIX))
-      {
+    const exprt &e = *stack.back();
+    stack.pop_back();
+
+    if(!visited.insert(&e.read()).second)
+      continue;
+
+    if(e.id() == ID_symbol)
+    {
+      if(to_symbol_expr(e).identifier().starts_with(LASSO_PREFIX))
         return true;
-      }
+    }
+
+    for(auto &op : e.operands())
+      stack.push_back(&op);
   }
 
   return false;

@@ -29,6 +29,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "sequence.h"
 
 #include <cstdlib>
+#include <optional>
 
 /*******************************************************************\
 
@@ -194,6 +195,17 @@ static std::vector<mp_integer> path_order_timeframes(
   }
 
   return result;
+}
+
+/// Returns x ∨ acc, or x if acc is empty. The result shares the
+/// expression of 'acc', which allows building a disjunction over a
+/// sequence of timeframes incrementally with linear size.
+static exprt or_accumulate(std::optional<exprt> acc, exprt x)
+{
+  if(acc.has_value())
+    return or_exprt{std::move(x), std::move(*acc)};
+  else
+    return x;
 }
 
 static obligationst property_obligations_rec(
@@ -492,8 +504,13 @@ static obligationst property_obligations_rec(
     auto &q = binary_expr.rhs();
 
     // p has to to be true until (not including) q is true
-    exprt::operandst q_disjuncts;
     obligationst obligations;
+
+    // The disjunction of q over the timeframes visited so far,
+    // including the current one. This is built incrementally, sharing
+    // the expression for the previous timeframe, to keep the size of
+    // the encoding linear in the number of timeframes.
+    std::optional<exprt> q_so_far;
 
     // Visit the timeframes in path order starting at 'current'; the
     // operands must not be evaluated before the start of the attempt.
@@ -503,12 +520,11 @@ static obligationst property_obligations_rec(
     {
       auto q_rec = property_obligations_rec(
         q, allow_pending_matches, j, no_timeframes, lasso);
-      q_disjuncts.push_back(q_rec.conjunction().second);
+      q_so_far = or_accumulate(std::move(q_so_far), q_rec.conjunction().second);
 
       auto p_rec = property_obligations_rec(
         p, allow_pending_matches, j, no_timeframes, lasso);
-      auto cond =
-        or_exprt{p_rec.conjunction().second, disjunction(q_disjuncts)};
+      auto cond = or_exprt{p_rec.conjunction().second, *q_so_far};
 
       obligations.add(current, cond);
     }
@@ -522,8 +538,13 @@ static obligationst property_obligations_rec(
     auto &q = R_expr.rhs();
 
     // q has to be true until (including) p is true
-    exprt::operandst p_disjuncts;
     obligationst obligations;
+
+    // The disjunction of p over the timeframes visited so far,
+    // excluding the current one. This is built incrementally, sharing
+    // the expression for the previous timeframe, to keep the size of
+    // the encoding linear in the number of timeframes.
+    std::optional<exprt> p_so_far;
 
     // Visit the timeframes in path order starting at 'current'; the
     // operands must not be evaluated before the start of the attempt.
@@ -533,13 +554,15 @@ static obligationst property_obligations_rec(
     {
       auto q_rec = property_obligations_rec(
         q, allow_pending_matches, j, no_timeframes, lasso);
-      auto cond =
-        or_exprt{q_rec.conjunction().second, disjunction(p_disjuncts)};
-      obligations.add(current, cond);
+      auto q_j = q_rec.conjunction().second;
+      if(p_so_far.has_value())
+        obligations.add(current, or_exprt{std::move(q_j), *p_so_far});
+      else
+        obligations.add(current, std::move(q_j));
 
       auto p_rec = property_obligations_rec(
         p, allow_pending_matches, j, no_timeframes, lasso);
-      p_disjuncts.push_back(p_rec.conjunction().second);
+      p_so_far = or_accumulate(std::move(p_so_far), p_rec.conjunction().second);
     }
 
     return obligations;
