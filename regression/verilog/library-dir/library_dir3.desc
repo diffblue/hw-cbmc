@@ -1,0 +1,10 @@
+KNOWNBUG
+library_dir3.sv
+-y library_dir1_lib --bound 10
+^\[.*p1\] .* REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+--
+The instances in a case generate construct are not considered when
+searching the library directories, which gives "module `sub' not found".
