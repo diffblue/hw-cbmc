@@ -1,0 +1,15 @@
+CORE
+parameter7.sv
+--bound 0
+^\[main\.r\.p0\] always \$bits\(main\.r\.b\.a\.d\) == 8: PROVED up to bound 0$
+^\[main\.p1\] always main\.y == main\.x: PROVED up to bound 0$
+^\[main\.p2\] always main\.z == main\.x: PROVED up to bound 0$
+^\[main\.p3\] always \$bits\(main\.b\.e\) == 8: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The interface type of an interface port is passed on through further
+interface ports, and includes the interface types of the interface ports
+of the interface.

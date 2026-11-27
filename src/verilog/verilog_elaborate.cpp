@@ -574,6 +574,12 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
 
         symbols_added.push_back(symbol.name);
       }
+
+      // The interface ports of a design element with a non-ANSI header
+      // are declared in the body. Their interfaces are instantiated
+      // right away, as for the ports in an ANSI header.
+      if(decl.type().id() == ID_verilog_interface)
+        instantiate_interface_ports(decl);
     }
     else
     {
@@ -1562,9 +1568,14 @@ verilog_typecheckt::elaborate(const verilog_module_sourcet &module_source)
       collect_symbols(declaration.type(), declarator);
 
   // At the top level of the module, include the non-parameter module port
-  // module items.
+  // module items. The interfaces under the interface ports are
+  // instantiated right away, since their members may be used in
+  // elaboration-time constants, e.g., $bits(bus.i).
   for(auto &port_decl : module_source.ports())
+  {
     collect_port_symbols(port_decl);
+    instantiate_interface_ports(port_decl);
+  }
 
   // Now elaborate the top level of the module.
   auto elaborated_module_items = elaborate_level(module_source.module_items());

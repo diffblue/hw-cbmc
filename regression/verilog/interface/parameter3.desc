@@ -1,0 +1,16 @@
+CORE
+parameter3.sv
+--bound 1
+^\[main\.u\.wide\.p0\] always 1: PROVED up to bound 1$
+^\[main\.u\.p1\] always main\.u\.N == 16: PROVED up to bound 1$
+^\[main\.u\.p2\] always \$bits\(main\.u\.copy\) == 16: PROVED up to bound 1$
+^\[main\.u\.p3\] always main\.u\.copy == main\.u\.s\.a: PROVED up to bound 1$
+^\[main\.u\.p4\] always \$bits\(main\.u\.x\) == 16: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The members of an interface port must be available, with the parameters of
+the bound instance, when the elaboration-time constants of the module are
+evaluated.

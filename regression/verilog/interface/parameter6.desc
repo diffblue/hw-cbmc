@@ -1,0 +1,11 @@
+CORE
+parameter6.sv
+--bound 1
+^\[main\.u\.p0\] always main\.u\.N == 16: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The interface ports of a module with a non-ANSI header are declared in the
+module body.

@@ -2286,11 +2286,8 @@ void verilog_typecheckt::typecheck_design_element(
 
   // Elaborate the named constants (parameters, enums),
   // generate constructs, and add the symbols to the symbol table.
+  // This instantiates the interfaces under the interface ports.
   auto verilog_module_expr = elaborate(module_source);
-
-  // Instantiate interface members under interface ports. This precedes
-  // the submodules, which may be bound to these.
-  instantiate_interface_ports(module_source);
 
   // instantiate and parameterize submodules, interfaces, etc.
   process_design_element_instantiations(verilog_module_expr);

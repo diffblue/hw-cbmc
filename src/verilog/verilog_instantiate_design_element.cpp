@@ -206,6 +206,60 @@ void verilog_typecheckt::set_parameter_values(
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::set_interface_port_types
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: An interface port is declared with the name of an interface,
+          e.g., bus b, but not with its parameters, which are those of
+          the interface instance that is bound to the port. The
+          instantiation gives these as parameter assignments of the
+          interface ports, which are set here on the declarations of
+          the ports, in the same way as the values of parameters.
+
+\*******************************************************************/
+
+void verilog_typecheckt::set_interface_port_types(
+  verilog_module_sourcet &module_source,
+  const exprt::operandst &interface_port_assignments)
+{
+  if(interface_port_assignments.empty())
+    return;
+
+  std::map<irep_idt, irept> types;
+
+  for(auto &assignment : interface_port_assignments)
+    types[assignment.get(ID_parameter)] = assignment.find(ID_value);
+
+  auto set_type = [&types](verilog_declt &decl)
+  {
+    if(decl.type().id() != ID_verilog_interface)
+      return;
+
+    // The interface ports have one declarator per declaration.
+    for(auto &declarator : decl.declarators())
+    {
+      auto type_it = types.find(declarator.base_name());
+      if(type_it != types.end())
+        decl.type().add(ID_C_verilog_interface_type) = type_it->second;
+    }
+  };
+
+  // the ANSI port declarations
+  for(auto &decl : module_source.ports())
+    set_type(decl);
+
+  // the declarations of the interface ports in the body, for a design
+  // element with a non-ANSI header
+  for(auto &item : module_source.module_items())
+    if(item.id() == ID_decl)
+      set_type(to_verilog_decl(item));
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::instantiate_design_element
 
   Inputs:
@@ -222,7 +276,7 @@ irep_idt verilog_typecheckt::instantiate_design_element(
   const irep_idt &design_element_identifier,
   const irep_idt &design_element_base_name,
   const irep_idt &instance_identifier,
-  const exprt::operandst &parameter_assignments,
+  const exprt::operandst &all_parameter_assignments,
   const std::map<irep_idt, exprt> &instance_defparams)
 {
   // find the source symbol of the design element
@@ -238,6 +292,19 @@ irep_idt verilog_typecheckt::instantiate_design_element(
   // find the source
   const auto &module_source =
     to_verilog_module_source(source_symbol.type.find(ID_module_source));
+
+  // The parameter assignments of the interface ports, which give the
+  // interface types of the ports, are separate from those of the
+  // parameters.
+  exprt::operandst parameter_assignments, interface_port_assignments;
+
+  for(auto &assignment : all_parameter_assignments)
+  {
+    if(assignment.id() == ID_verilog_interface_port_assignment)
+      interface_port_assignments.push_back(assignment);
+    else
+      parameter_assignments.push_back(assignment);
+  }
 
   auto parameter_values = get_parameter_values(
     module_source, parameter_assignments, instance_defparams);
@@ -268,6 +335,9 @@ irep_idt verilog_typecheckt::instantiate_design_element(
 
   // set parameters
   set_parameter_values(source_copy, location, parameter_values);
+
+  // set the interface types of the interface ports
+  set_interface_port_types(source_copy, interface_port_assignments);
 
   // put symbol in symbol_table
   symbolt *new_symbol;

@@ -2738,6 +2738,11 @@ public:
     return (const port_listt &)(find(ID_ports).get_sub());
   }
 
+  port_listt &ports()
+  {
+    return (port_listt &)(add(ID_ports).get_sub());
+  }
+
   using module_itemst = itemst;
 
   const module_itemst &module_items() const

@@ -189,6 +189,23 @@ protected:
     const mp_integer &element_index,
     const source_locationt &);
 
+  // How an instance is instantiated: the parameter assignments and the
+  // defparams. The parameter assignments include those of the interface
+  // ports, see interface_port_assignments. This is recorded on the
+  // symbol of an interface instance, and on the symbol of an interface
+  // port, and is the interface type of an interface port bound to it.
+  struct verilog_instantiationt
+  {
+    exprt::operandst parameter_assignments;
+    std::map<irep_idt, exprt> defparams;
+  };
+
+  static irept instantiation_record(const verilog_instantiationt &);
+  static verilog_instantiationt instantiation_of_record(const irept &);
+  static void set_instantiation(symbolt &, const verilog_instantiationt &);
+  std::optional<irept>
+  get_instantiation_record(const irep_idt &instance_identifier) const;
+
   // Specialize a design element (module, interface, program, ...)
   // to a given instance identifier and parameter assignment
   irep_idt instantiate_design_element(
@@ -198,6 +215,13 @@ protected:
     const irep_idt &instance_identifier,
     const exprt::operandst &parameter_assignment,
     const std::map<irep_idt, exprt> &defparams);
+
+  // The parameter assignments of the interface ports of a design element
+  // set the interface types of the ports in the source of the design
+  // element.
+  static void set_interface_port_types(
+    verilog_module_sourcet &,
+    const exprt::operandst &interface_port_assignments);
 
   std::vector<verilog_parameter_declt::declaratort>
   get_parameter_declarators(const verilog_module_sourcet &);
@@ -214,7 +238,15 @@ protected:
 
   // interfaces
   void check_module_ports(const verilog_module_sourcet &);
-  void instantiate_interface_ports(const verilog_module_sourcet &);
+  std::map<irep_idt, exprt> interface_port_actuals(
+    const irep_idt &module_identifier,
+    const verilog_instt::instancet &);
+  exprt interface_port_actual(const exprt &);
+  exprt::operandst interface_port_assignments(
+    const irep_idt &module_identifier,
+    const verilog_instt::instancet &);
+  irept interface_type_of_actual(const exprt &actual) const;
+  void instantiate_interface_ports(const verilog_declt &port_decl);
   void interface_members(
     const irep_idt &identifier,
     const typet &,
@@ -231,7 +263,8 @@ protected:
     const irep_idt &interface_module_id,
     const irep_idt &interface_base_name,
     const irep_idt &base_name,
-    const irep_idt &identifier);
+    const irep_idt &identifier,
+    const irept &interface_type);
   void interface_module_item(const class verilog_module_itemt &);
   void interface_block(const class verilog_blockt &);
   void interface_generate_block(const class verilog_generate_blockt &);
