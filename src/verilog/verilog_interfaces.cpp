@@ -292,23 +292,51 @@ std::map<irep_idt, exprt> verilog_typecheckt::interface_port_actuals(
 
   if(instance.named_port_connections())
   {
+    bool wildcard = false;
+    std::set<irep_idt> named_ports;
+
     for(auto &connection : instance.connections())
     {
+      if(connection.id() == ID_verilog_wildcard_port_connection)
+      {
+        wildcard = true;
+        continue;
+      }
+
       if(connection.id() != ID_verilog_named_port_connection)
-        continue; // e.g., a wildcard connection
+        continue;
 
       auto &named_connection = to_verilog_named_port_connection(connection);
 
       if(named_connection.port().id() != ID_verilog_identifier)
         continue;
 
+      auto &port_base_name =
+        to_verilog_identifier_expr(named_connection.port()).base_name();
+      named_ports.insert(port_base_name);
+
       auto actual = interface_port_actual(named_connection.value());
 
       if(actual.is_not_nil())
-      {
-        auto &port_base_name =
-          to_verilog_identifier_expr(named_connection.port()).base_name();
         result[port_base_name] = std::move(actual);
+    }
+
+    // 1800-2017 23.3.2.4: a wildcard connects each port that is not
+    // connected explicitly to the instance of the same name, if any.
+    if(wildcard)
+    {
+      for(auto &port : ports)
+      {
+        auto &port_base_name = port.declarators().front().base_name();
+
+        if(named_ports.find(port_base_name) != named_ports.end())
+          continue;
+
+        auto actual =
+          interface_port_actual(verilog_identifier_exprt{port_base_name});
+
+        if(actual.is_not_nil())
+          result[port_base_name] = std::move(actual);
       }
     }
   }

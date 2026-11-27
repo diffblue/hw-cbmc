@@ -33,6 +33,8 @@
 * SystemVerilog: arrays of interface ports, and interface ports bound to
   elements of arrays of interface instances, have the parameters of the
   bound instances
+* SystemVerilog: interface ports connected by a wildcard (.*) have the
+  parameters of the bound instance
 
 # EBMC 6.2
 
