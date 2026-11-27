@@ -111,7 +111,13 @@ bool verilog_languaget::preprocess(
   message_handlert &message_handler)
 {
   verilog_preprocessort preprocessor(
-    instream, outstream, message_handler, path, include_paths, initial_defines);
+    instream,
+    outstream,
+    message_handler,
+    path,
+    include_paths,
+    initial_defines,
+    verilog_standardt::SV2023);
 
   try { preprocessor.preprocessor(); }
   catch(int e) { return true; }

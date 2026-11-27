@@ -104,7 +104,7 @@ public:
   std::size_t total_number_of_lines() const;
 
 protected:
-  std::string preprocess(const std::string &file_name);
+  std::string preprocess(const std::string &file_name, verilog_standardt);
 };
 
 class cmdlinet;
