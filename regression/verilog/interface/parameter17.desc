@@ -1,0 +1,17 @@
+CORE
+parameter17.sv
+--bound 1
+^\[main\.u1\.p0\] always \$bits\(main\.u1\.s\.a\) == 16: PROVED up to bound 1$
+^\[main\.u1\.p1\] always \$bits\(main\.u1\.t\.a\) == 4: PROVED up to bound 1$
+^\[main\.u2\.p0\] always \$bits\(main\.u2\.s\.a\) == 16: PROVED up to bound 1$
+^\[main\.u2\.p1\] always \$bits\(main\.u2\.t\.a\) == 4: PROVED up to bound 1$
+^\[main\.u3\.p0\] always \$bits\(main\.u3\.s\.a\) == 16: PROVED up to bound 1$
+^\[main\.u3\.p1\] always \$bits\(main\.u3\.t\.a\) == 4: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+1800-2017 23.3.2.3 and 23.3.2.4: the interface instances bound by implicit
+named and by wildcard port connections determine the parameters of the
+interface ports.
