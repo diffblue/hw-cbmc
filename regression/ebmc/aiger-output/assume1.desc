@@ -1,0 +1,13 @@
+CORE
+assume1.sv
+--aiger
+activate-multi-line-match
+^aag 1 1 0 0 0 1 1\n2\n2\n3$
+^b0 .*\.safe$
+^c0 .*\.env$
+^EXIT=0$
+^SIGNAL=0$
+--
+^b[1-9][0-9]*\s
+--
+The assumption constrains traces. The assertion occupies the only bad-state index.

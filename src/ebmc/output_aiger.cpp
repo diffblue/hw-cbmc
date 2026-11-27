@@ -8,10 +8,16 @@ Author: Daniel Kroening, dkr@amazon.com
 
 #include "output_aiger.h"
 
+#include <util/output_file.h>
+
 #include <solvers/prop/literal_expr.h>
 #include <trans-netlist/netlist.h>
 
+#include "ebmc_error.h"
+#include "ebmc_properties.h"
+
 #include <map>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <unordered_set>
@@ -112,9 +118,14 @@ static bvt flatten_conjunction(const netlistt &netlist, const bvt &literals)
   return conjuncts;
 }
 
-void output_aiger(const netlistt &netlist, std::ostream &out)
+void output_aiger(
+  const netlistt &netlist,
+  const ebmc_propertiest &properties,
+  const std::string &filename)
 {
-  aiger *aig = aiger_init();
+  const std::unique_ptr<aiger, decltype(&aiger_reset)> model(
+    aiger_init(), aiger_reset);
+  auto *aig = model.get();
 
   // Add inputs
   for(auto var_no : netlist.var_map.inputs)
@@ -245,20 +256,35 @@ void output_aiger(const netlistt &netlist, std::ostream &out)
     }
   }
 
-  // Add properties as bad state outputs.
-  // A bad state is a state that violates the property,
-  // i.e., the negation of the property body literal.
-  for(auto &[id, netlist_expr] : netlist.properties)
+  // The netlist stores normalized expressions without the assume wrapper.
+  // Keep the existing order of property identifiers for the bad indices.
+  std::map<irep_idt, const ebmc_propertiest::propertyt *> active_properties;
+  for(const auto &property : properties.properties)
+    if(!property.is_disabled())
+      active_properties.emplace(property.identifier, &property);
+
+  for(const auto &[id, property] : active_properties)
   {
-    auto l = invariant_literal(netlist_expr);
-    if(l.has_value())
-    {
-      unsigned bad_lit = to_aiger_lit(!l.value());
-      aiger_add_bad(aig, bad_lit, aiger_symbol_name(id2string(id)).c_str());
-    }
+    auto entry = netlist.properties.find(id);
+    auto literal = entry == netlist.properties.end()
+                     ? std::nullopt
+                     : invariant_literal(entry->second);
+    if(!literal.has_value() || property->is_exists_path())
+      throw ebmc_errort{}.with_location(property->location)
+        << "AIGER: unsupported "
+        << (property->is_assumption() ? "assumption" : "property") << " '"
+        << property->name << "' (expected a state invariant)";
+
+    auto name = aiger_symbol_name(id2string(id));
+    if(property->is_assumption())
+      aiger_add_constraint(aig, to_aiger_lit(*literal), name.c_str());
+    else
+      aiger_add_bad(aig, to_aiger_lit(!*literal), name.c_str());
   }
 
   // Write in ASCII mode to the stream
+  output_filet output_file{filename};
+  auto &out = output_file.stream();
   auto put_fn = [](char ch, void *s) -> int
   {
     auto *os = static_cast<std::ostream *>(s);
@@ -267,6 +293,4 @@ void output_aiger(const netlistt &netlist, std::ostream &out)
   };
 
   aiger_write_generic(aig, aiger_ascii_mode, &out, put_fn);
-
-  aiger_reset(aig);
 }

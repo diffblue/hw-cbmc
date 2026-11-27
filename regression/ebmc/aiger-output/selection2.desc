@@ -1,0 +1,10 @@
+CORE
+selection1.sv
+--aiger --property main.eventual
+selection1\.sv line [1-9][0-9]*:.* AIGER: unsupported property 'main\.eventual'
+^EXIT=6$
+^SIGNAL=0$
+--
+^aag\s
+--
+A selected temporal property that cannot be exported must be diagnosed.
