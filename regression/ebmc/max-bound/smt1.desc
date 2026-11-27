@@ -1,0 +1,9 @@
+CORE
+counter1.sv
+--max-bound 20 --z3
+^error: --max-bound requires a SAT-based solver; it is not supported with SMT solvers$
+^EXIT=6$
+^SIGNAL=0$
+--
+--
+The SMT backends are not supported.

@@ -23,6 +23,17 @@ void lasso_constraints(
   const namespacet &,
   const irep_idt &module_identifier);
 
+/// Adds the lasso constraints for the lasso symbols lasso_symbol(k, i)
+/// with from_timeframe <= i < to_timeframe and k < i. Calling this
+/// with 0..a and then a..b yields the same constraints as a single
+/// call with 0..b, which enables incremental unwinding.
+void lasso_constraints(
+  decision_proceduret &,
+  const mp_integer &from_timeframe,
+  const mp_integer &to_timeframe,
+  const namespacet &,
+  const irep_idt &module_identifier);
+
 /// Is there a loop from i back to k?
 /// Precondition: k<i
 symbol_exprt lasso_symbol(const mp_integer &k, const mp_integer &i);

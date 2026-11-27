@@ -1,0 +1,17 @@
+CORE broken-smt-backend
+multiple1.sv
+--max-bound 20 --numbered-trace
+^\[main\.p0\] always main\.cnt != 3: REFUTED$
+^Counterexample with 4 states:$
+^\[main\.p1\] always main\.cnt != 9: REFUTED$
+^Counterexample with 10 states:$
+^\[main\.p2\] always main\.cnt != 0: REFUTED$
+^Counterexample with 1 state:$
+^\[main\.p3\] always main\.cnt != 100: PROVED up to bound 20$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Properties that fail at different depths, each with a shortest
+counterexample.

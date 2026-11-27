@@ -1,0 +1,12 @@
+CORE broken-smt-backend
+liveness1.sv
+--max-bound 20 --numbered-trace
+^\[main\.p0\] always s_eventually main\.cnt == 3: REFUTED$
+^Counterexample with 2 states:$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A liveness property refuted by a lasso; this requires the lasso
+constraints to be added as timeframes are added.

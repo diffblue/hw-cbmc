@@ -1,0 +1,12 @@
+CORE broken-smt-backend
+cover1.sv
+--max-bound 10 --numbered-trace
+^\[main\.c0\] cover main\.cnt == 4: PROVED$
+^Trace with 5 states:$
+^\[main\.c1\] cover main\.cnt == 20: REFUTED up to bound 10$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Cover properties are existential.
