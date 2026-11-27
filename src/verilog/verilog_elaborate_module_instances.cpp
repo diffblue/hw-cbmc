@@ -7,6 +7,7 @@ Author: Daniel Kroening, dkr@amazon.com
 \*******************************************************************/
 
 #include <util/arith_tools.h>
+#include <util/expr_iterator.h>
 #include <util/mathematical_types.h>
 #include <util/std_expr.h>
 
@@ -151,7 +152,8 @@ void verilog_typecheckt::parameterize_instantiation_site(
     const irep_idt design_element_identifier =
       verilog_module_symbol(id2string(inst.module_base_name()));
 
-    // the sites of the interface instances bound to the interface ports
+    // The sites of the interface instances bound to the interface ports.
+    // For an element of an array of instances, this is the array.
     std::set<std::size_t> dependencies;
 
     for(auto &instance : inst.instances())
@@ -159,11 +161,35 @@ void verilog_typecheckt::parameterize_instantiation_site(
       for(auto &[port, actual] :
           interface_port_actuals(design_element_identifier, instance))
       {
-        auto site_it =
-          site_of_instance.find(to_symbol_expr(actual).get_identifier());
+        for(auto it = actual.depth_cbegin(); it != actual.depth_cend(); ++it)
+        {
+          if(it->id() != ID_symbol)
+            continue;
 
-        if(site_it != site_of_instance.end())
-          dependencies.insert(site_it->second);
+          std::string identifier =
+            id2string(to_symbol_expr(*it).get_identifier());
+
+          while(true)
+          {
+            auto site_it = site_of_instance.find(identifier);
+            if(site_it != site_of_instance.end())
+            {
+              dependencies.insert(site_it->second);
+              break;
+            }
+
+            // an element of an array of instances, e.g., i[1]
+            auto bracket = identifier.rfind('[');
+            if(
+              identifier.empty() || identifier.back() != ']' ||
+              bracket == std::string::npos)
+            {
+              break;
+            }
+
+            identifier.resize(bracket);
+          }
+        }
       }
     }
 

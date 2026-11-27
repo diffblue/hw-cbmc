@@ -1,0 +1,15 @@
+CORE
+parameter16.sv
+--bound 1
+^\[main\.u\.p0\] always main\.u\.N == main\.u\.E: PROVED up to bound 1$
+^\[main\.g\[1\]\.u\.p0\] always main\.g\[1\]\.u\.N == main\.g\[1\]\.u\.E: PROVED up to bound 1$
+^\[main\.g\[2\]\.u\.p0\] always main\.g\[2\]\.u\.N == main\.g\[2\]\.u\.E: PROVED up to bound 1$
+^\[main\.g\[1\]\.v\.p0\] always main\.g\[1\]\.v\.N == main\.g\[1\]\.v\.E: PROVED up to bound 1$
+^\[main\.g\[2\]\.v\.p0\] always main\.g\[2\]\.v\.N == main\.g\[2\]\.v\.E: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The interface type of a port bound to an element of an array of interface
+instances is that of the element.
