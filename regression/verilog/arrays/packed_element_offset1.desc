@@ -1,0 +1,11 @@
+CORE
+packed_element_offset1.sv
+--bound 0
+^\[main\.p\] always main\.i != 2 \|\| main\.r == 4'b1010: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A variable index into a packed array whose range does not start at 0 must be
+mapped to the element with that declared index.
