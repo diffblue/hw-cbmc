@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "verilog_symbol_table.h"
 #include "verilog_typecheck_expr.h"
 
+#include <functional>
 #include <optional>
 
 bool verilog_typecheck(
@@ -136,7 +137,9 @@ protected:
   void process_design_element_instantiations(verilog_module_exprt &);
   void process_parameter_override(const class verilog_parameter_overridet &);
   void process_parameter_override(const verilog_module_itemt &);
-  void parameterize_instantiated_design_elements(verilog_module_itemt &);
+  void for_each_instantiation(
+    verilog_module_itemt &,
+    const std::function<void(verilog_module_itemt &)> &);
   void parameterize_instantiated_design_elements(class verilog_instt &);
   void parameterize_instantiated_design_elements(class verilog_inst_builtint &);
 
@@ -212,6 +215,16 @@ protected:
   // interfaces
   void check_module_ports(const verilog_module_sourcet &);
   void instantiate_interface_ports(const verilog_module_sourcet &);
+  void interface_members(
+    const irep_idt &identifier,
+    const typet &,
+    std::vector<const symbolt *> &dest) const;
+  void connect_interface_members(exprt::operandst &, const module_typet &);
+  void connect_interface_members(
+    const symbol_exprt &port,
+    const exprt &actual,
+    const std::vector<const module_typet::portt *> &members,
+    exprt::operandst &dest) const;
   void instantiate_interface_port(
     const typet &,
     const source_locationt &,

@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/mp_arith.h>
 #include <util/std_types.h>
 
+#include <algorithm>
 #include <optional>
 
 /// Used during elaboration only,
@@ -349,6 +350,24 @@ public:
       return direction() == ID_verilog_ref;
     }
 
+    /// The interface port of a port for a variable or net of the interface
+    /// of an interface port, empty for other ports. These ports are added
+    /// to the declared ports of the design element by the type checker.
+    irep_idt interface_port() const
+    {
+      return get(ID_C_verilog_interface_port);
+    }
+
+    void interface_port(irep_idt _interface_port)
+    {
+      set(ID_C_verilog_interface_port, _interface_port);
+    }
+
+    bool is_interface_member() const
+    {
+      return !interface_port().empty();
+    }
+
     const source_locationt &source_location() const
     {
       return (const source_locationt &)find(ID_C_source_location);
@@ -365,6 +384,19 @@ public:
   const portst &ports() const
   {
     return (const portst &)(find(ID_ports).get_sub());
+  }
+
+  /// The declared ports, i.e., without the ports for the members of the
+  /// interfaces of interface ports, which follow these.
+  portst declared_ports() const
+  {
+    auto &ports = this->ports();
+    return portst{
+      ports.begin(),
+      std::find_if(
+        ports.begin(),
+        ports.end(),
+        [](const portt &port) { return port.is_interface_member(); })};
   }
 
   using port_mapt = std::unordered_map<irep_idt, portt, irep_id_hash>;

@@ -102,6 +102,32 @@ void verilog_typecheckt::check_module_ports(
 
   DATA_INVARIANT(ports.size() == module_ports.size(), "number of ports");
 
+  // The variables and nets of the interfaces of the interface ports are
+  // ports as well, which are connected to the members of the bound
+  // interface instances, see connect_interface_members.
+  for(std::size_t i = 0; i < module_ports.size(); i++)
+  {
+    // copy, as the vector may grow
+    auto port_identifier = ports[i].identifier();
+    auto port_type = ports[i].type();
+
+    std::vector<const symbolt *> members;
+    interface_members(port_identifier, port_type, members);
+
+    for(auto member : members)
+    {
+      // e.g., bus.data, or bus[1].data
+      auto suffix =
+        id2string(member->name).substr(id2string(port_identifier).size());
+      auto base_name = id2string(ports[i].base_name()) + suffix;
+      auto source_location = ports[i].source_location();
+
+      ports.emplace_back(member->name, base_name, member->type, ID_verilog_ref);
+      ports.back().interface_port(port_identifier);
+      ports.back().set(ID_C_source_location, source_location);
+    }
+  }
+
   // Check that input/output declarations are in the port list.
   for(auto &item : module_source.items())
   {
@@ -128,6 +154,39 @@ void verilog_typecheckt::check_module_ports(
       }
     }
   }
+}
+
+/*******************************************************************\
+
+Function: interface_array_elements
+
+  Inputs: an array of interface instances or of interface ports
+
+ Outputs: its elements, in the order of the range, i.e., starting
+          from the left index
+
+ Purpose: The elements of an array of interface instances or of an
+          array of interface ports, 1800-2017 25.4, are symbols of
+          their own, named id[0], id[1], and so on.
+
+\*******************************************************************/
+
+static exprt::operandst interface_array_elements(const symbol_exprt &array)
+{
+  auto &array_type = to_verilog_array_type(array.type());
+  auto size = array_type.size_int();
+  auto offset = array_type.offset();
+  exprt::operandst result;
+
+  for(mp_integer i = 0; i < size; ++i)
+  {
+    auto index = array_type.increasing() ? offset + i : offset + size - 1 - i;
+    result.push_back(symbol_exprt{
+      id2string(array.get_identifier()) + '[' + integer2string(index) + ']',
+      array_type.element_type()});
+  }
+
+  return result;
 }
 
 /*******************************************************************\
@@ -265,6 +324,239 @@ void verilog_typecheckt::instantiate_interface_port(
   // Update the instance symbol value to record the interface binding
   symbolt &symbol = symbol_table_lookup(identifier);
   symbol.value = verilog_module_instancet{id2string(identifier) + "$module"};
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::interface_members
+
+  Inputs: the identifier and type of an interface port, or of an
+          interface instance
+
+ Outputs: the variables and nets of the interfaces instantiated under
+          the port, in the order of their identifiers
+
+ Purpose: These include the members of the elements of an array of
+          interface ports, 1800-2017 25.4, and those of interface
+          instances within the interfaces, e.g., under their interface
+          ports.
+
+\*******************************************************************/
+
+void verilog_typecheckt::interface_members(
+  const irep_idt &identifier,
+  const typet &type,
+  std::vector<const symbolt *> &dest) const
+{
+  if(is_interface_array_type(type))
+  {
+    for(auto &element :
+        interface_array_elements(symbol_exprt{identifier, type}))
+    {
+      interface_members(
+        to_symbol_expr(element).get_identifier(), element.type(), dest);
+    }
+
+    return;
+  }
+
+  if(type.id() != ID_verilog_module_instance)
+    return;
+
+  // The members are the symbols with the identifier of the instance as
+  // prefix. The elements of arrays of interface instances are reached
+  // through their arrays.
+  auto prefix = id2string(identifier) + '.';
+  std::vector<const symbolt *> members;
+
+  for(auto &[name, symbol] : symbol_table.symbols)
+  {
+    auto &name_string = id2string(name);
+
+    if(
+      name_string.size() > prefix.size() &&
+      name_string.compare(0, prefix.size(), prefix) == 0 &&
+      name_string.find_first_of(".[", prefix.size()) == std::string::npos)
+    {
+      members.push_back(&symbol);
+    }
+  }
+
+  std::sort(
+    members.begin(),
+    members.end(),
+    [](const symbolt *a, const symbolt *b)
+    { return id2string(a->name) < id2string(b->name); });
+
+  for(auto member : members)
+  {
+    if(
+      member->type.id() == ID_verilog_module_instance ||
+      is_interface_array_type(member->type))
+    {
+      interface_members(member->name, member->type, dest);
+    }
+    else if(
+      !member->is_type && !member->is_macro && !member->is_property &&
+      member->type.id() != ID_code && member->type.id() != ID_named_block &&
+      member->type.id() != ID_module && member->type.id() != ID_verilog_genvar)
+    {
+      dest.push_back(member);
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::connect_interface_members
+
+  Inputs: the connections of an instance, and the type of the
+          instantiated design element
+
+ Outputs:
+
+ Purpose: The ports for the variables and nets of the interfaces of the
+          interface ports, see check_module_ports, are connected to the
+          corresponding members of the interface instances that the
+          interface ports are bound to. The connections are converted to
+          named connections if need be.
+
+\*******************************************************************/
+
+void verilog_typecheckt::connect_interface_members(
+  exprt::operandst &connections,
+  const module_typet &module_type)
+{
+  auto &ports = module_type.ports();
+
+  // the member ports, by interface port
+  std::map<irep_idt, std::vector<const module_typet::portt *>> members;
+
+  for(auto &port : ports)
+    if(port.is_interface_member())
+      members[port.interface_port()].push_back(&port);
+
+  if(members.empty())
+    return;
+
+  // Positional connections are converted to named ones.
+  if(
+    !connections.empty() &&
+    connections.front().id() != ID_verilog_named_port_connection)
+  {
+    for(std::size_t i = 0; i < connections.size(); i++)
+    {
+      auto &port = ports[i];
+      auto source_location = connections[i].source_location();
+      connections[i] = verilog_inst_baset::named_port_connectiont{
+        symbol_exprt{port.identifier(), port.type()}.with_source_location(
+          source_location),
+        std::move(connections[i])};
+    }
+  }
+
+  exprt::operandst member_connections;
+
+  for(auto &connection : connections)
+  {
+    auto &named_connection = to_verilog_named_port_connection(connection);
+    auto &port = to_symbol_expr(named_connection.port());
+    auto members_it = members.find(port.get_identifier());
+
+    if(members_it != members.end() && named_connection.value().is_not_nil())
+    {
+      connect_interface_members(
+        port, named_connection.value(), members_it->second, member_connections);
+    }
+  }
+
+  for(auto &connection : member_connections)
+    connections.push_back(std::move(connection));
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::connect_interface_members
+
+  Inputs: an interface port, or an element of an array of these, its
+          actual, and the member ports of the interface port
+
+ Outputs: the connections of the member ports of the given port, or
+          element, to the corresponding members of the actual
+
+ Purpose: The elements of an array of interface ports are bound to the
+          elements of the actual pairwise, in the order of the ranges.
+          The actual is then an array of interface instances, or an
+          assignment pattern of these.
+
+\*******************************************************************/
+
+void verilog_typecheckt::connect_interface_members(
+  const symbol_exprt &port,
+  const exprt &actual,
+  const std::vector<const module_typet::portt *> &members,
+  exprt::operandst &dest) const
+{
+  if(is_interface_array_type(port.type()))
+  {
+    exprt::operandst actual_elements;
+
+    if(actual.id() == ID_verilog_assignment_pattern)
+      actual_elements = actual.operands();
+    else if(actual.id() == ID_symbol && is_interface_array_type(actual.type()))
+      actual_elements = interface_array_elements(to_symbol_expr(actual));
+
+    auto port_elements = interface_array_elements(port);
+
+    for(std::size_t i = 0;
+        i < port_elements.size() && i < actual_elements.size();
+        i++)
+    {
+      connect_interface_members(
+        to_symbol_expr(port_elements[i]), actual_elements[i], members, dest);
+    }
+
+    return;
+  }
+
+  if(actual.id() != ID_symbol)
+    return;
+
+  // The members of the port are those of its interface, and the actual
+  // is an instance of the same interface, with the same members.
+  auto prefix = id2string(port.get_identifier()) + '.';
+  auto &actual_identifier = id2string(to_symbol_expr(actual).get_identifier());
+
+  for(auto member : members)
+  {
+    auto &member_identifier = id2string(member->identifier());
+
+    if(member_identifier.compare(0, prefix.size(), prefix) != 0)
+      continue;
+
+    auto actual_member_identifier =
+      actual_identifier + '.' + member_identifier.substr(prefix.size());
+
+    const symbolt *actual_member;
+    if(ns.lookup(actual_member_identifier, actual_member))
+      continue;
+
+    // The interface under the port must be instantiated with the
+    // parameters of the bound instance for the types to match.
+    if(member->type() != actual_member->type)
+    {
+      throw errort().with_location(actual.source_location())
+        << "interface port `" << strip_verilog_root_prefix(member->identifier())
+        << "' is bound to `" << actual_member->display_name()
+        << "', which has a different type";
+    }
+
+    dest.push_back(verilog_inst_baset::named_port_connectiont{
+      symbol_exprt{member->identifier(), member->type()}.with_source_location(
+        actual.source_location()),
+      actual_member->symbol_expr().with_source_location(
+        actual.source_location())});
+  }
 }
 
 /*******************************************************************\

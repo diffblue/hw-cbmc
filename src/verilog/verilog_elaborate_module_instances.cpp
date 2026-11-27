@@ -48,7 +48,38 @@ void verilog_typecheckt::process_design_element_instantiations(
 
   // now parameterize the instantiated design elements
   for(auto &module_item : verilog_module_expr.module_items())
-    parameterize_instantiated_design_elements(module_item);
+  {
+    for_each_instantiation(
+      module_item,
+      [this](verilog_module_itemt &item)
+      {
+        if(item.id() == ID_inst)
+          parameterize_instantiated_design_elements(to_verilog_inst(item));
+        else
+          parameterize_instantiated_design_elements(
+            to_verilog_inst_builtin(item));
+      });
+  }
+
+  // Now that all instances exist, connect the members of the interfaces
+  // of the interface ports to those of the bound interface instances.
+  for(auto &module_item : verilog_module_expr.module_items())
+  {
+    for_each_instantiation(
+      module_item,
+      [this](verilog_module_itemt &item)
+      {
+        if(item.id() != ID_inst)
+          return;
+
+        for(auto &instance : to_verilog_inst(item).instances())
+        {
+          connect_interface_members(
+            instance.connections(),
+            to_module_type(ns.lookup(instance.module_identifier()).type));
+        }
+      });
+  }
 }
 
 /*******************************************************************\
@@ -457,27 +488,25 @@ void verilog_typecheckt::process_parameter_override(
 
 /*******************************************************************\
 
-Function: verilog_typecheckt::parameterize_instantiated_design_elements
+Function: verilog_typecheckt::for_each_instantiation
 
   Inputs:
 
  Outputs:
 
- Purpose:
+ Purpose: Apply the given function to the design element
+          instantiations of the given module item, in their scope and
+          with their genvar values.
 
 \*******************************************************************/
 
-void verilog_typecheckt::parameterize_instantiated_design_elements(
-  verilog_module_itemt &module_item)
+void verilog_typecheckt::for_each_instantiation(
+  verilog_module_itemt &module_item,
+  const std::function<void(verilog_module_itemt &)> &f)
 {
-  if(module_item.id() == ID_inst)
+  if(module_item.id() == ID_inst || module_item.id() == ID_inst_builtin)
   {
-    parameterize_instantiated_design_elements(to_verilog_inst(module_item));
-  }
-  else if(module_item.id() == ID_inst_builtin)
-  {
-    parameterize_instantiated_design_elements(
-      to_verilog_inst_builtin(module_item));
+    f(module_item);
   }
   else if(module_item.id() == ID_generate_block)
   {
@@ -493,7 +522,7 @@ void verilog_typecheckt::parameterize_instantiated_design_elements(
     }
 
     for(auto &item : generate_block.module_items())
-      parameterize_instantiated_design_elements(item);
+      for_each_instantiation(item, f);
 
     if(is_named)
       named_blocks.pop_back();
@@ -503,7 +532,7 @@ void verilog_typecheckt::parameterize_instantiated_design_elements(
     auto old_genvars = genvars;
     auto &set_genvars = to_verilog_set_genvars(module_item);
     genvars = set_genvars.build_map();
-    parameterize_instantiated_design_elements(set_genvars.module_item());
+    for_each_instantiation(set_genvars.module_item(), f);
     genvars = std::move(old_genvars);
   }
 }
@@ -687,9 +716,9 @@ void verilog_typecheckt::expand_instance_array(
   // Now do the port connections. All elements have the same list
   // of ports; use the ports of the first element to resolve the
   // connections.
-  const auto &first_ports =
+  const auto first_ports =
     to_module_type(symbol_table_lookup(element_design_elements.front()).type)
-      .ports();
+      .declared_ports();
 
   // 'no connection' is one connection that is nil
   exprt::operandst connections = instance.connections();
