@@ -119,6 +119,28 @@ constant_exprt convert_real_literal(const irep_idt &value)
   return result;
 }
 
+std::optional<std::size_t> integral_literal_size(const irep_idt &value)
+{
+  // get rid of whitespace and underscores
+  std::string rest;
+  rest.reserve(value.size());
+
+  for(std::size_t i = 0; i < value.size(); i++)
+  {
+    char ch = value[i];
+    if(!isspace(ch) && ch != '_')
+      rest += ch;
+  }
+
+  // The size precedes the apostrophe, if given.
+  std::string::size_type pos = rest.find('\'');
+
+  if(pos == std::string::npos || pos == 0)
+    return {};
+
+  return safe_string2size_t(rest.substr(0, pos));
+}
+
 exprt convert_integral_literal(const irep_idt &value)
 {
   // first, get rid of whitespace and underscores

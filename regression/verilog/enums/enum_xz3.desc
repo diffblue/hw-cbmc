@@ -1,0 +1,9 @@
+CORE
+enum_xz3.sv
+
+^\[main\.p1\] always .*: PROVED .*$
+^\[main\.p2\] always .*: PROVED .*$
+^\[main\.p3\] always .*: PROVED .*$
+^EXIT=0$
+^SIGNAL=0$
+--
