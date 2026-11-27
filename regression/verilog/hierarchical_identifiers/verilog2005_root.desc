@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 verilog2005_root.v
 --bound 1
-^EXIT=1$
+^file .*verilog2005_root\.v line 7: \$root requires SystemVerilog$
+^EXIT=2$
 ^SIGNAL=0$
 --
-KNOWNBUG test: a .v file is Verilog 1364-2005, which does not have $root.
-The parser should reject it, but it is accepted.
+a .v file is Verilog 1364-2005, which does not have $root.

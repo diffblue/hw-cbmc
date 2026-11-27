@@ -679,6 +679,9 @@ void verilog_typecheckt::collect_symbols(const verilog_declt &decl)
           // not an lvalue, we only permit defaults for input arguments.
           if(declarator.has_value())
           {
+            require_system_verilog(
+              "default argument value", declarator.source_location());
+
             if(!input || output)
             {
               throw errort().with_location(declarator.source_location())

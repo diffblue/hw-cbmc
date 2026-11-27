@@ -4112,7 +4112,10 @@ named_port_connection:
                   exprt value = stack_expr($2);
                   value.id(ID_verilog_identifier);
                   mto($$, $2);
-                  stack_expr($$).add_to_operands(std::move(value)); }
+                  stack_expr($$).add_to_operands(std::move(value));
+                  // remember that this is the implicit form, which
+                  // is not available in Verilog
+                  stack_expr($$).set(ID_verilog_implicit_port_connection, true); }
         | ".*" { init($$, ID_verilog_wildcard_port_connection); }
         ;
 

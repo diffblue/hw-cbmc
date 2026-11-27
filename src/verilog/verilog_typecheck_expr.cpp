@@ -2387,6 +2387,8 @@ exprt verilog_typecheck_exprt::convert_hierarchical_identifier(
       verilog_root_module_name())
   {
     // $root.somewhere
+    require_system_verilog("$root", expr.source_location());
+
     auto module_base_name = to_verilog_identifier_expr(expr.rhs()).base_name();
 
     const irep_idt full_instance_identifier =
@@ -2576,6 +2578,9 @@ exprt verilog_typecheck_exprt::convert_constant(constant_exprt expr)
   {
     auto result = convert_integral_literal(value);
     result.add_source_location() = source_location;
+
+    if(result.id() == ID_verilog_unbased_unsized_literal)
+      require_system_verilog("unbased unsized literal", source_location);
     result.set("#verilog_value", value);
 
     return result;
@@ -3716,6 +3721,8 @@ exprt verilog_typecheck_exprt::convert_unary_expr(unary_exprt expr)
     expr.id() == ID_verilog_streaming_concatenation_left_to_right ||
     expr.id() == ID_verilog_streaming_concatenation_right_to_left)
   {
+    require_system_verilog("streaming concatenation", expr.source_location());
+
     // slice_size is defaulted to 1
     mp_integer width = 0;
     for(auto &op : expr.op().operands())
@@ -4488,6 +4495,8 @@ exprt verilog_typecheck_exprt::convert_binary_expr(binary_exprt expr)
     expr.id() == ID_verilog_streaming_concatenation_left_to_right ||
     expr.id() == ID_verilog_streaming_concatenation_right_to_left)
   {
+    require_system_verilog("streaming concatenation", expr.source_location());
+
     auto slice_size = convert_integer_constant_expression(expr.op0());
 
     if(slice_size < 1)

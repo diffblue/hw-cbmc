@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 verilog2005_implicit_port_connection.v
 --bound 1
-^EXIT=1$
+^file .*verilog2005_implicit_port_connection\.v line 10: implicit named port connection requires SystemVerilog$
+^EXIT=2$
 ^SIGNAL=0$
 --
-KNOWNBUG test: a .v file is Verilog 1364-2005, which does not have implicit .name port connections.
-The parser should reject it, but it is accepted.
+a .v file is Verilog 1364-2005, which does not have implicit .name port connections.

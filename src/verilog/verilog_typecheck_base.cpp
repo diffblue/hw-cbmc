@@ -206,6 +206,30 @@ std::string verilog_typecheck_baset::to_string(const exprt &expr)
 
 /*******************************************************************\
 
+Function: verilog_typecheck_baset::require_system_verilog
+
+  Inputs: description of a construct, and its source location
+
+ Outputs:
+
+ Purpose: Throws an error for a construct that is not available in the
+          Verilog standard that is selected.
+
+\*******************************************************************/
+
+void verilog_typecheck_baset::require_system_verilog(
+  const std::string &what,
+  const source_locationt &source_location) const
+{
+  if(standard < verilog_standardt::SV2005)
+  {
+    throw errort().with_location(source_location)
+      << what << " requires SystemVerilog";
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheck_baset::get_width
 
   Inputs:

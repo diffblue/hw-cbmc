@@ -278,6 +278,12 @@ void verilog_typecheckt::typecheck_port_connections(
       auto &named_port_connection =
         to_verilog_named_port_connection(connection);
 
+      if(named_port_connection.get_bool(ID_verilog_implicit_port_connection))
+      {
+        require_system_verilog(
+          "implicit named port connection", connection.source_location());
+      }
+
       exprt &value = named_port_connection.value();
       const irep_idt &base_name =
         to_verilog_identifier_expr(named_port_connection.port()).base_name();

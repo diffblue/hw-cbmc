@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 verilog2005_unpacked_array_size.v
 --bound 1
-^EXIT=1$
+^file .*verilog2005_unpacked_array_size\.v line 5: unpacked array size requires SystemVerilog$
+^EXIT=2$
 ^SIGNAL=0$
 --
-KNOWNBUG test: a .v file is Verilog 1364-2005, which does not have unpacked array sizes.
-The parser should reject it, but it is accepted.
+a .v file is Verilog 1364-2005, which does not have unpacked array sizes.
