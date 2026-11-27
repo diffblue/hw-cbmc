@@ -21,13 +21,12 @@
 
 /*------------------------------------------------------------------------*/
 
-#define yylineno yysmvlineno
-#define yytext yysmvtext
-
 #define yyerror yysmverror
 int yysmverror(const std::string &error);
-int yylex();
-extern char *yytext;
+
+// The tokenizer is owned by the parser object.
+#undef yylex
+#define yylex() PARSER.lex()
 
 /*------------------------------------------------------------------------*/
 
@@ -901,7 +900,7 @@ case       : formula ':' formula ';'
 
 int yysmverror(const std::string &error)
 {
-  PARSER.parse_error(error, yytext);
+  PARSER.parse_error(error, PARSER.token_text());
   return 0;
 }
 

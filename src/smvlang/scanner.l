@@ -1,4 +1,8 @@
 %option nounput
+%option noinput
+%option reentrant
+%option noyywrap
+%option yylineno
 
 %{
 #include <util/pragma_wdeprecated_register.def>
@@ -21,6 +25,28 @@ static int isatty(int) { return 0; }
 #include "smv_parser.h"
 #include "smv_y.tab.h"
 
+#define FLEX_PREFIX yysmv
+#include <verilog/flex_interface.h>
+
+// The scanner is reentrant; its "extra" data is the flex_interface
+// wrapper, reached via yyget_extra.
+#undef YY_INPUT
+#define YY_INPUT(buf, result, max_size)                          \
+  {                                                              \
+    result = FLEX_CLASS_NAME::from_extra(yyget_extra(yyscanner)) \
+               .yy_input(buf, max_size);                         \
+  }
+
+// The scanner reads the input in bulk, and hence does not rely on
+// the parser to count lines. A token has the line it ends on, as given by
+// flex's yylineno. Whitespace does not move the line number, as a newline
+// at the end of the input would otherwise move it past the last line.
+#undef YY_USER_ACTION
+#define YY_USER_ACTION \
+  if(yytext[0] > ' ') \
+    PARSER.set_line_no(yylineno); \
+  PARSER.advance_column(yyleng);
+
 int yysmverror(const std::string &error);
 
 void newlocation(YYSTYPE &x)
@@ -39,37 +65,26 @@ void newlocation(YYSTYPE &x)
 
 %pointer
 
+%x MLCOMMENT
+
 %%
 
-"/*"		{
-		  int c;
-
-		  for(;;)
-		    {
-		      while((c = yyinput()) != '*' && c != EOF)
-			;
-
-		      if(c == '*')
-                        {
-			  while((c = yyinput()) == '*')
-                            ;
-
-			  if( c == '/' ) break;
-                        }
-
-		      if (c == EOF)
-                        {
-			  yysmverror("EOF in comment");
-			  break;
-                        }
-                    }
-                }
+<INITIAL>"/*"	{ BEGIN MLCOMMENT; /* multi-line comment */ }
+<MLCOMMENT>"*/"	{ BEGIN INITIAL; /* comment done */ }
+<MLCOMMENT>[^*\n]+	;
+<MLCOMMENT>"*"	;
+<MLCOMMENT>\n	;
+<MLCOMMENT><<EOF>>	{
+		  yysmverror("EOF in comment");
+		  PARSER.scanner_error = true;
+		  BEGIN INITIAL;
+		}
 
 "//".*          ;
 "--".*          ;
 "#".*		{ /* preprocessor */ }
 
-[ \t\n]+	;
+[ \t\r\n]+	;
 
  /* Keywords from page 7 */
  /* https://nusmv.fbk.eu/userman/v27/nusmv.pdf */
@@ -225,4 +240,4 @@ void newlocation(YYSTYPE &x)
 
 %%
 
-int yywrap() { return 1; }
+#include <verilog/flex_interface.inc>

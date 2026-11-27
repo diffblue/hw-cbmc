@@ -1,0 +1,10 @@
+MODULE main
+
+VAR x : boolean;
+
+/* a
+   multi-line
+   comment */
+
+INVAR x &
+  & x

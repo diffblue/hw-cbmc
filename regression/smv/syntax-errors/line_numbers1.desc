@@ -1,0 +1,8 @@
+CORE
+line_numbers1.smv
+
+^file .* line 10: syntax error, unexpected &( before '&')?$
+^EXIT=1$
+^SIGNAL=0$
+--
+The scanner counts the lines, including those inside comments.
