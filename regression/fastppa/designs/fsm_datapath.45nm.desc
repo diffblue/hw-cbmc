@@ -1,0 +1,7 @@
+CORE
+fsm_datapath.sv
+--top fsm_datapath --process 45nm
+^  Register bits:       34$
+^  Total:               329\.0 um2$
+^EXIT=0$
+^SIGNAL=0$
