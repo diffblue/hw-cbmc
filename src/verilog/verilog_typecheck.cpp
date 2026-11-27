@@ -233,7 +233,7 @@ void verilog_typecheckt::typecheck_port_connections(
   else
     range = convert_range(range_expr);
 
-  const auto &ports = to_module_type(symbol.type).ports();
+  const auto ports = to_module_type(symbol.type).declared_ports();
 
   // no connection is one connection that is nil
   if(inst.connections().size() == 1 && inst.connections().front().is_nil())
@@ -2288,15 +2288,16 @@ void verilog_typecheckt::typecheck_design_element(
   // generate constructs, and add the symbols to the symbol table.
   auto verilog_module_expr = elaborate(module_source);
 
+  // Instantiate interface members under interface ports. This precedes
+  // the submodules, which may be bound to these.
+  instantiate_interface_ports(module_source);
+
   // instantiate and parameterize submodules, interfaces, etc.
   process_design_element_instantiations(verilog_module_expr);
 
   // Create symbols for the functions, tasks, registers/variables and wires.
   for(auto &module_item : verilog_module_expr.module_items())
     interface_module_item(module_item);
-
-  // Instantiate interface members under interface ports
-  instantiate_interface_ports(module_source);
 
   // Check the module interface
   check_module_ports(module_source);

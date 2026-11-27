@@ -24,6 +24,8 @@
   type yields that enum type
 * SystemVerilog: system functions, e.g., $rose, in named properties and
   sequences
+* SystemVerilog: an interface with an interface port can be bound to an
+  interface port
 
 # EBMC 6.2
 
