@@ -1,0 +1,13 @@
+CORE
+parameter12.sv
+--bound 1
+^\[main\.u\.p0\] always \$bits\(main\.u\.b\.copy\) == 16: PROVED up to bound 1$
+^\[main\.u\.p1\] always \$bits\(main\.u\.b\.a\.d\) == 16: PROVED up to bound 1$
+^\[main\.p2\] always main\.a\.d == 16'h1234: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The interface type of an interface includes the interface types of its
+interface ports.

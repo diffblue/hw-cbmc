@@ -28,6 +28,8 @@
   interface port
 * SystemVerilog: interface ports have the parameters of the interface
   instance that is bound to them, including in elaboration-time constants
+* SystemVerilog: interface instances with parameters may be declared after
+  the instances whose interface ports they are bound to
 
 # EBMC 6.2
 
