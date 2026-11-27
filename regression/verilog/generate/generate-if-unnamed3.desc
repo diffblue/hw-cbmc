@@ -1,0 +1,16 @@
+CORE
+generate-if-unnamed3.sv
+--bound 0
+^\[main\.p0\] always \$bits\(main\.genblk1\.c\) == 2: PROVED up to bound 0$
+^\[main\.p1\] always \$bits\(main\.genblk2\.genblk1\[1\]\.d\) == 4: PROVED up to bound 0$
+^\[main\.p2\] always main\.y == main\.x: PROVED up to bound 0$
+^\[main\.p3\] always main\.genblk3\[1\]\.u\.o == main\.x\[1\]: PROVED up to bound 0$
+^\[main\.p4\] always main\.genblk4\.v\.i == main\.x\[0\]: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The blocks of single items are scopes, also for case generate constructs,
+for loops whose body is an instance, and for a loop that is the single
+item of a branch.

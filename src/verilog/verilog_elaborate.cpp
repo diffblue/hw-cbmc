@@ -1566,8 +1566,13 @@ verilog_typecheckt::elaborate(const verilog_module_sourcet &module_source)
   for(auto &port_decl : module_source.ports())
     collect_port_symbols(port_decl);
 
+  // The generate constructs are numbered, which yields the names of the
+  // unnamed generate blocks.
+  auto module_items = module_source.module_items();
+  number_generate_constructs(module_items);
+
   // Now elaborate the top level of the module.
-  auto elaborated_module_items = elaborate_level(module_source.module_items());
+  auto elaborated_module_items = elaborate_level(module_items);
 
   // Create verilog_module expression from the elaborated
   // module items.
