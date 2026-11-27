@@ -1,0 +1,14 @@
+KNOWNBUG
+ref_port3.sv
+--bound 0
+^\[main\.p0\] always main\.v == 1 \|\| main\.v == 2: PROVED up to bound 0$
+^\[main\.p1\] always main\.x == 0: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The initial value of the variable and the one of the ref port are separate
+initial-state constraints on two variables that are equated, which
+contradict each other. The model has no initial state, and every property
+holds vacuously, including p1.
