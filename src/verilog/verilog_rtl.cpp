@@ -184,6 +184,10 @@ protected:
   /// driver may be in any module.
   void force_interface_port_connections();
 
+  /// Moves the initial values of the members equated by a connection to
+  /// the bound side, since these are the same variable.
+  void merge_connected_initial_values();
+
   /// per-loop state for break and continue statements
   class loop_framet
   {
@@ -4515,6 +4519,80 @@ void verilog_rtl_buildert::force_interface_port_connections()
 
 /*******************************************************************\
 
+Function: verilog_rtl_buildert::merge_connected_initial_values
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: The members equated by a connection are the same variable,
+          and hence have a single initial value. The initial values
+          assigned in an initial procedure to the member of an
+          interface port or to a ref port are moved to the bound
+          member, at the end of a chain of connections. The initial
+          procedures run in an unspecified order (1800-2017 9.2.1);
+          the values assigned through the port are applied after those
+          of the bound member, and are hence the ones that a bit has
+          when both assign it. Without this, the two members had
+          separate initial values, which contradicted each other when
+          they differed.
+
+\*******************************************************************/
+
+void verilog_rtl_buildert::merge_connected_initial_values()
+{
+  std::map<irep_idt, irep_idt> bound_member;
+
+  for(auto &[member, bound] : interface_port_connections)
+    bound_member.emplace(member, bound);
+
+  // the end of the chain of connections that starts with the given member
+  auto representative = [&bound_member](irep_idt identifier)
+  {
+    std::set<irep_idt> seen;
+
+    while(seen.insert(identifier).second)
+    {
+      auto it = bound_member.find(identifier);
+      if(it == bound_member.end())
+        break;
+      identifier = it->second;
+    }
+
+    return identifier;
+  };
+
+  for(auto &[member, bound] : interface_port_connections)
+  {
+    auto member_it = rtl.initial_values.find(member);
+    if(member_it == rtl.initial_values.end())
+      continue;
+
+    auto target = representative(member);
+    if(target == member)
+      continue;
+
+    // The members of a connection have the same type.
+    const symbolt *member_symbol, *target_symbol;
+    if(
+      ns.lookup(member, member_symbol) || ns.lookup(target, target_symbol) ||
+      member_symbol->type != target_symbol->type)
+    {
+      continue;
+    }
+
+    auto values = std::move(member_it->second);
+    rtl.initial_values.erase(member_it);
+
+    auto &target_values = rtl.initial_values[target];
+
+    for(auto &[slice, value] : values)
+      write_slice(target_values, slice, value);
+  }
+}
+
+/*******************************************************************\
+
 Function: verilog_rtl_buildert::build_interface_port_array_connection
 
   Inputs:
@@ -5226,6 +5304,7 @@ verilog_rtlt verilog_rtl_buildert::build()
   build_module(module_symbol);
 
   // now that all drivers are known
+  merge_connected_initial_values();
   force_interface_port_connections();
   mark_self_dependent_wires();
 

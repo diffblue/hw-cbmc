@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 ref_port3.sv
 --bound 0
 ^\[main\.p0\] always main\.v == 1 \|\| main\.v == 2: PROVED up to bound 0$
@@ -8,7 +8,7 @@ ref_port3.sv
 --
 ^warning: ignoring
 --
-The initial value of the variable and the one of the ref port are separate
-initial-state constraints on two variables that are equated, which
-contradict each other. The model has no initial state, and every property
-holds vacuously, including p1.
+The initial values of the variable and of the ref port were
+separate initial-state constraints on two equated variables, which
+contradicted each other, and every property, including p1, held
+vacuously.
