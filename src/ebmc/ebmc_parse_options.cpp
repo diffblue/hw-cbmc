@@ -423,9 +423,8 @@ int ebmc_parse_optionst::doit()
 #else
       auto netlist = make_netlist(
         transition_system, properties, cmdline, ui_message_handler);
-      auto filename = cmdline.value_opt("outfile").value_or("-");
-      output_filet output_file{filename};
-      output_aiger(netlist, output_file.stream());
+      output_aiger(
+        netlist, properties, cmdline.value_opt("outfile").value_or("-"));
       return 0;
 #endif
     }
