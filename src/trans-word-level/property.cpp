@@ -810,9 +810,18 @@ static obligationst property_obligations_rec(
 
     for(auto &match : matches)
     {
-      // drop pending matches
       if(match.is_pending())
+      {
+        // The antecedent may still match beyond the bound. Under weak
+        // semantics, the attempt is inconclusive and must not yield a
+        // counterexample (relies on NNF). Otherwise, drop the match.
+        if(allow_pending_matches)
+        {
+          t = std::max(t, no_timeframes - 1);
+          disjuncts.push_back(match.condition());
+        }
         continue;
+      }
 
       bool overlapped = property_expr.id() == ID_sva_overlapped_followed_by;
 
