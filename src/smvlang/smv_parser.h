@@ -35,10 +35,23 @@ public:
   smv_parse_treet parse_tree;
   smv_parse_treet::modulet *module;
 
-  virtual bool parse()
-  {
-    return yysmvparse();
-  }
+  bool parse() override;
+
+  /// Set by the scanner when it encounters an error that
+  /// the parser doesn't see, e.g., an unterminated comment.
+  bool scanner_error = false;
+
+  /// Returns the next token. Called by the generated parser.
+  /// Only valid during parse().
+  int lex();
+
+  /// Returns the text of the most recently scanned token.
+  /// Only valid during parse().
+  const char *token_text() const;
+
+protected:
+  /// The tokenizer, which exists only during parse().
+  class yysmvflext *scanner = nullptr;
 };
 
 #endif

@@ -1,0 +1,8 @@
+CORE
+unterminated_comment1.smv
+
+^file .* line 5: EOF in comment$
+^EXIT=1$
+^SIGNAL=0$
+--
+An unterminated comment is an error. It used to make the scanner loop forever.

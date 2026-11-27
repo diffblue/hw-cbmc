@@ -1,0 +1,8 @@
+CORE
+crlf1.smv
+--bound 3
+^\[spec1\] G F x: PROVED up to bound 3$
+^EXIT=0$
+^SIGNAL=0$
+--
+Lines may end in CRLF.
