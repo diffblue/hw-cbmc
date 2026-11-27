@@ -102,14 +102,12 @@ verilog_parse_treet verilog_ebmc_languaget::parse(
   const std::filesystem::path &path,
   verilog_scopest &scopes)
 {
-  verilog_standardt standard;
+  auto standard = cmdline.isset("systemverilog") ? default_sv_standard
+                                                 : default_standard(path);
 
-  if(path.extension() == ".sv" || cmdline.isset("systemverilog"))
-    standard = default_sv_standard;
-  else if(cmdline.isset("vl2smv-extensions"))
+  // Upgrade Verilog (but not SystemVerilog) to the SMV variant.
+  if(cmdline.isset("vl2smv-extensions") && standard < verilog_standardt::SV2005)
     standard = verilog_standardt::V2005_SMV;
-  else
-    standard = default_verilog_standard;
 
   std::stringstream preprocessed;
   preprocess(path, preprocessed);

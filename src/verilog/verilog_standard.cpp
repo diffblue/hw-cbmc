@@ -42,3 +42,11 @@ std::string as_string(verilog_standardt standard)
 
   UNREACHABLE;
 }
+
+verilog_standardt default_standard(const std::filesystem::path &path)
+{
+  if(path.extension() == ".sv")
+    return default_sv_standard;
+  else
+    return default_verilog_standard;
+}
