@@ -24,6 +24,10 @@
   type yields that enum type
 * SystemVerilog: system functions, e.g., $rose, in named properties and
   sequences
+* Verilog: unnamed generate blocks are named genblk<n> following
+  1800-2017 27.6, which allows several unnamed generate loops in a module
+* Verilog: generate blocks without begin-end are scopes, following
+  1800-2017 27.5
 
 # EBMC 6.2
 

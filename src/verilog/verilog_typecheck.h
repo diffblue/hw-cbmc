@@ -334,6 +334,16 @@ protected:
   exprt
   generate_for_loop_index(const verilog_module_itemt &initialization) const;
 
+  // 1800-2017 27.6: the generate constructs of a scope are numbered in
+  // the order in which they appear, starting with 1. The numbers are
+  // recorded on the constructs before the elaboration.
+  static void number_generate_constructs(module_itemst &);
+  irep_idt unnamed_generate_block_name(std::size_t construct_number);
+  void elaborate_conditional_generate_branch(
+    const verilog_module_itemt &,
+    std::size_t construct_number,
+    module_itemst &dest);
+
   // generate state
   typedef std::map<irep_idt, mp_integer> genvarst;
   genvarst genvars;

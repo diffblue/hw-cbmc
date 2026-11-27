@@ -1,0 +1,9 @@
+CORE
+generate-for8.sv
+--bound 0
+^\[main\.p0\] .*: PROVED up to bound 0$
+^\[main\.p1\] .*: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+--

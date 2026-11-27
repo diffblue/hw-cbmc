@@ -1,0 +1,16 @@
+CORE
+generate-if-unnamed2.sv
+--bound 0
+^\[main\.p0\] always \$bits\(main\.genblk1\.b\) == 2: PROVED up to bound 0$
+^\[main\.p1\] always \$bits\(main\.genblk02\.b\) == 4: PROVED up to bound 0$
+^\[main\.p2\] always \$bits\(main\.g1\[0\]\.genblk1\.a\) == 5: PROVED up to bound 0$
+^\[main\.p3\] always \$bits\(main\.genblk4\[0\]\.genblk1\.a\) == 6: PROVED up to bound 0$
+^\[main\.p4\] always \$bits\(main\.genblk5\.a\) == 8: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+Every generate construct of a scope is numbered, including those with a
+name, and a branch or loop body without begin-end is a generate block, and
+hence a scope.

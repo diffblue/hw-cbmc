@@ -1,0 +1,11 @@
+CORE
+generate-for7.sv
+--bound 1
+^\[main\.p0\] .*: PROVED up to bound 1$
+^\[main\.p1\] .*: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+--
+The blocks of both loops used to be named [0] and [1], which gave a
+duplicate definition of the identifier [0].
