@@ -333,6 +333,9 @@ protected:
   elaborate_generate_for(const verilog_generate_fort &, module_itemst &dest);
   exprt
   generate_for_loop_index(const verilog_module_itemt &initialization) const;
+  void add_loop_index_symbol(
+    const irep_idt &block_base_name,
+    const exprt &loop_index);
 
   // 1800-2017 27.6: the generate constructs of a scope are numbered in
   // the order in which they appear, starting with 1. The numbers are

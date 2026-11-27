@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 genvar_scope10.sv
 --bound 0
 ^\[main\.property\.p1\] always main\.some_wire1 == 2'b10: PROVED up to bound 0$
@@ -9,6 +9,5 @@ genvar_scope10.sv
 --
 Two loop generate constructs in the same scope, whose bodies are not
 surrounded by begin-end, may both declare a genvar with the same name in
-their header.
-The second loop currently yields "definition of symbol `gi' conflicts with
-earlier definition".
+their header. A body without begin-end is a generate block, and hence a
+scope, 1800-2017 27.4.

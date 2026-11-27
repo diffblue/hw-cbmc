@@ -28,6 +28,8 @@
   1800-2017 27.6, which allows several unnamed generate loops in a module
 * Verilog: generate blocks without begin-end are scopes, following
   1800-2017 27.5
+* SystemVerilog: several generate loops in one scope may declare a genvar
+  with the same name in their header
 
 # EBMC 6.2
 
