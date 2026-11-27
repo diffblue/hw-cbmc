@@ -2322,12 +2322,12 @@ exprt verilog_typecheck_exprt::convert_verilog_identifier(
           << "invalid genvar value";
       }
 
-      std::size_t bits = address_bits(int_value + 1);
-      source_locationt source_location=expr.source_location();
-
-      exprt result=from_integer(int_value, unsignedbv_typet(bits));
-      result.add_source_location()=source_location;
-      return result;
+      // IEEE 1800-2017 27.4: the index denotes an implicit integer
+      // localparam in each instance of a loop generate block.
+      signedbv_typet integer_type{32};
+      integer_type.set(ID_C_verilog_type, ID_integer);
+      return from_integer(int_value, integer_type)
+        .with_source_location(expr.source_location());
     }
     else if(
       symbol->type.id() == ID_verilog_sva_named_sequence ||

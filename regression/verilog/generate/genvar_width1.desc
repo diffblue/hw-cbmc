@@ -1,0 +1,10 @@
+CORE
+genvar_width1.sv
+--bound 0
+^\[main\.g\[0\]\.p\] .*: PROVED up to bound 0$
+^EXIT=0$
+^SIGNAL=0$
+--
+REFUTED
+--
+A generate loop index has the width of its implicit integer localparam.

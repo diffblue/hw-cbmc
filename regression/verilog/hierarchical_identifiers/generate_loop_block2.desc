@@ -4,8 +4,8 @@ generate_loop_block2.sv
 ^\[main\.p0\] main\.outer\[0\]\.inner\[0\]\.x == 10: PROVED up to bound 0$
 ^\[main\.p1\] main\.outer\[0\]\.inner\[1\]\.x == 11: PROVED up to bound 0$
 ^\[main\.p2\] main\.outer\[1\]\.inner\[0\]\.x == 12: PROVED up to bound 0$
-^\[main\.chk\[0\]\.p\] main\.outer\[0\]\.inner\[0\]\.x == 10 \+ 1'b0 \* 2: PROVED up to bound 0$
-^\[main\.chk\[1\]\.p\] main\.outer\[1\]\.inner\[0\]\.x == 10 \+ 1'b1 \* 2: PROVED up to bound 0$
+^\[main\.chk\[0\]\.p\] main\.outer\[0\]\.inner\[0\]\.x == 10 \+ 0 \* 2: PROVED up to bound 0$
+^\[main\.chk\[1\]\.p\] main\.outer\[1\]\.inner\[0\]\.x == 10 \+ 1 \* 2: PROVED up to bound 0$
 ^EXIT=0$
 ^SIGNAL=0$
 --
