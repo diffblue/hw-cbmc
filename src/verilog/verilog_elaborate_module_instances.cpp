@@ -46,20 +46,38 @@ void verilog_typecheckt::process_design_element_instantiations(
   for(auto &module_item : verilog_module_expr.module_items())
     process_parameter_override(module_item);
 
-  // now parameterize the instantiated design elements
+  // Now parameterize the instantiated design elements. An instance whose
+  // interface port is bound to an interface instance of this design
+  // element is parameterized after that instance, since the interface
+  // type of the port is that of the bound instance. Otherwise, the order
+  // is that of the instantiations.
+  instantiation_sitest sites;
+
   for(auto &module_item : verilog_module_expr.module_items())
   {
     for_each_instantiation(
       module_item,
-      [this](verilog_module_itemt &item)
-      {
-        if(item.id() == ID_inst)
-          parameterize_instantiated_design_elements(to_verilog_inst(item));
-        else
-          parameterize_instantiated_design_elements(
-            to_verilog_inst_builtin(item));
+      [this, &sites](verilog_module_itemt &item) {
+        sites.push_back(instantiation_sitet{&item, named_blocks, genvars});
       });
   }
+
+  // the site of each instance, by instance identifier
+  std::map<irep_idt, std::size_t> site_of_instance;
+
+  for(std::size_t i = 0; i < sites.size(); i++)
+  {
+    auto old_named_blocks = named_blocks;
+    named_blocks = sites[i].named_blocks;
+
+    for(auto &instance : to_verilog_inst_baset(*sites[i].item).instances())
+      site_of_instance[hierarchical_identifier(instance.base_name())] = i;
+
+    named_blocks = std::move(old_named_blocks);
+  }
+
+  for(std::size_t i = 0; i < sites.size(); i++)
+    parameterize_instantiation_site(sites, i, site_of_instance);
 
   // Now that all instances exist, connect the members of the interfaces
   // of the interface ports to those of the bound interface instances.
@@ -80,6 +98,91 @@ void verilog_typecheckt::process_design_element_instantiations(
         }
       });
   }
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::parameterize_instantiation_site
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Parameterize the instantiation at the given site, after the
+          instantiations of the interface instances that it binds to
+          interface ports.
+
+\*******************************************************************/
+
+void verilog_typecheckt::parameterize_instantiation_site(
+  instantiation_sitest &sites,
+  std::size_t index,
+  const std::map<irep_idt, std::size_t> &site_of_instance)
+{
+  auto &site = sites[index];
+
+  if(site.state == instantiation_sitet::statet::DONE)
+    return;
+
+  if(site.state == instantiation_sitet::statet::IN_PROGRESS)
+  {
+    throw errort().with_location(site.item->source_location())
+      << "cyclic interface port connections";
+  }
+
+  site.state = instantiation_sitet::statet::IN_PROGRESS;
+
+  // the scope of the instantiation
+  auto old_named_blocks = std::move(named_blocks);
+  auto old_genvars = std::move(genvars);
+
+  auto enter_site = [this, &site]()
+  {
+    named_blocks = site.named_blocks;
+    genvars = site.genvars;
+  };
+
+  enter_site();
+
+  if(site.item->id() == ID_inst)
+  {
+    auto &inst = to_verilog_inst(*site.item);
+
+    const irep_idt design_element_identifier =
+      verilog_module_symbol(id2string(inst.module_base_name()));
+
+    // the sites of the interface instances bound to the interface ports
+    std::set<std::size_t> dependencies;
+
+    for(auto &instance : inst.instances())
+    {
+      for(auto &[port, actual] :
+          interface_port_actuals(design_element_identifier, instance))
+      {
+        auto site_it =
+          site_of_instance.find(to_symbol_expr(actual).get_identifier());
+
+        if(site_it != site_of_instance.end())
+          dependencies.insert(site_it->second);
+      }
+    }
+
+    for(auto dependency : dependencies)
+    {
+      parameterize_instantiation_site(sites, dependency, site_of_instance);
+      enter_site();
+    }
+
+    parameterize_instantiated_design_elements(inst);
+  }
+  else
+    parameterize_instantiated_design_elements(
+      to_verilog_inst_builtin(*site.item));
+
+  named_blocks = std::move(old_named_blocks);
+  genvars = std::move(old_genvars);
+
+  site.state = instantiation_sitet::statet::DONE;
 }
 
 /*******************************************************************\

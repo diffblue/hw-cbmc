@@ -140,6 +140,29 @@ protected:
   void for_each_instantiation(
     verilog_module_itemt &,
     const std::function<void(verilog_module_itemt &)> &);
+
+  // An instantiation, with the scope in which it occurs. The
+  // instantiations of a design element are parameterized in dependency
+  // order: an instantiation that binds an interface port to an interface
+  // instance of the design element depends on that instance.
+  struct instantiation_sitet
+  {
+    verilog_module_itemt *item;
+    named_blockst named_blocks;
+    std::map<irep_idt, mp_integer> genvars;
+    enum class statet
+    {
+      TO_DO,
+      IN_PROGRESS,
+      DONE
+    } state = statet::TO_DO;
+  };
+
+  using instantiation_sitest = std::vector<instantiation_sitet>;
+  void parameterize_instantiation_site(
+    instantiation_sitest &,
+    std::size_t,
+    const std::map<irep_idt, std::size_t> &site_of_instance);
   void parameterize_instantiated_design_elements(class verilog_instt &);
   void parameterize_instantiated_design_elements(class verilog_inst_builtint &);
 
