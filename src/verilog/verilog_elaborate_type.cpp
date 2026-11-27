@@ -673,6 +673,13 @@ typet verilog_typecheck_exprt::elaborate_type(const typet &src)
     auto result =
       verilog_module_instance_typet{}.with_source_location(source_location);
     result.set(ID_base_name, src.get(ID_base_name));
+
+    // the parameters of the interface, given by the instantiation of the
+    // design element, see set_interface_port_types
+    auto &interface_type = src.find(ID_C_verilog_interface_type);
+    if(interface_type.is_not_nil())
+      result.add(ID_C_verilog_interface_type) = interface_type;
+
     return result;
   }
   else if(src.id() == ID_verilog_virtual_interface)

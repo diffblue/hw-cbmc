@@ -26,6 +26,8 @@
   sequences
 * SystemVerilog: an interface with an interface port can be bound to an
   interface port
+* SystemVerilog: interface ports have the parameters of the interface
+  instance that is bound to them, including in elaboration-time constants
 
 # EBMC 6.2
 

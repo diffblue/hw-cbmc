@@ -619,16 +619,28 @@ void verilog_typecheckt::parameterize_instantiated_design_elements(
     const irep_idt instance_identifier =
       hierarchical_identifier(instance_base_name);
 
-    // add relevant defparam assignments
-    auto &instance_defparams = defparams[instance_identifier];
+    // The parameter assignments, and those of the interface ports, which
+    // give the interface types of the ports.
+    verilog_instantiationt instantiation{
+      parameter_assignments, defparams[instance_identifier]};
+
+    for(auto &assignment :
+        interface_port_assignments(design_element_identifier, instance))
+    {
+      instantiation.parameter_assignments.push_back(std::move(assignment));
+    }
+
+    // An interface instance is the interface type of the interface ports
+    // that it is bound to.
+    set_instantiation(symbol_table_lookup(instance_identifier), instantiation);
 
     irep_idt new_design_element_identifier = instantiate_design_element(
       inst.source_location(),
       design_element_identifier,
       design_element_base_name,
       instance_identifier,
-      parameter_assignments,
-      instance_defparams);
+      instantiation.parameter_assignments,
+      instantiation.defparams);
 
     instance.identifier(instance_identifier);
     instance.module_identifier(new_design_element_identifier);
@@ -680,6 +692,16 @@ void verilog_typecheckt::expand_instance_array(
 
   const mp_integer number_of_elements = suffixes.size();
 
+  // The parameter assignments of the interface ports, if any; these are
+  // the same for every element of the array.
+  auto element_parameter_assignments = parameter_assignments;
+
+  for(auto &assignment :
+      interface_port_assignments(design_element_identifier, instance))
+  {
+    element_parameter_assignments.push_back(std::move(assignment));
+  }
+
   // Instantiate the design element for each element of the array.
   std::vector<irep_idt> element_base_names, element_identifiers,
     element_design_elements;
@@ -696,12 +718,19 @@ void verilog_typecheckt::expand_instance_array(
     // add relevant defparam assignments
     auto &instance_defparams = defparams[element_identifier];
 
+    // An interface instance is the interface type of the interface ports
+    // that it is bound to.
+    set_instantiation(
+      symbol_table_lookup(element_identifier),
+      verilog_instantiationt{
+        element_parameter_assignments, instance_defparams});
+
     irep_idt element_design_element_identifier = instantiate_design_element(
       inst.source_location(),
       design_element_identifier,
       design_element_base_name,
       element_identifier,
-      parameter_assignments,
+      element_parameter_assignments,
       instance_defparams);
 
     // fix the design element in the instance symbol

@@ -1,0 +1,10 @@
+CORE
+parameter5.sv
+--bound 1
+^\[main\.u\.p0\] always main\.u\.N == 16: PROVED up to bound 1$
+^EXIT=0$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+The interface type includes the defparams of the bound instance.

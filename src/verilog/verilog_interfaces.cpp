@@ -191,28 +191,302 @@ static exprt::operandst interface_array_elements(const symbol_exprt &array)
 
 /*******************************************************************\
 
+Function: verilog_typecheckt::interface_port_actual
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: The interface instance that the given port connection
+          expression denotes, as a symbol expression, or nil if the
+          expression is not the name of an interface instance.
+
+\*******************************************************************/
+
+exprt verilog_typecheckt::interface_port_actual(const exprt &expr)
+{
+  if(expr.id() != ID_verilog_identifier)
+    return nil_exprt{};
+
+  auto *symbol = resolve(to_verilog_identifier_expr(expr).base_name());
+
+  if(symbol == nullptr || symbol->type.id() != ID_verilog_module_instance)
+    return nil_exprt{};
+
+  return symbol->symbol_expr();
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::interface_port_actuals
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: The interface instances that the given instance binds to
+          the interface ports of the given design element, by port base
+          name, as far as they can be determined from the port
+          connections.
+
+\*******************************************************************/
+
+std::map<irep_idt, exprt> verilog_typecheckt::interface_port_actuals(
+  const irep_idt &module_identifier,
+  const verilog_instt::instancet &instance)
+{
+  std::map<irep_idt, exprt> result;
+
+  auto source_it =
+    symbol_table.symbols.find(id2string(module_identifier) + "$source");
+
+  if(source_it == symbol_table.symbols.end())
+    return result; // error is raised by instantiate_design_element
+
+  const auto &module_source =
+    to_verilog_module_source(source_it->second.type.find(ID_module_source));
+
+  auto &ports = module_source.ports();
+
+  if(instance.named_port_connections())
+  {
+    for(auto &connection : instance.connections())
+    {
+      if(connection.id() != ID_verilog_named_port_connection)
+        continue; // e.g., a wildcard connection
+
+      auto &named_connection = to_verilog_named_port_connection(connection);
+
+      if(named_connection.port().id() != ID_verilog_identifier)
+        continue;
+
+      auto actual = interface_port_actual(named_connection.value());
+
+      if(actual.is_not_nil())
+      {
+        auto &port_base_name =
+          to_verilog_identifier_expr(named_connection.port()).base_name();
+        result[port_base_name] = std::move(actual);
+      }
+    }
+  }
+  else
+  {
+    auto &connections = instance.connections();
+
+    for(std::size_t i = 0; i < connections.size() && i < ports.size(); i++)
+    {
+      auto actual = interface_port_actual(connections[i]);
+
+      if(actual.is_not_nil())
+      {
+        auto &port_base_name = ports[i].declarators().front().base_name();
+        result[port_base_name] = std::move(actual);
+      }
+    }
+  }
+
+  return result;
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::interface_port_assignments
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: The parameter assignments of the interface ports of the given
+          design element for the given instance: for each interface
+          port that the instance binds to an interface instance, the
+          interface type of that instance, i.e., its parameter
+          assignments, including those of its own interface ports, and
+          its defparams. These are passed to instantiate_design_element
+          with the parameter assignments of the design element.
+
+\*******************************************************************/
+
+exprt::operandst verilog_typecheckt::interface_port_assignments(
+  const irep_idt &module_identifier,
+  const verilog_instt::instancet &instance)
+{
+  exprt::operandst result;
+
+  for(auto &[port, actual] :
+      interface_port_actuals(module_identifier, instance))
+  {
+    auto interface_type = interface_type_of_actual(actual);
+
+    if(interface_type.is_nil())
+      continue;
+
+    exprt assignment{ID_verilog_interface_port_assignment};
+    assignment.set(ID_parameter, port);
+    assignment.add(ID_value) = std::move(interface_type);
+    result.push_back(std::move(assignment));
+  }
+
+  return result;
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::interface_type_of_actual
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: The interface type of the given actual of an interface port,
+          see interface_port_actual: the instantiation recorded on the
+          interface instance. Nil if unknown.
+
+\*******************************************************************/
+
+irept verilog_typecheckt::interface_type_of_actual(const exprt &actual) const
+{
+  if(actual.id() != ID_symbol)
+    return irept{ID_nil};
+
+  auto record =
+    get_instantiation_record(to_symbol_expr(actual).get_identifier());
+  return record.has_value() ? *record : irept{ID_nil};
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::instantiation_record
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: The irep form of an instantiation
+
+\*******************************************************************/
+
+irept verilog_typecheckt::instantiation_record(
+  const verilog_instantiationt &instantiation)
+{
+  irept record{ID_verilog_instantiation};
+
+  auto &parameter_assignments =
+    static_cast<exprt &>(record.add(ID_parameter_assignments));
+  parameter_assignments.operands() = instantiation.parameter_assignments;
+
+  auto &defparams = record.add(ID_verilog_defparams);
+  for(auto &[name, value] : instantiation.defparams)
+    defparams.add(name) = value;
+
+  return record;
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::instantiation_of_record
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: The instantiation in the given irep form
+
+\*******************************************************************/
+
+auto verilog_typecheckt::instantiation_of_record(const irept &record)
+  -> verilog_instantiationt
+{
+  verilog_instantiationt result;
+
+  result.parameter_assignments =
+    static_cast<const exprt &>(record.find(ID_parameter_assignments))
+      .operands();
+
+  for(auto &[name, value] : record.find(ID_verilog_defparams).get_named_sub())
+    result.defparams[name] = static_cast<const exprt &>(value);
+
+  return result;
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::set_instantiation
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Record on the given symbol of an interface instance or an
+          interface port how the interface is instantiated.
+
+\*******************************************************************/
+
+void verilog_typecheckt::set_instantiation(
+  symbolt &symbol,
+  const verilog_instantiationt &instantiation)
+{
+  symbol.value.add(ID_verilog_instantiation) =
+    instantiation_record(instantiation);
+}
+
+/*******************************************************************\
+
+Function: verilog_typecheckt::get_instantiation_record
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: How the interface instance or interface port with the given
+          identifier is instantiated, if recorded.
+
+\*******************************************************************/
+
+std::optional<irept> verilog_typecheckt::get_instantiation_record(
+  const irep_idt &instance_identifier) const
+{
+  const symbolt *symbol;
+  if(ns.lookup(instance_identifier, symbol))
+    return {};
+
+  const irept &record = symbol->value.find(ID_verilog_instantiation);
+
+  if(record.is_nil())
+    return {};
+
+  return record;
+}
+
+/*******************************************************************\
+
 Function: verilog_typecheckt::instantiate_interface_ports
 
   Inputs:
 
  Outputs:
 
- Purpose: For each port that has an interface type, instantiate
-          the interface under the port's identifier so that
-          hierarchical member access (e.g., bus.i) works.
-          Arrays of interface ports, 1800-2017 25.4, yield one
-          instance per array element, named bus[0], bus[1], ...
+ Purpose: Instantiate the interface of each interface port of the given
+          port declaration under the port's identifier, so that
+          hierarchical member access (e.g., bus.i) works. Arrays of
+          interface ports, 1800-2017 25.4, yield one instance per array
+          element, named bus[0], bus[1], ... The interface type of a
+          port, i.e., the parameters of the interface, are those that
+          the instantiation of the design element gives, see
+          set_interface_port_types.
+
+          This is done as soon as the symbols of the ports exist, i.e.,
+          when the port declaration is elaborated, so that the members
+          may be used in elaboration-time constants, e.g., $bits(bus.i).
+          Declarations of ports that are not interface ports are
+          ignored.
 
 \*******************************************************************/
 
-void verilog_typecheckt::instantiate_interface_ports(
-  const verilog_module_sourcet &module_source)
+void verilog_typecheckt::instantiate_interface_ports(const verilog_declt &decl)
 {
-  for(auto &decl : module_source.ports())
+  for(auto &declarator : decl.declarators())
   {
-    DATA_INVARIANT(decl.id() == ID_decl, "port declaration id");
-
-    const auto &declarator = decl.declarators().front();
     const irep_idt &base_name = declarator.base_name();
     irep_idt port_identifier = hierarchical_identifier(base_name);
 
@@ -236,13 +510,21 @@ void verilog_typecheckt::instantiate_interface_ports(
     // Find the interface source, to be instantiated under the port.
     irep_idt interface_module_id = verilog_module_symbol(interface_base_name);
 
+    auto &location = port_symbol->location.is_nil()
+                       ? declarator.source_location()
+                       : port_symbol->location;
+
+    // The interface type, which is the same for all dimensions.
+    irept interface_type = type->find(ID_C_verilog_interface_type);
+
     instantiate_interface_port(
       port_symbol->type,
-      port_symbol->location,
+      location,
       interface_module_id,
       interface_base_name,
       base_name,
-      port_identifier);
+      port_identifier,
+      interface_type);
   }
 }
 
@@ -254,9 +536,12 @@ Function: verilog_typecheckt::instantiate_interface_port
 
  Outputs:
 
- Purpose: Instantiate the given interface under the given identifier.
-          When the type is an array, this recurses into the array
-          elements, which are given the identifiers id[0], id[1], ...
+ Purpose: Instantiate the given interface under the given identifier,
+          with the given interface type, i.e., the instantiation of the
+          interface instance that is bound to the port, or nil for the
+          defaults. When the type is an array, this recurses into the
+          array elements, which are given the identifiers id[0],
+          id[1], ..., and the defaults.
 
 \*******************************************************************/
 
@@ -266,7 +551,8 @@ void verilog_typecheckt::instantiate_interface_port(
   const irep_idt &interface_module_id,
   const irep_idt &interface_base_name,
   const irep_idt &base_name,
-  const irep_idt &identifier)
+  const irep_idt &identifier,
+  const irept &interface_type)
 {
   if(type.id() == ID_array)
   {
@@ -304,26 +590,37 @@ void verilog_typecheckt::instantiate_interface_port(
         interface_module_id,
         interface_base_name,
         element_base_name,
-        element_identifier);
+        element_identifier,
+        get_nil_irep());
     }
 
     return;
   }
 
-  exprt::operandst no_parameters;
-  std::map<irep_idt, exprt> no_defparams;
+  // The interface under the port is instantiated as the interface
+  // instance that is bound to the port, i.e., with the same parameter
+  // assignments, including those of its interface ports, and the same
+  // defparams. Without a bound instance, e.g., for the ports of a
+  // top-level module, the defaults are used.
+  verilog_instantiationt instantiation;
+
+  if(interface_type.id() == ID_verilog_instantiation)
+    instantiation = instantiation_of_record(interface_type);
 
   instantiate_design_element(
     location,
     interface_module_id,
     interface_base_name,
     identifier,
-    no_parameters,
-    no_defparams);
+    instantiation.parameter_assignments,
+    instantiation.defparams);
 
-  // Update the instance symbol value to record the interface binding
+  // Update the instance symbol value to record the interface binding, and
+  // the interface type, for interface ports of submodules that this port
+  // is bound to.
   symbolt &symbol = symbol_table_lookup(identifier);
   symbol.value = verilog_module_instancet{id2string(identifier) + "$module"};
+  set_instantiation(symbol, instantiation);
 }
 
 /*******************************************************************\
