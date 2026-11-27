@@ -197,23 +197,65 @@ Function: verilog_typecheckt::interface_port_actual
 
  Outputs:
 
- Purpose: The interface instance that the given port connection
-          expression denotes, as a symbol expression, or nil if the
-          expression is not the name of an interface instance.
+ Purpose: The interface instance (or array of interface instances)
+          that the given port connection expression denotes, as a
+          symbol expression, or nil if the expression is not the
+          name of an interface instance. Elements of arrays of interface
+          instances are resolved to their symbols, and assignment
+          patterns, which bind arrays of interface ports, are resolved
+          element-wise.
 
 \*******************************************************************/
 
 exprt verilog_typecheckt::interface_port_actual(const exprt &expr)
 {
-  if(expr.id() != ID_verilog_identifier)
+  if(expr.id() == ID_verilog_identifier)
+  {
+    auto *symbol = resolve(to_verilog_identifier_expr(expr).base_name());
+
+    if(symbol == nullptr)
+      return nil_exprt{};
+
+    if(
+      symbol->type.id() != ID_verilog_module_instance &&
+      !is_interface_array_type(symbol->type))
+    {
+      return nil_exprt{};
+    }
+
+    return symbol->symbol_expr();
+  }
+  else if(expr.id() == ID_verilog_bit_select)
+  {
+    // An element of an array of interface instances, 1800-2017 25.4,
+    // which is a symbol of its own, e.g., bus[1].
+    auto bit_select = to_verilog_bit_select_expr(expr);
+    bit_select.src() = interface_port_actual(bit_select.src());
+
+    if(
+      bit_select.src().id() != ID_symbol ||
+      !is_interface_array_type(bit_select.src().type()))
+    {
+      return nil_exprt{};
+    }
+
+    return convert_interface_array_element(std::move(bit_select));
+  }
+  else if(expr.id() == ID_verilog_assignment_pattern)
+  {
+    exprt result = expr;
+
+    for(auto &op : result.operands())
+    {
+      op = interface_port_actual(op);
+      if(op.is_nil())
+        return nil_exprt{};
+    }
+
+    return result;
+  }
+  else
     return nil_exprt{};
-
-  auto *symbol = resolve(to_verilog_identifier_expr(expr).base_name());
-
-  if(symbol == nullptr || symbol->type.id() != ID_verilog_module_instance)
-    return nil_exprt{};
-
-  return symbol->symbol_expr();
 }
 
 /*******************************************************************\
@@ -340,18 +382,42 @@ Function: verilog_typecheckt::interface_type_of_actual
 
  Purpose: The interface type of the given actual of an interface port,
           see interface_port_actual: the instantiation recorded on the
-          interface instance. Nil if unknown.
+          interface instance, or, for an array of interfaces, the list
+          of the interface types of the elements, in the order of the
+          range, as the elements are bound pairwise. Nil if unknown.
 
 \*******************************************************************/
 
 irept verilog_typecheckt::interface_type_of_actual(const exprt &actual) const
 {
-  if(actual.id() != ID_symbol)
-    return irept{ID_nil};
+  if(actual.id() == ID_symbol)
+  {
+    auto &identifier = to_symbol_expr(actual).get_identifier();
 
-  auto record =
-    get_instantiation_record(to_symbol_expr(actual).get_identifier());
-  return record.has_value() ? *record : irept{ID_nil};
+    if(is_interface_array_type(actual.type()))
+    {
+      irept result{ID_verilog_assignment_pattern};
+
+      for(auto &element : interface_array_elements(to_symbol_expr(actual)))
+        result.get_sub().push_back(interface_type_of_actual(element));
+
+      return result;
+    }
+
+    auto record = get_instantiation_record(identifier);
+    return record.has_value() ? *record : irept{ID_nil};
+  }
+  else if(actual.id() == ID_verilog_assignment_pattern)
+  {
+    irept result{ID_verilog_assignment_pattern};
+
+    for(auto &op : actual.operands())
+      result.get_sub().push_back(interface_type_of_actual(op));
+
+    return result;
+  }
+  else
+    return irept{ID_nil};
 }
 
 /*******************************************************************\
@@ -541,7 +607,8 @@ Function: verilog_typecheckt::instantiate_interface_port
           interface instance that is bound to the port, or nil for the
           defaults. When the type is an array, this recurses into the
           array elements, which are given the identifiers id[0],
-          id[1], ..., and the defaults.
+          id[1], ..., and the interface type is a list with one entry
+          per element.
 
 \*******************************************************************/
 
@@ -563,6 +630,11 @@ void verilog_typecheckt::instantiate_interface_port(
     auto size = array_type.size_int();
     auto offset = array_type.offset();
 
+    // the interface types of the elements, in the order of the range
+    const bool have_element_types =
+      interface_type.id() == ID_verilog_assignment_pattern &&
+      interface_type.get_sub().size() == size;
+
     for(mp_integer i = 0; i < size; ++i)
     {
       // The elements are stored starting from the left index of the range.
@@ -583,6 +655,11 @@ void verilog_typecheckt::instantiate_interface_port(
       auto element_identifier = element_symbol.name;
       add_symbol(std::move(element_symbol));
 
+      const irept &element_interface_type =
+        have_element_types
+          ? interface_type.get_sub()[numeric_cast_v<std::size_t>(i)]
+          : get_nil_irep();
+
       // recursive call, for further dimensions
       instantiate_interface_port(
         array_type.element_type(),
@@ -591,7 +668,7 @@ void verilog_typecheckt::instantiate_interface_port(
         interface_base_name,
         element_base_name,
         element_identifier,
-        get_nil_irep());
+        element_interface_type);
     }
 
     return;

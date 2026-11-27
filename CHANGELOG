@@ -30,6 +30,9 @@
   instance that is bound to them, including in elaboration-time constants
 * SystemVerilog: interface instances with parameters may be declared after
   the instances whose interface ports they are bound to
+* SystemVerilog: arrays of interface ports, and interface ports bound to
+  elements of arrays of interface instances, have the parameters of the
+  bound instances
 
 # EBMC 6.2
 
