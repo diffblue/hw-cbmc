@@ -1,0 +1,11 @@
+KNOWNBUG
+subtype_attribute1.vhd
+--show-parse
+^EXIT=0$
+^SIGNAL=0$
+^ENTITY subtype_attribute1$
+--
+^warning: ignoring
+^syntax error
+--
+The VHDL-2008 'subtype attribute is not parsed.

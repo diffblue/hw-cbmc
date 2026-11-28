@@ -1,0 +1,11 @@
+KNOWNBUG
+generate_declarations1.vhd
+--show-parse
+^EXIT=0$
+^SIGNAL=0$
+^ENTITY generate_declarations1$
+--
+^warning: ignoring
+^syntax error
+--
+The declarative part of a generate statement body is not parsed.
