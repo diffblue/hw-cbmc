@@ -1,0 +1,9 @@
+CORE
+undeclared_indexed.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file undeclared_indexed\.vhd line 6 column 8: `c' is not declared$
+^CONVERSION ERROR$
+--
+^warning: ignoring

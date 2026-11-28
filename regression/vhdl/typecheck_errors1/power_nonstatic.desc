@@ -1,0 +1,9 @@
+CORE
+power_nonstatic.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file power_nonstatic\.vhd line 6 column 10: \*\* requires static operands$
+^CONVERSION ERROR$
+--
+^warning: ignoring

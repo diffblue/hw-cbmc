@@ -35,6 +35,8 @@ SRC += ebmc/bdd_model_checker.cpp \
        vhdl/parse_tree.cpp \
        vhdl/parser.cpp \
        vhdl/vhdl_expr.cpp \
+       vhdl/vhdl_lowering.cpp \
+       vhdl/vhdl_types.cpp \
        # Empty last line
 
 INCLUDES= -I ../src/ -I . -I $(CPROVER_DIR)/unit -I $(CPROVER_DIR)/src

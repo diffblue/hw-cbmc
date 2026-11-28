@@ -1,0 +1,9 @@
+CORE
+overloaded_ambiguous.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file overloaded_ambiguous\.vhd line 8 column 8: cannot determine the type of the literal$
+^CONVERSION ERROR$
+--
+^warning: ignoring

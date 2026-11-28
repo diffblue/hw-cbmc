@@ -1,0 +1,12 @@
+KNOWNBUG
+out_default1.vhd
+--bound 1
+^EXIT=0$
+^SIGNAL=0$
+^\[out_default1\.p1\] .* PROVED up to bound 1$
+^\[out_default1\.p2\] .* PROVED up to bound 1$
+^\[out_default1\.p3\] .* PROVED up to bound 1$
+--
+^warning: ignoring
+--
+Nothing is implemented yet.

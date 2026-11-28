@@ -1,0 +1,9 @@
+CORE
+to_integer_slv.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file to_integer_slv\.vhd line 9 column 18: to_integer requires an unsigned or signed argument$
+^CONVERSION ERROR$
+--
+^warning: ignoring

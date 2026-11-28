@@ -680,6 +680,9 @@ std::string expr2vhdlt::convert(const exprt &src, unsigned &precedence)
   else if(src.id() == ID_lshr)
     return convert_binary(src, ">>", precedence = 14);
 
+  else if(src.id() == ID_vhdl_sla)
+    return convert_binary(src, "sla", precedence = 14);
+
   else if(src.id() == ID_unary_minus)
   {
     if(src.operands().size() != 1)

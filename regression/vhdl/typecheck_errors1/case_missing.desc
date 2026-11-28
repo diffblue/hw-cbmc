@@ -1,0 +1,9 @@
+CORE
+case_missing.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file case_missing\.vhd line 8 column 5: the choices do not cover all values of integer range 0 to 3; add an others choice$
+^CONVERSION ERROR$
+--
+^warning: ignoring

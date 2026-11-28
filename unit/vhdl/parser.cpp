@@ -115,7 +115,7 @@ SCENARIO("Parsing VHDL design units")
         REQUIRE(!indexed.argument(0).is_named());
 
         auto &process = to_vhdl_process(static_cast<const exprt &>(body[1]));
-        REQUIRE(process.get(ID_label) == "p");
+        REQUIRE(process.label() == "p");
         REQUIRE(process.sensitivity().get_sub().size() == 1);
         REQUIRE(process.body().id() == ID_block);
         REQUIRE(process.body().operands().size() == 1);
@@ -156,6 +156,32 @@ SCENARIO("Parsing VHDL design units")
     parse(
       "entity e is end;\narchitecture a of e is begin x <= ; end;\n", error);
     REQUIRE(error);
+  }
+
+  GIVEN("The shift operators")
+  {
+    // IEEE 1076-2008 9.2.4: each has its own operator id
+    bool error;
+    auto parse_tree = parse(
+      "entity e is end;\n"
+      "architecture a of e is begin\n"
+      "  a <= v sll 1; b <= v srl 1; c <= v sla 1;\n"
+      "  d <= v sra 1; f <= v rol 1; g <= v ror 1;\n"
+      "end;\n",
+      error);
+    REQUIRE(!error);
+
+    auto &body = parse_tree.items.back().body().get_sub();
+    REQUIRE(body.size() == 6);
+    const irep_idt expected[] = {
+      ID_shl, ID_lshr, ID_vhdl_sla, ID_ashr, ID_rol, ID_ror};
+    for(std::size_t i = 0; i < 6; i++)
+    {
+      auto &assignment =
+        to_vhdl_signal_assign(static_cast<const exprt &>(body[i]));
+      REQUIRE(assignment.value().id() == expected[i]);
+      REQUIRE(assignment.value().operands().size() == 2);
+    }
   }
 
   GIVEN("Non-associative relational operators")

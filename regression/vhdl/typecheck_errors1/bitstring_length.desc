@@ -1,0 +1,9 @@
+CORE
+bitstring_length.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file bitstring_length\.vhd line 8 column 8: bit string literal has 4 elements, but std_logic_vector\(7 downto 0\) has 8$
+^CONVERSION ERROR$
+--
+^warning: ignoring

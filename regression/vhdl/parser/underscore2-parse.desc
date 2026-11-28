@@ -3,6 +3,6 @@ underscore2.vhd
 --show-parse
 ^EXIT=1$
 ^SIGNAL=0$
-^file underscore2\.vhd line 3: syntax error
+^file underscore2\.vhd line 3 column 13: syntax error before `_'
 --
 ^warning: ignoring

@@ -1,0 +1,9 @@
+CORE
+overloaded_literal1.vhd
+--show-symbol-table
+^EXIT=0$
+^SIGNAL=0$
+^  vhdl::overloaded_literal1$
+--
+^warning: ignoring
+^CONVERSION ERROR

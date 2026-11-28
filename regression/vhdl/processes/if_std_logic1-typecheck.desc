@@ -1,0 +1,9 @@
+CORE
+if_std_logic1.vhd
+--show-symbol-table
+^EXIT=0$
+^SIGNAL=0$
+^  vhdl::if_std_logic1$
+--
+^warning: ignoring
+^CONVERSION ERROR

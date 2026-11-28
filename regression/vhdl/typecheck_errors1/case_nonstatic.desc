@@ -1,0 +1,9 @@
+CORE
+case_nonstatic.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file case_nonstatic\.vhd line 9 column 12: case choice must be a static expression$
+^CONVERSION ERROR$
+--
+^warning: ignoring

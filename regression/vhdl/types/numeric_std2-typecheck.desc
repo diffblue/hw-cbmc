@@ -1,0 +1,9 @@
+CORE
+numeric_std2.vhd
+--show-symbol-table
+^EXIT=0$
+^SIGNAL=0$
+^  vhdl::numeric_std2$
+--
+^warning: ignoring
+^CONVERSION ERROR

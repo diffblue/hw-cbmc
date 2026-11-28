@@ -3,6 +3,6 @@ missing_label1.vhd
 --show-parse
 ^EXIT=1$
 ^SIGNAL=0$
-^file missing_label1\.vhd line 5: label required
+^file missing_label1\.vhd line 5 column \d+: label required$
 --
 ^warning: ignoring

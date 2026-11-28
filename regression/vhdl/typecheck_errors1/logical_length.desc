@@ -1,0 +1,9 @@
+CORE
+logical_length.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file logical_length\.vhd line 6 column 8: the operands have different lengths: bit_vector\(3 downto 0\) and bit_vector\(1 downto 0\)$
+^CONVERSION ERROR$
+--
+^warning: ignoring

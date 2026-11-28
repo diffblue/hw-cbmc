@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/symbol_table.h>
 
 #include "expr2vhdl.h"
+#include "vhdl_lowering.h"
 #include "vhdl_parser.h"
 #include "vhdl_std_packages.h"
 #include "vhdl_synthesis.h"
@@ -162,6 +163,9 @@ bool vhdl_languaget::typecheck(
 
   if(vhdl_synthesis(symbol_table, module2, message_handler))
     return true;
+
+  // map the VHDL types to CBMC types
+  vhdl_lowering(symbol_table);
 
   return false;
 }

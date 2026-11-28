@@ -1,0 +1,9 @@
+CORE
+type_mismatch.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file type_mismatch\.vhd line 7 column 8: type mismatch: expected boolean, got bit$
+^CONVERSION ERROR$
+--
+^warning: ignoring

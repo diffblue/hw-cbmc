@@ -1,0 +1,9 @@
+CORE
+length_mismatch.vhd
+--show-symbol-table
+^EXIT=2$
+^SIGNAL=0$
+^file length_mismatch\.vhd line 8 column 8: type mismatch: expected std_logic_vector\(7 downto 0\), got std_logic_vector\(3 downto 0\)$
+^CONVERSION ERROR$
+--
+^warning: ignoring

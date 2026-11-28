@@ -36,6 +36,17 @@ void vhdl_synthesist::synth_code(const codet &code)
   else if(statement == ID_vhdl_signal_assign)
   {
   }
+  else if(statement == ID_skip)
+  {
+  }
+  else if(statement == ID_ifthenelse)
+  {
+    // the branches may contain assertions
+    auto &if_code = to_code_ifthenelse(code);
+    synth_code(if_code.then_case());
+    if(if_code.has_else_case())
+      synth_code(if_code.else_case());
+  }
   else if(statement == ID_block)
   {
     for(auto &op : code.operands())
@@ -106,6 +117,8 @@ void vhdl_synthesist::synth_module(const irept &module)
   {
     if(op.id() == ID_process)
       synth_process(op);
+    else if(op.id() == ID_code)
+      synth_code(to_code(op));
     else
     {
       error() << "unexpected module item during synthesis: " << op.id() << eom;

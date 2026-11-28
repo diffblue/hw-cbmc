@@ -1,0 +1,9 @@
+CORE
+array1.vhd
+--show-symbol-table
+^EXIT=0$
+^SIGNAL=0$
+^  vhdl::array1$
+--
+^warning: ignoring
+^CONVERSION ERROR
