@@ -1,0 +1,5 @@
+# suite directory, and the number of tests the parser must accept;
+# "-" for suites without a baseline, which are only reported
+billowitch/compliant 1189
+ashenden/compliant 245
+billowitch/non_compliant -

@@ -1,0 +1,57 @@
+name: VHDL parser acceptance (VESTs)
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/vhdl/**'
+      - 'regression/vhdl-compliance/**'
+      - '.github/workflows/vhdl-compliance.yaml'
+
+jobs:
+  vests-vhdl-93:
+    name: VESTs VHDL-93 (parser acceptance)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Fetch dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get remove --purge man-db
+          packages_to_install="ccache"
+          if ! sudo apt-get install --no-install-recommends -yq $packages_to_install ; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -yq $packages_to_install
+          fi
+      - name: Prepare ccache
+        uses: actions/cache/restore@v6
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-24.04-make-gcc-${{ github.ref }}-${{ github.sha }}-PR
+          restore-keys: |
+            ${{ runner.os }}-24.04-make-gcc-${{ github.ref }}
+            ${{ runner.os }}-24.04-make-gcc
+      - name: ccache environment
+        run: |
+          echo "CCACHE_BASEDIR=$PWD" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$PWD/.ccache" >> $GITHUB_ENV
+      - name: Zero ccache stats and limit in size
+        run: ccache -z --max-size=500M
+      - name: Get cadical and minisat
+        run: make -C lib/cbmc/src cadical-download minisat2-download
+      - name: Build with make
+        run: make -C src -j4 CXX="ccache g++" MINISAT2=../../minisat-2.2.1 CADICAL=../../cadical
+      - name: Run the VESTs VHDL-93 tests
+        run: regression/vhdl-compliance/run-vests.sh src/ebmc/ebmc vests-report.html
+      - name: Upload the report
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: vests-report
+          path: vests-report.html
+      - name: Print ccache stats
+        run: ccache -s

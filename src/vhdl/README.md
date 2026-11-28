@@ -164,6 +164,8 @@ in VHDL notation.
   after any change to the type checker or the synthesis.
 * `unit/vhdl`: the parse tree, parser, expression and type classes,
   the lowering, the synthesis and `expr2vhdl`.
+* `regression/vhdl-compliance`: parser acceptance on the VESTs
+  VHDL-93 suites, run in CI with a published report.
 
 ## References
 
