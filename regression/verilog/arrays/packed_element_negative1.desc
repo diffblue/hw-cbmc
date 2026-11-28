@@ -1,0 +1,12 @@
+CORE
+packed_element_negative1.sv
+--bound 0
+^\[main\.p_value\] .*: PROVED up to bound 0$
+^\[main\.p_reach\] .*: REFUTED$
+^EXIT=10$
+^SIGNAL=0$
+--
+^warning: ignoring
+--
+A variable index into a packed array with a negative range. The index
+-5 is reachable.
