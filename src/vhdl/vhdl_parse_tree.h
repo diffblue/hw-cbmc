@@ -84,6 +84,11 @@ public:
     {
       return get("item_type") == "package";
     }
+    bool is_configuration() const
+    {
+      return get("item_type") == "configuration";
+    }
+
     bool is_package_body() const
     {
       return get("item_type") == "package_body";

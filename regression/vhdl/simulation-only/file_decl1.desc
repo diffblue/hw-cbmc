@@ -1,0 +1,9 @@
+CORE
+file_decl1.vhd
+--bound 1
+^EXIT=2$
+^SIGNAL=0$
+^file file_decl1\.vhd line \d+ column \d+: `f' has type text, which is for simulation only$
+^CONVERSION ERROR$
+--
+^warning: ignoring

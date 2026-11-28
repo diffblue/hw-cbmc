@@ -56,8 +56,11 @@ IEEE 1076-2008. The scanner is reentrant and owned by `vhdl_parsert`
 and every parse tree node gets a source location. Basic identifiers are
 case insensitive and are kept as written; the type checker lowers them.
 
-The grammar covers the RTL synthesis subset of the language. Some
-constructs cannot be told
+The grammar covers the whole language, including the constructs that
+have no hardware meaning (access and file types, waveforms with delays,
+wait statements, configurations), so that a design or test bench is
+parsed completely and problems are reported as type or synthesis errors
+with a location, not as syntax errors. Some constructs cannot be told
 apart syntactically and are disambiguated by the type checker:
 `f(x)` is an indexed name, a slice, a function call or a type
 conversion (`vhdl_indexed_exprt`), and `t'(e)` is a qualified
@@ -96,7 +99,10 @@ The result has **VHDL types** (the classes in the middle of
 `vhdl_types.h`): `vhdl_enumeration_typet` (boolean, bit, std_ulogic,
 character, user-defined enumerations), `vhdl_integer_typet` (always
 with its range), `vhdl_array_typet` (element type, index subtype, and
-the index range when constrained) and `vhdl_record_typet`. A type carries its name and the name of its base type; two
+the index range when constrained) and `vhdl_record_typet`, plus
+`vhdl_physical_typet` (time), `vhdl_access_typet` and `vhdl_file_typet`
+for the simulation-only constructs, which are type checked and rejected
+by the synthesis. A type carries its name and the name of its base type; two
 types are compatible when the base types agree, which gives VHDL's
 strong typing: `bit` and `boolean`, or `std_logic_vector` and
 `unsigned`, are distinct.
@@ -129,7 +135,9 @@ implicit clock, following IEEE 1076.6-2004:
 * Initial values are INIT constraints. Assertions become property
   symbols, `always` the condition.
 * Multiple drivers, mixed clocks and clock edges in other positions are
-  errors.
+  errors, as are the simulation-only constructs: objects of time, access
+  or file types, delays in signal assignments, guarded blocks,
+  disconnection specifications and wait statements.
 
 Partial assignments (to an element, a slice or a record element) are
 expressed as `with` expressions and slice concatenations on the whole
@@ -158,8 +166,9 @@ in VHDL notation.
 ## Tests
 
 * `regression/vhdl`: by topic (`operators`, `processes`, `concurrent`,
-  `types`, `design-units`, `parser`, `typecheck_errors1`, `soundness1`);
-  each input has a `-parse`, a `-typecheck` and a BMC `.desc`.
+  `types`, `design-units`, `parser`, `typecheck_errors1`, `soundness1`,
+  `simulation-only`); each input has a `-parse`, a `-typecheck` and a
+  BMC `.desc`.
   `soundness1` holds designs whose verdicts were once wrong; re-run it
   after any change to the type checker or the synthesis.
 * `unit/vhdl`: the parse tree, parser, expression and type classes,

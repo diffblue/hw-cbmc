@@ -82,6 +82,13 @@ protected:
   exprt typecheck_concurrent_statement(exprt);
   /// the label of a concurrent statement is a declaration
   void declare_label(irep_idt label, const source_locationt &);
+  exprt typecheck_block_statement(const vhdl_block_statementt &);
+
+  // Simulation-only constructs are type checked, and rejected by the
+  // synthesis. Those that are declarations are kept here, and added to
+  // the body of the architecture.
+  void typecheck_disconnect(const vhdl_disconnectt &);
+  exprt::operandst simulation_only_items;
   exprt typecheck_process(exprt);
 
   // sequential statements
@@ -93,6 +100,7 @@ protected:
   codet typecheck_if(exprt);
   codet typecheck_case(exprt);
   codet typecheck_for(exprt);
+  codet typecheck_wait(const vhdl_waitt &);
 
   /// a condition, with the implicit condition operator ??
   exprt typecheck_condition(exprt);
@@ -152,6 +160,13 @@ protected:
     const source_locationt &);
   exprt typecheck_type_conversion(exprt, const typet &);
   exprt typecheck_binary(exprt);
+  /// the operators on time, a simulation-only type
+  exprt typecheck_physical_binary(
+    irep_idt id,
+    exprt,
+    exprt,
+    const source_locationt &);
+  exprt typecheck_physical_literal(const vhdl_physical_literal_exprt &);
   exprt typecheck_concatenation(exprt, exprt, const source_locationt &);
   /// the operators of the numeric packages on vectors
   exprt
@@ -264,7 +279,7 @@ protected:
 
   void add_predefined_types();
 
-  unsigned process_counter = 0;
+  unsigned process_counter = 0, block_counter = 0;
 };
 
 #endif

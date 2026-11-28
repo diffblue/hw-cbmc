@@ -403,6 +403,78 @@ library_unit:
 primary_unit:
          entity_declaration
        | package_declaration
+       | configuration_declaration
+       ;
+
+/* IEEE 1076-2008 3.4; simulation only, recorded for --show-parse */
+configuration_declaration:
+         TOK_CONFIGURATION identifier TOK_OF name TOK_IS
+         configuration_declarative_part
+         block_configuration
+         TOK_END configuration_opt name_opt ';'
+       {
+         vhdl_parse_treet::itemt &c=PARSER.new_configuration_item();
+         $1.set_location(c);
+         c.set_name(stack($2));
+         c.add(ID_entity) = stack($4);
+       }
+       ;
+
+configuration_opt:
+         /* Empty */
+       | TOK_CONFIGURATION
+       ;
+
+configuration_declarative_part:
+         /* Empty */
+       | configuration_declarative_part use_clause
+       | configuration_declarative_part attribute_specification
+       | configuration_declarative_part group_declaration
+       ;
+
+/* IEEE 1076-2008 3.4.2 */
+block_configuration:
+         TOK_FOR block_specification
+         use_clause_list
+         configuration_item_list
+         TOK_END TOK_FOR ';'
+       ;
+
+block_specification:
+         name
+       ;
+
+use_clause_list:
+         /* Empty */
+       | use_clause_list use_clause
+       ;
+
+configuration_item_list:
+         /* Empty */
+       | configuration_item_list configuration_item
+       ;
+
+configuration_item:
+         block_configuration
+       | component_configuration
+       ;
+
+/* IEEE 1076-2008 3.4.3 */
+component_configuration:
+         TOK_FOR instantiation_list ':' name
+         binding_indication_opt
+         block_configuration_opt
+         TOK_END TOK_FOR ';'
+       ;
+
+binding_indication_opt:
+         /* Empty */
+       | TOK_USE binding_indication ';'
+       ;
+
+block_configuration_opt:
+         /* Empty */
+       | block_configuration
        ;
 
 secondary_unit:
@@ -643,9 +715,74 @@ declarative_item:
        | attribute_declaration
        | attribute_specification
        | configuration_specification
+       | file_declaration
+       | disconnection_specification
+       | group_template_declaration
+       | group_declaration
        | use_clause
        {
          init($$, ID_nil);
+       }
+       ;
+
+/* IEEE 1076-2008 6.4.2.5; simulation only */
+file_declaration:
+         TOK_FILE identifier_list ':' subtype_indication file_open_information_opt ';'
+       {
+         init($$, ID_vhdl_file_declaration);
+         $1.set_location(stack($$));
+         stack($$).add(ID_vhdl_declarators).get_sub().swap(stack($2).get_sub());
+         stack($$).add(ID_type) = stack($4);
+       }
+       ;
+
+file_open_information_opt:
+         /* Empty */
+       | TOK_OPEN expr TOK_IS expr
+       | TOK_IS expr
+       | TOK_IS TOK_IN expr  /* VHDL-87 */
+       | TOK_IS TOK_OUT expr /* VHDL-87 */
+       ;
+
+/* IEEE 1076-2008 7.4; simulation only */
+disconnection_specification:
+         TOK_DISCONNECT instantiation_list ':' name TOK_AFTER expr ';'
+       {
+         init($$, ID_vhdl_disconnect);
+         $1.set_location(stack($$));
+         stack($$).add(ID_vhdl_declarators).get_sub().swap(stack($2).get_sub());
+         stack($$).add(ID_name) = stack($4);
+         mto($$, $6);
+       }
+       ;
+
+/* IEEE 1076-2008 6.9 */
+group_template_declaration:
+         TOK_GROUP identifier TOK_IS '(' entity_class_entry_list ')' ';'
+       {
+         init($$, ID_vhdl_group);
+         $1.set_location(stack($$));
+       }
+       ;
+
+entity_class_entry_list:
+         entity_class_entry
+       | entity_class_entry_list ',' entity_class_entry
+       ;
+
+entity_class_entry:
+         entity_class
+       | entity_class TOK_BOX
+       ;
+
+/* IEEE 1076-2008 6.10 */
+group_declaration:
+         TOK_GROUP identifier ':' name ';'
+       {
+         // the group constituents are parsed as the arguments of an
+         // indexed name
+         init($$, ID_vhdl_group);
+         $1.set_location(stack($$));
        }
        ;
 
@@ -660,7 +797,15 @@ configuration_specification:
 instantiation_list:
          identifier_list
        | TOK_OTHERS
+       {
+         init($$);
+         stack($$).get_sub().push_back(irept{ID_vhdl_others});
+       }
        | TOK_ALL
+       {
+         init($$);
+         stack($$).get_sub().push_back(irept{ID_all});
+       }
        ;
 
 binding_indication:
@@ -740,6 +885,30 @@ type_definition:
        | range_type_definition
        | array_type_definition
        | record_type_definition
+       | access_type_definition
+       | file_type_definition
+       ;
+
+/* IEEE 1076-2008 5.4; simulation only */
+access_type_definition:
+         TOK_ACCESS subtype_indication
+       {
+         init($$);
+         stack_type($$) = typet{ID_vhdl_access_type};
+         stack_type($$).add_subtype() = stack_type($2);
+         $1.set_location(stack($$));
+       }
+       ;
+
+/* IEEE 1076-2008 5.5; simulation only */
+file_type_definition:
+         TOK_FILE TOK_OF name
+       {
+         init($$);
+         stack_type($$) = typet{ID_vhdl_file_type};
+         stack_type($$).add(ID_name) = stack($3);
+         $1.set_location(stack($$));
+       }
        ;
 
 /* IEEE 1076-2008 5.2.2 */
@@ -925,6 +1094,21 @@ subtype_indication:
          name
        {
          make_subtype_indication($$, $1);
+       }
+       | name name
+       {
+         // IEEE 1076-2008 6.3: with a resolution function
+         make_subtype_indication($$, $2);
+         stack($$).add(ID_vhdl_resolution) = stack($1);
+       }
+       | name name TOK_RANGE range
+       {
+         init($$);
+         vhdl_subtype_indicationt result{std::move(stack($2))};
+         result.range_constraint(std::move(stack($4)));
+         stack_type($$) = std::move(result);
+         stack($$).add(ID_vhdl_resolution) = stack($1);
+         $3.set_location(stack($$));
        }
        | name TOK_RANGE range
        {
@@ -1137,6 +1321,58 @@ concurrent_statement_body:
        | concurrent_signal_assignment_statement
        | component_instantiation_statement
        | generate_statement
+       | block_statement
+       ;
+
+/* IEEE 1076-2008 11.2 */
+block_statement:
+         TOK_BLOCK guard_condition_opt is_opt
+         block_header
+         declarative_part
+         TOK_BEGIN concurrent_statement_list
+         TOK_END TOK_BLOCK name_opt ';'
+       {
+         init($$, ID_vhdl_block);
+         $1.set_location(stack($$));
+         stack($$).add(ID_vhdl_guard) = stack($2);
+         stack($$).add(ID_decl).get_sub().swap(stack($5).get_sub());
+         stack($$).add(ID_body).get_sub().swap(stack($7).get_sub());
+       }
+       ;
+
+guard_condition_opt:
+         /* Empty */
+       {
+         init($$, ID_nil);
+       }
+       | '(' expr ')'
+       {
+         $$=$2;
+       }
+       ;
+
+block_header:
+         block_generic_part_opt block_port_part_opt
+       ;
+
+block_generic_part_opt:
+         /* Empty */
+       | TOK_GENERIC '(' interface_list ')' ';' block_generic_map_opt
+       ;
+
+block_generic_map_opt:
+         /* Empty */
+       | TOK_GENERIC TOK_MAP '(' association_list ')' ';'
+       ;
+
+block_port_part_opt:
+         /* Empty */
+       | TOK_PORT '(' interface_list ')' ';' block_port_map_opt
+       ;
+
+block_port_map_opt:
+         /* Empty */
+       | TOK_PORT TOK_MAP '(' association_list ')' ';'
        ;
 
 /* IEEE 1076-2008 11.3 */
@@ -1223,7 +1459,14 @@ severity_opt:
 
 /* IEEE 1076-2008 11.6 */
 concurrent_signal_assignment_statement:
-         name TOK_LE guarded_opt delay_mechanism_opt conditional_waveforms ';'
+         aggregate TOK_LE guarded_opt delay_mechanism_opt conditional_waveforms ';'
+       {
+         // IEEE 1076-2008 10.5.2.1: an aggregate as target
+         init($$);
+         stack($$) = vhdl_signal_assignt{std::move(stack($1)), std::move(stack($5))};
+         $2.set_location(stack($$));
+       }
+       | name TOK_LE guarded_opt delay_mechanism_opt conditional_waveforms ';'
        {
          init($$);
          stack($$) = vhdl_signal_assignt{std::move(stack($1)), std::move(stack($5))};
@@ -1299,14 +1542,32 @@ selected_waveform:
 /* IEEE 1076-2008 10.5.2.1; only one waveform element is supported,
    and the delay is ignored */
 waveform:
-         expr
-       | expr TOK_AFTER expr
+         waveform_element
+       | waveform ',' waveform_element
        {
+         // IEEE 1076-2008 10.5.2.1: several elements, simulation only
+         if(stack($1).id() != ID_vhdl_waveform)
+         {
+           exprt waveform(ID_vhdl_waveform);
+           waveform.add_source_location() = stack($1).source_location();
+           waveform.add_to_operands(std::move(stack($1)));
+           stack($1) = std::move(waveform);
+         }
          $$=$1;
+         mto($$, $3);
        }
        | TOK_UNAFFECTED
        {
          init($$, ID_nil);
+       }
+       ;
+
+waveform_element:
+         expr
+       | expr TOK_AFTER expr
+       {
+         // IEEE 1076-2008 10.5.2.1: the delay is for simulation
+         binary($$, $1, $2, $3, ID_vhdl_after);
        }
        ;
 
@@ -1405,6 +1666,23 @@ association_element:
 
 actual:
          expr
+       | expr updown expr
+       {
+         // a discrete range, in an index constraint
+         init($$);
+         stack($$) = vhdl_range_exprt{
+           std::move(stack($1)), stack($2).id(), std::move(stack($3))};
+         $2.set_location(stack($$));
+       }
+       | name TOK_RANGE range
+       {
+         // a subtype indication with a range, in an index constraint
+         init($$);
+         vhdl_subtype_indicationt result{std::move(stack($1))};
+         result.range_constraint(std::move(stack($3)));
+         stack_type($$) = std::move(result);
+         $2.set_location(stack($$));
+       }
        | TOK_OPEN
        {
          init($$, ID_vhdl_open);
@@ -1493,6 +1771,7 @@ wait_statement:
          $1.set_location(stack($$));
          stack($$).add(ID_vhdl_sensitivity) = stack($2);
          mto($$, $3);
+         stack($$).add(ID_vhdl_timeout) = stack($4);
        }
        ;
 
@@ -1520,7 +1799,13 @@ condition_clause_opt:
 
 timeout_clause_opt:
          /* Empty */
+       {
+         init($$, ID_nil);
+       }
        | TOK_FOR expr
+       {
+         $$=$2;
+       }
        ;
 
 /* IEEE 1076-2008 10.3 */
@@ -1544,7 +1829,14 @@ report_statement:
 
 /* IEEE 1076-2008 10.5; conditional and selected forms are VHDL-2008 */
 signal_assignment_statement:
-         name TOK_LE delay_mechanism_opt conditional_waveforms ';'
+         aggregate TOK_LE delay_mechanism_opt conditional_waveforms ';'
+       {
+         // IEEE 1076-2008 10.5.2.1: an aggregate as target
+         init($$);
+         stack($$) = vhdl_signal_assignt{std::move(stack($1)), std::move(stack($4))};
+         $2.set_location(stack($$));
+       }
+       | name TOK_LE delay_mechanism_opt conditional_waveforms ';'
        {
          init($$);
          stack($$) = vhdl_signal_assignt{std::move(stack($1)), std::move(stack($4))};
@@ -1562,7 +1854,14 @@ signal_assignment_statement:
 
 /* IEEE 1076-2008 10.6; conditional and selected forms are VHDL-2008 */
 variable_assignment_statement:
-         name TOK_ASSIGN conditional_expression ';'
+         aggregate TOK_ASSIGN conditional_expression ';'
+       {
+         // IEEE 1076-2008 10.6.2.1: an aggregate as target
+         init($$, ID_assign);
+         $2.set_location(stack($$));
+         mto2($$, $1, $3);
+       }
+       | name TOK_ASSIGN conditional_expression ';'
        {
          init($$, ID_assign);
          $2.set_location(stack($$));
@@ -1870,6 +2169,29 @@ name:
          $2.set_location(stack($$));
          mto($$, $1);
        }
+       | name '.' TOK_STRING
+       {
+         // a selected name denoting an operator symbol, e.g., pkg."+"
+         init($$, ID_member);
+         $2.set_location(stack($$));
+         mto($$, $1);
+         stack($$).set(ID_component_name, $3.text);
+       }
+       | TOK_STRING '(' association_list ')'
+       {
+         // a call of an operator by its symbol, e.g., "and"(a, b)
+         exprt designator(ID_symbol);
+         $1.set_location(designator);
+         designator.set(ID_identifier, $1.text);
+
+         init($$);
+         vhdl_indexed_exprt result{std::move(designator)};
+         for(auto &association : stack($3).get_sub())
+           result.add_argument(
+             std::move(static_cast<vhdl_associationt &>(association)));
+         stack($$) = std::move(result);
+         $2.set_location(stack($$));
+       }
        | name '.' character_literal
        {
          // a selected name denoting a character literal
@@ -1880,22 +2202,29 @@ name:
        }
        | name '(' association_list ')'
        {
+         // A single positional argument that is a range is a slice
+         // (IEEE 1076-2008 8.5); the other indexed names, calls and
+         // conversions are resolved during type checking.
+         auto &associations = stack($3).get_sub();
          init($$);
-         vhdl_indexed_exprt result{std::move(stack($1))};
-         for(auto &association : stack($3).get_sub())
-           result.add_argument(
-             std::move(static_cast<vhdl_associationt &>(association)));
-         stack($$) = std::move(result);
-         $2.set_location(stack($$));
-       }
-       | name '(' expr updown expr ')'
-       {
-         vhdl_range_exprt range{
-           std::move(stack($3)), stack($4).id(), std::move(stack($5))};
-         $4.set_location(range);
 
-         init($$);
-         stack($$) = vhdl_slice_exprt{std::move(stack($1)), std::move(range)};
+         if(associations.size() == 1 &&
+            to_vhdl_association(static_cast<const exprt &>(associations.front())).actual().id() == ID_range &&
+            !to_vhdl_association(static_cast<const exprt &>(associations.front())).is_named())
+         {
+           auto &association = static_cast<vhdl_associationt &>(associations.front());
+           stack($$) = vhdl_slice_exprt{
+             std::move(stack($1)), exprt{association.actual()}};
+         }
+         else
+         {
+           vhdl_indexed_exprt result{std::move(stack($1))};
+           for(auto &association : associations)
+             result.add_argument(
+               std::move(static_cast<vhdl_associationt &>(association)));
+           stack($$) = std::move(result);
+         }
+
          $2.set_location(stack($$));
        }
        | name '\'' TOK_IDENTIFIER
@@ -1957,6 +2286,13 @@ literal:
        | TOK_NATURAL identifier
        {
          // physical literal, e.g., 10 ns
+         init($$);
+         stack($$) = vhdl_physical_literal_exprt{$1.text, stack($2).get(ID_identifier)};
+         $1.set_location(stack($$));
+       }
+       | TOK_REAL identifier
+       {
+         // physical literal with a real, e.g., 7.5 ns
          init($$);
          stack($$) = vhdl_physical_literal_exprt{$1.text, stack($2).get(ID_identifier)};
          $1.set_location(stack($$));
@@ -2060,6 +2396,13 @@ primary:
          name
        | literal
        | aggregate
+       | TOK_NEW name
+       {
+         // IEEE 1076-2008 9.3.7: an allocator, simulation only
+         init($$, ID_vhdl_allocator);
+         $1.set_location(stack($$));
+         mto($$, $2);
+       }
        | '(' expr ')'
        {
          $$=$2;

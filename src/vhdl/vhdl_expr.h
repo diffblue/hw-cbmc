@@ -420,6 +420,95 @@ public:
   }
 };
 
+inline const vhdl_physical_literal_exprt &
+to_vhdl_physical_literal_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_vhdl_physical);
+  vhdl_physical_literal_exprt::check(expr);
+  return static_cast<const vhdl_physical_literal_exprt &>(expr);
+}
+
+/// IEEE 1076-2008 10.5.2.1: a waveform element with a delay,
+/// value after time; a simulation-only construct
+class vhdl_after_exprt : public binary_exprt
+{
+public:
+  vhdl_after_exprt(exprt _value, exprt _time)
+    : binary_exprt(std::move(_value), ID_vhdl_after, std::move(_time), typet{})
+  {
+  }
+
+  const exprt &value() const
+  {
+    return op0();
+  }
+
+  const exprt &time() const
+  {
+    return op1();
+  }
+};
+
+inline const vhdl_after_exprt &to_vhdl_after_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_vhdl_after);
+  vhdl_after_exprt::check(expr);
+  return static_cast<const vhdl_after_exprt &>(expr);
+}
+
+/// IEEE 1076-2008 10.5.2.1: a waveform with more than one element; the
+/// operands are the elements, each a vhdl_after_exprt or an expression
+class vhdl_waveform_exprt : public multi_ary_exprt
+{
+public:
+  explicit vhdl_waveform_exprt(operandst _elements)
+    : multi_ary_exprt(ID_vhdl_waveform, std::move(_elements), typet{})
+  {
+  }
+
+  const operandst &elements() const
+  {
+    return operands();
+  }
+};
+
+/// IEEE 1076-2008 9.3.7: an allocator, new type_mark; the operand is
+/// the type mark before type checking, and the type is the access type
+/// after type checking
+class vhdl_allocator_exprt : public unary_exprt
+{
+public:
+  const exprt &type_mark() const
+  {
+    return op();
+  }
+};
+
+inline const vhdl_allocator_exprt &to_vhdl_allocator_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_vhdl_allocator);
+  vhdl_allocator_exprt::check(expr);
+  return static_cast<const vhdl_allocator_exprt &>(expr);
+}
+
+/// IEEE 1076-2008 8.3: the selected name prefix.all, which denotes the
+/// object designated by an access value
+class vhdl_all_exprt : public unary_exprt
+{
+public:
+  const exprt &prefix() const
+  {
+    return op();
+  }
+};
+
+inline const vhdl_all_exprt &to_vhdl_all_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_all);
+  vhdl_all_exprt::check(expr);
+  return static_cast<const vhdl_all_exprt &>(expr);
+}
+
 /// IEEE 1076-2008 10.1, 11.1: a sequential or concurrent statement.
 /// Any statement may be labelled; the label is set by the parser.
 class vhdl_statementt : public exprt
@@ -781,6 +870,163 @@ inline const vhdl_code_assignt &to_vhdl_code_assign(const codet &code)
   DATA_INVARIANT(
     code.operands().size() == 2, "assignment has target and value");
   return static_cast<const vhdl_code_assignt &>(code);
+}
+
+/// IEEE 1076-2008 10.2: a wait statement, wait on signals until
+/// condition for time; the operand is the condition, or nil
+class vhdl_waitt : public vhdl_statementt
+{
+public:
+  /// the sensitivity list: nil, or a list of names
+  const exprt &sensitivity() const
+  {
+    return static_cast<const exprt &>(find(ID_vhdl_sensitivity));
+  }
+
+  const exprt &condition() const
+  {
+    return op0();
+  }
+
+  /// the timeout, or nil
+  const exprt &timeout() const
+  {
+    return static_cast<const exprt &>(find(ID_vhdl_timeout));
+  }
+};
+
+inline const vhdl_waitt &to_vhdl_wait(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_wait);
+  DATA_INVARIANT(expr.operands().size() == 1, "wait has a condition");
+  return static_cast<const vhdl_waitt &>(expr);
+}
+
+/// The type checked wait statement; the operands are the condition,
+/// the timeout, and the signals of the sensitivity list, any of which
+/// may be nil. Wait statements are not synthesised.
+class vhdl_code_waitt : public codet
+{
+public:
+  vhdl_code_waitt(exprt _condition, exprt _timeout, exprt _sensitivity)
+    : codet(
+        ID_wait,
+        {std::move(_condition), std::move(_timeout), std::move(_sensitivity)})
+  {
+  }
+
+  const exprt &condition() const
+  {
+    return op0();
+  }
+
+  const exprt &timeout() const
+  {
+    return op1();
+  }
+
+  const exprt &sensitivity() const
+  {
+    return op2();
+  }
+};
+
+/// IEEE 1076-2008 11.2: a block statement, with an optional guard
+/// condition, a declarative part, and concurrent statements
+class vhdl_block_statementt : public vhdl_statementt
+{
+public:
+  /// the guard condition, or nil
+  const exprt &guard() const
+  {
+    return static_cast<const exprt &>(find(ID_vhdl_guard));
+  }
+
+  const irept &declarations() const
+  {
+    return find(ID_decl);
+  }
+
+  const irept &body() const
+  {
+    return find(ID_body);
+  }
+};
+
+inline const vhdl_block_statementt &to_vhdl_block_statement(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_vhdl_block);
+  return static_cast<const vhdl_block_statementt &>(expr);
+}
+
+/// The type checked block statement: the operands are the concurrent
+/// statements, and the guard is kept, or is nil
+class vhdl_code_blockt : public exprt
+{
+public:
+  vhdl_code_blockt(exprt _guard, operandst _statements)
+    : exprt(ID_vhdl_block, typet{}, std::move(_statements))
+  {
+    add(ID_vhdl_guard) = std::move(_guard);
+  }
+
+  const exprt &guard() const
+  {
+    return static_cast<const exprt &>(find(ID_vhdl_guard));
+  }
+
+  const operandst &statements() const
+  {
+    return operands();
+  }
+};
+
+inline const vhdl_code_blockt &to_vhdl_code_block(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_vhdl_block);
+  return static_cast<const vhdl_code_blockt &>(expr);
+}
+
+/// IEEE 1076-2008 7.4: a disconnection specification, disconnect
+/// signals : type after time; the operand is the time. A
+/// simulation-only construct; the type checker keeps it in the body of
+/// the architecture, typed, and the synthesis rejects it.
+class vhdl_disconnectt : public exprt
+{
+public:
+  vhdl_disconnectt(
+    operandst _signals,
+    exprt _time,
+    const source_locationt &_source_location)
+    : exprt(ID_vhdl_disconnect, typet{}, {std::move(_time)})
+  {
+    add(ID_vhdl_declarators).get_sub().assign(_signals.begin(), _signals.end());
+    add_source_location() = _source_location;
+  }
+
+  /// before type checking: the names of the signals, or others, or all
+  const irept::subt &signals() const
+  {
+    return find(ID_vhdl_declarators).get_sub();
+  }
+
+  /// before type checking: the type mark
+  const exprt &type_mark() const
+  {
+    return static_cast<const exprt &>(find(ID_name));
+  }
+
+  const exprt &time() const
+  {
+    return op0();
+  }
+};
+
+inline const vhdl_disconnectt &to_vhdl_disconnect(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_vhdl_disconnect);
+  DATA_INVARIANT(expr.operands().size() == 1, "disconnect has a time");
+  return static_cast<const vhdl_disconnectt &>(expr);
 }
 
 /// IEEE 1076-2008 10.9, 10.5.4: an alternative of a case statement,

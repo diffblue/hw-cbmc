@@ -1,0 +1,9 @@
+CORE
+waveform1.vhd
+--bound 1
+^EXIT=2$
+^SIGNAL=0$
+^file waveform1\.vhd line \d+ column \d+: signal assignments with a delay are for simulation only$
+^CONVERSION ERROR$
+--
+^warning: ignoring

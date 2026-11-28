@@ -195,3 +195,62 @@ SCENARIO("Parsing VHDL design units")
     REQUIRE(error);
   }
 }
+
+SCENARIO("Parsing simulation-only constructs")
+{
+  GIVEN("Access and file types, a block, an allocator and a configuration")
+  {
+    bool error;
+    auto parse_tree = parse(
+      "entity e is end;\n"
+      "architecture a of e is\n"
+      "  type p is access integer;\n"
+      "  type ft is file of integer;\n"
+      "  file f : ft is \"x\";\n"
+      "  signal s : bit;\n"
+      "begin\n"
+      "  b: block begin s <= '1' after 1 ns, '0' after 2 ns; end block;\n"
+      "  process variable v : p; begin v := new integer; end process;\n"
+      "end;\n"
+      "configuration c of e is for a end for; end;\n",
+      error);
+
+    REQUIRE(!error);
+    REQUIRE(parse_tree.items.size() == 3);
+    REQUIRE(parse_tree.items.back().is_configuration());
+
+    auto architecture = std::next(parse_tree.items.begin());
+    auto &decl = architecture->find(ID_decl).get_sub();
+    REQUIRE(decl.size() == 4);
+    REQUIRE(decl[0].find(ID_type).id() == ID_vhdl_access_type);
+    REQUIRE(decl[1].find(ID_type).id() == ID_vhdl_file_type);
+    REQUIRE(decl[2].id() == ID_vhdl_file_declaration);
+
+    auto &body = architecture->find(ID_body).get_sub();
+    REQUIRE(body.size() == 2);
+    REQUIRE(body[0].id() == ID_vhdl_block);
+    auto &block_body = body[0].find(ID_body).get_sub();
+    REQUIRE(block_body.size() == 1);
+    auto &assignment =
+      to_vhdl_signal_assign(static_cast<const exprt &>(block_body[0]));
+    REQUIRE(assignment.value().id() == ID_vhdl_waveform);
+    REQUIRE(assignment.value().operands().size() == 2);
+  }
+
+  GIVEN("A slice written as an indexed name with a range")
+  {
+    bool error;
+    auto parse_tree = parse(
+      "entity e is end;\n"
+      "architecture a of e is signal v : bit_vector(3 downto 0); begin\n"
+      "  v(1 downto 0) <= v(3 downto 2);\n"
+      "end;\n",
+      error);
+    REQUIRE(!error);
+    auto &body = parse_tree.items.back().find(ID_body).get_sub();
+    auto &assignment =
+      to_vhdl_signal_assign(static_cast<const exprt &>(body[0]));
+    REQUIRE(assignment.target().id() == ID_vhdl_slice);
+    REQUIRE(assignment.value().id() == ID_vhdl_slice);
+  }
+}

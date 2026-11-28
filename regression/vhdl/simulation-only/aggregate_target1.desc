@@ -1,0 +1,9 @@
+CORE
+aggregate_target1.vhd
+--bound 1
+^EXIT=2$
+^SIGNAL=0$
+^file aggregate_target1\.vhd line \d+ column \d+: aggregates as assignment targets are not supported yet$
+^CONVERSION ERROR$
+--
+^warning: ignoring

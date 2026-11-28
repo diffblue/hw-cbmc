@@ -1,0 +1,9 @@
+CORE
+access_type1.vhd
+--bound 1
+^EXIT=2$
+^SIGNAL=0$
+^file access_type1\.vhd line \d+ column \d+: `k' has type p, which is for simulation only$
+^CONVERSION ERROR$
+--
+^warning: ignoring

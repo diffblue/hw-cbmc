@@ -109,6 +109,13 @@ public:
     return parse_tree.items.back();
   }
 
+  inline vhdl_parse_treet::itemt &new_configuration_item()
+  {
+    parse_tree.items.push_back(vhdl_parse_treet::itemt());
+    parse_tree.items.back().set_item_type("configuration");
+    return parse_tree.items.back();
+  }
+
   inline vhdl_parse_treet::itemt &new_library_item()
   {
     parse_tree.items.push_back(vhdl_parse_treet::itemt());

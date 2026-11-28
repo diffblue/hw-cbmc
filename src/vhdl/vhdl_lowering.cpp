@@ -110,6 +110,12 @@ typet vhdl_lowering(const typet &type)
     result.add_source_location() = type.source_location();
     return with_vhdl_type_name(std::move(result), to_vhdl_record_type(type));
   }
+  else if(is_vhdl_simulation_type(type))
+  {
+    // rejected by the synthesis
+    throw ebmc_errort{}.with_location(type.source_location())
+      << "type " << vhdl_type_to_string(type) << " is for simulation only";
+  }
   else
     return type; // a CBMC type
 }

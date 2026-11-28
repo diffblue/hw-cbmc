@@ -157,6 +157,13 @@ void vhdl_typecheckt::add_predefined_types()
   add_type("positive", vhdl_positive_type());
   add_type("std_logic", vhdl_std_logic_type());
   add_type("std_ulogic", vhdl_std_ulogic_type());
+  add_type("character", vhdl_character_type());
+  add_type("string", vhdl_string_type());
+
+  // the types for simulation; the synthesis rejects objects of these
+  add_type("time", vhdl_time_type());
+  if(uses_package("textio"))
+    add_type("text", vhdl_text_type());
 
   // the unconstrained array types; the range is set when constrained
   for(auto name :
@@ -329,6 +336,19 @@ void vhdl_typecheckt::typecheck_declaration(const irept &decl_irep)
     throw errort{}.with_location(source_location)
       << "alias declarations are not supported yet";
   }
+  else if(decl.id() == ID_vhdl_file_declaration)
+  {
+    // IEEE 1076-2008 6.4.2.5; simulation only, rejected by the synthesis
+    typecheck_object_declaration(to_vhdl_object_declaration(decl));
+  }
+  else if(decl.id() == ID_vhdl_disconnect)
+  {
+    typecheck_disconnect(to_vhdl_disconnect(decl));
+  }
+  else if(decl.id() == ID_vhdl_group)
+  {
+    // groups have no semantics (IEEE 1076-2008 6.10)
+  }
   else
     throw errort{}.with_location(source_location)
       << "unexpected declaration: " << decl.id();
@@ -384,9 +404,11 @@ void vhdl_typecheckt::typecheck_object_declaration(
       auto &symbol = add_object(base_name, type, source_location);
       symbol.is_state_var = true;
       symbol.value = init_value;
-      // Variables are marked as auxiliary; this distinguishes them
-      // from signals, which matters for assignments within a process.
-      symbol.is_auxiliary = decl.id() == ID_vhdl_variable;
+      // Variables and files are marked as auxiliary; this distinguishes
+      // them from signals, which matters for assignments within a
+      // process.
+      symbol.is_auxiliary =
+        decl.id() == ID_vhdl_variable || decl.id() == ID_vhdl_file_declaration;
     }
   }
 }
@@ -504,6 +526,10 @@ exprt vhdl_typecheckt::typecheck_concurrent_statement(exprt statement)
     throw errort{}.with_location(statement.source_location())
       << "generate statements are not supported yet";
   }
+  else if(statement.id() == ID_vhdl_block)
+  {
+    return typecheck_block_statement(to_vhdl_block_statement(statement));
+  }
   else
     throw errort{}.with_location(statement.source_location())
       << "unexpected concurrent statement: " << statement.id();
@@ -571,8 +597,7 @@ codet vhdl_typecheckt::typecheck_code(exprt statement)
   else if(statement.id() == ID_vhdl_report)
     return code_skipt{}; // no effect on the hardware
   else if(statement.id() == ID_wait)
-    throw errort{}.with_location(statement.source_location())
-      << "wait statements are not supported";
+    return typecheck_wait(to_vhdl_wait(statement));
   else if(
     statement.id() == ID_while || statement.id() == ID_vhdl_exit ||
     statement.id() == ID_vhdl_next)
@@ -638,13 +663,18 @@ codet vhdl_typecheckt::typecheck_assert(exprt expr)
 codet vhdl_typecheckt::typecheck_assign(exprt assignment, bool is_signal)
 {
   auto &binary = to_binary_expr(assignment);
+
+  if(binary.lhs().id() == ID_vhdl_aggregate)
+    throw errort{}.with_location(assignment.source_location())
+      << "aggregates as assignment targets are not supported yet";
+
   auto target = typecheck_expr(binary.lhs());
 
   // the target must be an object of the right class
   // the object is operand 0 of these
   exprt base = target;
   while(base.id() == ID_index || base.id() == ID_vhdl_slice ||
-        base.id() == ID_member)
+        base.id() == ID_member || base.id() == ID_dereference)
     base = base.operands().front();
 
   if(base.id() != ID_symbol)
@@ -685,6 +715,28 @@ codet vhdl_typecheckt::typecheck_assign(exprt assignment, bool is_signal)
       }
       else if(v.is_nil())
         return v; // unaffected
+      else if(v.id() == ID_vhdl_after)
+      {
+        // IEEE 1076-2008 10.5.2.1: a delay; simulation only, rejected by
+        // the synthesis
+        auto &after = to_vhdl_after_expr(v);
+        vhdl_after_exprt result{
+          rec(after.value()),
+          convert_to(typecheck_expr(after.time()), vhdl_time_type())};
+        result.type() = target.type();
+        result.add_source_location() = v.source_location();
+        return std::move(result);
+      }
+      else if(v.id() == ID_vhdl_waveform)
+      {
+        exprt::operandst elements;
+        for(auto &element : v.operands())
+          elements.push_back(rec(element));
+        vhdl_waveform_exprt result{std::move(elements)};
+        result.type() = target.type();
+        result.add_source_location() = v.source_location();
+        return std::move(result);
+      }
       else
         return convert_to(typecheck_expr(v), target.type());
     };
@@ -1123,12 +1175,114 @@ void vhdl_typecheckt::typecheck_architecture(
 
   auto body = typecheck_concurrent_statements(item.body());
 
+  // the simulation-only declarations, for the synthesis to reject
+  for(auto &item : simulation_only_items)
+    body.add_to_operands(std::move(item));
+  simulation_only_items.clear();
+
   pop_scope();
   pop_scope();
   pop_scope();
 
   new_symbol->value.id(ID_module);
   new_symbol->value.add(ID_body) = std::move(body);
+}
+
+/// IEEE 1076-2008 7.4: a disconnection specification, which is for
+/// simulation only; the signals and the time are type checked, and the
+/// specification is kept for the synthesis to reject
+void vhdl_typecheckt::typecheck_disconnect(const vhdl_disconnectt &disconnect)
+{
+  auto type = typecheck_type_mark(disconnect.type_mark());
+  auto time = convert_to(typecheck_expr(disconnect.time()), vhdl_time_type());
+
+  exprt::operandst signals;
+
+  for(auto &signal_irep : disconnect.signals())
+  {
+    auto &signal = static_cast<const exprt &>(signal_irep);
+
+    if(signal.id() == ID_vhdl_others || signal.id() == ID_all)
+    {
+      signals.push_back(signal);
+      continue;
+    }
+
+    auto typed = typecheck_expr(signal);
+
+    if(typed.id() != ID_symbol || ns.lookup(to_symbol_expr(typed)).is_auxiliary)
+      throw errort{}.with_location(signal.source_location())
+        << "disconnection specification requires a signal";
+
+    if(!vhdl_types_compatible(typed.type(), type))
+      throw errort{}.with_location(signal.source_location())
+        << "the signal is not of type " << vhdl_type_to_string(type);
+
+    signals.push_back(std::move(typed));
+  }
+
+  simulation_only_items.push_back(vhdl_disconnectt{
+    std::move(signals), std::move(time), disconnect.source_location()});
+}
+
+/// IEEE 1076-2008 11.2: a block statement. The declarations are scoped
+/// to the block. A guard condition is for simulation only, and is
+/// rejected by the synthesis.
+exprt vhdl_typecheckt::typecheck_block_statement(
+  const vhdl_block_statementt &block)
+{
+  auto label = block.label();
+  irep_idt prefix = id2string(current_scope().prefix) + "." +
+                    (label.empty() ? "block#" + std::to_string(++block_counter)
+                                   : id2string(to_lower(label)));
+
+  push_scope(prefix);
+
+  typecheck_declarations(block.declarations());
+
+  exprt guard = block.guard();
+  if(guard.is_not_nil())
+    guard = typecheck_condition(guard);
+
+  auto body = typecheck_concurrent_statements(block.body());
+
+  pop_scope();
+
+  vhdl_code_blockt result{std::move(guard), std::move(body.operands())};
+  result.add_source_location() = block.source_location();
+  return std::move(result);
+}
+
+/// IEEE 1076-2008 10.2: a wait statement; the sensitivity list, the
+/// condition and the timeout are type checked. Wait statements are not
+/// synthesised.
+codet vhdl_typecheckt::typecheck_wait(const vhdl_waitt &wait)
+{
+  exprt sensitivity = wait.sensitivity();
+
+  if(sensitivity.is_not_nil())
+  {
+    exprt new_sensitivity{ID_vhdl_sensitivity};
+    for(auto &name : sensitivity.get_sub())
+    {
+      auto typed = typecheck_expr(static_cast<const exprt &>(name));
+      new_sensitivity.move_to_sub(typed);
+    }
+    sensitivity = std::move(new_sensitivity);
+  }
+
+  exprt condition = wait.condition();
+  if(condition.is_not_nil())
+    condition = typecheck_condition(condition);
+
+  exprt timeout = wait.timeout();
+  if(timeout.is_not_nil())
+    timeout = convert_to(typecheck_expr(timeout), vhdl_time_type());
+
+  vhdl_code_waitt result{
+    std::move(condition), std::move(timeout), std::move(sensitivity)};
+  result.add_source_location() = wait.source_location();
+  return std::move(result);
 }
 
 /// We only support constants, types and subtypes in packages.

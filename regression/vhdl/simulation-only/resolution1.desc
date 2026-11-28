@@ -1,0 +1,9 @@
+CORE
+resolution1.vhd
+--bound 1
+^EXIT=2$
+^SIGNAL=0$
+^file resolution1\.vhd line \d+ column \d+: resolution functions are not supported$
+^CONVERSION ERROR$
+--
+^warning: ignoring

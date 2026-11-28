@@ -52,15 +52,34 @@ exprt vhdl_typecheckt::typecheck_expr_rec(exprt expr)
       return expr;
     }
     else if(type_id == ID_nullptr)
-      throw errort{}.with_location(expr.source_location())
-        << "null literals are not supported";
+      return expr; // the access type comes from the context
     else
       return expr; // already typed
   }
   else if(expr.id() == ID_vhdl_physical)
   {
-    throw errort{}.with_location(expr.source_location())
-      << "physical literals are for simulation only";
+    return typecheck_physical_literal(to_vhdl_physical_literal_expr(expr));
+  }
+  else if(expr.id() == ID_vhdl_allocator)
+  {
+    // IEEE 1076-2008 9.3.7: new type_mark; the access type is anonymous
+    // and takes its name from the context in convert_to
+    auto designated_type =
+      typecheck_type_mark(to_vhdl_allocator_expr(expr).type_mark());
+    return nullary_exprt{
+      ID_vhdl_allocator,
+      vhdl_access_typet{irep_idt{}, std::move(designated_type)}};
+  }
+  else if(expr.id() == ID_all)
+  {
+    // IEEE 1076-2008 8.3: the object designated by an access value
+    auto prefix = typecheck_expr(to_vhdl_all_expr(expr).prefix());
+    if(prefix.type().id() != ID_vhdl_access)
+      throw errort{}.with_location(expr.source_location())
+        << ".all requires an access value, got "
+        << vhdl_type_to_string(prefix.type());
+    auto designated_type = to_vhdl_access_type(prefix.type()).designated_type();
+    return unary_exprt{ID_dereference, std::move(prefix), designated_type};
   }
   else if(expr.id() == ID_vhdl_aggregate)
   {
@@ -91,6 +110,14 @@ exprt vhdl_typecheckt::typecheck_expr_rec(exprt expr)
     auto &member_expr = to_member_expr(expr);
     auto prefix = typecheck_expr(member_expr.compound());
     irep_idt component_name = to_lower(member_expr.get_component_name());
+
+    // IEEE 1076-2008 8.3: implicit dereference of an access value
+    if(prefix.type().id() == ID_vhdl_access)
+    {
+      auto designated_type =
+        to_vhdl_access_type(prefix.type()).designated_type();
+      prefix = unary_exprt{ID_dereference, std::move(prefix), designated_type};
+    }
 
     if(prefix.type().id() != ID_vhdl_record)
       throw errort{}.with_location(expr.source_location())
@@ -1194,6 +1221,116 @@ exprt vhdl_typecheckt::typecheck_aggregate(exprt expr, const typet &type)
       << vhdl_type_to_string(type);
 }
 
+/// IEEE 1076-2008 15.5.1, 16.3: a physical literal of type time, e.g.
+/// 10 ns or 1.5 us; the value is in femtoseconds
+exprt vhdl_typecheckt::typecheck_physical_literal(
+  const vhdl_physical_literal_exprt &literal)
+{
+  static const std::map<irep_idt, mp_integer> units = {
+    {"fs", 1},
+    {"ps", 1000},
+    {"ns", 1000000},
+    {"us", 1000000000},
+    {"ms", mp_integer{1000000000} * 1000},
+    {"sec", mp_integer{1000000000} * 1000000},
+    {"min", mp_integer{1000000000} * 60000000},
+    {"hr", mp_integer{1000000000} * 3600000000}};
+
+  auto unit = to_lower(literal.unit());
+  auto u_it = units.find(unit);
+  if(u_it == units.end())
+    throw errort{}.with_location(literal.source_location())
+      << "unknown unit `" << literal.unit() << "'";
+
+  // decimal literal, possibly with a fractional part
+  std::string value_string = id2string(literal.value());
+  value_string.erase(
+    std::remove(value_string.begin(), value_string.end(), '_'),
+    value_string.end());
+
+  auto dot = value_string.find('.');
+  if(value_string.find_first_of("eE#") != std::string::npos)
+    throw errort{}.with_location(literal.source_location())
+      << "unsupported physical literal";
+
+  mp_integer value;
+  if(dot == std::string::npos)
+    value = string2integer(value_string) * u_it->second;
+  else
+  {
+    auto integer_part = string2integer(value_string.substr(0, dot));
+    auto fraction = value_string.substr(dot + 1);
+    value = integer_part * u_it->second;
+    mp_integer scale = u_it->second;
+    for(char digit : fraction)
+    {
+      scale /= 10;
+      value += (digit - '0') * scale;
+    }
+  }
+
+  constant_exprt result{integer2string(value), vhdl_time_type()};
+  result.add_source_location() = literal.source_location();
+  return std::move(result);
+}
+
+/// IEEE 1076-2008 9.2.7: the operators on physical types
+exprt vhdl_typecheckt::typecheck_physical_binary(
+  irep_idt id,
+  exprt lhs,
+  exprt rhs,
+  const source_locationt &source_location)
+{
+  bool relational = id == ID_equal || id == ID_notequal || id == ID_lt ||
+                    id == ID_le || id == ID_gt || id == ID_ge;
+
+  if(relational || id == ID_plus || id == ID_minus)
+  {
+    match_types(lhs, rhs);
+    auto type =
+      relational ? static_cast<typet>(vhdl_boolean_type()) : lhs.type();
+    exprt result = binary_exprt{std::move(lhs), id, std::move(rhs), type};
+    result.add_source_location() = source_location;
+    return result;
+  }
+  else if(id == ID_mult || id == ID_div)
+  {
+    // time * integer, integer * time, time / integer; time / time is
+    // an integer
+    bool lhs_physical = lhs.type().id() == ID_vhdl_physical_type;
+    bool rhs_physical = rhs.type().id() == ID_vhdl_physical_type;
+
+    if(lhs_physical && rhs_physical && id == ID_div)
+    {
+      match_types(lhs, rhs);
+      exprt result =
+        binary_exprt{std::move(lhs), id, std::move(rhs), vhdl_integer_type()};
+      result.add_source_location() = source_location;
+      return result;
+    }
+
+    if(lhs_physical && rhs_physical)
+      throw errort{}.with_location(source_location)
+        << "cannot multiply two values of type time";
+
+    auto &integer_operand = lhs_physical ? rhs : lhs;
+    integer_operand =
+      convert_to(std::move(integer_operand), vhdl_integer_type());
+
+    if(id == ID_div && !lhs_physical)
+      throw errort{}.with_location(source_location)
+        << "cannot divide an integer by a time";
+
+    exprt result =
+      binary_exprt{std::move(lhs), id, std::move(rhs), vhdl_time_type()};
+    result.add_source_location() = source_location;
+    return result;
+  }
+  else
+    throw errort{}.with_location(source_location)
+      << "operator " << id << " is not defined on time";
+}
+
 /// IEEE 1076-2008 15.5.2: the value of a decimal or based integer
 /// literal
 mp_integer vhdl_typecheckt::integer_literal_value(const constant_exprt &expr)
@@ -1250,6 +1387,9 @@ exprt vhdl_typecheckt::literal_with_default_type(exprt literal)
 
   if(id == ID_natural)
     return convert_to(std::move(literal), vhdl_integer_type());
+  else if(id == ID_nullptr)
+    throw errort{}.with_location(literal.source_location())
+      << "cannot determine the type of null";
   else if(id == ID_char)
     return convert_to(std::move(literal), vhdl_std_logic_type());
   else if(id == ID_string || id == ID_vhdl_bit_string)
@@ -1416,6 +1556,16 @@ exprt vhdl_typecheckt::convert_to(exprt expr, const typet &type)
   else if(source_type.id() == ID_vhdl_aggregate)
   {
     return typecheck_aggregate(std::move(expr), type);
+  }
+  else if(source_type.id() == ID_nullptr)
+  {
+    // IEEE 1076-2008 5.4.1: null is a value of every access type
+    if(type.id() != ID_vhdl_access)
+      throw errort{}.with_location(source_location)
+        << "null where " << vhdl_type_to_string(type) << " is expected";
+    constant_exprt result{"null", type};
+    result.add_source_location() = source_location;
+    return std::move(result);
   }
   else if(source_type.id() == ID_real)
   {
@@ -1876,6 +2026,13 @@ exprt vhdl_typecheckt::typecheck_binary(exprt expr)
     array_literal(lhs, rhs);
     array_literal(rhs, lhs);
   }
+
+  // the operators on time
+  if(
+    lhs.type().id() == ID_vhdl_physical_type ||
+    rhs.type().id() == ID_vhdl_physical_type)
+    return typecheck_physical_binary(
+      id, std::move(lhs), std::move(rhs), source_location);
 
   // the operators of the numeric packages on vectors
   if(
