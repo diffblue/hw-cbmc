@@ -1779,11 +1779,21 @@ exprt vhdl_typecheckt::typecheck_concatenation(
   // IEEE 1076-2008 9.2.5: if both operands are null arrays, the result
   // is the right operand. Otherwise, the direction of the result is
   // that of the index subtype S of the base type, and the left bound
-  // is S'left, e.g., 0 to N-1 for bit_vector. (VHDL-87 took the left
-  // bound and direction from the left operand.)
+  // is S'left, e.g., 0 to N-1 for bit_vector. IEEE 1076-1987 7.2.3
+  // took the direction and left bound from the left operand instead,
+  // unless that is a null array or an element.
   vhdl_ranget range;
   if(lhs_array && rhs_array && length == 0)
     range = to_vhdl_array_type(rhs.type()).range();
+  else if(standard == vhdl_standardt::VHDL87 && lhs_array && lhs_length != 0)
+  {
+    auto lhs_range = to_vhdl_array_type(lhs.type()).range();
+    range.left = lhs_range.left;
+    range.direction = lhs_range.direction;
+    range.right = range.direction == vhdl_directiont::TO
+                    ? range.left + length - 1
+                    : range.left - length + 1;
+  }
   else
     range = result_type.range_for_length(length);
 

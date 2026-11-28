@@ -153,7 +153,12 @@ bool vhdl_languaget::typecheck(
 
   vhdl_std_packages(symbol_table, message_handler);
 
-  if(vhdl_typecheck(parse_tree, symbol_table, module, message_handler))
+  if(vhdl_typecheck(
+       parse_tree,
+       symbol_table,
+       module,
+       default_vhdl_standard,
+       message_handler))
     return true;
 
   messaget message(message_handler);

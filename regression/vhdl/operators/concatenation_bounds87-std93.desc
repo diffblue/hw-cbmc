@@ -1,0 +1,10 @@
+CORE
+concatenation_bounds87.vhd
+--vhdl-std 93 --bound 0
+^EXIT=10$
+^SIGNAL=0$
+^\[concatenation_bounds87\.p1\] .* REFUTED$
+^\[concatenation_bounds87\.p2\] .* REFUTED$
+^\[concatenation_bounds87\.p4\] .* PROVED up to bound 0$
+--
+^warning: ignoring

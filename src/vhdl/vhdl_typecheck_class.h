@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "vhdl_expr.h"
 #include "vhdl_parse_tree.h"
+#include "vhdl_standard.h"
 #include "vhdl_types.h"
 
 #include <map>
@@ -46,12 +47,14 @@ public:
     const vhdl_parse_treet &_parse_tree,
     irep_idt _module_name,
     symbol_table_baset &_symbol_table,
+    vhdl_standardt _standard,
     message_handlert &_message_handler)
     : typecheckt(_message_handler),
       ns(_symbol_table),
       parse_tree(_parse_tree),
       module_name(_module_name),
-      symbol_table(_symbol_table)
+      symbol_table(_symbol_table),
+      standard(_standard)
   {
   }
 
@@ -63,6 +66,10 @@ protected:
   const irep_idt module_name;
   symbolt *module_symbol = nullptr;
   symbol_table_baset &symbol_table;
+
+  /// the revision of IEEE 1076 whose semantics apply where the
+  /// revisions differ, e.g., the bounds of a concatenation
+  const vhdl_standardt standard;
 
   // design units
   void typecheck_architecture(const vhdl_parse_treet::itemt &);

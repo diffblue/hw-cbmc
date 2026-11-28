@@ -1,5 +1,5 @@
 SRC = vhdl_ebmc_language.cpp vhdl_language.cpp expr2vhdl.cpp vhdl_y.tab.cpp vhdl_lex.yy.cpp \
-      vhdl_parser.cpp vhdl_parse_tree.cpp vhdl_typecheck.cpp \
+      vhdl_parser.cpp vhdl_parse_tree.cpp vhdl_standard.cpp vhdl_typecheck.cpp \
       vhdl_typecheck_expr.cpp vhdl_typecheck_type.cpp vhdl_types.cpp \
       vhdl_lowering.cpp \
       vhdl_synthesis.cpp vhdl_std_packages.cpp vhdl_libraries.cpp

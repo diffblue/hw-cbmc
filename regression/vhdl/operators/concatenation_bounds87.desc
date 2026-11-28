@@ -1,0 +1,14 @@
+CORE
+concatenation_bounds87.vhd
+--vhdl-std 87 --bound 0
+^EXIT=0$
+^SIGNAL=0$
+^\[concatenation_bounds87\.p1\] .* PROVED up to bound 0$
+^\[concatenation_bounds87\.p2\] .* PROVED up to bound 0$
+^\[concatenation_bounds87\.p3\] .* PROVED up to bound 0$
+^\[concatenation_bounds87\.p4\] .* PROVED up to bound 0$
+^\[concatenation_bounds87\.p5\] .* PROVED up to bound 0$
+^\[concatenation_bounds87\.p6\] .* PROVED up to bound 0$
+^\[concatenation_bounds87\.p7\] .* PROVED up to bound 0$
+--
+^warning: ignoring
