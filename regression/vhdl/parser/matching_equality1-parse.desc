@@ -1,0 +1,11 @@
+KNOWNBUG
+matching_equality1.vhd
+--show-parse
+^EXIT=0$
+^SIGNAL=0$
+^ENTITY matching_equality1$
+--
+^warning: ignoring
+^syntax error
+--
+The VHDL-2008 matching relational operators are not parsed.

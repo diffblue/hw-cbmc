@@ -1,0 +1,11 @@
+KNOWNBUG
+reduction_operators1.vhd
+--show-parse
+^EXIT=0$
+^SIGNAL=0$
+^ENTITY reduction_operators1$
+--
+^warning: ignoring
+^syntax error
+--
+The VHDL-2008 unary reduction operators are not parsed.
