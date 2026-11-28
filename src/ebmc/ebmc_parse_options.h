@@ -58,7 +58,7 @@ public:
         "I:(incdir):D:"
         "l:(libfile):"
         "y:(libdir):(libext):"
-        "(preprocess)(systemverilog)(vl2smv-extensions)"
+        "(preprocess)(systemverilog)(vl2smv-extensions)(vhdl-std):"
         "(warn-implicit-nets)",
         argc,
         argv,

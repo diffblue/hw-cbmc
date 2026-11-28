@@ -1,0 +1,8 @@
+CORE
+vhdl_std_unknown.vhd
+--vhdl-std 2000
+^EXIT=1$
+^SIGNAL=0$
+^error: unknown VHDL standard `2000'; use 87, 93 or 2008$
+--
+^warning: ignoring

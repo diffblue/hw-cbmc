@@ -1,0 +1,9 @@
+CORE
+concatenation_bounds1.vhd
+--vhdl-std 2008 --bound 0
+^EXIT=0$
+^SIGNAL=0$
+^\[concatenation_bounds1\.p1\] .* PROVED up to bound 0$
+^\[concatenation_bounds1\.p7\] .* PROVED up to bound 0$
+--
+^warning: ignoring

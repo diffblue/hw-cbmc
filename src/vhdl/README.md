@@ -47,6 +47,15 @@ The driver is `vhdl_ebmc_language.cpp` (for `ebmc`) and `vhdl_language.cpp`
 `--show-symbol-table` the result of type checking (with VHDL types),
 `--show-trans` the lowered transition system.
 
+The grammar and the typing rules are those of IEEE 1076-2008 for every
+input. `--vhdl-std 87|93|2008` (`vhdl_standard.h`, default 2008)
+selects the semantics of the constructs whose meaning changed between
+the revisions; the type checker consults it where the revisions differ.
+Currently that is the index range of a concatenation: VHDL-87 takes the
+direction and left bound from the left operand, VHDL-93 and later from
+the index subtype of the base type (9.2.5). Each such difference has a
+regression test per standard.
+
 ## Parsing
 
 `scanner.l` and `parser.y` are a flex scanner and a bison grammar for

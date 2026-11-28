@@ -1338,8 +1338,10 @@ bool vhdl_typecheck(
   const vhdl_parse_treet &parse_tree,
   symbol_table_baset &symbol_table,
   const std::string &module,
+  vhdl_standardt standard,
   message_handlert &message_handler)
 {
-  return vhdl_typecheckt(parse_tree, module, symbol_table, message_handler)
+  return vhdl_typecheckt(
+           parse_tree, module, symbol_table, standard, message_handler)
     .typecheck_main();
 }

@@ -13,11 +13,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/symbol_table_base.h>
 
 #include "vhdl_parse_tree.h"
+#include "vhdl_standard.h"
 
 bool vhdl_typecheck(
   const vhdl_parse_treet &,
   symbol_table_baset &,
   const std::string &module,
+  vhdl_standardt,
   message_handlert &);
 
 #endif

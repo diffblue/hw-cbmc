@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <trans-netlist/ldg.h>
 #include <trans-netlist/smv_netlist.h>
 #include <verilog/verilog_standard.h>
+#include <vhdl/vhdl_standard.h>
 
 #include "build_transition_system.h"
 #include "command_file.h"
@@ -574,6 +575,7 @@ void ebmc_parse_optionst::help()
     " {y-l} {ufile}                  \t library file (modules are not top-level)\n"
     " {y+libfile+}{ufile}            \t library file (modules are not top-level)\n"
     " {y--systemverilog}             \t force SystemVerilog " + as_string(default_sv_standard) + " instead of Verilog\n"
+    " {y--vhdl-std} {u87}|{u93}|{u2008}      \t VHDL standard (default " + as_string(default_vhdl_standard) + ")\n"
     " {y--reset} {uexpr}             \t set up module reset\n"
     " {y--ignore-initial}            \t disregard initial blocks\n"
     " {y--initial-zero}              \t initialize variables with zero\n"

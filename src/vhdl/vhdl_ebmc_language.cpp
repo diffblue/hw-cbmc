@@ -154,8 +154,24 @@ std::optional<transition_systemt> vhdl_ebmc_languaget::transition_system()
 
   const std::string module_identifier = "vhdl::" + id2string(top);
 
+  // the revision of IEEE 1076 whose semantics apply
+  auto standard = default_vhdl_standard;
+  if(cmdline.isset("vhdl-std"))
+  {
+    auto given = vhdl_standard_from_string(cmdline.get_value("vhdl-std"));
+    if(!given.has_value())
+      throw ebmc_errort{}.with_exit_code(1)
+        << "unknown VHDL standard `" << cmdline.get_value("vhdl-std")
+        << "'; use 87, 93 or 2008";
+    standard = *given;
+  }
+
   if(vhdl_typecheck(
-       parse_tree, result.symbol_table, id2string(top), message_handler))
+       parse_tree,
+       result.symbol_table,
+       id2string(top),
+       standard,
+       message_handler))
   {
     message.error() << "CONVERSION ERROR" << messaget::eom;
     throw ebmc_errort{}.with_exit_code(2);

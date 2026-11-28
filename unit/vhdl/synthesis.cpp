@@ -35,8 +35,12 @@ static transt synthesise(
   parser.grammar = vhdl_parsert::LANGUAGE;
   REQUIRE(!parser.parse());
 
-  REQUIRE(
-    !vhdl_typecheck(parser.parse_tree, symbol_table, entity, message_handler));
+  REQUIRE(!vhdl_typecheck(
+    parser.parse_tree,
+    symbol_table,
+    entity,
+    default_vhdl_standard,
+    message_handler));
 
   const std::string module = "vhdl::" + entity;
   REQUIRE(!vhdl_synthesis(symbol_table, module, message_handler));
