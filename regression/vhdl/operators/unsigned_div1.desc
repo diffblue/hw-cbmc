@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 unsigned_div1.vhd
 --bound 0
 ^EXIT=0$
@@ -15,5 +15,3 @@ unsigned_div1.vhd
 ^\[unsigned_div1\.p10\] .* PROVED up to bound 0$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

@@ -1,0 +1,8 @@
+CORE
+unaffected1.vhd
+--bound 2
+^EXIT=0$
+^SIGNAL=0$
+^\[unaffected1\.p0\] .* PROVED up to bound 2$
+--
+^warning: ignoring

@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 shift_register1.vhd
 --bound 7
 ^EXIT=10$
@@ -7,5 +7,3 @@ shift_register1.vhd
 ^\[shift_register1\.p2\] .* REFUTED$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

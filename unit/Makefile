@@ -34,6 +34,7 @@ SRC += ebmc/bdd_model_checker.cpp \
        vhdl/expr2vhdl.cpp \
        vhdl/parse_tree.cpp \
        vhdl/parser.cpp \
+       vhdl/synthesis.cpp \
        vhdl/vhdl_expr.cpp \
        vhdl/vhdl_lowering.cpp \
        vhdl/vhdl_types.cpp \

@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 shadow1.vhd
 --bound 1
 ^EXIT=0$
@@ -6,5 +6,3 @@ shadow1.vhd
 ^\[shadow1\.p1\] .* PROVED up to bound 1$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

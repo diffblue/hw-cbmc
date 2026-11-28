@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 reset1.vhd
 --bound 3
 ^EXIT=10$
@@ -9,5 +9,3 @@ reset1.vhd
 ^\[reset1\.p4\] .* REFUTED$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

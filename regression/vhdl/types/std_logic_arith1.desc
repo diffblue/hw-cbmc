@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 std_logic_arith1.vhd
 --bound 2
 ^EXIT=10$
@@ -7,5 +7,3 @@ std_logic_arith1.vhd
 ^\[std_logic_arith1\.p2\] .* REFUTED$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

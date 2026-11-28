@@ -1,0 +1,9 @@
+CORE
+two_edges.vhd
+--bound 1
+^EXIT=2$
+^SIGNAL=0$
+^file two_edges\.vhd line \d+ column \d+: multiple clocks or clock edges are not supported$
+^CONVERSION ERROR$
+--
+^warning: ignoring

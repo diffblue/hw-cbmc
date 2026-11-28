@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 array1.vhd
 --bound 1
 ^EXIT=10$
@@ -7,5 +7,3 @@ array1.vhd
 ^\[array1\.p2\] .* REFUTED$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

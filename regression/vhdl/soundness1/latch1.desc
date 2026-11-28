@@ -1,0 +1,9 @@
+CORE
+latch1.vhd
+--bound 2
+^EXIT=10$
+^SIGNAL=0$
+^\[latch1\.p0\] .* REFUTED$
+^\[latch1\.p1\] .* REFUTED$
+--
+^warning: ignoring

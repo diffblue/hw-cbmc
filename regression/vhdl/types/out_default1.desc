@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 out_default1.vhd
 --bound 1
 ^EXIT=0$
@@ -8,5 +8,3 @@ out_default1.vhd
 ^\[out_default1\.p3\] .* PROVED up to bound 1$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

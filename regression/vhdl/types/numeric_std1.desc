@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 numeric_std1.vhd
 --bound 3
 ^EXIT=10$
@@ -7,5 +7,3 @@ numeric_std1.vhd
 ^\[numeric_std1\.p2\] .* REFUTED$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

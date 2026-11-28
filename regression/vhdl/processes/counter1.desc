@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 counter1.vhd
 --bound 5
 ^EXIT=10$
@@ -7,5 +7,3 @@ counter1.vhd
 ^\[counter1\.p2\] .* REFUTED$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

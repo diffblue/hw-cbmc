@@ -1,0 +1,9 @@
+CORE
+std_logic_l1.vhd
+--bound 1
+^EXIT=2$
+^SIGNAL=0$
+^file std_logic_l1\.vhd line 11 column \d+: the value 'L' of std_ulogic is not supported$
+^CONVERSION ERROR$
+--
+^warning: ignoring

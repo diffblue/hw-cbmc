@@ -1,0 +1,9 @@
+CORE
+edge_else.vhd
+--bound 1
+^EXIT=2$
+^SIGNAL=0$
+^file edge_else\.vhd line \d+ column \d+: else branch on a clock edge condition$
+^CONVERSION ERROR$
+--
+^warning: ignoring

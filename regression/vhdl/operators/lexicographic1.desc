@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 lexicographic1.vhd
 --bound 0
 ^EXIT=0$
@@ -10,5 +10,3 @@ lexicographic1.vhd
 ^\[lexicographic1\.p5\] .* PROVED up to bound 0$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

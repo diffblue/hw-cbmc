@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 comb_process1.vhd
 --bound 3
 ^EXIT=10$
@@ -7,5 +7,3 @@ comb_process1.vhd
 ^\[comb_process1\.p2\] .* REFUTED$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

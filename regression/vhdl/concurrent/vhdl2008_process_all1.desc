@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 vhdl2008_process_all1.vhd
 --bound 1
 ^EXIT=10$
@@ -7,5 +7,3 @@ vhdl2008_process_all1.vhd
 ^\[vhdl2008_process_all1\.p2\] .* REFUTED$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

@@ -1,0 +1,13 @@
+CORE
+to_range_lhs.vhd
+--bound 2
+^EXIT=10$
+^SIGNAL=0$
+^\[to_range_lhs\.p0\] .* PROVED up to bound 2$
+^\[to_range_lhs\.p1\] .* PROVED up to bound 2$
+^\[to_range_lhs\.p2\] .* PROVED up to bound 2$
+^\[to_range_lhs\.p3\] .* PROVED up to bound 2$
+^\[to_range_lhs\.p4\] .* PROVED up to bound 2$
+^\[to_range_lhs\.p5\] .* REFUTED$
+--
+^warning: ignoring

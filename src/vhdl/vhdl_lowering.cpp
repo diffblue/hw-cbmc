@@ -37,6 +37,15 @@ static bool lowers_to_bitvector(const typet &vhdl_type)
   return vhdl_lowering(array_type.element_type()).id() == ID_bool;
 }
 
+/// The name of the VHDL type is kept as a comment on the CBMC type,
+/// for displaying values in traces; comments do not take part in type
+/// equality.
+static typet with_vhdl_type_name(typet lowered, const vhdl_typet &vhdl_type)
+{
+  lowered.set(ID_C_vhdl_type, vhdl_type.name());
+  return lowered;
+}
+
 typet vhdl_lowering(const typet &type)
 {
   if(type.id() == ID_vhdl_enumeration)
@@ -45,16 +54,16 @@ typet vhdl_lowering(const typet &type)
     auto base = enumeration_type.base_name();
 
     if(base == "boolean" || base == "bit" || base == "std_ulogic")
-      return bool_typet{};
+      return with_vhdl_type_name(bool_typet{}, enumeration_type);
 
     enumeration_typet result;
     result.elements() = enumeration_type.elements();
     result.add_source_location() = type.source_location();
-    return std::move(result);
+    return with_vhdl_type_name(std::move(result), enumeration_type);
   }
   else if(type.id() == ID_vhdl_integer)
   {
-    return signedbv_typet{32};
+    return with_vhdl_type_name(signedbv_typet{32}, to_vhdl_integer_type(type));
   }
   else if(type.id() == ID_vhdl_array)
   {
@@ -66,16 +75,29 @@ typet vhdl_lowering(const typet &type)
     auto element_type = vhdl_lowering(array_type.element_type());
     auto length = numeric_cast_v<std::size_t>(array_type.length());
 
+    typet result;
     if(element_type.id() == ID_bool)
     {
       if(array_type.base_name() == "signed")
-        return signedbv_typet{length};
+        result = signedbv_typet{length};
       else
-        return unsignedbv_typet{length};
+        result = unsignedbv_typet{length};
+      // distinguishes vectors from integers when displaying values
+      result.set(
+        ID_C_vhdl_element,
+        static_cast<const vhdl_typet &>(array_type.element_type()).name());
     }
     else
-      return array_typet{
-        element_type, from_integer(length, signedbv_typet{32})};
+      result =
+        array_typet{element_type, from_integer(length, signedbv_typet{32})};
+
+    // the index range, for displaying indexed names and slices
+    auto range = array_type.range();
+    result.set(ID_C_vhdl_left, integer2string(range.left));
+    result.set(ID_C_vhdl_right, integer2string(range.right));
+    result.set(ID_C_vhdl_direction, to_irep_id(range.direction));
+
+    return with_vhdl_type_name(std::move(result), array_type);
   }
   else if(type.id() == ID_vhdl_record)
   {
@@ -86,7 +108,7 @@ typet vhdl_lowering(const typet &type)
       result.components().back().set_pretty_name(c.get_pretty_name());
     }
     result.add_source_location() = type.source_location();
-    return std::move(result);
+    return with_vhdl_type_name(std::move(result), to_vhdl_record_type(type));
   }
   else
     return type; // a CBMC type
@@ -345,7 +367,8 @@ exprt vhdl_lowering(exprt expr)
         // The design is two-valued: '0' and '1' (and false, true). 'H'
         // and 'L' are distinct values of std_ulogic, and are only
         // supported where they are read as '1' and '0', by the
-        // condition operator (see lower_condition_literal).
+        // condition operator (see lower_condition_literal). The lowered
+        // type carries the VHDL type name, for display.
         if(literal == "true" || literal == "'1'")
           return constant_exprt{ID_true, lowered_type};
         else if(literal == "false" || literal == "'0'")

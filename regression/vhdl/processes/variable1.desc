@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 variable1.vhd
 --bound 2
 ^EXIT=10$
@@ -7,5 +7,3 @@ variable1.vhd
 ^\[variable1\.p2\] .* REFUTED$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

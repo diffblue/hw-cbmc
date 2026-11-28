@@ -1,0 +1,9 @@
+CORE
+mixed_timing1.vhd
+--bound 1
+^EXIT=2$
+^SIGNAL=0$
+^file mixed_timing1\.vhd line \d+ column \d+: a clocked process must consist of a single if statement$
+^CONVERSION ERROR$
+--
+^warning: ignoring

@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 std_logic_condition1.vhd
 --bound 0
 ^EXIT=0$
@@ -9,5 +9,3 @@ std_logic_condition1.vhd
 ^\[std_logic_condition1\.p4\] .* PROVED up to bound 0$
 --
 ^warning: ignoring
---
-Nothing is implemented yet.

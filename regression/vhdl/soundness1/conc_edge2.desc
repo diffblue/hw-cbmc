@@ -1,0 +1,8 @@
+CORE
+conc_edge2.vhd
+--bound 3
+^EXIT=0$
+^SIGNAL=0$
+^\[conc_edge2\.p0\] .* PROVED up to bound 3$
+--
+^warning: ignoring

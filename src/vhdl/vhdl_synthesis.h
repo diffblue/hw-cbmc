@@ -12,10 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/message.h>
 #include <util/symbol_table_base.h>
 
-bool vhdl_synthesis(
-  symbol_table_baset &,
-  const irep_idt &module,
-  message_handlert &);
+bool vhdl_synthesis(symbol_table_baset &, irep_idt module, message_handlert &);
 
 #endif
-
